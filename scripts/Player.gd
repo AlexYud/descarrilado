@@ -29,8 +29,8 @@ const FOOTSTEP_PITCH_MAX = 1.1
 @onready var hand = $Hand
 @onready var flashlight = $Hand/SpotLight3D
 @onready var collider = $CollisionShape3D  
-@onready var sfx_walk = $sfx_walk
-@onready var sfx_crouch_walk = $sfx_crouch_walk
+@onready var sfx_walk = $SoundEffects/sfx_walk
+@onready var sfx_crouch_walk = $SoundEffects/sfx_crouch_walk
 
 var direction = Vector3.ZERO
 var head_y_axis = 0.0
