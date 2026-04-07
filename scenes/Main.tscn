@@ -1,16 +1,17 @@
 [gd_scene format=3 uid="uid://cily3cdujyv7r"]
 
 [ext_resource type="PackedScene" path="res://scenes/CSGStairMaker3D.tscn" id="1_elqb8"]
+[ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rvslj"]
 
 [node name="Main" type="Node3D" unique_id=357131378]
 
-[node name="PlayerRef" type="CSGBox3D" parent="." unique_id=1196894789]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.44118536, 0.9123013, 3.4144685)
-size = Vector3(0.6, 1.7, 0.6)
+[node name="Player" parent="." unique_id=604324590 instance=ExtResource("1_rvslj")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.278954, -7.1867476)
 
 [node name="SceneStructure" type="Node3D" parent="." unique_id=691403289]
 
 [node name="JulianasHouse" type="CSGCombiner3D" parent="SceneStructure" unique_id=174151692]
+use_collision = true
 
 [node name="Floor" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=1683054587]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.723167, -0.19944811, 3.0531921)
@@ -99,66 +100,82 @@ size = Vector3(3.713887, 4.34527, 0.25)
 
 [node name="Ground1" type="CSGBox3D" parent="SceneStructure/Streets" unique_id=1495871503]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49234152, -0.44967985, 0)
+use_collision = true
 size = Vector3(5, 1, 10)
 
 [node name="Ground2" type="CSGBox3D" parent="SceneStructure/Streets" unique_id=456232633]
 transform = Transform3D(0.99590176, -0.0068079387, -0.090184785, 0, 0.99716294, -0.07527461, 0.09044139, 0.07496612, 0.9930763, 0.92789817, -0.08280444, -9.767504)
+use_collision = true
 size = Vector3(5, 1, 10)
 
 [node name="Ground3" type="CSGBox3D" parent="SceneStructure/Streets" unique_id=882118582]
 transform = Transform3D(-0.08280097, -0.14139806, -0.98648405, -0.007958155, 0.9899453, -0.14122617, 0.99653447, -0.0038430742, -0.08309372, 0.21056509, 0.14964277, -18.813957)
+use_collision = true
 size = Vector3(8, 1, 37.699)
 
 [node name="ExtraHouse" type="Node3D" parent="SceneStructure" unique_id=961377411]
 
 [node name="House2" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=601780181]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.939005, 2.249296, -0.4911852)
+use_collision = true
 size = Vector3(15.668945, 4.6034546, 3.1843414)
 
 [node name="House3" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=1622061042]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.826551, 3.3696573, -4.4243402)
+use_collision = true
 size = Vector3(15.647461, 6.8441772, 4.6367493)
 
 [node name="House4" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=1324265318]
 transform = Transform3D(0.9974133, 0, -0.07188043, 0, 1, 0, 0.07188043, 0, 0.9974133, -9.794761, 2.2218463, -9.000206)
+use_collision = true
 size = Vector3(15.611328, 4.5, 3.8936157)
 
 [node name="House5" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=283179556]
 transform = Transform3D(0.99661016, 0, -0.082269, 0, 1, 0, 0.082269, 0, 0.99661016, -9.434788, 2.9563425, -13.267556)
+use_collision = true
 size = Vector3(15.87207, 6.0175476, 4.458267)
 
 [node name="House6" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=1048776564]
 transform = Transform3D(0.04846624, 0, -0.99882483, 0, 1, 0, 0.99882483, 0, 0.04846624, -5.6614685, 3.027952, -32.10804)
+use_collision = true
 size = Vector3(17.997559, 6.1607666, 3.8936157)
 
 [node name="House7" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=422049407]
 transform = Transform3D(-0.06099628, 0, -0.99813807, 0, 1, 0, 0.99813807, 0, -0.06099628, -1.3107592, 2.18881, -31.452805)
+use_collision = true
 size = Vector3(16.214844, 4.482483, 3.1843414)
 
 [node name="House9" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=407172918]
 transform = Transform3D(0.99658716, 0, -0.082547314, 0, 1, 0, 0.082547314, 0, 0.99658716, 10.301781, 4.056507, -30.099094)
+use_collision = true
 size = Vector3(4.9639893, 5.7304688, 15.192413)
 
 [node name="House10" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=441653629]
 transform = Transform3D(0.99647236, 0, -0.083921336, 0, 1, 0, 0.083921336, 0, 0.99647236, 4.0692863, 3.7611077, -30.730986)
+use_collision = true
 size = Vector3(7.401062, 7.250389, 15.892708)
 
 [node name="House11" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=617356783]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.733485, 3.3992898, 3.531479)
+use_collision = true
 size = Vector3(13.407715, 6.9034424, 2.9370422)
 
 [node name="House12" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=764836686]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.651113, 3.3741968, -0.20015144)
+use_collision = true
 size = Vector3(13.498169, 6.853256, 4.1965485)
 
 [node name="House13" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=1961090216]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.998378, 2.1260355, -4.3112354)
+use_collision = true
 size = Vector3(13.9375, 4.3569336, 3.6076813)
 
 [node name="House14" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=1643591099]
 transform = Transform3D(0.9954579, 0, -0.09520294, 0, 1, 0, 0.09520294, 0, 0.9954579, 10.047883, 2.598707, -7.2311683)
+use_collision = true
 size = Vector3(13.390747, 5.3022766, 3.6076813)
 
 [node name="House15" type="CSGBox3D" parent="SceneStructure/ExtraHouse" unique_id=1786910514]
 transform = Transform3D(0.995453, 0, -0.09525506, 0, 1, 0, 0.09525506, 0, 0.995453, 10.4976015, 3.429609, -11.476193)
+use_collision = true
 size = Vector3(13.437012, 6.964081, 4.8323402)
