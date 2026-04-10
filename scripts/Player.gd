@@ -50,27 +50,45 @@ var original_camera_position: Vector3 = Vector3.ZERO
 var original_hand_position: Vector3 = Vector3.ZERO
 
 var audio_trigger_areas: Dictionary = {}
+var dialogue_frozen: bool = false
 
 
 func _ready() -> void:
+	if not DialogueManager.player_freeze_changed.is_connected(_on_dialogue_freeze_changed):
+		DialogueManager.player_freeze_changed.connect(_on_dialogue_freeze_changed)
+
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	original_camera_position = camera.position
 	original_hand_position = hand.position
 	register_audio_triggers()
 
+	# Optional test:
+	DialogueManager.show_timed("Welcome to the game.", 2.0, true)
+	DialogueManager.show_continue("This message waits for Enter.", false)
+
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		get_tree().quit()
+		return
+
+	if dialogue_frozen:
+		return
+
 	if event is InputEventMouseMotion:
 		look_yaw += event.relative.x * camera_sensitivity
 		look_pitch += event.relative.y * camera_sensitivity
 		look_pitch = clampf(look_pitch, -35.0, 35.0)
 
-	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		get_tree().quit()
-
 
 func _physics_process(delta: float) -> void:
 	_apply_look(delta)
+
+	if dialogue_frozen:
+		_apply_gravity_only(delta)
+		_update_frozen_view(delta)
+		move_and_slide()
+		return
 
 	var move_dir: Vector3 = _get_move_direction()
 	var wants_crouch: bool = Input.is_action_pressed("crouch")
@@ -83,6 +101,13 @@ func _physics_process(delta: float) -> void:
 	_update_view_effects(delta, move_dir, wants_crouch, wants_sprint)
 
 	move_and_slide()
+
+
+func _on_dialogue_freeze_changed(is_frozen: bool) -> void:
+	dialogue_frozen = is_frozen
+
+	if dialogue_frozen:
+		_stop_footsteps()
 
 
 func _apply_look(delta: float) -> void:
@@ -171,6 +196,18 @@ func _update_view_effects(delta: float, move_dir: Vector3, wants_crouch: bool, w
 	var fov_speed: float = clampf(horizontal_speed, 0.0, SPRINT_SPEED * 2.0)
 	var target_fov: float = BASE_FOV + FOV_CHANGE * fov_speed
 	camera.fov = lerpf(camera.fov, target_fov, delta * 8.0)
+
+
+func _update_frozen_view(delta: float) -> void:
+	bob_time = 0.0
+	last_step_phase = false
+	_stop_footsteps()
+
+	var final_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
+
+	camera.position = camera.position.lerp(original_camera_position + final_offset, delta * camera_lerp_speed)
+	hand.position = hand.position.lerp(original_hand_position + final_offset, delta * camera_lerp_speed)
+	camera.fov = lerpf(camera.fov, BASE_FOV, delta * 8.0)
 
 
 func _headbob(time: float) -> Vector3:
