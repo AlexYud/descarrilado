@@ -2,10 +2,11 @@
 
 [ext_resource type="PackedScene" path="res://scenes/CSGStairMaker3D.tscn" id="1_elqb8"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rvslj"]
+[ext_resource type="PackedScene" uid="uid://bfke7y7536h28" path="res://ui/dialogue/DialogueTrigger.tscn" id="3_0bbpv"]
 
 [node name="Main" type="Node3D" unique_id=357131378]
 
-[node name="Player" parent="." unique_id=604324590 instance=ExtResource("1_rvslj")]
+[node name="Player" parent="." unique_id=604324590 groups=["player"] instance=ExtResource("1_rvslj")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.278954, -7.1867476)
 
 [node name="SceneStructure" type="Node3D" parent="." unique_id=691403289]
@@ -182,3 +183,7 @@ size = Vector3(13.437012, 6.964081, 4.8323402)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2049918596]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 38.318886, 0)
+
+[node name="DialogTrigger" parent="." unique_id=419420945 instance=ExtResource("3_0bbpv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.60220957, 0)
+freeze_player = true

@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://bfke7y7536h28"]
+
+[ext_resource type="Script" uid="uid://c0a0ujwp3scfn" path="res://ui/dialogue/DialogueTrigger.gd" id="1_0kv6t"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xhioj"]
+size = Vector3(9, 6, 8)
+
+[node name="DialogTrigger" type="Area3D" unique_id=419420945]
+script = ExtResource("1_0kv6t")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1857140254]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 3.5)
+shape = SubResource("BoxShape3D_xhioj")
