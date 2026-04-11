@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://e2gh377r1chw"]
+
+[ext_resource type="Script" uid="uid://cdr71vk7hbsph" path="res://ui/dialogue/DialogueBox.gd" id="1_jlwca"]
+
+[node name="DialogueBox" type="CanvasLayer" unique_id=316858389]
+script = ExtResource("1_jlwca")
+
+[node name="Root" type="Control" parent="." unique_id=1813859167]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BottomMargin" type="MarginContainer" parent="Root" unique_id=1394726270]
+layout_mode = 1
+offset_top = 512.0
+offset_right = 1152.0
+offset_bottom = 648.0
+
+[node name="Panel" type="PanelContainer" parent="Root/BottomMargin" unique_id=1782297319]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Root/BottomMargin/Panel" unique_id=296830652]
+layout_mode = 2
+
+[node name="MessageLabel" type="Label" parent="Root/BottomMargin/Panel/VBox" unique_id=521202641]
+layout_mode = 2
+text = "Dialogue text here"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="HintLabel" type="Label" parent="Root/BottomMargin/Panel/VBox" unique_id=9767359]
+layout_mode = 2
+text = "Press enter to continue"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HideTimer" type="Timer" parent="." unique_id=931241734]
+one_shot = true
