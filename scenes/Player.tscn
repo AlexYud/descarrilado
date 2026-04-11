@@ -22,10 +22,11 @@ shape = SubResource("CapsuleShape3D_vmcb2")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2052677781]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+visible = false
 mesh = SubResource("CapsuleMesh_tm2b5")
 
 [node name="Head" type="Node3D" parent="." unique_id=607507967]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.26693, -0.013838)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.014)
 
 [node name="Camera3D" type="Camera3D" parent="Head" unique_id=608416810]
 
