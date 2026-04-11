@@ -74,7 +74,7 @@ func _input(event):
 	if event is InputEventMouseMotion:
 		head_y_axis += event.relative.x * cameraSensitivity
 		camera_x_axis += event.relative.y * cameraSensitivity
-		camera_x_axis = clamp(camera_x_axis, -35.0, 35.0)
+		camera_x_axis = clamp(camera_x_axis, -35.0, 60.0)
 	
 	if Input.is_key_pressed(KEY_ESCAPE):
 		get_tree().quit()

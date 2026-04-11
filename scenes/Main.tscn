@@ -3,10 +3,19 @@
 [ext_resource type="PackedScene" uid="uid://bak8ltrhbmlv5" path="res://scenes/CSGStairMaker3D.tscn" id="1_elqb8"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rvslj"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rarhs"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vcsgt"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rvslj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0bbpv"]
+
 [node name="Main" type="Node3D" unique_id=357131378]
 
 [node name="Player" parent="." unique_id=604324590 instance=ExtResource("1_rvslj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.278954, -7.1867476)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.826897, 4.317574, 2.962279)
 
 [node name="SceneStructure" type="Node3D" parent="." unique_id=691403289]
 
@@ -100,6 +109,70 @@ size = Vector3(3.713887, 4.34527, 0.25)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.280376, 4.574, 3.696)
 operation = 2
 size = Vector3(0.9, 2.1, 0.9)
+
+[node name="Furniture" type="CSGCombiner3D" parent="SceneStructure/JulianasHouse" unique_id=1610140195]
+
+[node name="Bedroom" type="CSGCombiner3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=262018230]
+
+[node name="Bed" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1400682703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5835857, 3.7740068, 1.8618522)
+size = Vector3(1.9, 0.5, 0.9)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Desk" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=511542568]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1471806, 3.9273882, 4.42895)
+size = Vector3(2.0256152, 0.8, 0.609375)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Chair" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=277048628]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1192737, 3.8326128, 3.7450686)
+size = Vector3(0.57942873, 0.6104492, 0.5253906)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Wardrobe" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1388647919]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.941142, 4.582362, 2.20797)
+size = Vector3(0.6500659, 2.1099486, 1.6611328)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Nightstand" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=939856221]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -2.8398566, 3.8512788, 2.8416378)
+size = Vector3(1.0148672, 0.6446899, 0.40344238)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Lamp" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=2113003499]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -2.8757625, 4.389763, 4.370618)
+size = Vector3(0.2898496, 1.7216583, 0.29205322)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Laptop" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=716293059]
+transform = Transform3D(-0.110150695, 0, 0.9939149, 0, 1, 0, -0.9939149, 0, -0.110150695, -4.038059, 4.4478135, 4.450264)
+size = Vector3(0.237, 0.237, 0.362)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Cup" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=483155229]
+transform = Transform3D(0.94421554, 0, -0.32932812, 0, 1, 0, 0.32932812, 0, 0.94421554, -4.484163, 4.3807497, 4.3779006)
+size = Vector3(0.067, 0.095, 0.067)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Trash" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=930082480]
+transform = Transform3D(0.98695713, 0, -0.16098376, 0, 1, 0, 0.16098376, 0, 0.98695713, -5.325687, 3.7082548, 4.572918)
+size = Vector3(0.25, 0.35, 0.25)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Guitar" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=812460156]
+transform = Transform3D(-4.2451628e-08, 0.23834701, 0.9711801, 1.04184785e-08, 0.9711801, -0.23834701, -1, 0, -4.371139e-08, -2.8757625, 4.0787067, 3.737113)
+size = Vector3(0.38, 1, 0.1)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Shelf" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=588677403]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6289663, 5.116036, 1.5368191)
+size = Vector3(2.0256152, 0.06308594, 0.3083496)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Cellphone" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=627639791]
+transform = Transform3D(0.16267155, 0.9866802, -4.3129162e-08, 0, -4.371139e-08, -1, -0.9866802, 0.16267155, -7.1106028e-09, -2.8444085, 4.1851993, 2.6809413)
+size = Vector3(0.076, 0.164, 0.009)
+material = SubResource("StandardMaterial3D_vcsgt")
 
 [node name="Streets" type="Node3D" parent="SceneStructure" unique_id=1041921014]
 
@@ -327,6 +400,12 @@ size = Vector3(0.9, 2.1, 0.9)
 
 [node name="Furniture" type="CSGCombiner3D" parent="SceneStructure/SophiasHouse" unique_id=494958877]
 
-[node name="CSGBox3D" type="CSGBox3D" parent="SceneStructure/SophiasHouse/Furniture" unique_id=1673713487]
+[node name="Couch" type="CSGBox3D" parent="SceneStructure/SophiasHouse/Furniture" unique_id=1673713487]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.105854, 0.82819784, 4.2673225)
 size = Vector3(0.7866211, 0.6335449, 2.5666351)
+material = SubResource("StandardMaterial3D_rvslj")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="SceneStructure/SophiasHouse/Furniture" unique_id=1308621442]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.3168914, 1.8957688, 4.1759834)
+size = Vector3(0.19, 0.7, 1.25)
+material = SubResource("StandardMaterial3D_0bbpv")
