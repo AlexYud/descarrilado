@@ -28,14 +28,18 @@ const CROUCH_FOOTSTEP_PITCH_MAX: float = 1.0
 @export var gravity_force: float = 10.0
 @export var flashlight_lerp_speed: float = 6.0
 @export var camera_lerp_speed: float = 10.0
+@export var interaction_distance: float = 3.0
+@export var interaction_origin_offset: float = 0.05
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera3D
+@onready var interact_ray: RayCast3D = $Head/Camera3D/InteractRay
 @onready var hand: Node3D = $Hand
 @onready var flashlight: SpotLight3D = $Hand/SpotLight3D
 @onready var collider: CollisionShape3D = $CollisionShape3D
 @onready var sfx_walk: AudioStreamPlayer = $SoundEffects/sfx_walk
 @onready var sfx_crouch_walk: AudioStreamPlayer = $SoundEffects/sfx_crouch_walk
+@onready var interaction_prompt: Label = $InteractionUI/InteractionCenter/InteractionPrompt
 
 var look_yaw: float = 0.0
 var look_pitch: float = 0.0
@@ -51,6 +55,7 @@ var original_hand_position: Vector3 = Vector3.ZERO
 
 var audio_trigger_areas: Dictionary = {}
 var dialogue_frozen: bool = false
+var current_interactable: Interactable = null
 
 
 func _ready() -> void:
@@ -62,9 +67,10 @@ func _ready() -> void:
 	original_hand_position = hand.position
 	register_audio_triggers()
 
-	# Optional test:
-	DialogueManager.show_timed("Welcome to the game.", 2.0, true)
-	DialogueManager.show_continue("This message waits for Enter.", false)
+	interaction_prompt.visible = false
+	interaction_prompt.text = ""
+
+	_setup_interact_ray()
 
 
 func _input(event: InputEvent) -> void:
@@ -78,17 +84,22 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		look_yaw += event.relative.x * camera_sensitivity
 		look_pitch += event.relative.y * camera_sensitivity
-		look_pitch = clampf(look_pitch, -35.0, 35.0)
+		look_pitch = clampf(look_pitch, -35.0, 75.0)
 
 
 func _physics_process(delta: float) -> void:
 	_apply_look(delta)
+	_sync_interact_ray_to_flashlight()
+	_update_interaction_state()
 
 	if dialogue_frozen:
 		_apply_gravity_only(delta)
 		_update_frozen_view(delta)
 		move_and_slide()
 		return
+
+	if Input.is_action_just_pressed("interact") and is_instance_valid(current_interactable):
+		current_interactable.interact(self)
 
 	var move_dir: Vector3 = _get_move_direction()
 	var wants_crouch: bool = Input.is_action_pressed("crouch")
@@ -108,6 +119,31 @@ func _on_dialogue_freeze_changed(is_frozen: bool) -> void:
 
 	if dialogue_frozen:
 		_stop_footsteps()
+
+
+func _setup_interact_ray() -> void:
+	interact_ray.enabled = true
+	interact_ray.collide_with_areas = true
+	interact_ray.collide_with_bodies = true
+	interact_ray.target_position = Vector3(0.0, 0.0, -interaction_distance)
+	_add_interact_ray_exceptions(self)
+	_sync_interact_ray_to_flashlight()
+
+
+func _add_interact_ray_exceptions(node: Node) -> void:
+	var collision_object: CollisionObject3D = node as CollisionObject3D
+	if collision_object != null:
+		interact_ray.add_exception(collision_object)
+
+	for child in node.get_children():
+		_add_interact_ray_exceptions(child)
+
+
+func _sync_interact_ray_to_flashlight() -> void:
+	var ray_origin: Vector3 = flashlight.global_position + (-flashlight.global_transform.basis.z * interaction_origin_offset)
+	var ray_basis: Basis = flashlight.global_transform.basis
+	interact_ray.global_transform = Transform3D(ray_basis, ray_origin)
+	interact_ray.target_position = Vector3(0.0, 0.0, -interaction_distance)
 
 
 func _apply_look(delta: float) -> void:
@@ -243,6 +279,49 @@ func _stop_footsteps() -> void:
 		sfx_walk.stop()
 	if sfx_crouch_walk.playing:
 		sfx_crouch_walk.stop()
+
+
+func _update_interaction_state() -> void:
+	if dialogue_frozen:
+		current_interactable = null
+		interaction_prompt.visible = false
+		return
+
+	interact_ray.force_raycast_update()
+
+	if not interact_ray.is_colliding():
+		current_interactable = null
+		interaction_prompt.visible = false
+		return
+
+	var collider_obj: Object = interact_ray.get_collider()
+	var collider_node: Node = collider_obj as Node
+
+	if collider_node == null:
+		current_interactable = null
+		interaction_prompt.visible = false
+		return
+
+	var interactable: Interactable = _find_interactable_from_node(collider_node)
+
+	if interactable != null and interactable.can_interact(self):
+		current_interactable = interactable
+		interaction_prompt.text = interactable.get_prompt_text()
+		interaction_prompt.visible = true
+	else:
+		current_interactable = null
+		interaction_prompt.visible = false
+
+
+func _find_interactable_from_node(node: Node) -> Interactable:
+	var current: Node = node
+
+	while current != null:
+		if current is Interactable:
+			return current as Interactable
+		current = current.get_parent()
+
+	return null
 
 
 func play_3d_sound(sound_path: String, sound_position: Vector3, max_distance: float = 10.0, debug: bool = false) -> AudioStreamPlayer3D:
