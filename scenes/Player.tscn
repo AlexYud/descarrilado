@@ -1,11 +1,17 @@
 [gd_scene format=3 uid="uid://dajciuejb4dh2"]
 
-[ext_resource type="Script" uid="uid://ccv1on4mawtml" path="res://scripts/Player.gd" id="1_8qwge"]
+[ext_resource type="Script" uid="uid://ccv1on4mawtml" path="res://scripts/player/Player.gd" id="1_8qwge"]
 [ext_resource type="Texture2D" uid="uid://cva0fcww5pft7" path="res://assets/textures/cookie_light.jpg" id="2_ck06t"]
-[ext_resource type="Script" uid="uid://c5ki6fwaqncuy" path="res://scripts/SpotLight3D.gd" id="4_nxtpx"]
+[ext_resource type="Script" uid="uid://c5ki6fwaqncuy" path="res://scripts/items/SpotLight3D.gd" id="4_nxtpx"]
 [ext_resource type="AudioStream" uid="uid://bvo3q4nilt8nc" path="res://assets/audios/walk.wav" id="4_qtlqn"]
 [ext_resource type="AudioStream" uid="uid://2u8l67ab5jbd" path="res://assets/audios/walk_2.wav" id="5_4bn0h"]
 [ext_resource type="AudioStream" uid="uid://dywyq78sn0ex" path="res://assets/audios/crouch_walk.wav" id="5_f1qol"]
+[ext_resource type="Script" uid="uid://dgt1t84fdm0gk" path="res://scripts/player/PlayerMovement.gd" id="7_bruh7"]
+[ext_resource type="Script" uid="uid://b82qja02e32sf" path="res://scripts/player/PlayerInventory.gd" id="8_6eyey"]
+[ext_resource type="Script" uid="uid://cp2oxeafj8hxw" path="res://scripts/player/PlayerAudio.gd" id="8_d3wef"]
+[ext_resource type="Script" uid="uid://cfvq3wbgpg0u7" path="res://scripts/player/PlayerInteraction.gd" id="9_d3wef"]
+[ext_resource type="Script" uid="uid://b2ltsypk5gd1d" path="res://scripts/ui/InventoryUI.gd" id="9_o4126"]
+[ext_resource type="Script" uid="uid://wbwivqq87ip5" path="res://scripts/player/PlayerInspect.gd" id="11_o4126"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_vmcb2"]
 height = 1.93676
@@ -79,3 +85,21 @@ grow_vertical = 2
 [node name="InteractionPrompt" type="Label" parent="InteractionUI/InteractionCenter" unique_id=630529815]
 layout_mode = 2
 text = "[E] Interact"
+
+[node name="MovementController" type="Node" parent="." unique_id=1089501845]
+script = ExtResource("7_bruh7")
+
+[node name="AudioController" type="Node" parent="." unique_id=1446898271]
+script = ExtResource("8_d3wef")
+
+[node name="InventoryUIController" type="Node" parent="." unique_id=1936045705]
+script = ExtResource("9_o4126")
+
+[node name="InventoryController" type="Node" parent="." unique_id=1178150282]
+script = ExtResource("8_6eyey")
+
+[node name="InspectController" type="Node" parent="." unique_id=1963575232]
+script = ExtResource("11_o4126")
+
+[node name="InteractionController" type="Node" parent="." unique_id=2016440755]
+script = ExtResource("9_d3wef")
