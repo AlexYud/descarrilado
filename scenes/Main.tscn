@@ -17,6 +17,18 @@ size = Vector3(0.076, 0.164, 0.009)
 [sub_resource type="BoxShape3D" id="BoxShape3D_nxtc6"]
 size = Vector3(0.076, 0.164, 0.009)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c01mt"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_nxtc6"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.25
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_rarhs"]
+height = 0.25
+radius = 0.025
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rvslj"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0bbpv"]
@@ -208,21 +220,23 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Cellphone/InteractArea" unique_id=1756055292]
 shape = SubResource("BoxShape3D_nxtc6")
 
-[node name="Cellphone3" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1379095781]
-transform = Transform3D(-0.9963921, -0.07870363, 0.031758066, -0.034482203, 0.03349793, -0.9988437, 0.077548854, -0.99633515, -0.03609091, -4.3102365, 4.030068, 2.0432413)
+[node name="Flashlight" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1379095781]
+transform = Transform3D(-0.9963921, -0.07870363, 0.031758066, -0.034482203, 0.03349793, -0.9988437, 0.077548854, -0.99633515, -0.03609091, -4.3102365, 4.054136, 2.0432413)
 script = ExtResource("3_0bbpv")
 item_id = "flashlight"
 item_name = "Flashlight"
 item_description = "flashlight flashlight flashlight"
 
-[node name="Visual" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Cellphone3" unique_id=201841391]
-mesh = SubResource("BoxMesh_c01mt")
+[node name="Visual" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Flashlight" unique_id=201841391]
+transform = Transform3D(0.99999994, 0, 2.3283064e-10, 0, 1, 0, 3.0267984e-09, 0, 1, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_c01mt")
+mesh = SubResource("CylinderMesh_nxtc6")
 
-[node name="InteractArea" type="Area3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Cellphone3" unique_id=1036946629]
+[node name="InteractArea" type="Area3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Flashlight" unique_id=1036946629]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Cellphone3/InteractArea" unique_id=342308930]
-shape = SubResource("BoxShape3D_nxtc6")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Flashlight/InteractArea" unique_id=342308930]
+shape = SubResource("CylinderShape3D_rarhs")
 
 [node name="Streets" type="Node3D" parent="SceneStructure" unique_id=1041921014]
 
