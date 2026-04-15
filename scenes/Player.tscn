@@ -37,14 +37,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.014)
 [node name="Camera3D" type="Camera3D" parent="Head" unique_id=608416810]
 
 [node name="InteractRay" type="RayCast3D" parent="Head/Camera3D" unique_id=1231366330]
-target_position = Vector3(0, 0, -3)
+target_position = Vector3(0, 0, -1)
 collide_with_areas = true
+debug_shape_thickness = 5
 
 [node name="Hand" type="Node3D" parent="." unique_id=967910764]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.972921, 0)
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Hand" unique_id=1940344354]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.282927, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.41629204, 0, 0)
 light_color = Color(0.980392, 0.901961, 0.72549, 1)
 light_energy = 2.0
 light_projector = ExtResource("2_ck06t")

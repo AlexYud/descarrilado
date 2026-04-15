@@ -1,12 +1,10 @@
 extends Node
 class_name PlayerInteractionController
 
-@export var interaction_distance: float = 3.0
-@export var interaction_origin_offset: float = 0.05
+@export var interaction_distance: float = 1.0
 
 var player: CharacterBody3D = null
 var interact_ray: RayCast3D = null
-var flashlight: SpotLight3D = null
 var interaction_prompt: Label = null
 
 var current_interactable: Interactable = null
@@ -15,7 +13,6 @@ var current_interactable: Interactable = null
 func setup(player_node: CharacterBody3D) -> void:
 	player = player_node
 	interact_ray = player.get_node("Head/Camera3D/InteractRay") as RayCast3D
-	flashlight = player.get_node("Hand/SpotLight3D") as SpotLight3D
 	interaction_prompt = player.get_node("InteractionUI/InteractionCenter/InteractionPrompt") as Label
 
 	interaction_prompt.visible = false
@@ -29,7 +26,6 @@ func update_state(dialogue_frozen: bool, inventory_open: bool) -> void:
 		clear_prompt()
 		return
 
-	_sync_interact_ray_to_flashlight()
 	interact_ray.force_raycast_update()
 
 	if not interact_ray.is_colliding():
@@ -73,7 +69,6 @@ func _setup_interact_ray() -> void:
 	interact_ray.target_position = Vector3(0.0, 0.0, -interaction_distance)
 
 	_add_interact_ray_exceptions(player)
-	_sync_interact_ray_to_flashlight()
 
 
 func _add_interact_ray_exceptions(node: Node) -> void:
@@ -83,14 +78,6 @@ func _add_interact_ray_exceptions(node: Node) -> void:
 
 	for child in node.get_children():
 		_add_interact_ray_exceptions(child)
-
-
-func _sync_interact_ray_to_flashlight() -> void:
-	var ray_origin: Vector3 = flashlight.global_position + (-flashlight.global_transform.basis.z * interaction_origin_offset)
-	var ray_basis: Basis = flashlight.global_transform.basis
-
-	interact_ray.global_transform = Transform3D(ray_basis, ray_origin)
-	interact_ray.target_position = Vector3(0.0, 0.0, -interaction_distance)
 
 
 func _find_interactable_from_node(node: Node) -> Interactable:
