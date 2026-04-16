@@ -2,7 +2,7 @@ extends SpotLight3D
 
 @export var required_item_id: String = "flashlight"
 @export var flashlight_starts_on: bool = false
-@export var flicker_enabled: bool = true
+@export var flicker_enabled: bool = false
 @export var flicker_chance_percent: int = 10
 @export var flicker_interval_min: float = 0.05
 @export var flicker_interval_max: float = 0.2

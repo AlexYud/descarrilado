@@ -46,16 +46,29 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.972921, 0)
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Hand" unique_id=1940344354]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.41629204, 0, 0)
-light_color = Color(0.980392, 0.901961, 0.72549, 1)
-light_energy = 2.0
+light_color = Color(0.86487865, 0.94684523, 0.97615534, 1)
+light_energy = 1.15
+light_indirect_energy = 0.1
+light_volumetric_fog_energy = 0.0
 light_projector = ExtResource("2_ck06t")
-light_size = 1.0
-light_specular = 16.0
+light_specular = 0.8
 shadow_enabled = true
-spot_range = 20.0
-spot_attenuation = 2.0
+shadow_blur = 0.25
+spot_range = 19.0
+spot_attenuation = 0.05
 spot_angle = 20.0
 script = ExtResource("4_nxtpx")
+
+[node name="FlashlightFill" type="SpotLight3D" parent="Hand/SpotLight3D" unique_id=225553282]
+light_color = Color(0.8666667, 0.94509804, 0.9764706, 1)
+light_energy = 0.18
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+light_specular = 0.1
+shadow_blur = 0.2
+spot_range = 16.0
+spot_attenuation = 0.7
+spot_angle = 48.0
 
 [node name="SoundEffects" type="Node3D" parent="." unique_id=1331016434]
 
