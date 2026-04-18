@@ -1,9 +1,13 @@
 [gd_scene format=3 uid="uid://cily3cdujyv7r"]
 
-[ext_resource type="PackedScene" uid="uid://bak8ltrhbmlv5" path="res://scenes/CSGStairMaker3D.tscn" id="1_elqb8"]
+[ext_resource type="PackedScene" uid="uid://bak8ltrhbmlv5" path="res://scenes/assets/CSGStairMaker3D.tscn" id="1_elqb8"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rvslj"]
-[ext_resource type="Script" uid="uid://3mhcaj0whgyi" path="res://scripts/interactions/Collectible.gd" id="3_0bbpv"]
-[ext_resource type="Script" uid="uid://bjbryhx230a3f" path="res://scripts/interactions/Inspectable.gd" id="3_rarhs"]
+[ext_resource type="PackedScene" uid="uid://ceit7kq3tiboa" path="res://scenes/assets/drawer_interactable.tscn" id="3_jlsqs"]
+[ext_resource type="PackedScene" uid="uid://buut5geryxawq" path="res://scenes/assets/medical.tscn" id="4_q8u5g"]
+[ext_resource type="PackedScene" uid="uid://b331d0p4fp5l7" path="res://scenes/assets/photo.tscn" id="5_lhr70"]
+[ext_resource type="PackedScene" uid="uid://darv2neuecktq" path="res://scenes/assets/cellphone.tscn" id="6_wp0k4"]
+[ext_resource type="PackedScene" uid="uid://mcueo8o1y80r" path="res://scenes/assets/flashlight.tscn" id="7_bjd11"]
+[ext_resource type="PackedScene" uid="uid://cmge24batu1iv" path="res://scenes/assets/floor_lamp.tscn" id="8_qmy6f"]
 
 [sub_resource type="Environment" id="Environment_rarhs"]
 tonemap_mode = 4
@@ -11,54 +15,6 @@ tonemap_exposure = 0.8
 tonemap_agx_contrast = 1.45
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rarhs"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vcsgt"]
-albedo_color = Color(1, 0, 0, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_c01mt"]
-material = SubResource("StandardMaterial3D_vcsgt")
-size = Vector3(0.21, 0.297, 0.001)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_vcsgt"]
-size = Vector3(0.21, 0.297, 0.009)
-
-[sub_resource type="BoxMesh" id="BoxMesh_rarhs"]
-material = SubResource("StandardMaterial3D_vcsgt")
-size = Vector3(0.18, 0.1, 0.009)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_rarhs"]
-size = Vector3(0.18, 0.1, 0.009)
-
-[sub_resource type="BoxMesh" id="BoxMesh_vcsgt"]
-material = SubResource("StandardMaterial3D_vcsgt")
-size = Vector3(0.076, 0.164, 0.009)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_nxtc6"]
-size = Vector3(0.076, 0.164, 0.009)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c01mt"]
-albedo_color = Color(1, 0, 0, 1)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_nxtc6"]
-top_radius = 0.025
-bottom_radius = 0.025
-height = 0.25
-
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_rarhs"]
-height = 0.25
-radius = 0.025
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nxtc6"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_jlsqs"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q8u5g"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_lhr70"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wp0k4"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_bjd11"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rvslj"]
 
@@ -98,8 +54,8 @@ transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -2.4
 size = Vector3(3.4719715, 6.0370064, 0.25)
 
 [node name="Wall4" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=1841604313]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.840931, 1.9175467, 3.534039)
-size = Vector3(5.1450586, 3.2067413, 0.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.860904, 1.9175467, 3.534039)
+size = Vector3(5.105112, 3.2067413, 0.25)
 
 [node name="Door" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=2097611044]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.478716, 1.3510399, 3.1224306)
@@ -107,8 +63,8 @@ operation = 2
 size = Vector3(0.9, 2.1, 0.9)
 
 [node name="Wall5" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=622343922]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -6.391358, 1.9007125, 2.9199693)
-size = Vector3(1.0550036, 3.1730728, 0.25)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -6.4020524, 1.9007125, 3.1319802)
+size = Vector3(1.0420277, 3.1730728, 0.25)
 
 [node name="Wall6" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=621003727]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -11.301911, 3.288957, 3.0612354)
@@ -129,9 +85,9 @@ transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -15.
 size = Vector3(3.4122756, 5.967554, 0.25)
 
 [node name="Door5" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=310290868]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -8.245175, 3.2772894, 1.8662555)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -8.255716, 3.2718487, 1.9026761)
 operation = 2
-size = Vector3(0.51656497, 3.4991949, 1.0320313)
+size = Vector3(0.51656497, 3.4781132, 1.0509765)
 
 [node name="Wall8" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=1555841217]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -6.394681, 4.8424096, 3.0612354)
@@ -157,8 +113,8 @@ size = Vector3(3.725891, 2.919983, 1.0722656)
 num_stairs = 10
 
 [node name="Wall10" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=1385403803]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.144939, 2.4868112, 2.4981997)
-size = Vector3(3.713887, 4.34527, 0.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.139085, 2.4868112, 2.4981997)
+size = Vector3(3.725596, 4.34527, 0.25)
 
 [node name="Door7" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=93709168]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.280376, 4.574, 3.696)
@@ -179,6 +135,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1471806, 3.9160933, 4.4289
 size = Vector3(2.0256152, 0.8, 0.609375)
 material = SubResource("StandardMaterial3D_rarhs")
 
+[node name="DrawerInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Desk" unique_id=1678394892 instance=ExtResource("3_jlsqs")]
+transform = Transform3D(0.37259686, 0, 0, 0, 1, 0, 0, 0, 1, 0.72258663, 0.30047464, -0.14091396)
+
+[node name="DrawerInteractable2" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Desk" unique_id=1621390683 instance=ExtResource("3_jlsqs")]
+transform = Transform3D(0.37259686, 0, 0, 0, 1, 0, 0, 0, 1, -0.737, 0.3, -0.141)
+
 [node name="Chair" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=277048628]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1192737, 3.8268359, 3.7450686)
 size = Vector3(0.57942873, 0.6104492, 0.5253906)
@@ -193,6 +155,12 @@ material = SubResource("StandardMaterial3D_rarhs")
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -2.8398566, 3.8462677, 2.8416378)
 size = Vector3(1.0148672, 0.6446899, 0.40344238)
 material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="DrawerInteractable2" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand" unique_id=1912941077 instance=ExtResource("3_jlsqs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.016)
+
+[node name="DrawerInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand" unique_id=507300415 instance=ExtResource("3_jlsqs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.175, -0.016)
 
 [node name="Laptop" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=716293059]
 transform = Transform3D(-0.110150695, 0, 0.9939149, 0, 1, 0, -0.9939149, 0, -0.110150695, -4.038059, 4.429169, 4.535632)
@@ -219,99 +187,49 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6289663, 5.116036, 1.53681
 size = Vector3(2.0256152, 0.06308594, 0.3083496)
 material = SubResource("StandardMaterial3D_rarhs")
 
-[node name="Medical" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=66753170]
-transform = Transform3D(-0.8235216, 0.21869886, -0.52343327, -0.030424807, 0.904345, 0.4257172, 0.5664681, 0.36651284, -0.73809355, -5.314193, 3.8726065, 4.5793233)
-script = ExtResource("3_rarhs")
-inspect_name = "Psychiatric Evaluation Report"
-inspect_description = "A folded clinical document with Juliana’s name typed at the top and enough official language to make doubt sound scientific. It references anxiety, sleep disruption, dissociative episodes, and stress-induced distortions of memory and perception."
+[node name="Medical" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1967662599 instance=ExtResource("4_q8u5g")]
+transform = Transform3D(-0.82352155, 0.21869895, -0.5234335, -0.030424807, 0.904345, 0.42571703, 0.5664681, 0.36651278, -0.7380935, -5.314193, 3.8726065, 4.5793233)
 
-[node name="Visual" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Medical" unique_id=1420119893]
-transform = Transform3D(1, -2.6645353e-15, 7.1054274e-15, 1.7763568e-15, 1.0000002, 1.4901161e-08, -7.1054274e-15, -1.4901161e-08, 1.0000002, 0, 0.01150465, 0.002350092)
-mesh = SubResource("BoxMesh_c01mt")
+[node name="Photo" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=88594973 instance=ExtResource("5_lhr70")]
+transform = Transform3D(-4.0087027e-08, 0.20015457, -0.97976416, 1.7741382e-08, 0.97976434, 0.20015454, 1, -9.358771e-09, -4.282685e-08, -2.7988281, 4.2099013, 2.8997998)
 
-[node name="InteractArea" type="Area3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Medical" unique_id=1687330645]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+[node name="Cellphone" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=617360459 instance=ExtResource("6_wp0k4")]
+transform = Transform3D(0.115856074, -0.993266, 4.3417035e-08, 0, -4.371139e-08, -1, 0.993266, 0.115856074, -5.06423e-09, -2.8444085, 4.1851993, 2.4618084)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Medical/InteractArea" unique_id=698607825]
-shape = SubResource("BoxShape3D_vcsgt")
+[node name="Flashlight" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=164557964 instance=ExtResource("7_bjd11")]
+transform = Transform3D(-0.8146565, 0.5779946, 0.04750724, -0.034481864, 0.033497605, -0.9988438, -0.5789176, -0.8153528, -0.007358712, -5.0316634, 4.3385463, 4.2973175)
 
-[node name="Photo" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=618953018]
-transform = Transform3D(-3.994908e-08, 0.20015459, -0.97976416, 1.7741382e-08, 0.97976434, 0.20015456, 1, -9.386381e-09, -4.2691703e-08, -2.7988281, 4.2099013, 2.8997998)
-script = ExtResource("3_rarhs")
-inspect_name = "Old Childhood Photo"
-inspect_description = "A faded photograph of Juliana and Sophia as children, smiling on a train platform under a washed-out summer sky. Sophia is leaning into her, fearless and bright, while Juliana looks at the camera like she already knows happiness never stays still for long. The edges are curled, the back is stained, and someone has pressed a thumb so hard against one corner it nearly tore. It smells faintly of dust, old paper, and rain trapped in memory."
-
-[node name="Visual" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Photo" unique_id=397744324]
-transform = Transform3D(1, -2.6645353e-15, 7.1054274e-15, 1.7763568e-15, 1.0000002, 1.4901161e-08, -7.1054274e-15, -1.4901161e-08, 1.0000002, 0, 0.01150465, 0.002350092)
-mesh = SubResource("BoxMesh_rarhs")
-
-[node name="InteractArea" type="Area3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Photo" unique_id=1748170058]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Photo/InteractArea" unique_id=1604231727]
-shape = SubResource("BoxShape3D_rarhs")
-
-[node name="Cellphone" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1951632836]
-transform = Transform3D(0.11585604, -0.99326605, 4.341704e-08, 0, -4.371139e-08, -1, 0.99326605, 0.11585604, -5.0642286e-09, -2.8444085, 4.1851993, 2.4618084)
-script = ExtResource("3_0bbpv")
-item_id = "cellphone"
-item_name = "Juliana’s Cellphone"
-item_description = "A cheap phone with a cracked corner and fingerprints ground into the glass. The battery drains too fast, the signal dies at the worst moments, and Sophia’s name still sits near the top of the call history like a wound that refuses to close. There are unsent messages, half-written notes, and one voice recording Juliana doesn’t remember making. Every time she opens it, it feels less like a tool and more like evidence."
-
-[node name="Visual" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Cellphone" unique_id=1572603298]
-mesh = SubResource("BoxMesh_vcsgt")
-
-[node name="InteractArea" type="Area3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Cellphone" unique_id=189909475]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Cellphone/InteractArea" unique_id=1756055292]
-shape = SubResource("BoxShape3D_nxtc6")
-
-[node name="Flashlight" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1379095781]
-transform = Transform3D(-0.8146565, 0.57799464, 0.04750765, -0.034482196, 0.033497933, -0.9988438, -0.5789176, -0.81535274, -0.0073587783, -5.0316634, 4.3385463, 4.2973175)
-script = ExtResource("3_0bbpv")
-item_id = "flashlight"
-item_name = "Railway Shift Flashlight"
-item_description = "A heavy-duty flashlight issued for night patrols around the station grounds. The handle is worn smooth from years of use, and the metal casing is scratched where it clipped against keys, fences, and rusted rails. Its beam is stronger than it looks, but never quite reaches as far as Juliana needs it to. In the dark, it feels less like protection and more like permission to see things she would be better off missing."
-
-[node name="Visual" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Flashlight" unique_id=201841391]
-transform = Transform3D(0.99999994, 0, 2.3283064e-10, 0, 1, 0, 3.0267984e-09, 0, 1, 0, 0, 0)
-material_override = SubResource("StandardMaterial3D_c01mt")
-mesh = SubResource("CylinderMesh_nxtc6")
-
-[node name="InteractArea" type="Area3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Flashlight" unique_id=1036946629]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Flashlight/InteractArea" unique_id=342308930]
-transform = Transform3D(0.9999985, 0, 2.3283064e-10, -4.4703484e-08, 1, 0, 1.2805685e-08, 0, 1, 0, 0, 0)
-shape = SubResource("CylinderShape3D_rarhs")
-
-[node name="FloorLamp" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=325151529]
+[node name="FloorLamp" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1429014406 instance=ExtResource("8_qmy6f")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8757625, 4.389763, 4.370618)
 
-[node name="Base" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/FloorLamp" unique_id=1004510482]
-transform = Transform3D(0.35, 0, 0, 0, 0.03, 0, 0, 0, 0.35, 0, -0.8230233, 0)
-material_override = SubResource("StandardMaterial3D_nxtc6")
-mesh = SubResource("CylinderMesh_jlsqs")
-
-[node name="Pole" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/FloorLamp" unique_id=968516488]
-transform = Transform3D(0.03, 0, 0, 0, 0.75365967, 0, 0, 0, 0.03, 0, -0.06521654, 0)
-material_override = SubResource("StandardMaterial3D_q8u5g")
-mesh = SubResource("CylinderMesh_lhr70")
-
-[node name="Shade" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/FloorLamp" unique_id=1675405525]
-transform = Transform3D(0.35, 0, 0, 0, 0.25, 0, 0, 0, 0.35, 0, 0.5360389, 0)
-material_override = SubResource("StandardMaterial3D_wp0k4")
-mesh = SubResource("CylinderMesh_bjd11")
-
-[node name="LampLight" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/FloorLamp" unique_id=1344709050]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54548264, 0)
-light_color = Color(1, 0.84313726, 0.627451, 1)
-light_energy = 0.2
+[node name="LampLight3" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=68413252]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.231761, 2.7888324, 4.151363)
+light_color = Color(0.9999998, 0.9058288, 0.78608996, 1)
+light_energy = 0.5
 shadow_enabled = true
 shadow_bias = 0.05
-omni_range = 4.0
-omni_attenuation = 0.6
+shadow_opacity = 0.75
+omni_attenuation = 0.5
+
+[node name="LampLight2" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=1070072579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5397806, 2.7141354, 3.0087776)
+light_color = Color(0.9999998, 0.9058288, 0.78608996, 1)
+light_energy = 0.5
+shadow_enabled = true
+shadow_bias = 0.05
+shadow_opacity = 0.75
+omni_attenuation = 0.5
+
+[node name="LampLight" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=621563568]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.896701, 5.559737, 4.15823)
+light_color = Color(0.9999998, 0.9058288, 0.78608996, 1)
+light_energy = 0.5
+light_volumetric_fog_energy = 0.0
+shadow_enabled = true
+shadow_bias = 0.05
+shadow_opacity = 0.75
+shadow_blur = 2.0
+omni_attenuation = 0.5
 
 [node name="Streets" type="Node3D" parent="SceneStructure" unique_id=1041921014]
 

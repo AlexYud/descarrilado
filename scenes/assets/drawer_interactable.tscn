@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://ceit7kq3tiboa"]
+
+[ext_resource type="Script" uid="uid://blqijiv5o6uhe" path="res://scripts/interactions/DrawerInteractable.gd" id="1_7y1of"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_nxtc6"]
+size = Vector3(1.015, 0.1, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jlsqs"]
+size = Vector3(1.015, 0.1, 0.403)
+
+[node name="DrawerInteractable" type="Node3D" unique_id=1678394892 node_paths=PackedStringArray("drawer_root")]
+script = ExtResource("1_7y1of")
+drawer_root = NodePath("DrawerRoot")
+open_offset = Vector3(0, 0, -0.3)
+
+[node name="DrawerRoot" type="Node3D" parent="." unique_id=644874629]
+
+[node name="Visual" type="MeshInstance3D" parent="DrawerRoot" unique_id=96929418]
+mesh = SubResource("BoxMesh_nxtc6")
+
+[node name="InteractArea" type="Area3D" parent="DrawerRoot" unique_id=1371063570]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DrawerRoot/InteractArea" unique_id=355602509]
+shape = SubResource("BoxShape3D_jlsqs")

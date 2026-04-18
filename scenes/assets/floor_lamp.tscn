@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://cmge24batu1iv"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nxtc6"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_jlsqs"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q8u5g"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_lhr70"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wp0k4"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bjd11"]
+
+[node name="FloorLamp" type="Node3D" unique_id=1429014406]
+
+[node name="Base" type="MeshInstance3D" parent="." unique_id=150212430]
+transform = Transform3D(0.35, 0, 0, 0, 0.03, 0, 0, 0, 0.35, 0, -0.8230233, 0)
+material_override = SubResource("StandardMaterial3D_nxtc6")
+mesh = SubResource("CylinderMesh_jlsqs")
+
+[node name="Pole" type="MeshInstance3D" parent="." unique_id=995315016]
+transform = Transform3D(0.03, 0, 0, 0, 0.75365967, 0, 0, 0, 0.03, 0, -0.06521654, 0)
+material_override = SubResource("StandardMaterial3D_q8u5g")
+mesh = SubResource("CylinderMesh_lhr70")
+
+[node name="Shade" type="MeshInstance3D" parent="." unique_id=1195089395]
+transform = Transform3D(0.35, 0, 0, 0, 0.25, 0, 0, 0, 0.35, 0, 0.5360389, 0)
+material_override = SubResource("StandardMaterial3D_wp0k4")
+mesh = SubResource("CylinderMesh_bjd11")
+
+[node name="LampLight" type="OmniLight3D" parent="." unique_id=1009606461]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54548264, 0)
+light_color = Color(1, 0.84313726, 0.627451, 1)
+light_energy = 0.2
+shadow_enabled = true
+shadow_bias = 0.05
+omni_range = 4.0
+omni_attenuation = 0.6

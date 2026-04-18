@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://buut5geryxawq"]
+
+[ext_resource type="Script" uid="uid://bjbryhx230a3f" path="res://scripts/interactions/Inspectable.gd" id="1_dq57s"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vcsgt"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_c01mt"]
+material = SubResource("StandardMaterial3D_vcsgt")
+size = Vector3(0.21, 0.297, 0.001)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vcsgt"]
+size = Vector3(0.21, 0.297, 0.009)
+
+[node name="Medical" type="Node3D" unique_id=1967662599]
+transform = Transform3D(-0.8235216, 0.21869886, -0.52343327, -0.030424807, 0.904345, 0.4257172, 0.5664681, 0.36651284, -0.73809355, 0, 0, 0)
+script = ExtResource("1_dq57s")
+inspect_name = "Psychiatric Evaluation Report"
+inspect_description = "A folded clinical document with Juliana’s name typed at the top and enough official language to make doubt sound scientific. It references anxiety, sleep disruption, dissociative episodes, and stress-induced distortions of memory and perception."
+
+[node name="Visual" type="MeshInstance3D" parent="." unique_id=1581735958]
+transform = Transform3D(1, -2.6645353e-15, 7.1054274e-15, 1.7763568e-15, 1.0000002, 1.4901161e-08, -7.1054274e-15, -1.4901161e-08, 1.0000002, 0, 0.01150465, 0.002350092)
+mesh = SubResource("BoxMesh_c01mt")
+
+[node name="InteractArea" type="Area3D" parent="." unique_id=250356405]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea" unique_id=198597280]
+shape = SubResource("BoxShape3D_vcsgt")

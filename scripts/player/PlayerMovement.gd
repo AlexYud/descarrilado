@@ -5,7 +5,7 @@ const WALK_SPEED: float = 2.0
 const SPRINT_SPEED: float = 4.0
 const CROUCH_SPEED: float = 1.0
 
-const CROUCH_HEIGHT: float = -0.5
+const CROUCH_HEIGHT: float = -0.25
 const CROUCH_ACC: float = 8.0
 const STAND_HEIGHT: float = 2.0
 const CROUCH_COLLIDER_HEIGHT: float = 1.2

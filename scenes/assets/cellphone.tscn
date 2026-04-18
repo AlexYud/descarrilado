@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://darv2neuecktq"]
+
+[ext_resource type="Script" uid="uid://3mhcaj0whgyi" path="res://scripts/interactions/Collectible.gd" id="1_p2xuj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vcsgt"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_vcsgt"]
+material = SubResource("StandardMaterial3D_vcsgt")
+size = Vector3(0.076, 0.164, 0.009)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nxtc6"]
+size = Vector3(0.076, 0.164, 0.009)
+
+[node name="Cellphone" type="Node3D" unique_id=617360459]
+transform = Transform3D(0.11585604, -0.99326605, 4.341704e-08, 0, -4.371139e-08, -1, 0.99326605, 0.11585604, -5.0642286e-09, 0, 0, 0)
+script = ExtResource("1_p2xuj")
+item_id = "cellphone"
+item_name = "Juliana’s Cellphone"
+item_description = "A cheap phone with a cracked corner and fingerprints ground into the glass. The battery drains too fast, the signal dies at the worst moments, and Sophia’s name still sits near the top of the call history like a wound that refuses to close. There are unsent messages, half-written notes, and one voice recording Juliana doesn’t remember making. Every time she opens it, it feels less like a tool and more like evidence."
+
+[node name="Visual" type="MeshInstance3D" parent="." unique_id=970519405]
+mesh = SubResource("BoxMesh_vcsgt")
+
+[node name="InteractArea" type="Area3D" parent="." unique_id=496291315]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea" unique_id=80891443]
+shape = SubResource("BoxShape3D_nxtc6")
