@@ -33,7 +33,6 @@ mesh = SubResource("CylinderMesh_bjd11")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54548264, 0)
 light_color = Color(1, 0.84313726, 0.627451, 1)
 light_energy = 0.2
-shadow_enabled = true
 shadow_bias = 0.05
 omni_range = 4.0
 omni_attenuation = 0.6

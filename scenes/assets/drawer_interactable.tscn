@@ -2,11 +2,23 @@
 
 [ext_resource type="Script" uid="uid://blqijiv5o6uhe" path="res://scripts/interactions/DrawerInteractable.gd" id="1_7y1of"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_7y1of"]
+size = Vector3(1.015, 0.1, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5h14s"]
+size = Vector3(0.975, 0.02, 0.36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8epy3"]
+size = Vector3(0.02, 0.08, 0.36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mukaa"]
+size = Vector3(0.02, 0.08, 0.36)
+
 [sub_resource type="BoxMesh" id="BoxMesh_nxtc6"]
-size = Vector3(1.015, 0.1, 0.4)
+size = Vector3(0.975, 0.08, 0.02)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_jlsqs"]
-size = Vector3(1.015, 0.1, 0.403)
+size = Vector3(1.05, 0.14, 0.1)
 
 [node name="DrawerInteractable" type="Node3D" unique_id=1678394892 node_paths=PackedStringArray("drawer_root")]
 script = ExtResource("1_7y1of")
@@ -15,10 +27,31 @@ open_offset = Vector3(0, 0, -0.3)
 
 [node name="DrawerRoot" type="Node3D" parent="." unique_id=644874629]
 
-[node name="Visual" type="MeshInstance3D" parent="DrawerRoot" unique_id=96929418]
+[node name="Front" type="MeshInstance3D" parent="DrawerRoot" unique_id=1123046179]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.19)
+mesh = SubResource("BoxMesh_7y1of")
+
+[node name="Bottom" type="MeshInstance3D" parent="DrawerRoot" unique_id=253600560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+mesh = SubResource("BoxMesh_5h14s")
+
+[node name="RightWall" type="MeshInstance3D" parent="DrawerRoot" unique_id=1482404237]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.498, 0.01, 0)
+mesh = SubResource("BoxMesh_8epy3")
+
+[node name="LeftWall" type="MeshInstance3D" parent="DrawerRoot" unique_id=834921140]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.497, 0.01, 0)
+mesh = SubResource("BoxMesh_mukaa")
+
+[node name="Back" type="MeshInstance3D" parent="DrawerRoot" unique_id=96929418]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, -0.19)
 mesh = SubResource("BoxMesh_nxtc6")
 
+[node name="ItemAnchor" type="Node3D" parent="DrawerRoot" unique_id=546873071]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+
 [node name="InteractArea" type="Area3D" parent="DrawerRoot" unique_id=1371063570]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.19)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DrawerRoot/InteractArea" unique_id=355602509]
 shape = SubResource("BoxShape3D_jlsqs")

@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://dpu6neujx715j"]
+
+[ext_resource type="Script" uid="uid://bjbryhx230a3f" path="res://scripts/interactions/Inspectable.gd" id="1_k6pga"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q8u5g"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_q8u5g"]
+material = SubResource("StandardMaterial3D_q8u5g")
+size = Vector3(0.05, 0.075, 0.02)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_k6pga"]
+size = Vector3(0.05, 0.075, 0.02)
+
+[node name="StationLockerKey" type="Node3D" unique_id=756704975]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0, 0, 0)
+script = ExtResource("1_k6pga")
+inspect_name = "Station Locker Key"
+inspect_description = "A small brass key attached to a plastic tag with a number worn almost blank. It looks ordinary enough to be ignored, which is exactly what makes it feel important. Juliana doesn’t remember where she got it, only that the cold metal makes her stomach tighten the moment it touches her palm. Some doors in this story were never locked to keep people out."
+
+[node name="Visual" type="MeshInstance3D" parent="." unique_id=2095970228]
+mesh = SubResource("BoxMesh_q8u5g")
+
+[node name="InteractArea" type="Area3D" parent="." unique_id=1125872014]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea" unique_id=1006736995]
+shape = SubResource("BoxShape3D_k6pga")

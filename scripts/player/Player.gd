@@ -135,6 +135,9 @@ func _on_dialogue_freeze_changed(is_frozen: bool) -> void:
 	dialogue_frozen = is_frozen
 
 	if dialogue_frozen:
+		if movement_controller != null:
+			movement_controller.force_stop_immediately()
+
 		if audio_controller != null:
 			audio_controller.stop_footsteps()
 
@@ -209,7 +212,11 @@ func start_world_inspect(inspectable: Inspectable) -> bool:
 	if inspect_controller == null:
 		return false
 
+	if movement_controller != null:
+		movement_controller.force_stop_immediately()
+
 	var opened: bool = inspect_controller.open_world(inspectable)
+
 	if opened and inventory_ui_controller != null:
 		inventory_ui_controller.show_inspect(inspectable.get_inspect_data(), false)
 
@@ -223,6 +230,9 @@ func _on_inventory_use_requested(_slot_data: Dictionary) -> void:
 func _on_inventory_inspect_requested(slot_data: Dictionary) -> void:
 	if inspect_controller == null:
 		return
+
+	if movement_controller != null:
+		movement_controller.force_stop_immediately()
 
 	var opened: bool = inspect_controller.open_inventory(slot_data)
 

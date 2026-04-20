@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://ceit7kq3tiboa" path="res://scenes/assets/drawer_interactable.tscn" id="3_jlsqs"]
 [ext_resource type="PackedScene" uid="uid://buut5geryxawq" path="res://scenes/assets/medical.tscn" id="4_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://b331d0p4fp5l7" path="res://scenes/assets/photo.tscn" id="5_lhr70"]
+[ext_resource type="PackedScene" uid="uid://dpu6neujx715j" path="res://scenes/assets/station_locker_key.tscn" id="5_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://darv2neuecktq" path="res://scenes/assets/cellphone.tscn" id="6_wp0k4"]
 [ext_resource type="PackedScene" uid="uid://mcueo8o1y80r" path="res://scenes/assets/flashlight.tscn" id="7_bjd11"]
 [ext_resource type="PackedScene" uid="uid://cmge24batu1iv" path="res://scenes/assets/floor_lamp.tscn" id="8_qmy6f"]
@@ -15,6 +16,18 @@ tonemap_exposure = 0.8
 tonemap_agx_contrast = 1.45
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rarhs"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jlsqs"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_jlsqs"]
+material = SubResource("StandardMaterial3D_jlsqs")
+size = Vector3(0.21, 0.297, 0.001)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q8u5g"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_lhr70"]
+material = SubResource("StandardMaterial3D_q8u5g")
+size = Vector3(0.16, 0.23, 0.04)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rvslj"]
 
@@ -135,12 +148,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1471806, 3.9160933, 4.4289
 size = Vector3(2.0256152, 0.8, 0.609375)
 material = SubResource("StandardMaterial3D_rarhs")
 
-[node name="DrawerInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Desk" unique_id=1678394892 instance=ExtResource("3_jlsqs")]
-transform = Transform3D(0.37259686, 0, 0, 0, 1, 0, 0, 0, 1, 0.72258663, 0.30047464, -0.14091396)
-
-[node name="DrawerInteractable2" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Desk" unique_id=1621390683 instance=ExtResource("3_jlsqs")]
-transform = Transform3D(0.37259686, 0, 0, 0, 1, 0, 0, 0, 1, -0.737, 0.3, -0.141)
-
 [node name="Chair" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=277048628]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.1192737, 3.8268359, 3.7450686)
 size = Vector3(0.57942873, 0.6104492, 0.5253906)
@@ -153,14 +160,49 @@ material = SubResource("StandardMaterial3D_rarhs")
 
 [node name="Nightstand" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=939856221]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -2.8398566, 3.8462677, 2.8416378)
-size = Vector3(1.0148672, 0.6446899, 0.40344238)
+size = Vector3(1.025, 0.645, 0.403)
 material = SubResource("StandardMaterial3D_rarhs")
 
-[node name="DrawerInteractable2" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand" unique_id=1912941077 instance=ExtResource("3_jlsqs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.016)
+[node name="drawerHole" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand" unique_id=2016816631]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -0.02)
+operation = 2
+size = Vector3(1.015, 0.1, 0.4)
 
-[node name="DrawerInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand" unique_id=507300415 instance=ExtResource("3_jlsqs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.175, -0.016)
+[node name="DrawerInteractable3" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand" unique_id=248808833 instance=ExtResource("3_jlsqs")]
+transform = Transform3D(-1, 0, -8.742277e-08, 0, 1, 0, 8.742277e-08, 0, -1, 0, 0.2, -0.02)
+open_offset = Vector3(0, 0, 0.3)
+
+[node name="Medical" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="0" unique_id=1967662599 instance=ExtResource("4_q8u5g")]
+transform = Transform3D(0.55677414, -0.8306642, 9.9055635e-09, -8.1960464e-16, 1.1924886e-08, 0.9999999, -0.83066374, -0.5567744, 6.639462e-09, -0.23917294, 0, 0.0058088303)
+
+[node name="RandomPapers" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="1" unique_id=792035142]
+transform = Transform3D(0.9386797, 0.34479037, -1.5071265e-08, 0, -4.371139e-08, -1, -0.34479037, 0.9386797, -4.1030994e-08, -0.088487625, -0.010000229, 0)
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor/RandomPapers" unique_id=1733286749]
+transform = Transform3D(0.899779, 0.43634677, -1.9073317e-08, -0.43634677, 0.899779, 4.380788e-09, 1.9073319e-08, 4.380806e-09, 1, -0.08140302, -0.026161194, 0)
+mesh = SubResource("BoxMesh_jlsqs")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor/RandomPapers" unique_id=433154834]
+transform = Transform3D(1, 1.1920929e-07, -1.7763568e-15, -1.1920929e-07, 1, -1.7763568e-15, 2.6645353e-15, -2.6645353e-15, 1, 0.0021494627, 0.000310421, 0)
+mesh = SubResource("BoxMesh_jlsqs")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor/RandomPapers" unique_id=1143770970]
+transform = Transform3D(0.6648395, 0.746987, -3.2651844e-08, -0.746987, 0.6648395, 1.4650342e-08, 3.2651826e-08, 1.4650344e-08, 1, -0.1961453, -0.08516741, 0)
+mesh = SubResource("BoxMesh_jlsqs")
+
+[node name="StationLockerKey" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="2" unique_id=756704975 instance=ExtResource("5_q8u5g")]
+transform = Transform3D(0.9139496, 0.40582764, 1.7739287e-08, -3.7838685e-15, -4.3711392e-08, 1, 0.40582758, -0.91394967, -3.9950002e-08, 0.24511337, 0.006114483, -0.019967794)
+
+[node name="Book" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="3" unique_id=2091285086]
+transform = Transform3D(0.9712424, -0.23809275, 1.0407364e-08, 0, -4.371139e-08, -1, 0.23809275, 0.9712424, -4.2454356e-08, 0.36821413, 0, 0.024968863)
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor/Book" unique_id=1849921106]
+transform = Transform3D(0.9077038, 0.4196102, -1.8341751e-08, -0.4196102, 0.9077038, 4.034371e-09, 1.8341744e-08, 4.0343995e-09, 1, -0.24321747, 0.079889536, 0)
+mesh = SubResource("BoxMesh_lhr70")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor/Book" unique_id=462477442]
+transform = Transform3D(0.99775815, 0.066918224, -2.9250815e-09, -0.066918224, 0.99775815, 9.7978514e-11, 2.9250913e-09, 9.7994834e-11, 1, 0.009043217, -0.02256918, 0)
+mesh = SubResource("BoxMesh_lhr70")
 
 [node name="Laptop" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=716293059]
 transform = Transform3D(-0.110150695, 0, 0.9939149, 0, 1, 0, -0.9939149, 0, -0.110150695, -4.038059, 4.429169, 4.535632)
@@ -187,17 +229,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6289663, 5.116036, 1.53681
 size = Vector3(2.0256152, 0.06308594, 0.3083496)
 material = SubResource("StandardMaterial3D_rarhs")
 
-[node name="Medical" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1967662599 instance=ExtResource("4_q8u5g")]
-transform = Transform3D(-0.82352155, 0.21869895, -0.5234335, -0.030424807, 0.904345, 0.42571703, 0.5664681, 0.36651278, -0.7380935, -5.314193, 3.8726065, 4.5793233)
-
 [node name="Photo" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=88594973 instance=ExtResource("5_lhr70")]
 transform = Transform3D(-4.0087027e-08, 0.20015457, -0.97976416, 1.7741382e-08, 0.97976434, 0.20015454, 1, -9.358771e-09, -4.282685e-08, -2.7988281, 4.2099013, 2.8997998)
 
 [node name="Cellphone" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=617360459 instance=ExtResource("6_wp0k4")]
 transform = Transform3D(0.115856074, -0.993266, 4.3417035e-08, 0, -4.371139e-08, -1, 0.993266, 0.115856074, -5.06423e-09, -2.8444085, 4.1851993, 2.4618084)
-
-[node name="Flashlight" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=164557964 instance=ExtResource("7_bjd11")]
-transform = Transform3D(-0.8146565, 0.5779946, 0.04750724, -0.034481864, 0.033497605, -0.9988438, -0.5789176, -0.8153528, -0.007358712, -5.0316634, 4.3385463, 4.2973175)
 
 [node name="FloorLamp" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1429014406 instance=ExtResource("8_qmy6f")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8757625, 4.389763, 4.370618)
@@ -230,6 +266,9 @@ shadow_bias = 0.05
 shadow_opacity = 0.75
 shadow_blur = 2.0
 omni_attenuation = 0.5
+
+[node name="Flashlight" parent="SceneStructure/JulianasHouse/Furniture" unique_id=164557964 instance=ExtResource("7_bjd11")]
+transform = Transform3D(-0.8146565, 0.5779946, 0.04750724, -0.034481864, 0.033497605, -0.9988438, -0.5789176, -0.8153528, -0.007358712, -5.0316634, 0.37844515, 4.2973175)
 
 [node name="Streets" type="Node3D" parent="SceneStructure" unique_id=1041921014]
 
@@ -466,3 +505,5 @@ material = SubResource("StandardMaterial3D_rvslj")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.3168914, 1.8957688, 4.1759834)
 size = Vector3(0.19, 0.7, 1.25)
 material = SubResource("StandardMaterial3D_0bbpv")
+
+[editable path="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3"]

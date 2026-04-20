@@ -19,11 +19,10 @@ inspect_name = "Psychiatric Evaluation Report"
 inspect_description = "A folded clinical document with Juliana’s name typed at the top and enough official language to make doubt sound scientific. It references anxiety, sleep disruption, dissociative episodes, and stress-induced distortions of memory and perception."
 
 [node name="Visual" type="MeshInstance3D" parent="." unique_id=1581735958]
-transform = Transform3D(1, -2.6645353e-15, 7.1054274e-15, 1.7763568e-15, 1.0000002, 1.4901161e-08, -7.1054274e-15, -1.4901161e-08, 1.0000002, 0, 0.01150465, 0.002350092)
+transform = Transform3D(1, -2.6645353e-15, 7.1054274e-15, 1.7763568e-15, 1.0000002, 1.4901161e-08, -7.1054274e-15, -1.4901161e-08, 1.0000002, 0, 0, 0)
 mesh = SubResource("BoxMesh_c01mt")
 
 [node name="InteractArea" type="Area3D" parent="." unique_id=250356405]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea" unique_id=198597280]
 shape = SubResource("BoxShape3D_vcsgt")

@@ -90,12 +90,38 @@ func physics_update(delta: float, movement_frozen: bool) -> void:
 	player.move_and_slide()
 
 
+func force_stop_immediately() -> void:
+	if player == null:
+		return
+
+	player.velocity.x = 0.0
+	player.velocity.z = 0.0
+
+	if player.is_on_floor():
+		player.velocity.y = 0.0
+
+	bob_time = 0.0
+
+	if audio_controller != null:
+		audio_controller.stop_footsteps()
+
+	var final_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
+
+	if camera != null:
+		camera.position = original_camera_position + final_offset
+		camera.fov = BASE_FOV
+
+	if hand != null:
+		hand.position = original_hand_position + final_offset
+
+
 func _apply_look(delta: float) -> void:
 	head.rotation.y = -deg_to_rad(look_yaw)
 	camera.rotation.x = -deg_to_rad(look_pitch)
 
-	flashlight.rotation.x = lerpf(flashlight.rotation.x, camera.rotation.x, delta * flashlight_lerp_speed)
-	flashlight.rotation.y = lerpf(flashlight.rotation.y, head.rotation.y, delta * flashlight_lerp_speed)
+	if flashlight != null:
+		flashlight.rotation.x = lerpf(flashlight.rotation.x, camera.rotation.x, delta * flashlight_lerp_speed)
+		flashlight.rotation.y = lerpf(flashlight.rotation.y, head.rotation.y, delta * flashlight_lerp_speed)
 
 
 func _get_move_direction() -> Vector3:
@@ -135,8 +161,8 @@ func _apply_vertical_movement(delta: float, wants_crouch: bool) -> void:
 
 
 func _apply_gravity_only(delta: float) -> void:
-	player.velocity.x = lerpf(player.velocity.x, 0.0, player_acceleration * delta)
-	player.velocity.z = lerpf(player.velocity.z, 0.0, player_acceleration * delta)
+	player.velocity.x = 0.0
+	player.velocity.z = 0.0
 
 	if not player.is_on_floor():
 		player.velocity.y -= gravity_force * delta
@@ -164,10 +190,14 @@ func _update_view_effects(delta: float, move_dir: Vector3, wants_crouch: bool, w
 	if move_dir.length() > 0.01 and player.is_on_floor():
 		bob_time += delta * maxf(horizontal_speed, 1.0)
 		final_offset += _headbob(bob_time)
-		audio_controller.update_footsteps(bob_time, wants_crouch, wants_sprint)
+
+		if audio_controller != null:
+			audio_controller.update_footsteps(bob_time, wants_crouch, wants_sprint)
 	else:
 		bob_time = 0.0
-		audio_controller.stop_footsteps()
+
+		if audio_controller != null:
+			audio_controller.stop_footsteps()
 
 	camera.position = camera.position.lerp(original_camera_position + final_offset, delta * camera_lerp_speed)
 	hand.position = hand.position.lerp(original_hand_position + final_offset, delta * camera_lerp_speed)
@@ -179,7 +209,9 @@ func _update_view_effects(delta: float, move_dir: Vector3, wants_crouch: bool, w
 
 func _update_frozen_view(delta: float) -> void:
 	bob_time = 0.0
-	audio_controller.stop_footsteps()
+
+	if audio_controller != null:
+		audio_controller.stop_footsteps()
 
 	var final_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
 
