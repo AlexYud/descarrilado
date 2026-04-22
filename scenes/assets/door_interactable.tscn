@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://dp3nms81seyxg"]
+
+[ext_resource type="Script" uid="uid://ctyeldlm67l7h" path="res://scripts/interactions/DoorController.gd" id="1_0on4n"]
+[ext_resource type="Script" uid="uid://bd3u11hu4m18i" path="res://scripts/interactions/DoorKnobInteractable.gd" id="2_28c5c"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_28c5c"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_0on4n"]
+material = SubResource("StandardMaterial3D_28c5c")
+size = Vector3(0.9, 2, 0.08)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_28c5c"]
+size = Vector3(0.9, 2, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1w6y7"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_0on4n"]
+material = SubResource("StandardMaterial3D_1w6y7")
+radius = 0.04
+height = 0.08
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_28c5c"]
+radius = 0.1
+
+[node name="DoorController" type="Node3D" unique_id=944800287]
+script = ExtResource("1_0on4n")
+
+[node name="Hinge" type="Node3D" parent="." unique_id=1507265073]
+
+[node name="DoorRoot" type="Node3D" parent="Hinge" unique_id=2121753341]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 1, 0)
+
+[node name="DoorMesh" type="MeshInstance3D" parent="Hinge/DoorRoot" unique_id=723597196]
+mesh = SubResource("BoxMesh_0on4n")
+
+[node name="DoorBody" type="StaticBody3D" parent="Hinge/DoorRoot" unique_id=1529330409]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hinge/DoorRoot/DoorBody" unique_id=2099712320]
+shape = SubResource("BoxShape3D_28c5c")
+
+[node name="FrontKnobInteractable" type="Node3D" parent="Hinge/DoorRoot" unique_id=181303587]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0, 0.07)
+script = ExtResource("2_28c5c")
+
+[node name="KnobMesh" type="MeshInstance3D" parent="Hinge/DoorRoot/FrontKnobInteractable" unique_id=2129062643]
+mesh = SubResource("SphereMesh_0on4n")
+
+[node name="InteractArea" type="Area3D" parent="Hinge/DoorRoot/FrontKnobInteractable" unique_id=1301724627]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hinge/DoorRoot/FrontKnobInteractable/InteractArea" unique_id=301862749]
+shape = SubResource("SphereShape3D_28c5c")
+
+[node name="BackKnobInteractable" type="Node3D" parent="Hinge/DoorRoot" unique_id=712785230]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0, -0.07)
+script = ExtResource("2_28c5c")
+
+[node name="KnobMesh" type="MeshInstance3D" parent="Hinge/DoorRoot/BackKnobInteractable" unique_id=1402798812]
+mesh = SubResource("SphereMesh_0on4n")
+
+[node name="InteractArea" type="Area3D" parent="Hinge/DoorRoot/BackKnobInteractable" unique_id=916088022]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hinge/DoorRoot/BackKnobInteractable/InteractArea" unique_id=1772482309]
+shape = SubResource("SphereShape3D_28c5c")
