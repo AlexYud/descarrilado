@@ -20,7 +20,7 @@ radius = 0.04
 height = 0.08
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_28c5c"]
-radius = 0.1
+radius = 0.2
 
 [node name="DoorController" type="Node3D" unique_id=944800287]
 script = ExtResource("1_0on4n")

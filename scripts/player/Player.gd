@@ -167,6 +167,18 @@ func has_inventory_item(item_id: String) -> bool:
 	return inventory_controller.has_item(item_id)
 
 
+func consume_inventory_item(item_id: String) -> bool:
+	if inventory_controller == null:
+		return false
+
+	var removed: bool = inventory_controller.remove_item(item_id)
+
+	if removed and inventory_ui_controller != null:
+		inventory_ui_controller.refresh(inventory_controller.get_slots())
+
+	return removed
+
+
 func is_inventory_open() -> bool:
 	if inventory_ui_controller == null:
 		return false

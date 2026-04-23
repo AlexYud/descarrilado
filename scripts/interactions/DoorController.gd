@@ -4,14 +4,16 @@ class_name DoorController
 @export var hinge: Node3D
 @export var door_root: Node3D
 
-@export var open_angle_degrees: float = 100.0
-@export var rotate_speed: float = 3.0
+@export var open_angle_degrees: float = 90.0
+@export var rotate_speed: float = 6.0
 @export var starts_open: bool = false
 @export var starts_locked: bool = false
+@export var required_key_id: String = ""
 
 @export var closed_prompt_text: String = "[E] Open"
 @export var opened_prompt_text: String = "[E] Close"
 @export var locked_prompt_text: String = "[Locked]"
+@export var unlock_prompt_text: String = "[E] Unlock"
 
 var is_open: bool = false
 var is_locked: bool = false
@@ -73,9 +75,23 @@ func get_prompt_text() -> String:
 	return closed_prompt_text
 
 
+func get_prompt_text_for_player(player: Node) -> String:
+	if is_locked:
+		if _player_can_unlock(player):
+			return unlock_prompt_text
+		return locked_prompt_text
+
+	if is_open:
+		return opened_prompt_text
+
+	return closed_prompt_text
+
+
 func interact(player: Node) -> void:
 	if is_locked:
-		return
+		var unlocked: bool = _try_unlock_with_player(player)
+		if not unlocked:
+			return
 
 	if not is_open:
 		_choose_open_side(player)
@@ -90,6 +106,53 @@ func unlock() -> void:
 func lock() -> void:
 	is_locked = true
 	is_open = false
+
+
+func _try_unlock_with_player(player: Node) -> bool:
+	if not is_locked:
+		return true
+
+	if required_key_id == "":
+		return false
+
+	if not _player_has_required_key(player):
+		return false
+
+	if not _consume_required_key(player):
+		return false
+
+	unlock()
+	return true
+
+
+func _player_can_unlock(player: Node) -> bool:
+	if not is_locked:
+		return false
+
+	if required_key_id == "":
+		return false
+
+	return _player_has_required_key(player)
+
+
+func _player_has_required_key(player: Node) -> bool:
+	if player == null:
+		return false
+
+	if not player.has_method("has_inventory_item"):
+		return false
+
+	return bool(player.call("has_inventory_item", required_key_id))
+
+
+func _consume_required_key(player: Node) -> bool:
+	if player == null:
+		return false
+
+	if not player.has_method("consume_inventory_item"):
+		return false
+
+	return bool(player.call("consume_inventory_item", required_key_id))
 
 
 func _choose_open_side(player: Node) -> void:

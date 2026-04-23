@@ -45,6 +45,17 @@ func add_item(item_id: String, item_name: String, item_description: String = "",
 	return false
 
 
+func remove_item(item_id: String) -> bool:
+	for i in range(inventory_slots.size()):
+		var slot_data: Dictionary = inventory_slots[i]
+
+		if str(slot_data.get("id", "")) == item_id:
+			inventory_slots[i] = _create_empty_inventory_slot()
+			return true
+
+	return false
+
+
 func get_slots() -> Array[Dictionary]:
 	return inventory_slots
 
