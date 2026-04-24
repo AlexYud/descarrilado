@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://biu14ke0j0euc"]
+
+[ext_resource type="Script" uid="uid://cl0ftga8o0rya" path="res://scripts/items/stairs.gd" id="1_32tbb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_nglkd"]
+size = Vector3(5.3210826, 0.12, 1.072)
+
+[node name="Stairs" type="Node3D" unique_id=2036270861]
+script = ExtResource("1_32tbb")
+
+[node name="VisualCSG" type="CSGCombiner3D" parent="." unique_id=1625621605]
+
+[node name="StairBaseCSG" type="CSGBox3D" parent="VisualCSG" unique_id=620670571]
+
+[node name="StairsSubtractCSG" type="CSGPolygon3D" parent="VisualCSG/StairBaseCSG" unique_id=564991382]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, -0.5, 0.5)
+operation = 2
+polygon = PackedVector2Array(0, 0.25, 0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.5, 0.75, 0.75, 0.75, 0.75, 1, 0, 1)
+
+[node name="RampBody" type="StaticBody3D" parent="." unique_id=797305095]
+
+[node name="RampCollision" type="CollisionShape3D" parent="RampBody" unique_id=266880524]
+transform = Transform3D(0.7071067, -0.7071067, 0, 0.7071067, 0.7071067, 0, 0, 0, 1, -0.0075735785, -0.07242641, 0)
+shape = SubResource("BoxShape3D_nglkd")

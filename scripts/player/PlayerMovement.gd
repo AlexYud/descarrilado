@@ -23,6 +23,10 @@ const FOV_CHANGE: float = 1.5
 @export var flashlight_lerp_speed: float = 6.0
 @export var camera_lerp_speed: float = 10.0
 
+@export var stair_snap_length: float = 0.35
+@export var max_floor_angle_degrees: float = 55.0
+@export var grounded_stick_velocity: float = 0.1
+
 var player: CharacterBody3D = null
 var audio_controller: PlayerAudioController = null
 
@@ -56,6 +60,8 @@ func setup(player_node: CharacterBody3D, audio_node: PlayerAudioController) -> v
 	original_camera_position = camera.position
 	original_hand_position = hand.position
 
+	_apply_floor_settings()
+
 
 func handle_input(event: InputEvent, block_look: bool) -> void:
 	if block_look:
@@ -69,6 +75,7 @@ func handle_input(event: InputEvent, block_look: bool) -> void:
 
 
 func physics_update(delta: float, movement_frozen: bool) -> void:
+	_apply_floor_settings()
 	_apply_look(delta)
 
 	if movement_frozen:
@@ -115,6 +122,14 @@ func force_stop_immediately() -> void:
 		hand.position = original_hand_position + final_offset
 
 
+func _apply_floor_settings() -> void:
+	if player == null:
+		return
+
+	player.floor_snap_length = stair_snap_length
+	player.floor_max_angle = deg_to_rad(max_floor_angle_degrees)
+
+
 func _apply_look(delta: float) -> void:
 	head.rotation.y = -deg_to_rad(look_yaw)
 	camera.rotation.x = -deg_to_rad(look_pitch)
@@ -157,7 +172,7 @@ func _apply_vertical_movement(delta: float, wants_crouch: bool) -> void:
 	elif Input.is_action_just_pressed("jump") and not wants_crouch:
 		player.velocity.y = jump_force
 	else:
-		player.velocity.y = 0.0
+		player.velocity.y = -grounded_stick_velocity
 
 
 func _apply_gravity_only(delta: float) -> void:
@@ -167,7 +182,7 @@ func _apply_gravity_only(delta: float) -> void:
 	if not player.is_on_floor():
 		player.velocity.y -= gravity_force * delta
 	else:
-		player.velocity.y = 0.0
+		player.velocity.y = -grounded_stick_velocity
 
 
 func _update_crouch(delta: float, wants_crouch: bool) -> void:

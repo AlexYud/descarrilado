@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cily3cdujyv7r"]
 
-[ext_resource type="PackedScene" uid="uid://bak8ltrhbmlv5" path="res://scenes/assets/CSGStairMaker3D.tscn" id="1_elqb8"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rvslj"]
+[ext_resource type="PackedScene" uid="uid://biu14ke0j0euc" path="res://scenes/assets/stairs.tscn" id="2_wp0k4"]
 [ext_resource type="PackedScene" uid="uid://ceit7kq3tiboa" path="res://scenes/assets/drawer_interactable.tscn" id="3_jlsqs"]
 [ext_resource type="PackedScene" uid="uid://buut5geryxawq" path="res://scenes/assets/medical.tscn" id="4_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://b331d0p4fp5l7" path="res://scenes/assets/photo.tscn" id="5_lhr70"]
@@ -121,10 +121,9 @@ size = Vector3(0.9, 1.2, 1.5)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.743697, 6.5177364, 3.0531921)
 size = Vector3(15.452, 0.5, 3.894)
 
-[node name="CSGStairMaker3D" parent="SceneStructure/JulianasHouse" unique_id=1957327226 instance=ExtResource("1_elqb8")]
-transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, -8.141334, 1.7607985, 1.8692762)
-size = Vector3(3.725891, 2.919983, 1.0722656)
-num_stairs = 10
+[node name="Stairs" parent="SceneStructure/JulianasHouse" unique_id=2036270861 instance=ExtResource("2_wp0k4")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -8.141334, 1.9153259, 1.867738)
+stair_size = Vector3(3.726, 3.22, 1.072)
 
 [node name="Wall10" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=1385403803]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.139085, 2.4868112, 2.4981997)
@@ -470,11 +469,6 @@ size = Vector3(0.25, 3.069107, 5.0809174)
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 3.0072541, 3.5033395, -4.9287643)
 operation = 2
 size = Vector3(1.0404297, 3.682103, 0.9)
-
-[node name="CSGStairMaker3D" parent="SceneStructure/SophiasHouse/Structure" unique_id=1701597092 instance=ExtResource("1_elqb8")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 2.9794683, 1.9584382, -4.9071503)
-size = Vector3(3.725891, 2.919983, 1.0722656)
-num_stairs = 10
 
 [node name="Wall10" type="CSGBox3D" parent="SceneStructure/SophiasHouse/Structure" unique_id=1821204400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.3150043, 2.0305471, -5.403679)
