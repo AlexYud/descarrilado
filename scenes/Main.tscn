@@ -232,6 +232,10 @@ material = SubResource("StandardMaterial3D_rarhs")
 [node name="Photo" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=88594973 instance=ExtResource("5_lhr70")]
 transform = Transform3D(-4.0087027e-08, 0.20015457, -0.97976416, 1.7741382e-08, 0.97976434, 0.20015454, 1, -9.358771e-09, -4.282685e-08, -2.7988281, 4.2099013, 2.8997998)
 
+[node name="Cellphone2" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=617360459 instance=ExtResource("6_wp0k4")]
+transform = Transform3D(0.013422673, -0.11507584, 0.993266, -0.993266, -0.115856074, 4.8775618e-08, 0.115075886, -0.98657733, -0.11585603, -4.50303, 4.576064, 4.183176)
+item_id = "doorkey1"
+
 [node name="Cellphone" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=754512920 instance=ExtResource("6_wp0k4")]
 transform = Transform3D(0.115856074, -0.993266, 4.3417035e-08, 0, -4.371139e-08, -1, 0.993266, 0.115856074, -5.06423e-09, -2.8444085, 4.1851993, 2.4618084)
 
@@ -240,6 +244,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8757625, 4.389763, 4.37061
 
 [node name="DoorInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=944800287 instance=ExtResource("6_lhr70")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -6.4301357, 3.55, 4.146984)
+starts_locked = true
+required_key_id = "doorkey1"
 
 [node name="LampLight3" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=68413252]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.231761, 2.7888324, 4.151363)
