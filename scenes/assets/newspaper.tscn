@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://o161wgu88sd"]
+
+[ext_resource type="Script" uid="uid://bjbryhx230a3f" path="res://scripts/interactions/Inspectable.gd" id="1_ka78x"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gxc31"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_gxc31"]
+material = SubResource("StandardMaterial3D_gxc31")
+size = Vector3(0.21, 0.21, 0.001)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gxc31"]
+size = Vector3(0.21, 0.21, 0.001)
+
+[node name="Newspaper" type="Node3D" unique_id=613955124]
+script = ExtResource("1_ka78x")
+
+[node name="Visual" type="MeshInstance3D" parent="." unique_id=1401169587]
+mesh = SubResource("BoxMesh_gxc31")
+
+[node name="InteractArea" type="Area3D" parent="." unique_id=1027102613]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea" unique_id=1659759744]
+shape = SubResource("BoxShape3D_gxc31")

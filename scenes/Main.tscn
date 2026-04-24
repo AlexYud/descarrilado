@@ -5,11 +5,13 @@
 [ext_resource type="PackedScene" uid="uid://ceit7kq3tiboa" path="res://scenes/assets/drawer_interactable.tscn" id="3_jlsqs"]
 [ext_resource type="PackedScene" uid="uid://buut5geryxawq" path="res://scenes/assets/medical.tscn" id="4_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://b331d0p4fp5l7" path="res://scenes/assets/photo.tscn" id="5_lhr70"]
-[ext_resource type="PackedScene" uid="uid://dpu6neujx715j" path="res://scenes/assets/station_locker_key.tscn" id="5_q8u5g"]
+[ext_resource type="PackedScene" uid="uid://dpu6neujx715j" path="res://scenes/assets/identification_badge.tscn" id="5_q8u5g"]
 [ext_resource type="PackedScene" uid="uid://dp3nms81seyxg" path="res://scenes/assets/door_interactable.tscn" id="6_lhr70"]
 [ext_resource type="PackedScene" uid="uid://darv2neuecktq" path="res://scenes/assets/cellphone.tscn" id="6_wp0k4"]
 [ext_resource type="PackedScene" uid="uid://mcueo8o1y80r" path="res://scenes/assets/flashlight.tscn" id="7_bjd11"]
 [ext_resource type="PackedScene" uid="uid://cmge24batu1iv" path="res://scenes/assets/floor_lamp.tscn" id="8_qmy6f"]
+[ext_resource type="PackedScene" uid="uid://o161wgu88sd" path="res://scenes/assets/newspaper.tscn" id="10_wp0k4"]
+[ext_resource type="PackedScene" uid="uid://248xs3kmgile" path="res://scenes/assets/medicine.tscn" id="12_bjd11"]
 
 [sub_resource type="Environment" id="Environment_rarhs"]
 tonemap_mode = 4
@@ -89,13 +91,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.29273, 1.3483346, 4.20184
 operation = 2
 size = Vector3(0.9, 2.1, 0.9)
 
-[node name="Door4" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=951360460]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.29273, 1.3483346, 2.3971574)
-operation = 2
-size = Vector3(0.9, 2.1, 0.9)
-
 [node name="Wall7" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=720428637]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -15.665908, 3.2979531, 3.0612354)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -14.985953, 3.2979531, 3.0612354)
 size = Vector3(3.4122756, 5.967554, 0.25)
 
 [node name="Door5" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=310290868]
@@ -133,6 +130,14 @@ size = Vector3(3.725596, 4.34527, 0.25)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.280376, 4.541505, 3.696)
 operation = 2
 size = Vector3(0.9, 2.0350099, 0.9)
+
+[node name="Wall9" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=1609312635]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -12.515981, 3.288957, 2.0357096)
+size = Vector3(1.3609482, 6, 0.25)
+
+[node name="Wall11" type="CSGBox3D" parent="SceneStructure/JulianasHouse" unique_id=796191192]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.955656, 3.288957, 2.5927477)
+size = Vector3(1.0993378, 6, 0.25)
 
 [node name="Furniture" type="CSGCombiner3D" parent="SceneStructure/JulianasHouse" unique_id=1610140195]
 
@@ -174,6 +179,8 @@ open_offset = Vector3(0, 0, 0.3)
 
 [node name="Medical" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="0" unique_id=1967662599 instance=ExtResource("4_q8u5g")]
 transform = Transform3D(0.55677414, -0.8306642, 9.9055635e-09, -8.1960464e-16, 1.1924886e-08, 0.9999999, -0.83066374, -0.5567744, 6.639462e-09, -0.23917294, 0, 0.0058088303)
+inspect_name = "Receita médica"
+inspect_description = "Uma folha dobrada várias vezes, com a ponta rasgada e o papel já mole de tanto abrir e fechar. No topo está o nome Juliana Ferreira, a data da consulta e o carimbo da médica do posto do centro. No corpo da receita dá para ler sertralina 50 mg, uso diário, e mais abaixo uma orientação para medicação de apoio à noite, com retorno em trinta dias. Num campo digitado aparece a observação quadro de ansiedade persistente e insônia. A letra da médica no rodapé continua difícil de entender."
 
 [node name="RandomPapers" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="1" unique_id=792035142]
 transform = Transform3D(0.9386797, 0.34479037, -1.5071265e-08, 0, -4.371139e-08, -1, -0.34479037, 0.9386797, -4.1030994e-08, -0.088487625, -0.010000229, 0)
@@ -190,8 +197,10 @@ mesh = SubResource("BoxMesh_jlsqs")
 transform = Transform3D(0.6648395, 0.746987, -3.2651844e-08, -0.746987, 0.6648395, 1.4650342e-08, 3.2651826e-08, 1.4650344e-08, 1, -0.1961453, -0.08516741, 0)
 mesh = SubResource("BoxMesh_jlsqs")
 
-[node name="StationLockerKey" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="2" unique_id=756704975 instance=ExtResource("5_q8u5g")]
+[node name="IdentificationBadge" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="2" unique_id=756704975 instance=ExtResource("5_q8u5g")]
 transform = Transform3D(0.9139496, 0.40582764, 1.7739287e-08, -3.7838685e-15, -4.3711392e-08, 1, 0.40582758, -0.91394967, -3.9950002e-08, 0.24511337, 0.006114483, -0.019967794)
+inspect_name = "Crachá da Estação"
+inspect_description = "Plástico duro, borda trincada e a foto ruim de sempre. O nome está legível, Juliana Ferreira, e abaixo vem o cargo, Auxiliar de Apoio Operacional, com a marcação de turno noturno impressa numa faixa azul já meio desbotada. No canto inferior tem o logotipo da linha férrea local, com a tinta gasta pelo tempo. O cordão preto está encardido perto do fecho, de tanto uso."
 
 [node name="Book" type="Node3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="3" unique_id=2091285086]
 transform = Transform3D(0.9712424, -0.23809275, 1.0407364e-08, 0, -4.371139e-08, -1, 0.23809275, 0.9712424, -4.2454356e-08, 0.36821413, 0, 0.024968863)
@@ -229,23 +238,69 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6289663, 5.116036, 1.53681
 size = Vector3(2.0256152, 0.06308594, 0.3083496)
 material = SubResource("StandardMaterial3D_rarhs")
 
-[node name="Photo" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=88594973 instance=ExtResource("5_lhr70")]
-transform = Transform3D(-4.0087027e-08, 0.20015457, -0.97976416, 1.7741382e-08, 0.97976434, 0.20015454, 1, -9.358771e-09, -4.282685e-08, -2.7988281, 4.2099013, 2.8997998)
-
-[node name="Cellphone2" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=617360459 instance=ExtResource("6_wp0k4")]
-transform = Transform3D(0.013422673, -0.11507584, 0.993266, -0.993266, -0.115856074, 4.8775618e-08, 0.115075886, -0.98657733, -0.11585603, -4.50303, 4.576064, 4.183176)
-item_id = "doorkey1"
+[node name="Radio" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1313735980]
+transform = Transform3D(0.9642991, 0, -0.2648157, 0, 1, 0, 0.2648157, 0, 0.9642991, -2.7947857, 4.2211533, 2.9718907)
+size = Vector3(0.05, 0.1, 0.2)
+material = SubResource("StandardMaterial3D_rarhs")
 
 [node name="Cellphone" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=754512920 instance=ExtResource("6_wp0k4")]
 transform = Transform3D(0.115856074, -0.993266, 4.3417035e-08, 0, -4.371139e-08, -1, 0.993266, 0.115856074, -5.06423e-09, -2.8444085, 4.1851993, 2.4618084)
+item_name = "Celular de Juliana"
+item_description = "Capinha preta sem desenho, um canto da película rachado e marcas de unha perto do botão lateral. O aparelho está quente, como fica quando passa tempo demais na mão. Nada nele chama atenção além do desgaste de uso. É um celular comum, sem nada bonito ou novo, só funcional do jeito que precisa ser."
 
 [node name="FloorLamp" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=1429014406 instance=ExtResource("8_qmy6f")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8757625, 4.389763, 4.370618)
 
 [node name="DoorInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=944800287 instance=ExtResource("6_lhr70")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -6.4301357, 3.55, 4.146984)
-starts_locked = true
-required_key_id = "doorkey1"
+
+[node name="Newspaper" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=613955124 instance=ExtResource("10_wp0k4")]
+transform = Transform3D(-0.92646295, 0.376386, 1.6452354e-08, 0, -4.371139e-08, 1, 0.376386, 0.92646295, 4.049698e-08, -4.9775004, 4.3449497, 4.2396264)
+inspect_name = "Recorte de jornal"
+inspect_description = "Recorte do jornal A Voz do Vale, já com a dobra marcada no meio e uma mancha de café num canto. A manchete diz “Terceira jovem desaparece em menos de dois meses na região”. A matéria cita nomes, bairros e horários, tudo escrito naquele tom apressado de jornal pequeno que quer parecer mais certo do que realmente está. Um trecho foi sublinhado de caneta azul, bem em cima da frase sobre movimentação estranha perto da linha férrea desativada."
+
+[node name="Hallway" type="CSGCombiner3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=245359534]
+
+[node name="LampLight" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture/Hallway" unique_id=621563568]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.896701, 5.559737, 4.15823)
+light_color = Color(0.9999998, 0.9058288, 0.78608996, 1)
+light_energy = 0.5
+light_volumetric_fog_energy = 0.0
+shadow_enabled = true
+shadow_bias = 0.05
+shadow_opacity = 0.75
+shadow_blur = 2.0
+omni_attenuation = 0.5
+
+[node name="Cabinet" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Hallway" unique_id=1147398873]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.817213, 3.9160933, 4.5673776)
+size = Vector3(2.0256152, 0.8, 0.33251953)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Plant" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Hallway" unique_id=1782817018]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.700537, 3.9160933, 4.5777535)
+size = Vector3(0.3, 0.8, 0.3)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Plant2" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Hallway" unique_id=993102176]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.015972, 3.9160933, 4.5777535)
+size = Vector3(0.3, 0.8, 0.3)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Photo" parent="SceneStructure/JulianasHouse/Furniture/Hallway" unique_id=160603775 instance=ExtResource("5_lhr70")]
+transform = Transform3D(-1, 1.7429297e-08, -8.566772e-08, 0, 0.9799247, 0.1993679, 8.742278e-08, 0.19936793, -0.9799245, -8.77214, 4.365635, 4.5680127)
+inspect_name = "Foto antiga na estação"
+inspect_description = "Uma foto velha, já um pouco amarelada nas bordas. Eu e Sophia ainda crianças, sentadas num banco de madeira da estação antiga. Atrás da gente aparece metade da placa do lugar e um pedaço dos trilhos. Ela está olhando direto para a câmera, sorrindo sem esforço. Eu estou meio torta na foto, com cara de quem já não gostava disso nem naquela época. A moldura é simples, de plástico escuro, com um risco comprido atravessando a frente."
+
+[node name="Decoration" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Hallway" unique_id=155668387]
+transform = Transform3D(0.3305803, 0, -0.94377786, 0, 1, 0, 0.94377786, 0, 0.3305803, -8.117535, 4.432081, 4.5681157)
+size = Vector3(0.05, 0.21210937, 0.2)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Decoration2" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Hallway" unique_id=1882212687]
+transform = Transform3D(-0.2720787, 0, -0.9622751, 0, 1, 0, 0.9622751, 0, -0.2720787, -9.552966, 4.3731947, 4.5644484)
+size = Vector3(0.1734375, 0.094335936, 0.3470703)
+material = SubResource("StandardMaterial3D_rarhs")
 
 [node name="LampLight3" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=68413252]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.231761, 2.7888324, 4.151363)
@@ -265,19 +320,10 @@ shadow_bias = 0.05
 shadow_opacity = 0.75
 omni_attenuation = 0.5
 
-[node name="LampLight" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=621563568]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.896701, 5.559737, 4.15823)
-light_color = Color(0.9999998, 0.9058288, 0.78608996, 1)
-light_energy = 0.5
-light_volumetric_fog_energy = 0.0
-shadow_enabled = true
-shadow_bias = 0.05
-shadow_opacity = 0.75
-shadow_blur = 2.0
-omni_attenuation = 0.5
-
 [node name="Flashlight" parent="SceneStructure/JulianasHouse/Furniture" unique_id=164557964 instance=ExtResource("7_bjd11")]
 transform = Transform3D(-0.8146565, 0.5779946, 0.04750724, -0.034481864, 0.033497605, -0.9988438, -0.5789176, -0.8153528, -0.007358712, -5.0316634, 0.37844515, 4.2973175)
+item_name = "Lanterna de plantão"
+item_description = "Lanterna grande, de corpo metálico, com tinta preta descascada perto da base. O botão de ligar afundou um pouco mais do que devia e a alça está enrolada com fita isolante para não machucar a mão. Tem três marcas de impacto numa lateral, como se já tivesse caído no cascalho mais de uma vez. Mesmo gasta, ainda passa a impressão de ser confiável."
 
 [node name="Bathroom" type="CSGCombiner3D" parent="SceneStructure/JulianasHouse/Furniture" unique_id=1369772062]
 
@@ -294,6 +340,44 @@ shadow_bias = 0.05
 shadow_opacity = 0.75
 shadow_blur = 2.0
 omni_attenuation = 0.5
+
+[node name="Toilet" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=490865567]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.123818, 3.8516788, 4.343734)
+size = Vector3(0.4, 0.64, 0.78)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Sink" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=1572827915]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.916153, 3.9160933, 4.42895)
+size = Vector3(1, 0.8, 0.609)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Bathtub" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=1950221723]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.753082, 3.720724, 2.0137439)
+size = Vector3(2.2224243, 0.4, 1.2739258)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Trash" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=612388825]
+transform = Transform3D(0.9992563, 0, 0.038562194, 0, 1, 0, -0.038562194, 0, 0.9992563, -14.70872, 3.7082548, 4.572918)
+size = Vector3(0.25, 0.35, 0.25)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Mirror" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=534744956]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.916153, 4.872694, 4.714012)
+size = Vector3(0.75, 0.8, 0.039)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Shower" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=805785663]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.896751, 5.488946, 2.0137439)
+size = Vector3(0.50023043, 0.2, 0.2)
+material = SubResource("StandardMaterial3D_rarhs")
+
+[node name="Medicine" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=137409772 instance=ExtResource("12_bjd11")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.239645, 4.3542666, 4.3663216)
+
+[node name="Div" type="CSGBox3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=838779187]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.753082, 5.4019675, 2.6330066)
+size = Vector3(2.222, 0.035, 0.035)
+material = SubResource("StandardMaterial3D_rarhs")
 
 [node name="Streets" type="Node3D" parent="SceneStructure" unique_id=1041921014]
 

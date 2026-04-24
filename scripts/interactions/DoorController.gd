@@ -5,7 +5,7 @@ class_name DoorController
 @export var door_root: Node3D
 
 @export var open_angle_degrees: float = 100.0
-@export var rotate_speed: float = 1.5
+@export var rotate_speed: float = 2
 @export var starts_open: bool = false
 @export var starts_locked: bool = false
 @export var required_key_id: String = ""
