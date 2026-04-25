@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://c0q54mg82w5yr"]
+
+[ext_resource type="PackedScene" uid="uid://dkvujny026jxa" path="res://assets/models/streets/Street_Straight_Short_01_Neighborhood.glb" id="1_xlrtw"]
+[ext_resource type="Material" uid="uid://da8e0c0mcsqbp" path="res://assets/textures/streets/mat_paving_stones_138/mat_paving_stones_138.tres" id="2_16wre"]
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_xlrtw"]
+data = PackedVector3Array(-2.3, -0.79999995, 5, -2.3, 0.099999994, -5, -2.3, 0.099999994, 5, -2.3, -0.79999995, 5, -2.3, -0.79999995, -5, -2.3, 0.099999994, -5, -2.3, -0.79999995, -5, 2.7, 0.099999994, -5, -2.3, 0.099999994, -5, -2.3, -0.79999995, -5, 2.7, -0.79999995, -5, 2.7, 0.099999994, -5, 2.7, -0.79999995, -5, 2.7, 0.099999994, 5, 2.7, 0.099999994, -5, 2.7, -0.79999995, -5, 2.7, -0.79999995, 5, 2.7, 0.099999994, 5, 2.7, -0.79999995, 5, -2.3, 0.099999994, 5, 2.7, 0.099999994, 5, 2.7, -0.79999995, 5, -2.3, -0.79999995, 5, -2.3, 0.099999994, 5, -2.3, -0.79999995, -5, 2.7, -0.79999995, 5, 2.7, -0.79999995, -5, -2.3, -0.79999995, -5, -2.3, -0.79999995, 5, 2.7, -0.79999995, 5, 2.7, 0.099999994, -5, -2.3, 0.099999994, 5, -2.3, 0.099999994, -5, 2.7, 0.099999994, -5, 2.7, 0.099999994, 5, -2.3, 0.099999994, 5)
+
+[node name="Street_Straight_Short_01_Neighborhood" unique_id=1683326306 instance=ExtResource("1_xlrtw")]
+
+[node name="Cube" parent="." index="0" unique_id=178867092]
+surface_material_override/0 = ExtResource("2_16wre")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." index="1" unique_id=1397223563]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" index="0" unique_id=1589623048]
+shape = SubResource("ConcavePolygonShape3D_xlrtw")

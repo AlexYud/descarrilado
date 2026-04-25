@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dwst0pasdl0nf"]
+
+[ext_resource type="PackedScene" uid="uid://bsn6g4iuayqvs" path="res://assets/models/streets/Street_Straight_Short_02_Neighborhood.glb" id="1_tm1vx"]
+[ext_resource type="Material" uid="uid://da8e0c0mcsqbp" path="res://assets/textures/streets/mat_paving_stones_138/mat_paving_stones_138.tres" id="2_fpa2p"]
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_tm1vx"]
+data = PackedVector3Array(-2.329, -0.8242, 4.7026, -2.0898, 0.057299998, -2.7563999, -2.329, 0.0758, 4.7026, -2.329, -0.8242, 4.7026, -2.0779, -0.61439997, -2.7210999, -2.0898, 0.057299998, -2.7563999, -2.0779, -0.61439997, -2.7210999, 2.9222, 0.2856, -2.7210999, -2.0898, 0.057299998, -2.7563999, -2.0779, -0.61439997, -2.7210999, 2.9222, -0.61439997, -2.7210999, 2.9222, 0.2856, -2.7210999, 2.9222, -0.61439997, -2.7210999, 2.671, 0.0758, 4.7026, 2.9222, 0.2856, -2.7210999, 2.9222, -0.61439997, -2.7210999, 2.671, -0.8242, 4.7026, 2.671, 0.0758, 4.7026, 2.671, -0.8242, 4.7026, -2.329, 0.0758, 4.7026, 2.671, 0.0758, 4.7026, 2.671, -0.8242, 4.7026, -2.329, -0.8242, 4.7026, -2.329, 0.0758, 4.7026, -2.0779, -0.61439997, -2.7210999, 2.671, -0.8242, 4.7026, 2.9222, -0.61439997, -2.7210999, -2.0779, -0.61439997, -2.7210999, -2.329, -0.8242, 4.7026, 2.671, -0.8242, 4.7026, 2.9222, 0.2856, -2.7210999, -2.329, 0.0758, 4.7026, -2.0898, 0.057299998, -2.7563999, 2.9222, 0.2856, -2.7210999, 2.671, 0.0758, 4.7026, -2.329, 0.0758, 4.7026)
+
+[node name="Street_Straight_Short_02_Neighborhood" unique_id=1054286365 instance=ExtResource("1_tm1vx")]
+
+[node name="Cube_001" parent="." index="0" unique_id=1177461737]
+surface_material_override/0 = ExtResource("2_fpa2p")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." index="1" unique_id=2076828203]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" index="0" unique_id=2125036139]
+transform = Transform3D(0.9952207, 0.00570337, -0.09748438, -0.01353215, 0.9967161, -0.07983674, 0.09670891, 0.08077435, 0.99202967, 0, 0, 0)
+shape = SubResource("ConcavePolygonShape3D_tm1vx")
