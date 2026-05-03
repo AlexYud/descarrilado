@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://dechhjfthr7jj"]
+
+[sub_resource type="Environment" id="Environment_h5nv8"]
+background_mode = 1
+background_color = Color(0.05882353, 0.078431375, 0.11764706, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.11119685, 0.11119684, 0.11119684, 1)
+ambient_light_energy = 0.8
+tonemap_mode = 2
+tonemap_exposure = 0.2
+tonemap_agx_contrast = 1.45
+fog_enabled = true
+fog_light_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+fog_density = 0.3
+fog_height = 10.0
+fog_height_density = 0.15
+volumetric_fog_albedo = Color(0.039215688, 0.078431375, 0.11764706, 1)
+
+[node name="WorldEnvironmentStore" type="Node3D" unique_id=1748959053]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2139483835]
+environment = SubResource("Environment_h5nv8")

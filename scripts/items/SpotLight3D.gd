@@ -2,6 +2,8 @@ extends SpotLight3D
 
 @export var required_item_id: String = "flashlight"
 @export var flashlight_starts_on: bool = false
+@export var flashlight_input_enabled: bool = true
+
 @export var flicker_enabled: bool = false
 @export var flicker_chance_percent: int = 10
 @export var flicker_interval_min: float = 0.05
@@ -84,6 +86,16 @@ func _process(delta: float) -> void:
 	if _should_emit_light():
 		_update_flicker(delta)
 	else:
+		flicker_timer = 0.0
+		flicker_forced_off = false
+		visible = false
+
+
+func set_flashlight_input_enabled(enabled: bool) -> void:
+	flashlight_input_enabled = enabled
+
+	if not flashlight_input_enabled:
+		flashlight_on = false
 		flicker_timer = 0.0
 		flicker_forced_off = false
 		visible = false
@@ -283,17 +295,18 @@ func _update_flicker(delta: float) -> void:
 
 
 func _should_emit_light() -> bool:
-	return _player_has_flashlight() and not _player_flashlight_blocked() and flashlight_on
+	return flashlight_input_enabled and _player_has_flashlight() and not _player_flashlight_blocked() and flashlight_on
 
 
 func _can_toggle_flashlight() -> bool:
-	return _player_has_flashlight() and not _player_flashlight_blocked()
+	return flashlight_input_enabled and _player_has_flashlight() and not _player_flashlight_blocked()
 
 
 func _player_has_flashlight() -> bool:
-	if player != null and player.has_method("has_inventory_item"):
-		return bool(player.call("has_inventory_item", required_item_id))
-	return false
+	#if player != null and player.has_method("has_inventory_item"):
+	#	return bool(player.call("has_inventory_item", required_item_id))
+	#return false
+	return true
 
 
 func _player_flashlight_blocked() -> bool:

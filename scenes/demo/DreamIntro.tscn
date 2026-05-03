@@ -1,0 +1,392 @@
+[gd_scene format=3 uid="uid://c72gw0ygio5q1"]
+
+[ext_resource type="Script" uid="uid://cpxvm45e716hd" path="res://scripts/dream_intro_controller.gd" id="1_2xo7o"]
+[ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rhmqu"]
+[ext_resource type="PackedScene" uid="uid://bepla6bqlsog4" path="res://scenes/assets/train_wagon_blockout.tscn" id="2_5acte"]
+[ext_resource type="Script" uid="uid://byum38r46uier" path="res://scripts/outside_loop.gd" id="4_0kfqj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hnogt"]
+albedo_color = Color(0.021434637, 0.021434635, 0.021434633, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7koiu"]
+material = SubResource("StandardMaterial3D_hnogt")
+size = Vector3(0.25, 10, 0.25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0kfqj"]
+albedo_color = Color(0, 0.16078432, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0kfqj"]
+material = SubResource("StandardMaterial3D_0kfqj")
+size = Vector3(0.08, 2.5, 16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hnogt"]
+material = SubResource("StandardMaterial3D_0kfqj")
+size = Vector3(0.08, 2.5, 10)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7koiu"]
+albedo_color = Color(0.11764706, 0.078431375, 0.019607844, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7yl7e"]
+material = SubResource("StandardMaterial3D_7koiu")
+size = Vector3(100, 0.1, 100)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0kfqj"]
+size = Vector3(100, 0.1, 100)
+
+[sub_resource type="Environment" id="Environment_0kfqj"]
+background_mode = 1
+background_color = Color(0.05882353, 0.078431375, 0.11764706, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.11119685, 0.11119684, 0.11119684, 1)
+ambient_light_energy = 0.8
+tonemap_mode = 2
+tonemap_exposure = 0.2
+tonemap_agx_contrast = 1.45
+fog_enabled = true
+fog_light_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
+fog_density = 0.3
+fog_height = 5.0
+fog_height_density = 0.15
+volumetric_fog_albedo = Color(0.039215688, 0.078431375, 0.11764706, 1)
+
+[node name="DreamIntro" type="Node3D" unique_id=405065868]
+
+[node name="DreamIntroController" type="Node" parent="." unique_id=288397973]
+script = ExtResource("1_2xo7o")
+
+[node name="MenuCamera" type="Camera3D" parent="." unique_id=347395798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 4.5)
+current = true
+
+[node name="Player" parent="." unique_id=1340821127 instance=ExtResource("1_rhmqu")]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 1, 0.3, 3.2)
+
+[node name="Train" type="Node3D" parent="." unique_id=1716082974]
+
+[node name="TrainWagonBlockout" parent="Train" unique_id=1144106481 instance=ExtResource("2_5acte")]
+
+[node name="OutsideLoop" type="Node3D" parent="Train" unique_id=1077812068]
+script = ExtResource("4_0kfqj")
+stop_alignment_marker_path = NodePath("RightTreesB/StopGapMarker")
+
+[node name="LeftTreesA" type="Node3D" parent="Train/OutsideLoop" unique_id=1193431194]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=1949387579]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.1307971, 1, -7.826152)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=113402135]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9153805, 1, -4.0967145)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=61200979]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.3276587, 1, -6.6883106)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=1274443949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9467993, 1, 1.5913601)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=1465202061]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4282436, 1, 8)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=129333788]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2765965, 1, 2.379797)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="ForestWall" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=890760645]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 1.3, 0)
+mesh = SubResource("BoxMesh_0kfqj")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=2018842357]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -2.8028972, 1, -5.4960055)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=845281211]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -3.5678318, 1, -2.0190284)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=2042550618]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -2.9072065, 1, -0.10669112)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D10" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=1508375841]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -3.9850702, 1, 6.569105)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D11" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=1607521768]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -3.533063, 1, 3.6832137)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D12" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesA" unique_id=697123952]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -2.7333574, 1, 5.90848)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="LeftTreesB" type="Node3D" parent="Train/OutsideLoop" unique_id=242301247]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=19154271]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4.0520024, 1, 4.1715927)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=1101272566]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4.1296315, 1, 0.053836823)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=1755678489]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4.0700135, 1, -3.9206371)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=970416711]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -3.3385758, 1, -5.4919395)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=642248248]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -2.550322, 1, -1.147747)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=344119946]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -3.4864202, 1, 5.7536654)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="ForestWall" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=2071042973]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 1.3, 0)
+mesh = SubResource("BoxMesh_0kfqj")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=645003571]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8698316, 1, 4.797449)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=1175978919]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2870698, 1, 2.8851118)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=1919455316]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7307553, 1, 0.9727745)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D10" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=1881759126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.3566117, 1, -2.1217346)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D11" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=1123466616]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6264482, 1, -3.5125256)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D12" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=168835359]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.878161, 1, -6.5374947)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D13" type="MeshInstance3D" parent="Train/OutsideLoop/LeftTreesB" unique_id=286525167]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6264482, 1, -7.5458183)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="RightTreesA" type="Node3D" parent="Train/OutsideLoop" unique_id=532883171]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=282409444]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.356002, 1, -8)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=767549450]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5714188, 1, -2.9145427)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1912797091]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1591406, 1, -6.6883106)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=315662906]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.54, 1, 1.5913601)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1169422477]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.008169, 1, 7.4436836)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=868055250]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2102027, 1, 3.3533506)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="ForestWall" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1360932253]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1.3, 0)
+mesh = SubResource("BoxMesh_0kfqj")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1377195888]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 2.5132003, 1, -7.3046055)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1962975935]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 4.008302, 1, -5.7399673)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1971718384]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.10429, 1, -4.175329)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D10" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1517805344]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.730146, 1, -1.9500656)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D11" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1423109733]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 2.8609009, 1, -0.24634743)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D12" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=1444451087]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.3824482, 1, 6.429449)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D13" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=2127458178]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 4.0430737, 1, 4.969119)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D14" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesA" unique_id=752428535]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.31291, 1, 2.4656944)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="RightTreesB" type="Node3D" parent="Train/OutsideLoop" unique_id=1904463630]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=1337751361]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.208593, 1, 4.171592)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=1280984233]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.2609382, 1, 0.0538373)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=554947118]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.2609382, 1, -2.101073)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D4" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=767653487]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 4.1325297, 1, -10.070154)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D5" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=565754464]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 4.177734, 1, -1.1477475)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D6" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=1113210065]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 4.0468993, 1, 5.7536654)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="ForestWall" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=2141129105]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1.3, 3)
+mesh = SubResource("BoxMesh_hnogt")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=1090997266]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.524982, 1, 6.87849)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=26851703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.735908, 1, 2.9763403)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=905158559]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3492103, 1, 1.745933)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D10" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=856401119]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.8062186, 1, -2.1210623)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D11" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=810815187]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5771384, 1, -2.7016475)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D12" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=341088826]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.157764, 1, -7.4406633)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="MeshInstance3D13" type="MeshInstance3D" parent="Train/OutsideLoop/RightTreesB" unique_id=321100765]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1734366, 1, -7.640319)
+mesh = SubResource("BoxMesh_7koiu")
+
+[node name="StopGapMarker" type="Node3D" parent="Train/OutsideLoop/RightTreesB" unique_id=635763356]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -5)
+
+[node name="ForestExitPath" type="Node3D" parent="." unique_id=1458105979]
+
+[node name="PathGround" type="StaticBody3D" parent="ForestExitPath" unique_id=1479596228]
+
+[node name="GroundVisual" type="MeshInstance3D" parent="ForestExitPath/PathGround" unique_id=853154015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_7yl7e")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="ForestExitPath/PathGround" unique_id=1271454448]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_0kfqj")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
+layer = 10
+
+[node name="MainMenuUI" type="Control" parent="UI" unique_id=2008314116]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LeftPanel" type="ColorRect" parent="UI/MainMenuUI" unique_id=1042862037]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.4
+anchor_bottom = 1.0
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+
+[node name="MenuColumn" type="Control" parent="UI/MainMenuUI/LeftPanel" unique_id=1014570733]
+layout_mode = 1
+anchor_left = 0.2
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MenuMargin" type="MarginContainer" parent="UI/MainMenuUI/LeftPanel/MenuColumn" unique_id=775246633]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin" unique_id=89382277]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="TopSpacer" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=358300293]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=645727401]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Unrailed"
+
+[node name="MenuSpacer01" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1050070901]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1809137748]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+text = "Start"
+flat = true
+alignment = 0
+
+[node name="QuitButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=50317622]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+text = "Quit"
+flat = true
+alignment = 0
+
+[node name="BottomSpacer" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=323516311]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=246481196]
+environment = SubResource("Environment_0kfqj")
