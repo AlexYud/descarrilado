@@ -7,20 +7,15 @@ class_name TrainLightFlicker
 @export var min_energy: float = 0.15
 @export var max_energy: float = 0.9
 
-@export var flicker_chance: float = 0.09
+#@export var flicker_chance: float = 0.09
+@export var flicker_chance: float = 0
 @export var min_wait_time: float = 0.08
 @export var max_wait_time: float = 0.35
 
-@export var hard_flicker_chance: float = 0.04
+#@export var hard_flicker_chance: float = 0.04
+@export var hard_flicker_chance: float = 0
 @export var hard_flicker_duration: float = 0.06
 
-#@export var panic_flicker_chance: float = 0.38
-#@export var panic_min_energy: float = 0.18
-#@export var panic_max_energy: float = 0.85
-#@export var panic_min_wait_time: float = 0.12
-#@export var panic_max_wait_time: float = 0.32
-#@export var panic_hard_flicker_chance: float = 0.035
-#@export var panic_hard_flicker_duration: float = 0.055
 @export var panic_flicker_chance: float = 0.75
 @export var panic_min_energy: float = 0.0
 @export var panic_max_energy: float = 1.1

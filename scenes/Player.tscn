@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ccv1on4mawtml" path="res://scripts/player/Player.gd" id="1_8qwge"]
 [ext_resource type="Texture2D" uid="uid://cva0fcww5pft7" path="res://assets/textures/cookie_light.jpg" id="2_ck06t"]
+[ext_resource type="Script" uid="uid://dxo81xkstl11u" path="res://scripts/train_camera_shake.gd" id="2_lkdrv"]
 [ext_resource type="Script" uid="uid://c5ki6fwaqncuy" path="res://scripts/items/SpotLight3D.gd" id="4_nxtpx"]
 [ext_resource type="AudioStream" uid="uid://bvo3q4nilt8nc" path="res://assets/audios/walk.wav" id="4_qtlqn"]
 [ext_resource type="AudioStream" uid="uid://2u8l67ab5jbd" path="res://assets/audios/walk_2.wav" id="5_4bn0h"]
@@ -35,6 +36,7 @@ mesh = SubResource("CapsuleMesh_tm2b5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.014)
 
 [node name="Camera3D" type="Camera3D" parent="Head" unique_id=608416810]
+script = ExtResource("2_lkdrv")
 
 [node name="InteractRay" type="RayCast3D" parent="Head/Camera3D" unique_id=1231366330]
 target_position = Vector3(0, 0, -1)

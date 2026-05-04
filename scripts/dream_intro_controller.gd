@@ -11,9 +11,18 @@ extends Node
 @export var menu_fade_duration: float = 2.0
 @export var player_menu_settle_physics_frames: int = 6
 
-@export var outside_loop_path: NodePath = ^"$TTrain/OutsideLoop"
-@export var train_lights_path: NodePath = ^"$Train/TrainWagonBlockout/Lights"
-@export var player_flashlight_path: NodePath = ^"$Player/Hand/SpotLight3D"
+@export var menu_camera_path: String = "MenuCamera"
+@export var camera_animation_player_path: String = "CameraAnimationPlayer"
+@export var intro_camera_animation_name: String = "Intro"
+
+@export var intro_camera_animation_start_delay: float = 0.0
+
+@export var train_root_path: String = "Train"
+@export var outside_loop_path: String = "Train/OutsideLoop"
+
+@export var train_lights_path: String = "Train/TrainWagonBlockout/Lights"
+
+@export var player_flashlight_path: String = "Player/Hand/SpotLight3D"
 
 @export var train_slowdown_duration: float = 4.0
 @export var align_train_stop_to_loop_start: bool = true
@@ -34,14 +43,17 @@ extends Node
 
 var dream_root: Node = null
 var player: Node = null
+
 var menu_camera: Camera3D = null
 var player_camera: Camera3D = null
+var camera_animation_player: AnimationPlayer = null
+
 var player_flashlight: SpotLight3D = null
 var main_menu_ui: Control = null
 var ui_layer: CanvasLayer = null
 
 var outside_loop: OutsideTrainLoop = null
-var train_lights: TrainLightFlicker = null
+var train_light_flickers: Array[TrainLightFlicker] = []
 
 var title_label: Label = null
 var start_button: Button = null
@@ -56,10 +68,9 @@ var tutorial_prompt_visible: bool = false
 func _ready() -> void:
 	dream_root = get_parent()
 
-	player = dream_root.get_node_or_null("Player")
-	menu_camera = dream_root.get_node_or_null("MenuCamera") as Camera3D
-	main_menu_ui = dream_root.get_node_or_null("UI/MainMenuUI") as Control
-	ui_layer = dream_root.get_node_or_null("UI") as CanvasLayer
+	player = _get_node_from_dream_root("Player")
+	main_menu_ui = _get_node_from_dream_root("UI/MainMenuUI") as Control
+	ui_layer = _get_node_from_dream_root("UI") as CanvasLayer
 
 	if player != null:
 		player_camera = player.get_node_or_null("Head/Camera3D") as Camera3D
@@ -88,11 +99,37 @@ func _process(_delta: float) -> void:
 		_hide_flashlight_tutorial_prompt()
 
 
+func _get_node_from_dream_root(path_text: String) -> Node:
+	if dream_root == null:
+		return null
+
+	if path_text.strip_edges().is_empty():
+		return null
+
+	return dream_root.get_node_or_null(NodePath(path_text))
+
+
 func _find_sequence_nodes() -> void:
 	if dream_root == null:
 		return
 
-	outside_loop = dream_root.get_node_or_null(outside_loop_path) as OutsideTrainLoop
+	menu_camera = _get_node_from_dream_root(menu_camera_path) as Camera3D
+
+	if menu_camera == null:
+		menu_camera = _get_node_from_dream_root("MenuCamera") as Camera3D
+
+	if menu_camera == null:
+		push_warning("DreamIntroController: MenuCamera not found.")
+
+	camera_animation_player = _get_node_from_dream_root(camera_animation_player_path) as AnimationPlayer
+
+	if camera_animation_player == null:
+		camera_animation_player = _get_node_from_dream_root("CameraAnimationPlayer") as AnimationPlayer
+
+	if camera_animation_player == null:
+		push_warning("DreamIntroController: CameraAnimationPlayer not found.")
+
+	outside_loop = _get_node_from_dream_root(outside_loop_path) as OutsideTrainLoop
 
 	if outside_loop == null:
 		outside_loop = dream_root.find_child("OutsideLoop", true, false) as OutsideTrainLoop
@@ -100,21 +137,56 @@ func _find_sequence_nodes() -> void:
 	if outside_loop == null:
 		push_warning("DreamIntroController: OutsideLoop not found.")
 
-	train_lights = dream_root.get_node_or_null(train_lights_path) as TrainLightFlicker
+	_collect_train_light_flickers()
 
-	if train_lights == null:
-		train_lights = dream_root.find_child("Lights", true, false) as TrainLightFlicker
-
-	if train_lights == null:
-		push_warning("DreamIntroController: TrainLightFlicker Lights node not found.")
-
-	player_flashlight = dream_root.get_node_or_null(player_flashlight_path) as SpotLight3D
+	player_flashlight = _get_node_from_dream_root(player_flashlight_path) as SpotLight3D
 
 	if player_flashlight == null and player != null:
 		player_flashlight = player.find_child("SpotLight3D", true, false) as SpotLight3D
 
 	if player_flashlight == null:
 		push_warning("DreamIntroController: Player flashlight SpotLight3D not found.")
+
+
+func _collect_train_light_flickers() -> void:
+	train_light_flickers.clear()
+
+	var fallback_lights: TrainLightFlicker = _get_node_from_dream_root(train_lights_path) as TrainLightFlicker
+
+	if fallback_lights != null:
+		_add_train_light_flicker(fallback_lights)
+
+	var train_root: Node = _get_node_from_dream_root(train_root_path)
+
+	if train_root == null:
+		train_root = _get_node_from_dream_root("Train")
+
+	if train_root == null:
+		push_warning("DreamIntroController: Train root not found. Cannot collect wagon lights.")
+		return
+
+	_find_train_light_flickers_recursive(train_root)
+
+	if train_light_flickers.is_empty():
+		push_warning("DreamIntroController: No TrainLightFlicker nodes found. Wagon blackout will not affect train lights.")
+
+
+func _find_train_light_flickers_recursive(node: Node) -> void:
+	var flicker: TrainLightFlicker = node as TrainLightFlicker
+
+	if flicker != null:
+		_add_train_light_flicker(flicker)
+
+	for child in node.get_children():
+		_find_train_light_flickers_recursive(child)
+
+
+func _add_train_light_flicker(flicker: TrainLightFlicker) -> void:
+	if flicker == null:
+		return
+
+	if not train_light_flickers.has(flicker):
+		train_light_flickers.append(flicker)
 
 
 func _find_menu_nodes() -> void:
@@ -183,6 +255,7 @@ func _enter_menu_state() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	_set_flashlight_input_enabled(false)
+	_reset_intro_camera_animation_to_start()
 
 	if tutorial_prompt_label != null:
 		tutorial_prompt_label.visible = false
@@ -193,10 +266,10 @@ func _enter_menu_state() -> void:
 		main_menu_ui.modulate.a = 1.0
 
 	if menu_camera != null:
-		menu_camera.current = false
+		menu_camera.current = true
 
 	if player_camera != null:
-		player_camera.current = true
+		player_camera.current = false
 
 	if start_button != null:
 		start_button.disabled = true
@@ -253,6 +326,8 @@ func _on_start_button_pressed() -> void:
 
 func _start_game_transition() -> void:
 	await _fade_out_menu()
+	await _play_intro_camera_animation_after_delay()
+	_switch_to_player_camera()
 	await _run_train_stop_sequence()
 	_finish_start_transition()
 
@@ -275,10 +350,56 @@ func _fade_out_menu() -> void:
 	main_menu_ui.visible = false
 
 
+func _reset_intro_camera_animation_to_start() -> void:
+	if camera_animation_player == null:
+		return
+
+	if not camera_animation_player.has_animation(intro_camera_animation_name):
+		return
+
+	camera_animation_player.play(intro_camera_animation_name)
+	camera_animation_player.seek(0.0, true)
+	camera_animation_player.pause()
+
+
+func _play_intro_camera_animation_after_delay() -> void:
+	if intro_camera_animation_start_delay > 0.0:
+		await get_tree().create_timer(intro_camera_animation_start_delay).timeout
+
+	await _play_intro_camera_animation()
+
+
+func _play_intro_camera_animation() -> void:
+	if camera_animation_player == null:
+		return
+
+	if not camera_animation_player.has_animation(intro_camera_animation_name):
+		push_warning("DreamIntroController: Intro camera animation not found: %s" % intro_camera_animation_name)
+		return
+
+	camera_animation_player.play(intro_camera_animation_name)
+	camera_animation_player.seek(0.0, true)
+
+	await camera_animation_player.animation_finished
+
+
+func _switch_to_player_camera() -> void:
+	if player_camera != null:
+		player_camera.current = true
+
+	if menu_camera != null:
+		menu_camera.current = false
+
+
 func _run_train_stop_sequence() -> void:
 	var slowdown_time: float = maxf(train_slowdown_duration, 0.0)
 	var blackout_delay: float = clampf(blackout_during_slowdown_delay, 0.0, slowdown_time)
 	var blackout_duration: float = maxf(blackout_final_flicker_duration, 0.0)
+
+	# Lights start flickering only after the camera intro animation is finished.
+	for flicker: TrainLightFlicker in train_light_flickers:
+		if flicker != null and is_instance_valid(flicker):
+			flicker.start_panic_flicker()
 
 	var alignment_wait: float = 0.0
 
@@ -289,19 +410,19 @@ func _run_train_stop_sequence() -> void:
 	if alignment_wait > 0.001:
 		await get_tree().create_timer(alignment_wait).timeout
 
-	if train_lights != null:
-		train_lights.start_panic_flicker()
-
 	if outside_loop != null:
-		# Start slowing the train, but do not wait here.
-		# This lets the blackout happen while the train is still moving.
 		outside_loop.call("smooth_stop", slowdown_time)
 
 	if blackout_delay > 0.0:
 		await get_tree().create_timer(blackout_delay).timeout
 
-	if train_lights != null:
-		await train_lights.blackout_with_final_flicker(blackout_duration)
+	if not train_light_flickers.is_empty():
+		for flicker: TrainLightFlicker in train_light_flickers:
+			if flicker != null and is_instance_valid(flicker):
+				flicker.blackout_with_final_flicker(blackout_duration)
+
+		if blackout_duration > 0.0:
+			await get_tree().create_timer(blackout_duration).timeout
 	elif blackout_duration > 0.0:
 		await get_tree().create_timer(blackout_duration).timeout
 
@@ -318,11 +439,7 @@ func _finish_start_transition() -> void:
 	if main_menu_ui != null:
 		main_menu_ui.visible = false
 
-	if player_camera != null:
-		player_camera.current = true
-
-	if menu_camera != null:
-		menu_camera.current = false
+	_switch_to_player_camera()
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
