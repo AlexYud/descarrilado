@@ -1,3 +1,4 @@
+# DreamIntroController.gd
 extends Node
 
 @export var reference_resolution: Vector2 = Vector2(1920.0, 1080.0)
@@ -16,6 +17,14 @@ extends Node
 @export var intro_camera_animation_name: String = "Intro"
 
 @export var intro_camera_animation_start_delay: float = 0.0
+
+@export var audio_controller_path: String = "Audio"
+@export var play_menu_idle_audio: bool = true
+@export var menu_idle_fade_out_duration: float = 2.0
+
+@export var play_intro_narration: bool = true
+@export var intro_narration_start_delay: float = 0.0
+@export var intro_narration_volume_db: float = -10.0
 
 @export var train_root_path: String = "Train"
 @export var outside_loop_path: String = "Train/OutsideLoop"
@@ -48,6 +57,8 @@ var menu_camera: Camera3D = null
 var player_camera: Camera3D = null
 var camera_animation_player: AnimationPlayer = null
 
+var dream_intro_audio: DreamIntroAudio = null
+
 var player_flashlight: SpotLight3D = null
 var main_menu_ui: Control = null
 var ui_layer: CanvasLayer = null
@@ -57,12 +68,20 @@ var train_light_flickers: Array[TrainLightFlicker] = []
 
 var title_label: Label = null
 var start_button: Button = null
+var options_button: Button = null
 var quit_button: Button = null
+
+var options_panel: Control = null
+var options_back_button: Button = null
+var master_volume_slider: HSlider = null
+
 var tutorial_prompt_label: Label = null
 var tutorial_prompt_tween: Tween = null
 
 var start_transition_running: bool = false
 var tutorial_prompt_visible: bool = false
+var options_panel_open: bool = false
+var updating_master_volume_slider: bool = false
 
 
 func _ready() -> void:
@@ -128,6 +147,14 @@ func _find_sequence_nodes() -> void:
 
 	if camera_animation_player == null:
 		push_warning("DreamIntroController: CameraAnimationPlayer not found.")
+
+	dream_intro_audio = _get_node_from_dream_root(audio_controller_path) as DreamIntroAudio
+
+	if dream_intro_audio == null:
+		dream_intro_audio = dream_root.find_child("Audio", true, false) as DreamIntroAudio
+
+	if dream_intro_audio == null:
+		push_warning("DreamIntroController: DreamIntroAudio not found. Menu audio, narration, and saved volume will not work.")
 
 	outside_loop = _get_node_from_dream_root(outside_loop_path) as OutsideTrainLoop
 
@@ -196,7 +223,12 @@ func _find_menu_nodes() -> void:
 
 	title_label = main_menu_ui.find_child("TitleLabel", true, false) as Label
 	start_button = main_menu_ui.find_child("StartButton", true, false) as Button
+	options_button = main_menu_ui.find_child("OptionsButton", true, false) as Button
 	quit_button = main_menu_ui.find_child("QuitButton", true, false) as Button
+
+	options_panel = main_menu_ui.find_child("OptionsPanel", true, false) as Control
+	options_back_button = main_menu_ui.find_child("OptionsBackButton", true, false) as Button
+	master_volume_slider = main_menu_ui.find_child("MasterVolumeSlider", true, false) as HSlider
 
 	if title_label == null:
 		push_warning("DreamIntroController: TitleLabel not found.")
@@ -204,13 +236,38 @@ func _find_menu_nodes() -> void:
 	if start_button == null:
 		push_warning("DreamIntroController: StartButton not found.")
 
+	if options_button == null:
+		push_warning("DreamIntroController: OptionsButton not found.")
+
 	if quit_button == null:
 		push_warning("DreamIntroController: QuitButton not found.")
+
+	if options_panel == null:
+		push_warning("DreamIntroController: OptionsPanel not found.")
+
+	if options_back_button == null:
+		push_warning("DreamIntroController: OptionsBackButton not found.")
+
+	if master_volume_slider == null:
+		push_warning("DreamIntroController: MasterVolumeSlider not found.")
+	else:
+		master_volume_slider.min_value = 0.0
+		master_volume_slider.max_value = 100.0
+		master_volume_slider.step = 1.0
 
 
 func _connect_buttons() -> void:
 	if start_button != null and not start_button.pressed.is_connected(_on_start_button_pressed):
 		start_button.pressed.connect(_on_start_button_pressed)
+
+	if options_button != null and not options_button.pressed.is_connected(_on_options_button_pressed):
+		options_button.pressed.connect(_on_options_button_pressed)
+
+	if options_back_button != null and not options_back_button.pressed.is_connected(_on_options_back_button_pressed):
+		options_back_button.pressed.connect(_on_options_back_button_pressed)
+
+	if master_volume_slider != null and not master_volume_slider.value_changed.is_connected(_on_master_volume_slider_value_changed):
+		master_volume_slider.value_changed.connect(_on_master_volume_slider_value_changed)
 
 	if quit_button != null and not quit_button.pressed.is_connected(_on_quit_button_pressed):
 		quit_button.pressed.connect(_on_quit_button_pressed)
@@ -251,11 +308,14 @@ func _create_tutorial_prompt() -> void:
 func _enter_menu_state() -> void:
 	start_transition_running = false
 	tutorial_prompt_visible = false
+	options_panel_open = false
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	_set_flashlight_input_enabled(false)
 	_reset_intro_camera_animation_to_start()
+	_stop_intro_narration()
+	_sync_master_volume_slider_to_audio()
 
 	if tutorial_prompt_label != null:
 		tutorial_prompt_label.visible = false
@@ -265,17 +325,16 @@ func _enter_menu_state() -> void:
 		main_menu_ui.visible = false
 		main_menu_ui.modulate.a = 1.0
 
+	if options_panel != null:
+		options_panel.visible = false
+
 	if menu_camera != null:
 		menu_camera.current = true
 
 	if player_camera != null:
 		player_camera.current = false
 
-	if start_button != null:
-		start_button.disabled = true
-
-	if quit_button != null:
-		quit_button.disabled = true
+	_set_main_menu_buttons_enabled(false)
 
 	await _settle_player_for_menu()
 
@@ -285,13 +344,11 @@ func _enter_menu_state() -> void:
 		main_menu_ui.visible = true
 		main_menu_ui.modulate.a = 1.0
 
-	if start_button != null:
-		start_button.disabled = false
-
-	if quit_button != null:
-		quit_button.disabled = false
+	_set_options_panel_open(false)
+	_set_main_menu_buttons_enabled(true)
 
 	_apply_responsive_ui()
+	_start_menu_idle_audio()
 
 
 func _settle_player_for_menu() -> void:
@@ -311,17 +368,95 @@ func _on_start_button_pressed() -> void:
 		return
 
 	start_transition_running = true
+	options_panel_open = false
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	_set_flashlight_input_enabled(false)
+	_set_main_menu_buttons_enabled(false)
 
+	if options_panel != null:
+		options_panel.visible = false
+
+	_fade_out_menu_idle_audio()
+	_start_intro_narration_after_delay()
+	_start_game_transition()
+
+
+func _on_options_button_pressed() -> void:
+	if start_transition_running:
+		return
+
+	_set_options_panel_open(true)
+
+
+func _on_options_back_button_pressed() -> void:
+	if start_transition_running:
+		return
+
+	_set_options_panel_open(false)
+
+
+func _on_master_volume_slider_value_changed(value: float) -> void:
+	if updating_master_volume_slider:
+		return
+
+	if dream_intro_audio == null:
+		return
+
+	dream_intro_audio.set_master_volume_percent(value, true)
+
+
+func _set_options_panel_open(opened: bool) -> void:
+	options_panel_open = opened
+
+	if options_panel != null:
+		options_panel.visible = opened
+
+	_set_main_menu_buttons_visible(not opened)
+	_set_main_menu_buttons_enabled(not opened and not start_transition_running)
+
+	if opened:
+		if options_back_button != null:
+			options_back_button.grab_focus()
+	else:
+		if start_button != null and not start_transition_running:
+			start_button.grab_focus()
+
+
+func _set_main_menu_buttons_visible(visible: bool) -> void:
 	if start_button != null:
-		start_button.disabled = true
+		start_button.visible = visible
+
+	if options_button != null:
+		options_button.visible = visible
 
 	if quit_button != null:
-		quit_button.disabled = true
+		quit_button.visible = visible
 
-	_start_game_transition()
+
+func _set_main_menu_buttons_enabled(enabled: bool) -> void:
+	if start_button != null:
+		start_button.disabled = not enabled
+
+	if options_button != null:
+		options_button.disabled = not enabled
+
+	if quit_button != null:
+		quit_button.disabled = not enabled
+
+
+func _sync_master_volume_slider_to_audio() -> void:
+	if master_volume_slider == null:
+		return
+
+	updating_master_volume_slider = true
+
+	if dream_intro_audio != null:
+		master_volume_slider.value = dream_intro_audio.get_master_volume_percent()
+	else:
+		master_volume_slider.value = 100.0
+
+	updating_master_volume_slider = false
 
 
 func _start_game_transition() -> void:
@@ -348,6 +483,41 @@ func _fade_out_menu() -> void:
 	await tween.finished
 
 	main_menu_ui.visible = false
+
+
+func _start_menu_idle_audio() -> void:
+	if not play_menu_idle_audio:
+		return
+
+	if dream_intro_audio == null:
+		return
+
+	dream_intro_audio.play_menu_idle()
+
+
+func _fade_out_menu_idle_audio() -> void:
+	if dream_intro_audio == null:
+		return
+
+	dream_intro_audio.fade_out_menu_idle(menu_idle_fade_out_duration)
+
+
+func _start_intro_narration_after_delay() -> void:
+	if not play_intro_narration:
+		return
+
+	if dream_intro_audio == null:
+		return
+
+	dream_intro_audio.intro_narration_volume_db = intro_narration_volume_db
+	dream_intro_audio.play_intro_narration_after_delay(intro_narration_start_delay)
+
+
+func _stop_intro_narration() -> void:
+	if dream_intro_audio == null:
+		return
+
+	dream_intro_audio.stop_intro_narration()
 
 
 func _reset_intro_camera_animation_to_start() -> void:
@@ -540,6 +710,9 @@ func _apply_responsive_ui() -> void:
 
 	if start_button != null:
 		start_button.add_theme_font_size_override("font_size", button_size)
+
+	if options_button != null:
+		options_button.add_theme_font_size_override("font_size", button_size)
 
 	if quit_button != null:
 		quit_button.add_theme_font_size_override("font_size", button_size)

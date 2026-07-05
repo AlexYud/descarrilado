@@ -5,10 +5,13 @@
 [ext_resource type="PackedScene" uid="uid://bepla6bqlsog4" path="res://scenes/assets/train_wagon_blockout.tscn" id="2_5acte"]
 [ext_resource type="Script" uid="uid://byum38r46uier" path="res://scripts/outside_loop.gd" id="4_0kfqj"]
 [ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/ScreenBorderFilter.gdshader" id="5_7koiu"]
+[ext_resource type="AudioStream" uid="uid://djpvdt3yh3jdo" path="res://assets/audios/intro_placeholder.mp3" id="6_7koiu"]
+[ext_resource type="Script" uid="uid://cfyx4n0v2ypnc" path="res://scripts/dream_intro_audio.gd" id="6_icw3b"]
+[ext_resource type="AudioStream" uid="uid://cyleuysfowk4c" path="res://assets/audios/menu_idle.mp3" id="7_7yl7e"]
 
 [sub_resource type="Animation" id="Animation_hnogt"]
 resource_name = "Intro"
-length = 12.0
+length = 20.0
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -16,10 +19,10 @@ tracks/0/path = NodePath("MenuCamera:position")
 tracks/0/interp = 2
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 4, 8, 11, 12),
+"times": PackedFloat32Array(0, 8, 14.033334, 18, 19.966667),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(-1.9386787, 1.6, 28.054905), Vector3(-1.93, 2.9267, 19.736593), Vector3(0, 3.6670704, 11.775), Vector3(0.94, 3.254, 3.2), Vector3(0.94, 1.25, 3.2)]
+"values": [Vector3(-1.9386787, 1.6, 28.054905), Vector3(-1.8025424, 2.926413, 19.739506), Vector3(0, 3.6670704, 11.775), Vector3(0.94, 3.254, 3.2), Vector3(0.94, 1.25, 3.2)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
@@ -28,7 +31,7 @@ tracks/1/path = NodePath("MenuCamera:rotation")
 tracks/1/interp = 2
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 4, 8, 11, 12),
+"times": PackedFloat32Array(0, 8, 14.033334, 18, 19.966667),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1),
 "update": 0,
 "values": [Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0)]
@@ -91,19 +94,17 @@ shader_parameter/inner_radius = 0.38
 shader_parameter/outer_radius = 0.85
 shader_parameter/intensity = 1.0
 
-[sub_resource type="Environment" id="Environment_0kfqj"]
+[sub_resource type="Environment" id="Environment_7koiu"]
 background_mode = 1
 background_color = Color(0.05882353, 0.078431375, 0.11764706, 1)
-ambient_light_source = 2
-ambient_light_color = Color(0.11119685, 0.11119684, 0.11119684, 1)
+ambient_light_color = Color(0.96035105, 0.96035105, 0.96035093, 1)
 ambient_light_energy = 0.8
 tonemap_mode = 2
 tonemap_exposure = 0.2
 tonemap_agx_contrast = 1.45
 fog_enabled = true
-fog_light_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
-fog_density = 0.3
-fog_height = 5.0
+fog_light_color = Color(0.14044756, 0.14044741, 0.14044744, 1)
+fog_height = 10.0
 fog_height_density = 0.15
 volumetric_fog_albedo = Color(0.039215688, 0.078431375, 0.11764706, 1)
 
@@ -118,9 +119,12 @@ current = true
 
 [node name="CameraAnimationPlayer" type="AnimationPlayer" parent="." unique_id=1883923507]
 libraries/ = SubResource("AnimationLibrary_7yl7e")
+speed_scale = 0.75
 
 [node name="Player" parent="." unique_id=1340821127 instance=ExtResource("1_rhmqu")]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 1, 0.3, 3.2)
+
+[node name="Forest" type="Node3D" parent="." unique_id=141344234]
 
 [node name="Train" type="Node3D" parent="." unique_id=1716082974]
 
@@ -440,6 +444,13 @@ text = "Start"
 flat = true
 alignment = 0
 
+[node name="OptionsButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1635031449]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+text = "Options"
+flat = true
+alignment = 0
+
 [node name="QuitButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=50317622]
 custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
@@ -451,5 +462,67 @@ alignment = 0
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=246481196]
-environment = SubResource("Environment_0kfqj")
+[node name="OptionsPanel" type="PanelContainer" parent="UI/MainMenuUI" unique_id=329487634]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.3
+anchor_top = 0.2
+anchor_right = 0.7
+anchor_bottom = 0.8
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OptionsMargin" type="MarginContainer" parent="UI/MainMenuUI/OptionsPanel" unique_id=2125597063]
+layout_mode = 2
+
+[node name="OptionsVBox" type="VBoxContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin" unique_id=130151733]
+layout_mode = 2
+
+[node name="OptionsTitle" type="Label" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox" unique_id=2104925653]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Options"
+
+[node name="OptionsTabs" type="TabContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox" unique_id=596277558]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Audio" type="MarginContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs" unique_id=314067872]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="AudioVBox" type="VBoxContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio" unique_id=2075394363]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MasterVolumeRow" type="HBoxContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox" unique_id=322717856]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MasterVolumeLabel" type="Label" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=645035354]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Master Volume"
+
+[node name="MasterVolumeSlider" type="HSlider" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=2030607164]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 100.0
+
+[node name="OptionsBackButton" type="Button" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox" unique_id=335933562]
+layout_mode = 2
+text = "Back"
+
+[node name="Audio" type="Node3D" parent="." unique_id=841639067]
+script = ExtResource("6_icw3b")
+
+[node name="IntroNarrationPlayer" type="AudioStreamPlayer" parent="Audio" unique_id=1481098020]
+stream = ExtResource("6_7koiu")
+
+[node name="MenuIdlePlayer" type="AudioStreamPlayer" parent="Audio" unique_id=872905682]
+stream = ExtResource("7_7yl7e")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=66975712]
+environment = SubResource("Environment_7koiu")
