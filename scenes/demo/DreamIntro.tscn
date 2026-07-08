@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="10_7i7gg"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="11_svmu2"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
+[ext_resource type="PackedScene" uid="uid://cex2srsuecday" path="res://assets/models/trains/demo_train/train.tscn" id="13_p1vbp"]
 
 [sub_resource type="Animation" id="Animation_hnogt"]
 resource_name = "Intro"
@@ -590,3 +591,6 @@ material = SubResource("Terrain3DMaterial_7i7gg")
 assets = SubResource("Terrain3DAssets_uas77")
 top_level = true
 metadata/_edit_lock_ = true
+
+[node name="Train2" parent="." unique_id=1957882136 instance=ExtResource("13_p1vbp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.876695, -1.3504367, 7.107795)
