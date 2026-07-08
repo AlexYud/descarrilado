@@ -8,7 +8,10 @@
 [ext_resource type="AudioStream" uid="uid://djpvdt3yh3jdo" path="res://assets/audios/intro_placeholder.mp3" id="6_7koiu"]
 [ext_resource type="Script" uid="uid://cfyx4n0v2ypnc" path="res://scripts/dream_intro_audio.gd" id="6_icw3b"]
 [ext_resource type="AudioStream" uid="uid://cyleuysfowk4c" path="res://assets/audios/menu_idle.mp3" id="7_7yl7e"]
-[ext_resource type="PackedScene" uid="uid://cex2srsuecday" path="res://assets/models/trains/demo_train/train.tscn" id="9_dlv62"]
+[ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="9_1look"]
+[ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="10_7i7gg"]
+[ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="11_svmu2"]
+[ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
 
 [sub_resource type="Animation" id="Animation_hnogt"]
 resource_name = "Intro"
@@ -78,16 +81,6 @@ albedo_color = Color(0.021434637, 0.021434635, 0.021434633, 1)
 material = SubResource("StandardMaterial3D_hnogt")
 size = Vector3(0.25, 10, 0.25)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7koiu"]
-albedo_color = Color(0.11764706, 0.078431375, 0.019607844, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_7yl7e"]
-material = SubResource("StandardMaterial3D_7koiu")
-size = Vector3(100, 0.1, 100)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_0kfqj"]
-size = Vector3(100, 0.1, 100)
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_hnogt"]
 shader = ExtResource("5_7koiu")
 shader_parameter/border_color = Color(0, 0, 0, 0.6)
@@ -95,19 +88,97 @@ shader_parameter/inner_radius = 0.38
 shader_parameter/outer_radius = 0.85
 shader_parameter/intensity = 1.0
 
-[sub_resource type="Environment" id="Environment_7koiu"]
-background_mode = 1
-background_color = Color(0.05882353, 0.078431375, 0.11764706, 1)
-ambient_light_color = Color(0.96035105, 0.96035105, 0.96035093, 1)
-ambient_light_energy = 0.8
-tonemap_mode = 2
-tonemap_exposure = 0.2
-tonemap_agx_contrast = 1.45
-fog_enabled = true
-fog_light_color = Color(0.14044756, 0.14044741, 0.14044744, 1)
-fog_height = 10.0
-fog_height_density = 0.15
-volumetric_fog_albedo = Color(0.039215688, 0.078431375, 0.11764706, 1)
+[sub_resource type="Gradient" id="Gradient_icw3b"]
+offsets = PackedFloat32Array(0.2, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_dlv62"]
+noise_type = 2
+frequency = 0.03
+cellular_jitter = 3.0
+cellular_return_type = 0
+domain_warp_enabled = true
+domain_warp_type = 1
+domain_warp_amplitude = 50.0
+domain_warp_fractal_type = 2
+domain_warp_fractal_lacunarity = 1.5
+domain_warp_fractal_gain = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_1look"]
+noise = SubResource("FastNoiseLite_dlv62")
+color_ramp = SubResource("Gradient_icw3b")
+seamless = true
+
+[sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_7i7gg"]
+_shader_parameters = {
+&"bias_distance": 512.0,
+&"blend_sharpness": 0.0,
+&"depth_blur": 0.0,
+&"enable_macro_variation": true,
+&"enable_projection": true,
+&"flat_terrain_normals": false,
+&"macro_variation1": Color(1, 1, 1, 1),
+&"macro_variation2": Color(1, 1, 1, 1),
+&"macro_variation_slope": 0.333,
+&"mipmap_bias": 1.0,
+&"noise1_angle": 0.0,
+&"noise1_offset": Vector2(0.5, 0.5),
+&"noise1_scale": 0.04,
+&"noise2_scale": 0.076,
+&"noise_texture": SubResource("NoiseTexture2D_1look"),
+&"projection_threshold": 0.8,
+&"world_noise_fragment_normals": false,
+&"world_noise_height": 64.0,
+&"world_noise_lod_distance": 7500.0,
+&"world_noise_max_octaves": 4,
+&"world_noise_min_octaves": 2,
+&"world_noise_offset": Vector3(0, 0, 0),
+&"world_noise_region_blend": 0.33,
+&"world_noise_scale": 5.0
+}
+world_background = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_svmu2"]
+transparency = 4
+cull_mode = 2
+vertex_color_use_as_albedo = true
+backlight_enabled = true
+backlight = Color(0.5, 0.5, 0.5, 1)
+distance_fade_mode = 1
+distance_fade_min_distance = 128.0
+distance_fade_max_distance = 96.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_p1vbp"]
+generated_type = 1
+height_offset = 0.5
+material_override = SubResource("StandardMaterial3D_svmu2")
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_svmu2"]
+name = "Poliigon_GrassPatchyGround_4585_BaseColor"
+albedo_texture = ExtResource("9_1look")
+normal_texture = ExtResource("10_7i7gg")
+normal_depth = 0.35
+ao_strength = 0.4
+roughness = 0.8
+uv_scale = 1.0
+detiling_rotation = 0.25
+detiling_shift = 0.25
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_uas77"]
+name = "GroundDirtWeedsPatchy004_COL_2K"
+id = 1
+albedo_texture = ExtResource("11_svmu2")
+normal_texture = ExtResource("12_p1vbp")
+uv_scale = 0.75
+detiling_rotation = 0.25
+detiling_shift = 0.25
+
+[sub_resource type="Terrain3DAssets" id="Terrain3DAssets_uas77"]
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_p1vbp")])
+texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_svmu2"), SubResource("Terrain3DTextureAsset_uas77")])
 
 [node name="DreamIntro" type="Node3D" unique_id=405065868]
 
@@ -365,18 +436,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12.316599)
 [node name="TrainWagonBlockout4" parent="Train" unique_id=1125605507 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 24.626972)
 
-[node name="ForestExitPath" type="Node3D" parent="." unique_id=1458105979]
-
-[node name="PathGround" type="StaticBody3D" parent="ForestExitPath" unique_id=1479596228]
-
-[node name="GroundVisual" type="MeshInstance3D" parent="ForestExitPath/PathGround" unique_id=853154015]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-mesh = SubResource("BoxMesh_7yl7e")
-
-[node name="GroundCollision" type="CollisionShape3D" parent="ForestExitPath/PathGround" unique_id=1271454448]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-shape = SubResource("BoxShape3D_0kfqj")
-
 [node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
 layer = 10
 
@@ -525,8 +584,9 @@ stream = ExtResource("6_7koiu")
 [node name="MenuIdlePlayer" type="AudioStreamPlayer" parent="Audio" unique_id=872905682]
 stream = ExtResource("7_7yl7e")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=66975712]
-environment = SubResource("Environment_7koiu")
-
-[node name="Train2" parent="." unique_id=1861284670 instance=ExtResource("9_dlv62")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.930834, 1.4555142, 6.0185127)
+[node name="Terrain3D" type="Terrain3D" parent="." unique_id=729808578]
+data_directory = "res://dd"
+material = SubResource("Terrain3DMaterial_7i7gg")
+assets = SubResource("Terrain3DAssets_uas77")
+top_level = true
+metadata/_edit_lock_ = true

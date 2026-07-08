@@ -1,6 +1,11 @@
 # DreamIntroController.gd
 extends Node
 
+@export var dev_skip_intro: bool = true
+@export var dev_skip_stop_outside_loop: bool = true
+@export var dev_skip_blackout_train_lights: bool = true
+@export var dev_skip_show_flashlight_prompt: bool = false
+
 @export var reference_resolution: Vector2 = Vector2(1920.0, 1080.0)
 
 @export var title_base_font_size: int = 120
@@ -104,7 +109,10 @@ func _ready() -> void:
 
 	_set_flashlight_input_enabled(false)
 
-	call_deferred("_enter_menu_state")
+	if dev_skip_intro:
+		call_deferred("_enter_development_gameplay_state")
+	else:
+		call_deferred("_enter_menu_state")
 
 
 func _process(_delta: float) -> void:
@@ -305,6 +313,56 @@ func _create_tutorial_prompt() -> void:
 	ui_layer.add_child(tutorial_prompt_label)
 
 
+func _enter_development_gameplay_state() -> void:
+	start_transition_running = false
+	tutorial_prompt_visible = false
+	options_panel_open = false
+
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+	_stop_menu_idle_audio()
+	_stop_intro_narration()
+	_reset_intro_camera_animation_to_start()
+	_sync_master_volume_slider_to_audio()
+
+	if tutorial_prompt_label != null:
+		tutorial_prompt_label.visible = false
+		tutorial_prompt_label.modulate.a = 0.0
+
+	if main_menu_ui != null:
+		main_menu_ui.visible = false
+		main_menu_ui.modulate.a = 0.0
+
+	if options_panel != null:
+		options_panel.visible = false
+
+	if menu_camera != null:
+		menu_camera.current = false
+
+	if player_camera != null:
+		player_camera.current = true
+
+	_set_player_enabled(true)
+	_set_flashlight_input_enabled(true)
+
+	_prepare_train_for_development_skip()
+
+	if dev_skip_show_flashlight_prompt:
+		_show_flashlight_tutorial_prompt()
+
+
+func _prepare_train_for_development_skip() -> void:
+	if dev_skip_stop_outside_loop and outside_loop != null:
+		if outside_loop.has_method("smooth_stop"):
+			outside_loop.call("smooth_stop", 0.0)
+
+	if dev_skip_blackout_train_lights:
+		for flicker: TrainLightFlicker in train_light_flickers:
+			if flicker != null and is_instance_valid(flicker):
+				if flicker.has_method("blackout_with_final_flicker"):
+					flicker.call("blackout_with_final_flicker", 0.0)
+
+
 func _enter_menu_state() -> void:
 	start_transition_running = false
 	tutorial_prompt_visible = false
@@ -500,6 +558,13 @@ func _fade_out_menu_idle_audio() -> void:
 		return
 
 	dream_intro_audio.fade_out_menu_idle(menu_idle_fade_out_duration)
+
+
+func _stop_menu_idle_audio() -> void:
+	if dream_intro_audio == null:
+		return
+
+	dream_intro_audio.stop_menu_idle()
 
 
 func _start_intro_narration_after_delay() -> void:
