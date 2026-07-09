@@ -5,6 +5,7 @@ extends Node
 @export var dev_skip_stop_outside_loop: bool = true
 @export var dev_skip_blackout_train_lights: bool = true
 @export var dev_skip_show_flashlight_prompt: bool = false
+@export var dev_skip_stop_wagon_shake: bool = true
 
 @export var reference_resolution: Vector2 = Vector2(1920.0, 1080.0)
 
@@ -34,7 +35,10 @@ extends Node
 @export var train_root_path: String = "Train"
 @export var outside_loop_path: String = "Train/OutsideLoop"
 
-@export var train_lights_path: String = "Train/TrainWagonBlockout/Lights"
+@export var train_lights_path: String = "Train/TrainWagon/Lights"
+
+@export var start_wagon_shake_in_menu: bool = true
+@export var stop_wagon_shake_when_malfunction_starts: bool = true
 
 @export var player_flashlight_path: String = "Player/Hand/SpotLight3D"
 
@@ -70,6 +74,7 @@ var ui_layer: CanvasLayer = null
 
 var outside_loop: OutsideTrainLoop = null
 var train_light_flickers: Array[TrainLightFlicker] = []
+var train_wagon_shakes: Array[TrainWagonShake] = []
 
 var title_label: Label = null
 var start_button: Button = null
@@ -136,6 +141,15 @@ func _get_node_from_dream_root(path_text: String) -> Node:
 	return dream_root.get_node_or_null(NodePath(path_text))
 
 
+func _get_train_root() -> Node:
+	var train_root: Node = _get_node_from_dream_root(train_root_path)
+
+	if train_root == null:
+		train_root = _get_node_from_dream_root("Train")
+
+	return train_root
+
+
 func _find_sequence_nodes() -> void:
 	if dream_root == null:
 		return
@@ -173,6 +187,7 @@ func _find_sequence_nodes() -> void:
 		push_warning("DreamIntroController: OutsideLoop not found.")
 
 	_collect_train_light_flickers()
+	_collect_train_wagon_shakes()
 
 	player_flashlight = _get_node_from_dream_root(player_flashlight_path) as SpotLight3D
 
@@ -191,10 +206,7 @@ func _collect_train_light_flickers() -> void:
 	if fallback_lights != null:
 		_add_train_light_flicker(fallback_lights)
 
-	var train_root: Node = _get_node_from_dream_root(train_root_path)
-
-	if train_root == null:
-		train_root = _get_node_from_dream_root("Train")
+	var train_root: Node = _get_train_root()
 
 	if train_root == null:
 		push_warning("DreamIntroController: Train root not found. Cannot collect wagon lights.")
@@ -222,6 +234,39 @@ func _add_train_light_flicker(flicker: TrainLightFlicker) -> void:
 
 	if not train_light_flickers.has(flicker):
 		train_light_flickers.append(flicker)
+
+
+func _collect_train_wagon_shakes() -> void:
+	train_wagon_shakes.clear()
+
+	var train_root: Node = _get_train_root()
+
+	if train_root == null:
+		push_warning("DreamIntroController: Train root not found. Cannot collect wagon shakes.")
+		return
+
+	_find_train_wagon_shakes_recursive(train_root)
+
+	if train_wagon_shakes.is_empty():
+		push_warning("DreamIntroController: No TrainWagonShake nodes found. Wagon shake will not be controlled by intro sequence.")
+
+
+func _find_train_wagon_shakes_recursive(node: Node) -> void:
+	var wagon_shake: TrainWagonShake = node as TrainWagonShake
+
+	if wagon_shake != null:
+		_add_train_wagon_shake(wagon_shake)
+
+	for child in node.get_children():
+		_find_train_wagon_shakes_recursive(child)
+
+
+func _add_train_wagon_shake(wagon_shake: TrainWagonShake) -> void:
+	if wagon_shake == null:
+		return
+
+	if not train_wagon_shakes.has(wagon_shake):
+		train_wagon_shakes.append(wagon_shake)
 
 
 func _find_menu_nodes() -> void:
@@ -352,6 +397,9 @@ func _enter_development_gameplay_state() -> void:
 
 
 func _prepare_train_for_development_skip() -> void:
+	if dev_skip_stop_wagon_shake:
+		_stop_wagon_shake_immediate()
+
 	if dev_skip_stop_outside_loop and outside_loop != null:
 		if outside_loop.has_method("smooth_stop"):
 			outside_loop.call("smooth_stop", 0.0)
@@ -406,6 +454,10 @@ func _enter_menu_state() -> void:
 	_set_main_menu_buttons_enabled(true)
 
 	_apply_responsive_ui()
+
+	if start_wagon_shake_in_menu:
+		_start_wagon_shake()
+
 	_start_menu_idle_audio()
 
 
@@ -543,6 +595,24 @@ func _fade_out_menu() -> void:
 	main_menu_ui.visible = false
 
 
+func _start_wagon_shake() -> void:
+	for wagon_shake: TrainWagonShake in train_wagon_shakes:
+		if wagon_shake != null and is_instance_valid(wagon_shake):
+			wagon_shake.start_shake()
+
+
+func _stop_wagon_shake() -> void:
+	for wagon_shake: TrainWagonShake in train_wagon_shakes:
+		if wagon_shake != null and is_instance_valid(wagon_shake):
+			wagon_shake.stop_shake()
+
+
+func _stop_wagon_shake_immediate() -> void:
+	for wagon_shake: TrainWagonShake in train_wagon_shakes:
+		if wagon_shake != null and is_instance_valid(wagon_shake):
+			wagon_shake.stop_shake_immediate()
+
+
 func _start_menu_idle_audio() -> void:
 	if not play_menu_idle_audio:
 		return
@@ -630,6 +700,10 @@ func _run_train_stop_sequence() -> void:
 	var slowdown_time: float = maxf(train_slowdown_duration, 0.0)
 	var blackout_delay: float = clampf(blackout_during_slowdown_delay, 0.0, slowdown_time)
 	var blackout_duration: float = maxf(blackout_final_flicker_duration, 0.0)
+
+	# The train stops feeling like a normal ride once the malfunction begins.
+	if stop_wagon_shake_when_malfunction_starts:
+		_stop_wagon_shake()
 
 	# Lights start flickering only after the camera intro animation is finished.
 	for flicker: TrainLightFlicker in train_light_flickers:

@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://bepla6bqlsog4"]
+
+[ext_resource type="Script" uid="uid://c4mb748noxx6s" path="res://scripts/train_light_flicker.gd" id="1_8c4ah"]
+[ext_resource type="PackedScene" uid="uid://cex2srsuecday" path="res://assets/models/trains/demo_train/train.tscn" id="1_n1x3d"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_7fnek"]
+size = Vector3(0.7, 0.04, 0.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_3xkkt"]
+size = Vector3(0.7, 0.04, 0.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sdyrf"]
+size = Vector3(0.7, 0.04, 0.25)
+
+[node name="TrainWagon" type="Node3D" unique_id=1144106481]
+
+[node name="Visual" type="Node3D" parent="." unique_id=1005799019]
+
+[node name="LightCover01" type="MeshInstance3D" parent="Visual" unique_id=284071032]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.790497, 3.5)
+mesh = SubResource("BoxMesh_7fnek")
+
+[node name="LightCover02" type="MeshInstance3D" parent="Visual" unique_id=1063606717]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.790497, 0)
+mesh = SubResource("BoxMesh_3xkkt")
+
+[node name="LightCover03" type="MeshInstance3D" parent="Visual" unique_id=885272506]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.790497, -3.5)
+mesh = SubResource("BoxMesh_sdyrf")
+
+[node name="Train" parent="Visual" unique_id=824594584 instance=ExtResource("1_n1x3d")]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 1.4325294, 0)
+
+[node name="Lights" type="Node3D" parent="." unique_id=1675096014]
+script = ExtResource("1_8c4ah")
+
+[node name="CeilingLight01" type="OmniLight3D" parent="Lights" unique_id=382992980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.620497, 3.5)
+light_color = Color(0.9607843, 0.8627451, 0.7254902, 1)
+light_energy = 0.5
+shadow_enabled = true
+omni_range = 4.0
+
+[node name="CeilingLight02" type="OmniLight3D" parent="Lights" unique_id=1531105247]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.620497, 0)
+light_color = Color(0.9607843, 0.8627451, 0.7254902, 1)
+light_energy = 0.5
+shadow_enabled = true
+omni_range = 4.0
+
+[node name="CeilingLight03" type="OmniLight3D" parent="Lights" unique_id=1051616150]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.620497, -3.5)
+light_color = Color(0.9607843, 0.8627451, 0.7254902, 1)
+light_energy = 0.5
+shadow_enabled = true
+omni_range = 4.0
