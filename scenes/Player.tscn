@@ -53,8 +53,13 @@ light_volumetric_fog_energy = 0.0
 light_projector = ExtResource("2_ck06t")
 light_specular = 0.8
 shadow_enabled = true
+<<<<<<< HEAD
 shadow_blur = 0.25
 spot_range = 100.0
+=======
+shadow_blur = 0.5
+spot_range = 19.0
+>>>>>>> d31cfc39119a188b277411c1d28670b159fe7a06
 spot_attenuation = 0.05
 spot_angle = 20.0
 script = ExtResource("4_nxtpx")
