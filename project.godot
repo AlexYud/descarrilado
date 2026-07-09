@@ -13,6 +13,7 @@ config_version=5
 config/name="Unrailed"
 run/main_scene="uid://c72gw0ygio5q1"
 config/features=PackedStringArray("4.7", "Forward Plus")
+run/max_fps=60
 config/icon="res://icon.svg"
 
 [autoload]
