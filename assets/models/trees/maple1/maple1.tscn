@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://cb0ns725870yo"]
+
+[ext_resource type="PackedScene" uid="uid://dtjqyexmlvm87" path="res://assets/models/trees/maple1/maple1.glb" id="1_4sfr1"]
+
+[node name="Maple1_TerrainAsset" type="Node3D" unique_id=951678916]
+
+[node name="maple1" parent="." unique_id=1641338070 instance=ExtResource("1_4sfr1")]
+transform = Transform3D(0.08, 0, 0, 0, 0.08, 0, 0, 0, 0.08, 0, 0, 0)

@@ -4,7 +4,7 @@ class_name OutsideTrainLoop
 @export var movement_speed: float = 5.0
 @export var loop_length: float = 16.0
 @export var upstream_start_distance: float = 80.0
-@export var downstream_despawn_distance: float = 32.0
+@export var downstream_despawn_distance: float = 48.0
 @export var minimum_chunks_per_group: int = 8
 @export var active: bool = true
 

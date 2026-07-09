@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://h6cchd2oeor4"]
+
+[ext_resource type="PackedScene" uid="uid://ci8qavsvn76n4" path="res://assets/models/trees/poplar4/poplar4.glb" id="1_oqjsv"]
+
+[node name="Poplar4" type="Node3D" unique_id=170480577]
+
+[node name="poplar4" parent="." unique_id=1896053249 instance=ExtResource("1_oqjsv")]
