@@ -671,7 +671,13 @@ transform = Transform3D(-0.93501985, 0, 0.35459533, 0, 1, 0, -0.35459533, 0, -0.
 transform = Transform3D(-0.9902413, 0, 0.13936424, 0, 1, 0, -0.13936424, 0, -0.9902413, -3.9039583, 0.6452537, 10.939963)
 
 [node name="DoorController" parent="Train/OutsideLoop/RightFences" unique_id=944800287 instance=ExtResource("8_j607m")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.9660001, 0, 3.6699371)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.9660001, 0, 3.6917415)
+
+[node name="Box" type="CSGBox3D" parent="Train/OutsideLoop/RightFences" unique_id=916343917]
+transform = Transform3D(0.7445925, 0, -0.6675194, 0, 1, 0, 0.6675194, 0, 0.7445925, -2.057499, 0.33455998, 7.0602355)
+use_collision = true
+size = Vector3(0.57942873, 0.50733644, 1.282135)
+material = SubResource("StandardMaterial3D_yilg7")
 
 [node name="TrainWagon" parent="Train" unique_id=1144106481 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 0.67661524)
@@ -909,7 +915,7 @@ moon_energy = 0.85
 moon_shadow_enabled = true
 
 [node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=614223077]
-transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947145, -0.59080726, 0.6561579, 0, 0, 0)
+transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947142, -0.59080726, 0.6561579, 0, 0, 0)
 light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 light_energy = 0.85
 shadow_enabled = true
