@@ -1,22 +1,57 @@
 [gd_scene format=3 uid="uid://dechhjfthr7jj"]
 
-[sub_resource type="Environment" id="Environment_h5nv8"]
+[ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="1_a7tex"]
+
+[sub_resource type="Environment" id="Environment_u1huc"]
 background_mode = 1
-background_color = Color(0.05882353, 0.078431375, 0.11764706, 1)
+background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
+background_energy_multiplier = 0.35
 ambient_light_source = 2
-ambient_light_color = Color(0.11119685, 0.11119684, 0.11119684, 1)
-ambient_light_energy = 0.8
+ambient_light_color = Color(0.06666667, 0.09019608, 0.13333334, 1)
+ambient_light_sky_contribution = 0.25
+ambient_light_energy = 0.16
 tonemap_mode = 2
-tonemap_exposure = 0.2
+tonemap_exposure = 0.75
 tonemap_agx_contrast = 1.45
 fog_enabled = true
-fog_light_color = Color(0.078431375, 0.078431375, 0.078431375, 1)
-fog_density = 0.3
-fog_height = 10.0
-fog_height_density = 0.15
-volumetric_fog_albedo = Color(0.039215688, 0.078431375, 0.11764706, 1)
+fog_light_color = Color(0.37254903, 0.43529412, 0.50980395, 1)
+fog_light_energy = 0.28
+fog_density = 0.045
+fog_height_density = 0.1
+volumetric_fog_density = 0.028
+volumetric_fog_albedo = Color(0.37254903, 0.43529412, 0.50980395, 1)
+volumetric_fog_length = 80.0
+adjustment_enabled = true
+adjustment_brightness = 0.82
+adjustment_contrast = 1.22
+adjustment_saturation = 0.72
 
 [node name="WorldEnvironmentStore" type="Node3D" unique_id=1748959053]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2139483835]
-environment = SubResource("Environment_h5nv8")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=473814159]
+environment = SubResource("Environment_u1huc")
+script = ExtResource("1_a7tex")
+background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
+background_energy = 0.35
+ambient_color = Color(0.06666667, 0.09019608, 0.13333334, 1)
+ambient_energy = 0.16
+fog_color = Color(0.37254903, 0.43529412, 0.50980395, 1)
+fog_energy = 0.28
+fog_density = 0.045
+fog_height_density = 0.1
+volumetric_fog_density = 0.028
+volumetric_fog_length = 80.0
+exposure = 0.75
+brightness = 0.82
+contrast = 1.22
+saturation = 0.72
+moon_light_path = NodePath("../MoonLight")
+moon_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
+moon_energy = 0.85
+moon_shadow_enabled = true
+
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=84186456]
+transform = Transform3D(0.88294744, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.4694715, -0.59080726, 0.6561579, 0, 0, 0)
+light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
+light_energy = 0.85
+shadow_enabled = true
