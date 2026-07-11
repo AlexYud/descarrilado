@@ -23,7 +23,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02188, 0)
 script = ExtResource("1_8qwge")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1891922294]
-transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.00172341, 0)
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0.0017234087, 0)
 shape = SubResource("CapsuleShape3D_vmcb2")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2052677781]
@@ -53,9 +53,8 @@ light_volumetric_fog_energy = 0.0
 light_projector = ExtResource("2_ck06t")
 light_specular = 0.8
 shadow_enabled = true
-spot_range = 100.0
 shadow_blur = 0.5
-
+spot_range = 100.0
 spot_attenuation = 0.05
 spot_angle = 20.0
 script = ExtResource("4_nxtpx")
