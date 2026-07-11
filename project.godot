@@ -20,10 +20,6 @@ config/icon="res://icon.svg"
 
 DialogueManager="*uid://ce4t2jp8vp1ce"
 
-[display]
-
-window/size/mode=3
-
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/terrain_3d/plugin.cfg")
