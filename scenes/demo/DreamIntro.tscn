@@ -4,9 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rhmqu"]
 [ext_resource type="PackedScene" uid="uid://bepla6bqlsog4" path="res://scenes/assets/train_wagon.tscn" id="2_5acte"]
 [ext_resource type="Script" uid="uid://byum38r46uier" path="res://scripts/outside_loop.gd" id="4_0kfqj"]
-[ext_resource type="PackedScene" uid="uid://b5elu60cup8mt" path="res://assets/models/trees/poplar1/poplar1.tscn" id="4_d72hq"]
 [ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/ScreenBorderFilter.gdshader" id="5_7koiu"]
-[ext_resource type="PackedScene" uid="uid://cf4vgsdlaxoh" path="res://assets/models/trees/poplar2/poplar2.tscn" id="5_gi2up"]
 [ext_resource type="Script" uid="uid://dfsn5nq0htc3d" path="res://scripts/train_wagon_shake.gd" id="5_p1vbp"]
 [ext_resource type="AudioStream" uid="uid://djpvdt3yh3jdo" path="res://assets/audios/intro_placeholder.mp3" id="6_7koiu"]
 [ext_resource type="PackedScene" uid="uid://ciu6c418f6mwo" path="res://assets/models/wooden_structures/barbed_gate_big_no_angle/barbed-gate-big-no-angle.glb" id="6_gi2up"]
@@ -15,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="9_1look"]
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="10_7i7gg"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="11_svmu2"]
+[ext_resource type="PackedScene" uid="uid://ctj358rlsbnhy" path="res://assets/models/trees/custom_tree/tree_new.glb" id="12_gi2up"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="16_cgaoe"]
 [ext_resource type="PackedScene" uid="uid://cshsg4d4ivjjy" path="res://assets/models/wooden_structures/fence_gate/fence-gate.glb" id="17_2r5dj"]
@@ -143,13 +142,10 @@ _shader_parameters = {
 world_background = 2
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_cgaoe"]
-load_path = "res://.godot/imported/celandine_01_diff_1k.jpg-ebb01212642d0b4e60bf0f9fbc087180.s3tc.ctex"
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_2r5dj"]
-load_path = "res://.godot/imported/celandine_01_arm_1k.jpg-43c0637749f7ef50b8de4ae43d146966.s3tc.ctex"
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_16kht"]
-load_path = "res://.godot/imported/celandine_01_nor_gl_1k.jpg-859267bfda8077c43aa6d6be9d874c0d.s3tc.ctex"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n8afx"]
 resource_name = "celandine_01"
@@ -355,6 +351,15 @@ scene_file = SubResource("PackedScene_xh04x")
 last_lod = 4
 last_shadow_lod = 4
 
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_yilg7"]
+name = "tree_new"
+id = 1
+scene_file = ExtResource("12_gi2up")
+density = 0.01
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_svmu2"]
 name = "Poliigon_GrassPatchyGround_4585_BaseColor"
 albedo_texture = ExtResource("9_1look")
@@ -376,7 +381,7 @@ detiling_rotation = 0.25
 detiling_shift = 0.25
 
 [sub_resource type="Terrain3DAssets" id="Terrain3DAssets_uas77"]
-mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_16kht")])
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_16kht"), SubResource("Terrain3DMeshAsset_yilg7")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_svmu2"), SubResource("Terrain3DTextureAsset_uas77")])
 
 [sub_resource type="Environment" id="Environment_yilg7"]
@@ -430,173 +435,17 @@ stop_alignment_marker_path = NodePath("RightTreesB/StopGapMarker")
 [node name="LeftTreesA" type="Node3D" parent="Train/OutsideLoop" unique_id=1193431194]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
 
-[node name="Poplar1" parent="Train/OutsideLoop/LeftTreesA" unique_id=1072801218 instance=ExtResource("4_d72hq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.1307974, 0, -7.826152)
-
-[node name="Poplar2" parent="Train/OutsideLoop/LeftTreesA" unique_id=820519186 instance=ExtResource("5_gi2up")]
-transform = Transform3D(0.9862856, 0, 0.1650476, 0, 1, 0, -0.1650476, 0, 0.9862856, -3.9153805, 0, -4.0967145)
-
-[node name="Poplar3" parent="Train/OutsideLoop/LeftTreesA" unique_id=348404129 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.17364822, 0, -0.9848077, 0, 1, 0, 0.9848077, 0, 0.17364822, -4.3276587, 0, -6.6883106)
-
-[node name="Poplar4" parent="Train/OutsideLoop/LeftTreesA" unique_id=1893797919 instance=ExtResource("5_gi2up")]
-transform = Transform3D(0.98162717, 0, 0.190809, 0, 1, 0, -0.190809, 0, 0.98162717, -3.9467993, 0, 1.5913601)
-
-[node name="Poplar5" parent="Train/OutsideLoop/LeftTreesA" unique_id=255552028 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.36487675, 0, 0.93105584, 0, 1, 0, -0.93105584, 0, 0.36487675, -2.4282436, 0, 8)
-
-[node name="Poplar7" parent="Train/OutsideLoop/LeftTreesA" unique_id=1925156252 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.22325017, 0, 0.9747612, 0, 1, 0, -0.9747612, 0, -0.22325017, -2.8028975, 0, -5.4960055)
-
-[node name="Poplar8" parent="Train/OutsideLoop/LeftTreesA" unique_id=1484995630 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.82609826, 0, 0.5635261, 0, 1, 0, -0.5635261, 0, 0.82609826, -3.567832, 0, -2.0190284)
-
-[node name="Poplar6" parent="Train/OutsideLoop/LeftTreesA" unique_id=1652331424 instance=ExtResource("5_gi2up")]
-transform = Transform3D(0.17364822, 0, -0.9848077, 0, 1, 0, 0.9848077, 0, 0.17364822, -3.2765965, 0, 2.379797)
-
-[node name="Poplar9" parent="Train/OutsideLoop/LeftTreesA" unique_id=1154421993 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.6984153, 0, -0.71569276, 0, 1, 0, 0.71569276, 0, 0.6984153, -2.9072065, 0, -0.10669112)
-
-[node name="Poplar10" parent="Train/OutsideLoop/LeftTreesA" unique_id=1160690640 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.98768836, 0, 0.15643448, 0, 1, 0, -0.15643448, 0, 0.98768836, -3.9850702, 0, 6.569105)
-
-[node name="Poplar11" parent="Train/OutsideLoop/LeftTreesA" unique_id=1770638128 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.36487675, 0, -0.93105584, 0, 1, 0, 0.93105584, 0, 0.36487675, -3.533063, 0, 3.6832137)
-
-[node name="Poplar12" parent="Train/OutsideLoop/LeftTreesA" unique_id=1320514276 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.6984153, 0, 0.71569276, 0, 1, 0, -0.71569276, 0, 0.6984153, -2.7333574, 0, 5.90848)
-
 [node name="LeftTreesB" type="Node3D" parent="Train/OutsideLoop" unique_id=242301247]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -16)
 
-[node name="Poplar1" parent="Train/OutsideLoop/LeftTreesB" unique_id=562997631 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.41151434, 0, -0.9114033, 0, 1, 0, 0.9114033, 0, -0.41151434, -4.052, 0, 4.172)
-
-[node name="Poplar2" parent="Train/OutsideLoop/LeftTreesB" unique_id=1896581827 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.7965299, 0, -0.6045991, 0, 1, 0, 0.6045991, 0, -0.7965299, -4.13, 0, 0.054)
-
-[node name="Poplar3" parent="Train/OutsideLoop/LeftTreesB" unique_id=1534887501 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.82609826, 0, -0.5635261, 0, 1, 0, 0.5635261, 0, 0.82609826, -4.07, 0, -3.921)
-
-[node name="Poplar4" parent="Train/OutsideLoop/LeftTreesB" unique_id=536684505 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.5849576, 0, 0.81106377, 0, 1, 0, -0.81106377, 0, -0.5849576, -3.339, 0, -5.492)
-
-[node name="Poplar5" parent="Train/OutsideLoop/LeftTreesB" unique_id=8327409 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, -2.55, 0, -1.148)
-
-[node name="Poplar6" parent="Train/OutsideLoop/LeftTreesB" unique_id=1162498261 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.697165, 0, 0.71691054, 0, 1, 0, -0.71691054, 0, 0.697165, -3.486, 0, 5.754)
-
-[node name="Poplar7" parent="Train/OutsideLoop/LeftTreesB" unique_id=1860815160 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.54317445, 0, 0.8396199, 0, 1, 0, -0.8396199, 0, 0.54317445, -2.87, 0, 4.797)
-
-[node name="Poplar8" parent="Train/OutsideLoop/LeftTreesB" unique_id=201204336 instance=ExtResource("5_gi2up")]
-transform = Transform3D(0.67430234, 0, -0.73845536, 0, 1, 0, 0.73845536, 0, 0.67430234, -3.287, 0, 2.885)
-
-[node name="Poplar9" parent="Train/OutsideLoop/LeftTreesB" unique_id=209830344 instance=ExtResource("4_d72hq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.731, 0, 0.973)
-
-[node name="Poplar10" parent="Train/OutsideLoop/LeftTreesB" unique_id=1495782207 instance=ExtResource("5_gi2up")]
-transform = Transform3D(-0.2537579, 0, -0.96726775, 0, 1, 0, 0.96726775, 0, -0.2537579, -3.357, 0, -2.122)
-
-[node name="Poplar11" parent="Train/OutsideLoop/LeftTreesB" unique_id=1503102090 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.36487675, 0, -0.93105584, 0, 1, 0, 0.93105584, 0, 0.36487675, -2.626, 0, -3.513)
-
-[node name="Poplar12" parent="Train/OutsideLoop/LeftTreesB" unique_id=1993482896 instance=ExtResource("5_gi2up")]
-transform = Transform3D(-0.2537579, 0, -0.96726775, 0, 1, 0, 0.96726775, 0, -0.2537579, -3.878, 0, -6.537)
-
-[node name="Poplar13" parent="Train/OutsideLoop/LeftTreesB" unique_id=797138017 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.36487675, 0, -0.93105584, 0, 1, 0, 0.93105584, 0, 0.36487675, -2.626, 0, -7.546)
-
 [node name="RightTreesA" type="Node3D" parent="Train/OutsideLoop" unique_id=532883171]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, -16)
-
-[node name="Poplar1" parent="Train/OutsideLoop/RightTreesA" unique_id=1713731905 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.9961947, 0, 0.08715574, 0, 1, 0, -0.08715574, 0, 0.9961947, 4.356, 0, -8)
-
-[node name="Poplar2" parent="Train/OutsideLoop/RightTreesA" unique_id=1856327279 instance=ExtResource("5_gi2up")]
-transform = Transform3D(0.20620413, 0, 0.978509, 0, 1, 0, -0.978509, 0, 0.20620413, 3.571, 0, -2.915)
-
-[node name="Poplar3" parent="Train/OutsideLoop/RightTreesA" unique_id=1355538954 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.44463512, 0, -0.8957118, 0, 1, 0, 0.8957118, 0, 0.44463512, 3.159, 0, -6.688)
-
-[node name="Poplar4" parent="Train/OutsideLoop/RightTreesA" unique_id=1097227604 instance=ExtResource("5_gi2up")]
-transform = Transform3D(0.9994502, 0, -0.03315518, 0, 1, 0, 0.03315518, 0, 0.9994502, 3.54, 0, 1.591)
-
-[node name="Poplar5" parent="Train/OutsideLoop/RightTreesA" unique_id=876723369 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.88458097, 0, 0.46638665, 0, 1, 0, -0.46638665, 0, 0.88458097, 4.008, 0, 7.444)
-
-[node name="Poplar6" parent="Train/OutsideLoop/RightTreesA" unique_id=1038716327 instance=ExtResource("5_gi2up")]
-transform = Transform3D(-0.38107035, 0, 0.92454606, 0, 1, 0, -0.92454606, 0, -0.38107035, 4.21, 0, 3.353)
-
-[node name="Poplar7" parent="Train/OutsideLoop/RightTreesA" unique_id=715473509 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.92186314, 0, -0.38751557, 0, 1, 0, 0.38751557, 0, 0.92186314, 2.513, 0, -7.305)
-
-[node name="Poplar8" parent="Train/OutsideLoop/RightTreesA" unique_id=1056128322 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.8535508, 0, 0.5210096, 0, 1, 0, -0.5210096, 0, -0.8535508, 4.008, 0, -5.74)
-
-[node name="Poplar9" parent="Train/OutsideLoop/RightTreesA" unique_id=2081256014 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.17536676, 0, -0.9845031, 0, 1, 0, 0.9845031, 0, 0.17536676, 3.104, 0, -4.175)
-
-[node name="Poplar10" parent="Train/OutsideLoop/RightTreesA" unique_id=1772555222 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, 3.73, 0, -1.95)
-
-[node name="Poplar11" parent="Train/OutsideLoop/RightTreesA" unique_id=1569234477 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.97992456, 0, 0.1993679, 0, 1, 0, -0.1993679, 0, 0.97992456, 2.861, 0, -0.246)
-
-[node name="Poplar12" parent="Train/OutsideLoop/RightTreesA" unique_id=1839778678 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 3.382, 0, 6.429)
-
-[node name="Poplar13" parent="Train/OutsideLoop/RightTreesA" unique_id=687480278 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.17536674, 0, -0.984503, 0, 1, 0, 0.984503, 0, 0.17536674, 4.043, 0, 4.969)
-
-[node name="Poplar14" parent="Train/OutsideLoop/RightTreesA" unique_id=40926713 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.96901566, 0, 0.24699906, 0, 1, 0, -0.24699906, 0, -0.96901566, 3.313, 0, 2.466)
 
 [node name="RightTreesB" type="Node3D" parent="Train/OutsideLoop" unique_id=1904463630]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
 
 [node name="StopGapMarker" type="Node3D" parent="Train/OutsideLoop/RightTreesB" unique_id=635763356]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -5)
-
-[node name="Poplar1" parent="Train/OutsideLoop/RightTreesB" unique_id=1304020759 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.41151434, 0, -0.9114033, 0, 1, 0, 0.9114033, 0, -0.41151434, 3.209, 0, -4.729)
-
-[node name="Poplar2" parent="Train/OutsideLoop/RightTreesB" unique_id=651992985 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.9402881, 0, 0.34037942, 0, 1, 0, -0.34037942, 0, -0.9402881, 3.2609997, 0, -0.5317231)
-
-[node name="Poplar3" parent="Train/OutsideLoop/RightTreesB" unique_id=582503523 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.7337299, 0, -0.6794413, 0, 1, 0, 0.6794413, 0, -0.7337299, 3.261, 0, -2.101)
-
-[node name="Poplar4" parent="Train/OutsideLoop/RightTreesB" unique_id=18214634 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.4570979, 0, -0.88941634, 0, 1, 0, 0.88941634, 0, 0.4570979, 4.133, 0, -10.07)
-
-[node name="Poplar5" parent="Train/OutsideLoop/RightTreesB" unique_id=1666871505 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.41151434, 0, -0.9114033, 0, 1, 0, 0.9114033, 0, -0.41151434, 4.178, 0, -1.148)
-
-[node name="Poplar6" parent="Train/OutsideLoop/RightTreesB" unique_id=89340707 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.9552783, 0, 0.295708, 0, 1, 0, -0.295708, 0, 0.9552783, 4.047, 0, -5.724)
-
-[node name="Poplar7" parent="Train/OutsideLoop/RightTreesB" unique_id=1096715576 instance=ExtResource("4_d72hq")]
-transform = Transform3D(0.9211854, 0, 0.38912395, 0, 1, 0, -0.38912395, 0, 0.9211854, 3.9957924, 0, 8.546379)
-
-[node name="Poplar8" parent="Train/OutsideLoop/RightTreesB" unique_id=469037106 instance=ExtResource("5_gi2up")]
-transform = Transform3D(-0.18909545, 0, 0.9819587, 0, 1, 0, -0.9819587, 0, -0.18909545, 4.196783, 0, 1.3071115)
-
-[node name="Poplar9" parent="Train/OutsideLoop/RightTreesB" unique_id=487000027 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.22154853, 0, -0.9751493, 0, 1, 0, 0.9751493, 0, -0.22154853, 3.9356666, 0, 0.15903795)
-
-[node name="Poplar10" parent="Train/OutsideLoop/RightTreesB" unique_id=1036444003 instance=ExtResource("5_gi2up")]
-transform = Transform3D(0.21814327, 0, 0.9759167, 0, 1, 0, -0.9759167, 0, 0.21814327, 3.806, 0, -2.121)
-
-[node name="Poplar11" parent="Train/OutsideLoop/RightTreesB" unique_id=2064079659 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.66131186, 0, -0.750111, 0, 1, 0, 0.750111, 0, -0.66131186, 4.577, 0, -2.702)
-
-[node name="Poplar12" parent="Train/OutsideLoop/RightTreesB" unique_id=380531925 instance=ExtResource("5_gi2up")]
-transform = Transform3D(-0.06975647, 0, -0.997564, 0, 1, 0, 0.997564, 0, -0.06975647, 4.158, 0, -7.441)
-
-[node name="Poplar13" parent="Train/OutsideLoop/RightTreesB" unique_id=90425947 instance=ExtResource("4_d72hq")]
-transform = Transform3D(-0.3189593, 0, 0.94776833, 0, 1, 0, -0.94776833, 0, -0.3189593, 3.173, 0, -7.64)
 
 [node name="LeftFences" type="Node3D" parent="Train/OutsideLoop" unique_id=1679639336]
 
@@ -884,7 +733,7 @@ moon_energy = 0.85
 moon_shadow_enabled = true
 
 [node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=614223077]
-transform = Transform3D(0.88294744, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.4694715, -0.59080726, 0.6561579, 0, 0, 0)
+transform = Transform3D(0.8829474, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947148, -0.59080726, 0.6561579, 0, 0, 0)
 light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 light_energy = 0.85
 shadow_enabled = true
