@@ -1,7 +1,7 @@
 # DreamIntroController.gd
 extends Node
 
-@export var dev_skip_intro: bool = true
+@export var dev_skip_intro: bool = false
 @export var dev_skip_stop_outside_loop: bool = true
 @export var dev_skip_blackout_train_lights: bool = true
 @export var dev_skip_show_flashlight_prompt: bool = false

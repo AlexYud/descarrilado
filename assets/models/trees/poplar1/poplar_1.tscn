@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://cax4xyfvgc63m"]
+
+[ext_resource type="PackedScene" uid="uid://btdovb6h3817x" path="res://assets/models/trees/poplar1/poplar1.glb" id="1_f2etj"]
+
+[node name="poplar1" unique_id=83507561 instance=ExtResource("1_f2etj")]
+
+[node name="foliage_013" parent="." index="0" unique_id=1465999180]
+cast_shadow = 0
+
+[node name="structure_013" parent="." index="1" unique_id=48586085]
+cast_shadow = 0

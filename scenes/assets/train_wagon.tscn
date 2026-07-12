@@ -39,6 +39,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.620497, 3.5)
 light_color = Color(0.9607843, 0.8627451, 0.7254902, 1)
 light_energy = 0.5
 shadow_enabled = true
+distance_fade_enabled = true
+distance_fade_begin = 8.0
+distance_fade_shadow = 4.0
+distance_fade_length = 4.0
 omni_range = 4.0
 
 [node name="CeilingLight02" type="OmniLight3D" parent="Lights" unique_id=1531105247]
@@ -46,6 +50,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.620497, 0)
 light_color = Color(0.9607843, 0.8627451, 0.7254902, 1)
 light_energy = 0.5
 shadow_enabled = true
+distance_fade_enabled = true
+distance_fade_begin = 8.0
+distance_fade_shadow = 4.0
+distance_fade_length = 4.0
 omni_range = 4.0
 
 [node name="CeilingLight03" type="OmniLight3D" parent="Lights" unique_id=1051616150]
@@ -53,4 +61,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.620497, -3.5)
 light_color = Color(0.9607843, 0.8627451, 0.7254902, 1)
 light_energy = 0.5
 shadow_enabled = true
+distance_fade_enabled = true
+distance_fade_begin = 8.0
+distance_fade_shadow = 4.0
+distance_fade_length = 4.0
 omni_range = 4.0

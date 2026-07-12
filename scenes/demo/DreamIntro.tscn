@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="10_7i7gg"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="11_svmu2"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
+[ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="13_e6tct"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="16_cgaoe"]
 [ext_resource type="PackedScene" uid="uid://cshsg4d4ivjjy" path="res://assets/models/wooden_structures/fence_gate/fence-gate.glb" id="17_2r5dj"]
 [ext_resource type="PackedScene" uid="uid://c5e4eemudr5nq" path="res://assets/models/wooden_structures/barbed_gate_big_slight_angle/barbed-gate-big-slight-angle.glb" id="17_yilg7"]
@@ -414,6 +415,7 @@ script = ExtResource("1_2xo7o")
 [node name="MenuCamera" type="Camera3D" parent="." unique_id=347395798]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4272947, 1.4659163, 16.506426)
 current = true
+far = 55.0
 
 [node name="CameraAnimationPlayer" type="AnimationPlayer" parent="." unique_id=1883923507]
 libraries/ = SubResource("AnimationLibrary_7yl7e")
@@ -428,7 +430,6 @@ transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, -1.335716, 
 
 [node name="OutsideLoop" type="Node3D" parent="Train" unique_id=1077812068]
 script = ExtResource("4_0kfqj")
-stop_alignment_marker_path = NodePath("RightTreesB/StopGapMarker")
 
 [node name="LeftTreesA" type="Node3D" parent="Train/OutsideLoop" unique_id=1193431194]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
@@ -700,43 +701,45 @@ use_collision = true
 size = Vector3(0.9631552, 0.6843277, 2.0024056)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="TrainWagon" parent="Train" unique_id=1144106481 instance=ExtResource("2_5acte")]
+[node name="Wagons" type="Node3D" parent="Train" unique_id=430028723]
+
+[node name="TrainWagon" parent="Train/Wagons" unique_id=1144106481 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 0.67661524)
 script = ExtResource("5_p1vbp")
 
-[node name="Box" type="CSGBox3D" parent="Train/TrainWagon" unique_id=1276679142]
+[node name="Box" type="CSGBox3D" parent="Train/Wagons/TrainWagon" unique_id=1276679142]
 transform = Transform3D(0.9971597, 0, -0.07531636, 0, 1, 0, 0.07531636, 0, 0.9971597, -1.4880449, 0.33455998, 4.8023667)
 use_collision = true
 size = Vector3(0.57942873, 0.50733644, 1.8264542)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="Box2" type="CSGBox3D" parent="Train/TrainWagon" unique_id=296200729]
+[node name="Box2" type="CSGBox3D" parent="Train/Wagons/TrainWagon" unique_id=296200729]
 transform = Transform3D(0.98740816, 0, 0.15819329, 0, 1, 0, -0.15819329, 0, 0.98740816, -1.5118499, 0.8953204, 4.4026804)
 use_collision = true
 size = Vector3(0.57942873, 0.6104492, 0.8493099)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="Box3" type="CSGBox3D" parent="Train/TrainWagon" unique_id=1197948003]
+[node name="Box3" type="CSGBox3D" parent="Train/Wagons/TrainWagon" unique_id=1197948003]
 transform = Transform3D(0.9911154, 0, -0.13300459, 0, 1, 0, 0.13300459, 0, 0.9911154, -1.649408, 1.4218502, 4.352147)
 use_collision = true
 size = Vector3(0.57942873, 0.44240722, 0.47735882)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="Box4" type="CSGBox3D" parent="Train/TrainWagon" unique_id=1607654324]
+[node name="Box4" type="CSGBox3D" parent="Train/Wagons/TrainWagon" unique_id=1607654324]
 transform = Transform3D(0.97732484, 0, -0.21174562, 0, 1, 0, 0.21174562, 0, 0.97732484, -1.5230355, 0.7474967, 5.211193)
 use_collision = true
 size = Vector3(0.36246827, 0.2848541, 0.6270832)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="TrainWagon2" parent="Train" unique_id=392497124 instance=ExtResource("2_5acte")]
+[node name="TrainWagon2" parent="Train/Wagons" unique_id=392497124 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 13.731697)
 script = ExtResource("5_p1vbp")
 
-[node name="TrainWagon3" parent="Train" unique_id=250228809 instance=ExtResource("2_5acte")]
+[node name="TrainWagon3" parent="Train/Wagons" unique_id=250228809 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, -12.490075)
 script = ExtResource("5_p1vbp")
 
-[node name="TrainWagon4" parent="Train" unique_id=1125605507 instance=ExtResource("2_5acte")]
+[node name="TrainWagon4" parent="Train/Wagons" unique_id=1125605507 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 26.801626)
 script = ExtResource("5_p1vbp")
 
@@ -878,6 +881,11 @@ value = 100.0
 [node name="OptionsBackButton" type="Button" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox" unique_id=335933562]
 layout_mode = 2
 text = "Back"
+
+[node name="PerformanceOverlay" type="Label" parent="UI" unique_id=1282789101]
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("13_e6tct")
 
 [node name="Audio" type="Node3D" parent="." unique_id=841639067]
 script = ExtResource("6_icw3b")
