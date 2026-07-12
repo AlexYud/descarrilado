@@ -13,7 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="9_1look"]
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="10_7i7gg"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="11_svmu2"]
-[ext_resource type="PackedScene" uid="uid://ctj358rlsbnhy" path="res://assets/models/trees/custom_tree/tree_new.glb" id="12_gi2up"]
+[ext_resource type="PackedScene" uid="uid://cjkk68a68rvy1" path="res://assets/models/trees/custom_tree/tree_test.glb" id="12_gi2up"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="16_cgaoe"]
 [ext_resource type="PackedScene" uid="uid://cshsg4d4ivjjy" path="res://assets/models/wooden_structures/fence_gate/fence-gate.glb" id="17_2r5dj"]
@@ -352,7 +352,7 @@ last_lod = 4
 last_shadow_lod = 4
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_yilg7"]
-name = "tree_new"
+name = "tree_test"
 id = 1
 scene_file = ExtResource("12_gi2up")
 density = 0.01
@@ -733,7 +733,7 @@ moon_energy = 0.85
 moon_shadow_enabled = true
 
 [node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=614223077]
-transform = Transform3D(0.8829474, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947148, -0.59080726, 0.6561579, 0, 0, 0)
+transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947145, -0.59080726, 0.6561579, 0, 0, 0)
 light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 light_energy = 0.85
 shadow_enabled = true
