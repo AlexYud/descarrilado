@@ -12,11 +12,11 @@ class_name ScenePerformanceProfile
 
 # Absolute camera cutoff.
 # Anything farther than this will not be rendered.
-@export var camera_far_distance: float = 45.0
+@export var camera_far_distance: float = 60.0
 
 # Applies to MeshInstance3D, CSGShape3D, particles,
 # MultiMeshInstance3D and other GeometryInstance3D nodes.
-@export var geometry_render_distance: float = 40.0
+@export var geometry_render_distance: float = 60.0
 
 # Small margin prevents objects rapidly appearing/disappearing
 # when standing exactly at the distance limit.
@@ -28,14 +28,14 @@ class_name ScenePerformanceProfile
 @export var configure_local_lights: bool = true
 
 # The light begins fading at this camera distance.
-@export var light_fade_begin: float = 10.0
+@export var light_fade_begin: float = 20.0
 
 # The light disappears after:
 # light_fade_begin + light_fade_length.
-@export var light_fade_length: float = 5.0
+@export var light_fade_length: float = 10.0
 
 # Shadows disappear sooner than the light.
-@export var light_shadow_distance: float = 7.0
+@export var light_shadow_distance: float = 14.0
 
 
 @export_category("Directional Light")
@@ -43,7 +43,7 @@ class_name ScenePerformanceProfile
 @export var configure_directional_light: bool = true
 
 # Maximum distance for moon/sun shadows.
-@export var directional_shadow_distance: float = 25.0
+@export var directional_shadow_distance: float = 50.0
 
 @export_range(0.0, 1.0, 0.05)
 var directional_shadow_fade_start: float = 0.75

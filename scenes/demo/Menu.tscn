@@ -349,7 +349,7 @@ last_shadow_lod = 4
 name = "tree_test"
 id = 1
 scene_file = ExtResource("7_75e31")
-density = 0.01
+density = 0.5
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 128.0
@@ -485,7 +485,7 @@ script = ExtResource("9_dwddo")
 [node name="MenuCameraRig" type="Node3D" parent="MovingTrainSystem/TrainPath/WagonFollow4" unique_id=1843942066]
 
 [node name="MenuCamera" type="Camera3D" parent="MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig" unique_id=347395798]
-transform = Transform3D(1.0000061, 0, 8.9580506e-05, 0, 1.0000025, 0, -8.9580506e-05, 0, 1.0000061, -0.0021150606, 1.211518, 4.5196123)
+transform = Transform3D(1.0000061, 0, 4.4703487e-08, 0, 1.0000025, 0, -4.4703487e-08, 0, 1.0000061, -2.592936, 0.8023112, 5.919642)
 current = true
 far = 55.0
 
@@ -651,17 +651,15 @@ metadata/_edit_lock_ = true
 script = ExtResource("15_yivn6")
 
 [node name="PerformanceProfile" type="Node3D" parent="." unique_id=1513184291]
-transform = Transform3D(0.99999994, 2.9802322e-08, -2.9802322e-08, 1.4901161e-08, 1, 0, -1.4901161e-08, -2.9802322e-08, 1, 0, 0, 0)
 script = ExtResource("1_oxrth")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1407868777]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=758050473]
 environment = SubResource("Environment_75e31")
 script = ExtResource("16_h1mqy")
 background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
 background_energy = 0.35
 ambient_color = Color(0.06666667, 0.09019608, 0.13333334, 1)
 ambient_energy = 0.16
-fog_color = Color(0.37254903, 0.43529412, 0.50980395, 1)
 fog_energy = 0.28
 fog_density = 0.045
 fog_height_density = 0.1
@@ -676,8 +674,7 @@ moon_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 moon_energy = 0.85
 moon_shadow_enabled = true
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=2091314289]
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1057088753]
 transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947142, -0.59080726, 0.6561579, 0, 0, 0)
 light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
-light_energy = 0.85
 shadow_enabled = true

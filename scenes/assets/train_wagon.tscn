@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bepla6bqlsog4"]
 
 [ext_resource type="Script" uid="uid://c4mb748noxx6s" path="res://scripts/train_light_flicker.gd" id="1_8c4ah"]
-[ext_resource type="PackedScene" uid="uid://cex2srsuecday" path="res://assets/models/trains/demo_train/train.tscn" id="1_n1x3d"]
+[ext_resource type="PackedScene" uid="uid://dkr3q7w5oxxm5" path="res://assets/models/trains/demo_train_v2/train.tscn" id="1_sd6qm"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_7fnek"]
 size = Vector3(0.7, 0.04, 0.25)
@@ -28,7 +28,7 @@ mesh = SubResource("BoxMesh_3xkkt")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.790497, -3.5)
 mesh = SubResource("BoxMesh_sdyrf")
 
-[node name="Train" parent="Visual" unique_id=194928131 instance=ExtResource("1_n1x3d")]
+[node name="Train" parent="Visual" unique_id=2009910107 instance=ExtResource("1_sd6qm")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 1.5554441, 0)
 
 [node name="Lights" type="Node3D" parent="." unique_id=1675096014]
