@@ -3,89 +3,16 @@
 [ext_resource type="Script" uid="uid://cpxvm45e716hd" path="res://scripts/dream_intro_controller.gd" id="1_2xo7o"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rhmqu"]
 [ext_resource type="PackedScene" uid="uid://bepla6bqlsog4" path="res://scenes/assets/train_wagon.tscn" id="2_5acte"]
-[ext_resource type="Script" uid="uid://byum38r46uier" path="res://scripts/outside_loop.gd" id="4_0kfqj"]
 [ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/ScreenBorderFilter.gdshader" id="5_7koiu"]
-[ext_resource type="Script" uid="uid://dfsn5nq0htc3d" path="res://scripts/train_wagon_shake.gd" id="5_p1vbp"]
-[ext_resource type="AudioStream" uid="uid://djpvdt3yh3jdo" path="res://assets/audios/intro_placeholder.mp3" id="6_7koiu"]
-[ext_resource type="PackedScene" uid="uid://ciu6c418f6mwo" path="res://assets/models/wooden_structures/barbed_gate_big_no_angle/barbed-gate-big-no-angle.glb" id="6_gi2up"]
-[ext_resource type="Script" uid="uid://cfyx4n0v2ypnc" path="res://scripts/dream_intro_audio.gd" id="6_icw3b"]
-[ext_resource type="AudioStream" uid="uid://cyleuysfowk4c" path="res://assets/audios/menu_idle.mp3" id="7_7yl7e"]
-[ext_resource type="PackedScene" uid="uid://c3qpe0fpk4bl6" path="res://scenes/assets/fence_door_interactable.tscn" id="8_j607m"]
 [ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="9_1look"]
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="10_7i7gg"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="11_svmu2"]
 [ext_resource type="PackedScene" uid="uid://cjkk68a68rvy1" path="res://assets/models/trees/custom_tree/tree_test.glb" id="12_gi2up"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
 [ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="13_e6tct"]
+[ext_resource type="PackedScene" uid="uid://dlqu0p3xmxe86" path="res://scenes/demo/persistent_audio.tscn" id="13_p1vbp"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="16_cgaoe"]
-[ext_resource type="PackedScene" uid="uid://cshsg4d4ivjjy" path="res://assets/models/wooden_structures/fence_gate/fence-gate.glb" id="17_2r5dj"]
-[ext_resource type="PackedScene" uid="uid://c5e4eemudr5nq" path="res://assets/models/wooden_structures/barbed_gate_big_slight_angle/barbed-gate-big-slight-angle.glb" id="17_yilg7"]
-[ext_resource type="PackedScene" uid="uid://dkd7p335fwkug" path="res://assets/models/wooden_structures/barbed_gate_medium_no_angle/barbed-gate-medium-no-angle.glb" id="18_j607m"]
-[ext_resource type="PackedScene" uid="uid://bo5i2v33ipcgf" path="res://assets/models/wooden_structures/barbed_gate_medium_slight_angle/barbed-gate-medium-slight-angle.glb" id="19_ywnw5"]
-[ext_resource type="PackedScene" uid="uid://cb4ok0ek7md2t" path="res://assets/models/wooden_structures/barbed_gate_small_no_angle/barbed-gate-small-no-angle.glb" id="20_e6tct"]
-[ext_resource type="PackedScene" uid="uid://u86vrob1a2xt" path="res://assets/models/wooden_structures/barbed_gate_small_slight_angle/barbed-gate-small-slight-angle.glb" id="21_romvk"]
 [ext_resource type="Script" uid="uid://ca5e4nnd25xr7" path="res://scripts/optimization/scene_performance_profile.gd" id="26_e6tct"]
-
-[sub_resource type="Animation" id="Animation_hnogt"]
-resource_name = "Intro"
-length = 20.0
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("MenuCamera:position")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 15.01025, 20),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector3(-2.9359167, 1.2038231, 28.438383), Vector3(-2.4637525, 1.5585876, 3.4333258), Vector3(-1.3364608, 1.5674155, 3.4358845)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("MenuCamera:rotation")
-tracks/1/interp = 2
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 15.01025, 20),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_7koiu"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("MenuCamera:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(-2.4272947, 1.4659163, 16.506426)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("MenuCamera:rotation")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector3(0, 0, 0)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_7yl7e"]
-_data = {
-&"Intro": SubResource("Animation_hnogt"),
-&"RESET": SubResource("Animation_7koiu")
-}
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -389,7 +316,7 @@ detiling_shift = 0.25
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_16kht"), SubResource("Terrain3DMeshAsset_yilg7")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_svmu2"), SubResource("Terrain3DTextureAsset_uas77")])
 
-[sub_resource type="Environment" id="Environment_yilg7"]
+[sub_resource type="Environment" id="Environment_p1vbp"]
 background_mode = 1
 background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
 background_energy_multiplier = 0.35
@@ -417,157 +344,19 @@ adjustment_saturation = 0.72
 
 [node name="PerformanceProfile" type="Node3D" parent="." unique_id=1513184291]
 script = ExtResource("26_e6tct")
-camera_far_distance = 28.0
-geometry_render_distance = 24.0
-geometry_distance_margin = 0.0
-light_fade_begin = 6.0
-light_fade_length = 3.0
-light_shadow_distance = 4.0
-directional_shadow_distance = 12.0
-mesh_lod_threshold = 4.0
 
 [node name="DreamIntroController" type="Node" parent="." unique_id=288397973]
 script = ExtResource("1_2xo7o")
 
-[node name="MenuCamera" type="Camera3D" parent="." unique_id=347395798]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4272947, 1.4659163, 16.506426)
-current = true
-far = 55.0
-
-[node name="CameraAnimationPlayer" type="AnimationPlayer" parent="." unique_id=1883923507]
-libraries/ = SubResource("AnimationLibrary_7yl7e")
-speed_scale = 0.75
-
 [node name="Player" parent="." unique_id=1340821127 instance=ExtResource("1_rhmqu")]
-transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, -1.335716, 0.8170857, 3.4334261)
-
-[node name="Forest" type="Node3D" parent="." unique_id=141344234]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 1.2429868, 0.8170857, -2.5105872)
 
 [node name="Train" type="Node3D" parent="." unique_id=1716082974]
-
-[node name="OutsideLoop" type="Node3D" parent="Train" unique_id=1077812068]
-script = ExtResource("4_0kfqj")
-stop_alignment_marker_path = NodePath("RightTreesB/StopGapMarker")
-
-[node name="LeftTreesA" type="Node3D" parent="Train/OutsideLoop" unique_id=1193431194]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, 0)
-
-[node name="LeftTreesB" type="Node3D" parent="Train/OutsideLoop" unique_id=242301247]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0, -16)
-
-[node name="RightTreesA" type="Node3D" parent="Train/OutsideLoop" unique_id=532883171]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, -16)
-
-[node name="RightTreesB" type="Node3D" parent="Train/OutsideLoop" unique_id=1904463630]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, 0)
-
-[node name="StopGapMarker" type="Node3D" parent="Train/OutsideLoop/RightTreesB" unique_id=635763356]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -5)
-
-[node name="LeftFences" type="Node3D" parent="Train/OutsideLoop" unique_id=1679639336]
-
-[node name="barbed-gate-big-no-angle" parent="Train/OutsideLoop/LeftFences" unique_id=1036428136 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9961947, 0, 0.08715574, 0, 1, 0, -0.08715574, 0, 0.9961947, -3.7389407, 0.6452537, 7.7404995)
-
-[node name="barbed-gate-big-no-angle2" parent="Train/OutsideLoop/LeftFences" unique_id=580936463 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9986295, 0, -0.05233596, 0, 1, 0, 0.05233596, 0, 0.9986295, -3.8194976, 0.6452537, 5.940324)
-
-[node name="barbed-gate-big-no-angle3" parent="Train/OutsideLoop/LeftFences" unique_id=2086067948 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.99939084, 0, 0.034899496, 0, 1, 0, -0.034899496, 0, 0.99939084, -3.7858317, 0.6452537, 4.136757)
-
-[node name="barbed-gate-big-no-angle4" parent="Train/OutsideLoop/LeftFences" unique_id=1487799464 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9961947, 0, -0.08715574, 0, 1, 0, 0.08715574, 0, 0.9961947, -3.7589376, 0.6452537, 2.3176894)
-
-[node name="barbed-gate-big-no-angle5" parent="Train/OutsideLoop/LeftFences" unique_id=1293931727 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, -3.7461941, 0.6452537, 0.5169649)
-
-[node name="barbed-gate-big-no-angle6" parent="Train/OutsideLoop/LeftFences" unique_id=1408134547 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9986295, 0, -0.05233596, 0, 1, 0, 0.05233596, 0, 0.9986295, -3.8320131, 0.6452537, -1.2962179)
-
-[node name="barbed-gate-big-no-angle7" parent="Train/OutsideLoop/LeftFences" unique_id=707185699 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9961947, 0, -0.08715574, 0, 1, 0, 0.08715574, 0, 0.9961947, -3.7257562, 0.6452537, -3.0926623)
-
-[node name="barbed-gate-big-no-angle8" parent="Train/OutsideLoop/LeftFences" unique_id=1191744627 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9986295, 0, 0.05233596, 0, 1, 0, -0.05233596, 0, 0.9986295, -3.6768117, 0.6452537, -4.8889413)
-
-[node name="barbed-gate-big-no-angle9" parent="Train/OutsideLoop/LeftFences" unique_id=66722485 instance=ExtResource("6_gi2up")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7389407, 0.6452537, -6.698248)
-
-[node name="RightFences" type="Node3D" parent="Train/OutsideLoop" unique_id=1521412224]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.8181148, 0, 0)
-
-[node name="fence-gate" parent="Train/OutsideLoop/RightFences" unique_id=779549245 instance=ExtResource("17_2r5dj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9660616, 0.645, 4.7974043)
-visible = false
-
-[node name="barbed-gate-big-no-angle" parent="Train/OutsideLoop/RightFences" unique_id=921533474 instance=ExtResource("6_gi2up")]
-transform = Transform3D(-0.5966038, 0, 0.80253595, 0, 1, 0, -0.80253595, 0, -0.5966038, -2.257039, 0.6452537, 7.91786)
-
-[node name="barbed-gate-big-no-angle2" parent="Train/OutsideLoop/RightFences" unique_id=90102124 instance=ExtResource("6_gi2up")]
-transform = Transform3D(-0.89988333, 0, 0.43613067, 0, 1, 0, -0.43613067, 0, -0.89988333, -1.2248311, 0.6452537, 6.510341)
-
-[node name="barbed-gate-big-no-angle3" parent="Train/OutsideLoop/RightFences" unique_id=1992197866 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.87441695, 0, 0.48517552, 0, 1, 0, -0.48517552, 0, 0.87441695, -1.302877, 0.6452537, 3.1055112)
-
-[node name="barbed-gate-big-no-angle4" parent="Train/OutsideLoop/RightFences" unique_id=560695249 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.5591113, 0, 0.82909256, 0, 1, 0, -0.82909256, 0, 0.5591113, -2.4110618, 0.6452537, 1.7318642)
-
-[node name="barbed-gate-big-no-angle5" parent="Train/OutsideLoop/RightFences" unique_id=154639388 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9694305, 0, 0.24536619, 0, 1, 0, -0.24536619, 0, 0.9694305, -3.5522857, 0.6452537, 0.46456373)
-
-[node name="barbed-gate-big-no-angle6" parent="Train/OutsideLoop/RightFences" unique_id=1885889297 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9986295, 0, -0.05233596, 0, 1, 0, 0.05233596, 0, 0.9986295, -3.8320131, 0.6452537, -1.2962179)
-
-[node name="barbed-gate-big-no-angle7" parent="Train/OutsideLoop/RightFences" unique_id=1530416380 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9961947, 0, -0.08715574, 0, 1, 0, 0.08715574, 0, 0.9961947, -3.7257562, 0.6452537, -3.0926623)
-
-[node name="barbed-gate-big-no-angle8" parent="Train/OutsideLoop/RightFences" unique_id=49279835 instance=ExtResource("6_gi2up")]
-transform = Transform3D(0.9986295, 0, 0.05233596, 0, 1, 0, -0.05233596, 0, 0.9986295, -3.6768117, 0.6452537, -4.8889413)
-
-[node name="barbed-gate-big-no-angle9" parent="Train/OutsideLoop/RightFences" unique_id=1397706630 instance=ExtResource("6_gi2up")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7389407, 0.6452537, -6.698248)
-
-[node name="barbed-gate-big-no-angle10" parent="Train/OutsideLoop/RightFences" unique_id=1617598752 instance=ExtResource("6_gi2up")]
-transform = Transform3D(-0.93501985, 0, 0.35459533, 0, 1, 0, -0.35459533, 0, -0.93501985, -3.415094, 0.6452537, 9.218036)
-
-[node name="DoorController" parent="Train/OutsideLoop/RightFences" unique_id=944800287 instance=ExtResource("8_j607m")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.9660001, 0, 3.6917415)
-
-[node name="Box" type="CSGBox3D" parent="Train/OutsideLoop/RightFences" unique_id=916343917]
-transform = Transform3D(0.70422876, 0, -0.70997316, 0, 1, 0, 0.70997316, 0, 0.70422876, -2.0742269, 0.7849488, 7.4614935)
-use_collision = true
-size = Vector3(0.068644404, 0.6843277, 1.9020157)
-material = SubResource("StandardMaterial3D_yilg7")
-
-[node name="Box2" type="CSGBox3D" parent="Train/OutsideLoop/RightFences" unique_id=1824819374]
-transform = Transform3D(-0.07906763, 0, -0.99686927, 0, 1, 0, 0.99686927, 0, -0.07906763, -4.559352, 0.3355351, 8.517476)
-use_collision = true
-size = Vector3(0.9631552, 0.6843277, 2.2193398)
-material = SubResource("StandardMaterial3D_yilg7")
-
-[node name="Box3" type="CSGBox3D" parent="Train/OutsideLoop/RightFences" unique_id=704941051]
-transform = Transform3D(0.027098298, 0, -0.99963284, 0, 1, 0, 0.99963284, 0, 0.027098298, -4.5069394, 1.0147157, 8.521633)
-use_collision = true
-size = Vector3(0.9631552, 0.6843277, 2.0624287)
-material = SubResource("StandardMaterial3D_yilg7")
-
-[node name="Box4" type="CSGBox3D" parent="Train/OutsideLoop/RightFences" unique_id=44978701]
-transform = Transform3D(-0.07906763, 0, -0.99686927, 0, 1, 0, 0.99686927, 0, -0.07906763, -4.5937734, 0.3355351, 0.6577487)
-use_collision = true
-size = Vector3(0.9631552, 0.6843277, 2.1387734)
-material = SubResource("StandardMaterial3D_yilg7")
-
-[node name="Box5" type="CSGBox3D" parent="Train/OutsideLoop/RightFences" unique_id=417360117]
-transform = Transform3D(0.17600206, 0, -0.9843898, 0, 1, 0, 0.9843898, 0, 0.17600206, -4.53108, 1.0147157, 0.79878604)
-use_collision = true
-size = Vector3(0.9631552, 0.6843277, 2.0024056)
-material = SubResource("StandardMaterial3D_yilg7")
 
 [node name="Wagons" type="Node3D" parent="Train" unique_id=430028723]
 
 [node name="TrainWagon" parent="Train/Wagons" unique_id=1144106481 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 0.67661524)
-script = ExtResource("5_p1vbp")
 
 [node name="Box" type="CSGBox3D" parent="Train/Wagons/TrainWagon" unique_id=1276679142]
 transform = Transform3D(0.9971597, 0, -0.07531636, 0, 1, 0, 0.07531636, 0, 0.9971597, -1.4880449, 0.33455998, 4.8023667)
@@ -595,15 +384,12 @@ material = SubResource("StandardMaterial3D_yilg7")
 
 [node name="TrainWagon2" parent="Train/Wagons" unique_id=392497124 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 13.731697)
-script = ExtResource("5_p1vbp")
 
 [node name="TrainWagon3" parent="Train/Wagons" unique_id=250228809 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, -12.490075)
-script = ExtResource("5_p1vbp")
 
 [node name="TrainWagon4" parent="Train/Wagons" unique_id=1125605507 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 26.801626)
-script = ExtResource("5_p1vbp")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
 layer = 10
@@ -617,146 +403,10 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(1, 1, 1, 0)
 
-[node name="MainMenuUI" type="Control" parent="UI" unique_id=2008314116]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="LeftPanel" type="ColorRect" parent="UI/MainMenuUI" unique_id=1042862037]
-layout_mode = 1
-anchors_preset = -1
-anchor_right = 0.4
-anchor_bottom = 1.0
-grow_vertical = 2
-color = Color(1, 1, 1, 0)
-
-[node name="MenuColumn" type="Control" parent="UI/MainMenuUI/LeftPanel" unique_id=1014570733]
-layout_mode = 1
-anchor_left = 0.2
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="MenuMargin" type="MarginContainer" parent="UI/MainMenuUI/LeftPanel/MenuColumn" unique_id=775246633]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin" unique_id=89382277]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="TopSpacer" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=358300293]
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-
-[node name="TitleLabel" type="Label" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=645727401]
-layout_mode = 2
-theme_override_font_sizes/font_size = 36
-text = "Unrailed"
-
-[node name="MenuSpacer01" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1050070901]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-
-[node name="StartButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1809137748]
-custom_minimum_size = Vector2(180, 36)
-layout_mode = 2
-text = "Start"
-flat = true
-alignment = 0
-
-[node name="OptionsButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1635031449]
-custom_minimum_size = Vector2(180, 36)
-layout_mode = 2
-text = "Options"
-flat = true
-alignment = 0
-
-[node name="QuitButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=50317622]
-custom_minimum_size = Vector2(180, 36)
-layout_mode = 2
-text = "Quit"
-flat = true
-alignment = 0
-
-[node name="BottomSpacer" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=323516311]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="OptionsPanel" type="PanelContainer" parent="UI/MainMenuUI" unique_id=329487634]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.3
-anchor_top = 0.2
-anchor_right = 0.7
-anchor_bottom = 0.8
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="OptionsMargin" type="MarginContainer" parent="UI/MainMenuUI/OptionsPanel" unique_id=2125597063]
-layout_mode = 2
-
-[node name="OptionsVBox" type="VBoxContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin" unique_id=130151733]
-layout_mode = 2
-
-[node name="OptionsTitle" type="Label" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox" unique_id=2104925653]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Options"
-
-[node name="OptionsTabs" type="TabContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox" unique_id=596277558]
-layout_mode = 2
-size_flags_vertical = 3
-current_tab = 0
-
-[node name="Audio" type="MarginContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs" unique_id=314067872]
-layout_mode = 2
-metadata/_tab_index = 0
-
-[node name="AudioVBox" type="VBoxContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio" unique_id=2075394363]
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="MasterVolumeRow" type="HBoxContainer" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox" unique_id=322717856]
-layout_mode = 2
-size_flags_vertical = 0
-
-[node name="MasterVolumeLabel" type="Label" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=645035354]
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-text = "Master Volume"
-
-[node name="MasterVolumeSlider" type="HSlider" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=2030607164]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-value = 100.0
-
-[node name="OptionsBackButton" type="Button" parent="UI/MainMenuUI/OptionsPanel/OptionsMargin/OptionsVBox" unique_id=335933562]
-layout_mode = 2
-text = "Back"
-
 [node name="PerformanceOverlay" type="Label" parent="UI" unique_id=1282789101]
 offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("13_e6tct")
-
-[node name="Audio" type="Node3D" parent="." unique_id=841639067]
-script = ExtResource("6_icw3b")
-
-[node name="IntroNarrationPlayer" type="AudioStreamPlayer" parent="Audio" unique_id=1481098020]
-stream = ExtResource("6_7koiu")
-
-[node name="MenuIdlePlayer" type="AudioStreamPlayer" parent="Audio" unique_id=872905682]
-stream = ExtResource("7_7yl7e")
 
 [node name="Terrain3D" type="Terrain3D" parent="." unique_id=729808578]
 data_directory = "res://dd"
@@ -765,32 +415,8 @@ assets = SubResource("Terrain3DAssets_uas77")
 top_level = true
 metadata/_edit_lock_ = true
 
-[node name="Fences" type="Node3D" parent="." unique_id=1977835161]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.876919, 0, 0)
-
-[node name="barbed-gate-big-no-angle" parent="Fences" unique_id=1362181814 instance=ExtResource("6_gi2up")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45679957, -5.513594)
-
-[node name="barbed-gate-big-slight-angle" parent="Fences" unique_id=2143374394 instance=ExtResource("17_yilg7")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45679957, -3.333444)
-
-[node name="barbed-gate-medium-no-angle" parent="Fences" unique_id=261550068 instance=ExtResource("18_j607m")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45679957, -1.7042987)
-
-[node name="barbed-gate-medium-slight-angle" parent="Fences" unique_id=1902592434 instance=ExtResource("19_ywnw5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45679957, 2.441969)
-
-[node name="barbed-gate-small-no-angle" parent="Fences" unique_id=1661194803 instance=ExtResource("20_e6tct")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45679957, 3.8775852)
-
-[node name="barbed-gate-small-slight-angle" parent="Fences" unique_id=1091812956 instance=ExtResource("21_romvk")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45679957, 5.175761)
-
-[node name="fence-gate" parent="Fences" unique_id=1326554922 instance=ExtResource("17_2r5dj")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45679957, 0.13807511)
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1439425964]
-environment = SubResource("Environment_yilg7")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1378756397]
+environment = SubResource("Environment_p1vbp")
 script = ExtResource("16_cgaoe")
 background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
 background_energy = 0.35
@@ -811,8 +437,25 @@ moon_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 moon_energy = 0.85
 moon_shadow_enabled = true
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=614223077]
-transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947145, -0.59080726, 0.6561579, 0, 0, 0)
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=743826153]
+transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947142, -0.59080726, 0.6561579, 0, 0, 0)
 light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 light_energy = 0.85
 shadow_enabled = true
+
+[node name="TransitionBlackout" type="CanvasLayer" parent="." unique_id=607709047]
+layer = 1000
+
+[node name="BlackoutRect" type="ColorRect" parent="TransitionBlackout" unique_id=1866636450]
+modulate = Color(1, 1, 1, 0.003921569)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="PersistentAudio" parent="." unique_id=442030015 instance=ExtResource("13_p1vbp")]

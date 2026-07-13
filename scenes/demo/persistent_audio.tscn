@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://dlqu0p3xmxe86"]
+
+[ext_resource type="Script" uid="uid://cfyx4n0v2ypnc" path="res://scripts/dream_intro_audio.gd" id="1_76hik"]
+[ext_resource type="AudioStream" uid="uid://djpvdt3yh3jdo" path="res://assets/audios/intro_placeholder.mp3" id="2_578vn"]
+[ext_resource type="AudioStream" uid="uid://cyleuysfowk4c" path="res://assets/audios/menu_idle.mp3" id="3_1t6ld"]
+
+[node name="PersistentAudio" type="Node3D" unique_id=442030015]
+script = ExtResource("1_76hik")
+
+[node name="IntroNarrationPlayer" type="AudioStreamPlayer" parent="." unique_id=1620298636]
+stream = ExtResource("2_578vn")
+
+[node name="MenuIdlePlayer" type="AudioStreamPlayer" parent="." unique_id=1946294155]
+stream = ExtResource("3_1t6ld")

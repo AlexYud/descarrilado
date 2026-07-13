@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Unrailed"
-run/main_scene="uid://c72gw0ygio5q1"
+run/main_scene="uid://06oh821c5qmw"
 config/features=PackedStringArray("4.7", "Forward Plus")
 run/max_fps=60
 config/icon="res://icon.svg"
@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 DialogueManager="*uid://ce4t2jp8vp1ce"
+PersistentAudio="*uid://dlqu0p3xmxe86"
 
 [display]
 
@@ -99,3 +100,4 @@ inventory={
 rendering_device/driver.windows="d3d12"
 scaling_3d/mode=1
 scaling_3d/scale=0.75
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)

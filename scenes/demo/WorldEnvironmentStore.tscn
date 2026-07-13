@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="1_a7tex"]
 
-[sub_resource type="Environment" id="Environment_u1huc"]
+[sub_resource type="Environment" id="Environment_a7tex"]
 background_mode = 1
 background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
 background_energy_multiplier = 0.35
@@ -28,8 +28,8 @@ adjustment_saturation = 0.72
 
 [node name="WorldEnvironmentStore" type="Node3D" unique_id=1748959053]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=473814159]
-environment = SubResource("Environment_u1huc")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=216745188]
+environment = SubResource("Environment_a7tex")
 script = ExtResource("1_a7tex")
 background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
 background_energy = 0.35
@@ -50,8 +50,8 @@ moon_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 moon_energy = 0.85
 moon_shadow_enabled = true
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=84186456]
-transform = Transform3D(0.88294744, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.4694715, -0.59080726, 0.6561579, 0, 0, 0)
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=2108800892]
+transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947142, -0.59080726, 0.6561579, 0, 0, 0)
 light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
 light_energy = 0.85
 shadow_enabled = true

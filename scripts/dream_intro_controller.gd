@@ -1,123 +1,89 @@
-# DreamIntroController.gd
 extends Node
 
-@export var dev_skip_intro: bool = true
-@export var dev_skip_stop_outside_loop: bool = true
-@export var dev_skip_blackout_train_lights: bool = true
-@export var dev_skip_show_flashlight_prompt: bool = false
-@export var dev_skip_stop_wagon_shake: bool = true
-
-@export var reference_resolution: Vector2 = Vector2(1920.0, 1080.0)
-
-@export var title_base_font_size: int = 120
-@export var button_base_font_size: int = 32
-
-@export var min_ui_scale: float = 0.85
-@export var max_ui_scale: float = 1.35
-
-@export var menu_fade_duration: float = 2.0
-@export var player_menu_settle_physics_frames: int = 6
-
-@export var menu_camera_path: String = "MenuCamera"
-@export var camera_animation_player_path: String = "CameraAnimationPlayer"
-@export var intro_camera_animation_name: String = "Intro"
-
-@export var intro_camera_animation_start_delay: float = 0.0
-
-@export var audio_controller_path: String = "Audio"
-@export var play_menu_idle_audio: bool = true
-@export var menu_idle_fade_out_duration: float = 2.0
-
-@export var play_intro_narration: bool = true
-@export var intro_narration_start_delay: float = 0.0
-@export var intro_narration_volume_db: float = -10.0
-
-@export var train_root_path: String = "Train"
-@export var outside_loop_path: String = "Train/OutsideLoop"
-
-@export var train_lights_path: String = "Train/TrainWagon/Lights"
-
-@export var start_wagon_shake_in_menu: bool = true
-@export var stop_wagon_shake_when_malfunction_starts: bool = true
-
+@export_category("Scene References")
+@export var player_path: String = "Player"
+@export var player_camera_path: String = "Head/Camera3D"
 @export var player_flashlight_path: String = "Player/Hand/SpotLight3D"
+@export var train_root_path: String = "Train"
+@export var ui_layer_path: String = "UI"
 
-@export var train_slowdown_duration: float = 4.0
-@export var align_train_stop_to_loop_start: bool = true
+## Existing node:
+## DreamIntro/TransitionBlackout/BlackoutRect
+@export var blackout_rect_path: NodePath
 
-# Lights go out during the slowdown, before the train fully stops.
-@export var blackout_during_slowdown_delay: float = 1.2
-@export var blackout_final_flicker_duration: float = 0.6
+@export_category("Scene Transition")
+@export var initial_black_hold_duration: float = 0.20
+@export var scene_fade_in_duration: float = 0.50
 
-@export var train_stop_settle_delay: float = 0.5
+@export_category("Stopped Train")
+@export var force_train_lights_off: bool = true
 
+@export_category("Flashlight Tutorial")
 @export var show_flashlight_tutorial_prompt: bool = true
+@export var tutorial_prompt_delay: float = 0.35
+
 @export var flashlight_action_name: String = "flashlight"
 @export var flashlight_button_text: String = "F"
-@export var flashlight_tutorial_text: String = "Press %s to turn on the flashlight"
+
+@export var flashlight_tutorial_text: String = (
+	"Press %s to turn on the flashlight"
+)
+
 @export var tutorial_prompt_font_size: int = 26
 @export var tutorial_prompt_bottom_margin: float = 90.0
 @export var tutorial_prompt_fade_duration: float = 0.35
 
+@export_category("Responsive UI")
+@export var reference_resolution: Vector2 = Vector2(1920.0, 1080.0)
+@export var min_ui_scale: float = 0.85
+@export var max_ui_scale: float = 1.35
+
+
 var dream_root: Node = null
+
 var player: Node = null
-
-var menu_camera: Camera3D = null
 var player_camera: Camera3D = null
-var camera_animation_player: AnimationPlayer = null
-
-var dream_intro_audio: DreamIntroAudio = null
-
 var player_flashlight: SpotLight3D = null
-var main_menu_ui: Control = null
+
+var train_root: Node = null
 var ui_layer: CanvasLayer = null
+var blackout_rect: ColorRect = null
 
-var outside_loop: OutsideTrainLoop = null
 var train_light_flickers: Array[TrainLightFlicker] = []
-var train_wagon_shakes: Array[TrainWagonShake] = []
-
-var title_label: Label = null
-var start_button: Button = null
-var options_button: Button = null
-var quit_button: Button = null
-
-var options_panel: Control = null
-var options_back_button: Button = null
-var master_volume_slider: HSlider = null
 
 var tutorial_prompt_label: Label = null
 var tutorial_prompt_tween: Tween = null
-
-var start_transition_running: bool = false
 var tutorial_prompt_visible: bool = false
-var options_panel_open: bool = false
-var updating_master_volume_slider: bool = false
 
 
 func _ready() -> void:
 	dream_root = get_parent()
 
-	player = _get_node_from_dream_root("Player")
-	main_menu_ui = _get_node_from_dream_root("UI/MainMenuUI") as Control
-	ui_layer = _get_node_from_dream_root("UI") as CanvasLayer
+	_find_scene_nodes()
+	_collect_train_light_flickers()
 
-	if player != null:
-		player_camera = player.get_node_or_null("Head/Camera3D") as Camera3D
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
-	_find_sequence_nodes()
-	_find_menu_nodes()
-	_connect_buttons()
-	_create_tutorial_prompt()
+	if player_camera != null:
+		player_camera.current = true
 
-	if get_viewport() != null and not get_viewport().size_changed.is_connected(_apply_responsive_ui):
-		get_viewport().size_changed.connect(_apply_responsive_ui)
+	if blackout_rect != null:
+		blackout_rect.visible = true
+		blackout_rect.color = Color.BLACK
+		blackout_rect.modulate.a = 1.0
+		blackout_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
+		var blackout_parent: Node = blackout_rect.get_parent()
+
+		if blackout_parent is CanvasLayer:
+			(blackout_parent as CanvasLayer).layer = 1000
+
+	_set_player_enabled(false)
 	_set_flashlight_input_enabled(false)
 
-	if dev_skip_intro:
-		call_deferred("_enter_development_gameplay_state")
-	else:
-		call_deferred("_enter_menu_state")
+	_force_train_dark()
+
+	call_deferred("_finish_scene_setup")
 
 
 func _process(_delta: float) -> void:
@@ -131,214 +97,222 @@ func _process(_delta: float) -> void:
 		_hide_flashlight_tutorial_prompt()
 
 
-func _get_node_from_dream_root(path_text: String) -> Node:
+func _finish_scene_setup() -> void:
+	_create_tutorial_prompt()
+	_connect_viewport_resize()
+
+	# Other wagon/light scripts may initialize after this controller.
+	# Reapply the dark state after their startup has completed.
+	await get_tree().process_frame
+	_force_train_dark()
+
+	await get_tree().physics_frame
+	_force_train_dark()
+
+	await _begin_playable_scene()
+
+
+func _find_scene_nodes() -> void:
+	player = _get_node_from_root(player_path)
+	train_root = _get_node_from_root(train_root_path)
+	ui_layer = _get_node_from_root(ui_layer_path) as CanvasLayer
+
+	if not blackout_rect_path.is_empty():
+		blackout_rect = (
+			get_node_or_null(blackout_rect_path)
+			as ColorRect
+		)
+
+	if player == null and dream_root != null:
+		player = dream_root.find_child(
+			"Player",
+			true,
+			false
+		)
+
+	if train_root == null and dream_root != null:
+		train_root = dream_root.find_child(
+			"Train",
+			true,
+			false
+		)
+
+	if ui_layer == null and dream_root != null:
+		ui_layer = (
+			dream_root.find_child(
+				"UI",
+				true,
+				false
+			)
+			as CanvasLayer
+		)
+
+	if blackout_rect == null and dream_root != null:
+		blackout_rect = (
+			dream_root.find_child(
+				"BlackoutRect",
+				true,
+				false
+			)
+			as ColorRect
+		)
+
+	if player != null:
+		player_camera = (
+			player.get_node_or_null(
+				NodePath(player_camera_path)
+			)
+			as Camera3D
+		)
+
+	if player_camera == null and player != null:
+		player_camera = (
+			player.find_child(
+				"Camera3D",
+				true,
+				false
+			)
+			as Camera3D
+		)
+
+	player_flashlight = (
+		_get_node_from_root(player_flashlight_path)
+		as SpotLight3D
+	)
+
+	if player_flashlight == null and player != null:
+		player_flashlight = (
+			player.find_child(
+				"SpotLight3D",
+				true,
+				false
+			)
+			as SpotLight3D
+		)
+
+	if player == null:
+		push_error(
+			"DreamIntroController: Player was not found."
+		)
+
+	if player_camera == null:
+		push_error(
+			"DreamIntroController: Player Camera3D was not found."
+		)
+
+	if player_flashlight == null:
+		push_warning(
+			"DreamIntroController: Player flashlight was not found."
+		)
+
+	if train_root == null:
+		push_warning(
+			"DreamIntroController: Train root was not found."
+		)
+
+	if ui_layer == null:
+		push_warning(
+			"DreamIntroController: UI CanvasLayer was not found. "
+			+ "The flashlight tutorial cannot be displayed."
+		)
+
+	if blackout_rect == null:
+		push_error(
+			"DreamIntroController: BlackoutRect was not found. "
+			+ "Assign Blackout Rect Path."
+		)
+
+
+func _get_node_from_root(path_text: String) -> Node:
 	if dream_root == null:
 		return null
 
 	if path_text.strip_edges().is_empty():
 		return null
 
-	return dream_root.get_node_or_null(NodePath(path_text))
-
-
-func _get_train_root() -> Node:
-	var train_root: Node = _get_node_from_dream_root(train_root_path)
-
-	if train_root == null:
-		train_root = _get_node_from_dream_root("Train")
-
-	return train_root
-
-
-func _find_sequence_nodes() -> void:
-	if dream_root == null:
-		return
-
-	menu_camera = _get_node_from_dream_root(menu_camera_path) as Camera3D
-
-	if menu_camera == null:
-		menu_camera = _get_node_from_dream_root("MenuCamera") as Camera3D
-
-	if menu_camera == null:
-		push_warning("DreamIntroController: MenuCamera not found.")
-
-	camera_animation_player = _get_node_from_dream_root(camera_animation_player_path) as AnimationPlayer
-
-	if camera_animation_player == null:
-		camera_animation_player = _get_node_from_dream_root("CameraAnimationPlayer") as AnimationPlayer
-
-	if camera_animation_player == null:
-		push_warning("DreamIntroController: CameraAnimationPlayer not found.")
-
-	dream_intro_audio = _get_node_from_dream_root(audio_controller_path) as DreamIntroAudio
-
-	if dream_intro_audio == null:
-		dream_intro_audio = dream_root.find_child("Audio", true, false) as DreamIntroAudio
-
-	if dream_intro_audio == null:
-		push_warning("DreamIntroController: DreamIntroAudio not found. Menu audio, narration, and saved volume will not work.")
-
-	outside_loop = _get_node_from_dream_root(outside_loop_path) as OutsideTrainLoop
-
-	if outside_loop == null:
-		outside_loop = dream_root.find_child("OutsideLoop", true, false) as OutsideTrainLoop
-
-	if outside_loop == null:
-		push_warning("DreamIntroController: OutsideLoop not found.")
-
-	_collect_train_light_flickers()
-	_collect_train_wagon_shakes()
-
-	player_flashlight = _get_node_from_dream_root(player_flashlight_path) as SpotLight3D
-
-	if player_flashlight == null and player != null:
-		player_flashlight = player.find_child("SpotLight3D", true, false) as SpotLight3D
-
-	if player_flashlight == null:
-		push_warning("DreamIntroController: Player flashlight SpotLight3D not found.")
+	return dream_root.get_node_or_null(
+		NodePath(path_text)
+	)
 
 
 func _collect_train_light_flickers() -> void:
 	train_light_flickers.clear()
 
-	var fallback_lights: TrainLightFlicker = _get_node_from_dream_root(train_lights_path) as TrainLightFlicker
-
-	if fallback_lights != null:
-		_add_train_light_flicker(fallback_lights)
-
-	var train_root: Node = _get_train_root()
-
 	if train_root == null:
-		push_warning("DreamIntroController: Train root not found. Cannot collect wagon lights.")
 		return
 
 	_find_train_light_flickers_recursive(train_root)
-
-	if train_light_flickers.is_empty():
-		push_warning("DreamIntroController: No TrainLightFlicker nodes found. Wagon blackout will not affect train lights.")
 
 
 func _find_train_light_flickers_recursive(node: Node) -> void:
 	var flicker: TrainLightFlicker = node as TrainLightFlicker
 
 	if flicker != null:
-		_add_train_light_flicker(flicker)
+		if not train_light_flickers.has(flicker):
+			train_light_flickers.append(flicker)
 
-	for child in node.get_children():
+	for child: Node in node.get_children():
 		_find_train_light_flickers_recursive(child)
 
 
-func _add_train_light_flicker(flicker: TrainLightFlicker) -> void:
-	if flicker == null:
+func _force_train_dark() -> void:
+	if not force_train_lights_off:
 		return
 
-	if not train_light_flickers.has(flicker):
-		train_light_flickers.append(flicker)
+	for flicker: TrainLightFlicker in train_light_flickers:
+		if flicker == null or not is_instance_valid(flicker):
+			continue
+
+		if flicker.has_method("blackout_with_final_flicker"):
+			flicker.call(
+				"blackout_with_final_flicker",
+				0.0
+			)
+
+		# DreamIntro is the parked scene. Its wagon lights must
+		# remain in their final blackout state.
+		flicker.process_mode = Node.PROCESS_MODE_DISABLED
+
+	if train_root != null:
+		_disable_train_lights_recursive(train_root)
 
 
-func _collect_train_wagon_shakes() -> void:
-	train_wagon_shakes.clear()
+func _disable_train_lights_recursive(node: Node) -> void:
+	var light: Light3D = node as Light3D
 
-	var train_root: Node = _get_train_root()
+	if light != null:
+		light.visible = false
+		light.light_energy = 0.0
 
-	if train_root == null:
-		push_warning("DreamIntroController: Train root not found. Cannot collect wagon shakes.")
-		return
-
-	_find_train_wagon_shakes_recursive(train_root)
-
-	if train_wagon_shakes.is_empty():
-		push_warning("DreamIntroController: No TrainWagonShake nodes found. Wagon shake will not be controlled by intro sequence.")
-
-
-func _find_train_wagon_shakes_recursive(node: Node) -> void:
-	var wagon_shake: TrainWagonShake = node as TrainWagonShake
-
-	if wagon_shake != null:
-		_add_train_wagon_shake(wagon_shake)
-
-	for child in node.get_children():
-		_find_train_wagon_shakes_recursive(child)
-
-
-func _add_train_wagon_shake(wagon_shake: TrainWagonShake) -> void:
-	if wagon_shake == null:
-		return
-
-	if not train_wagon_shakes.has(wagon_shake):
-		train_wagon_shakes.append(wagon_shake)
-
-
-func _find_menu_nodes() -> void:
-	if main_menu_ui == null:
-		push_warning("DreamIntroController: MainMenuUI not found.")
-		return
-
-	title_label = main_menu_ui.find_child("TitleLabel", true, false) as Label
-	start_button = main_menu_ui.find_child("StartButton", true, false) as Button
-	options_button = main_menu_ui.find_child("OptionsButton", true, false) as Button
-	quit_button = main_menu_ui.find_child("QuitButton", true, false) as Button
-
-	options_panel = main_menu_ui.find_child("OptionsPanel", true, false) as Control
-	options_back_button = main_menu_ui.find_child("OptionsBackButton", true, false) as Button
-	master_volume_slider = main_menu_ui.find_child("MasterVolumeSlider", true, false) as HSlider
-
-	if title_label == null:
-		push_warning("DreamIntroController: TitleLabel not found.")
-
-	if start_button == null:
-		push_warning("DreamIntroController: StartButton not found.")
-
-	if options_button == null:
-		push_warning("DreamIntroController: OptionsButton not found.")
-
-	if quit_button == null:
-		push_warning("DreamIntroController: QuitButton not found.")
-
-	if options_panel == null:
-		push_warning("DreamIntroController: OptionsPanel not found.")
-
-	if options_back_button == null:
-		push_warning("DreamIntroController: OptionsBackButton not found.")
-
-	if master_volume_slider == null:
-		push_warning("DreamIntroController: MasterVolumeSlider not found.")
-	else:
-		master_volume_slider.min_value = 0.0
-		master_volume_slider.max_value = 100.0
-		master_volume_slider.step = 1.0
-
-
-func _connect_buttons() -> void:
-	if start_button != null and not start_button.pressed.is_connected(_on_start_button_pressed):
-		start_button.pressed.connect(_on_start_button_pressed)
-
-	if options_button != null and not options_button.pressed.is_connected(_on_options_button_pressed):
-		options_button.pressed.connect(_on_options_button_pressed)
-
-	if options_back_button != null and not options_back_button.pressed.is_connected(_on_options_back_button_pressed):
-		options_back_button.pressed.connect(_on_options_back_button_pressed)
-
-	if master_volume_slider != null and not master_volume_slider.value_changed.is_connected(_on_master_volume_slider_value_changed):
-		master_volume_slider.value_changed.connect(_on_master_volume_slider_value_changed)
-
-	if quit_button != null and not quit_button.pressed.is_connected(_on_quit_button_pressed):
-		quit_button.pressed.connect(_on_quit_button_pressed)
+	for child: Node in node.get_children():
+		_disable_train_lights_recursive(child)
 
 
 func _create_tutorial_prompt() -> void:
 	if ui_layer == null:
-		push_warning("DreamIntroController: UI CanvasLayer not found. Tutorial prompt will not be created.")
 		return
 
 	tutorial_prompt_label = Label.new()
 	tutorial_prompt_label.name = "FlashlightTutorialPrompt"
 	tutorial_prompt_label.visible = false
 	tutorial_prompt_label.modulate.a = 0.0
-	tutorial_prompt_label.text = flashlight_tutorial_text % flashlight_button_text
-	tutorial_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tutorial_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	tutorial_prompt_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	tutorial_prompt_label.text = (
+		flashlight_tutorial_text
+		% flashlight_button_text
+	)
+
+	tutorial_prompt_label.horizontal_alignment = (
+		HORIZONTAL_ALIGNMENT_CENTER
+	)
+
+	tutorial_prompt_label.vertical_alignment = (
+		VERTICAL_ALIGNMENT_CENTER
+	)
+
+	tutorial_prompt_label.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
+	)
 
 	tutorial_prompt_label.anchor_left = 0.0
 	tutorial_prompt_label.anchor_right = 1.0
@@ -347,467 +321,171 @@ func _create_tutorial_prompt() -> void:
 
 	tutorial_prompt_label.offset_left = 0.0
 	tutorial_prompt_label.offset_right = 0.0
-	tutorial_prompt_label.offset_top = -tutorial_prompt_bottom_margin
-	tutorial_prompt_label.offset_bottom = -tutorial_prompt_bottom_margin + 40.0
 
-	tutorial_prompt_label.add_theme_font_size_override("font_size", tutorial_prompt_font_size)
-	tutorial_prompt_label.add_theme_color_override("font_color", Color(0.92, 0.92, 0.88, 1.0))
-	tutorial_prompt_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
-	tutorial_prompt_label.add_theme_constant_override("outline_size", 6)
+	tutorial_prompt_label.offset_top = (
+		-tutorial_prompt_bottom_margin
+	)
+
+	tutorial_prompt_label.offset_bottom = (
+		-tutorial_prompt_bottom_margin + 40.0
+	)
+
+	tutorial_prompt_label.add_theme_font_size_override(
+		"font_size",
+		tutorial_prompt_font_size
+	)
+
+	tutorial_prompt_label.add_theme_color_override(
+		"font_color",
+		Color(0.92, 0.92, 0.88, 1.0)
+	)
+
+	tutorial_prompt_label.add_theme_color_override(
+		"font_outline_color",
+		Color(0.0, 0.0, 0.0, 0.9)
+	)
+
+	tutorial_prompt_label.add_theme_constant_override(
+		"outline_size",
+		6
+	)
 
 	ui_layer.add_child(tutorial_prompt_label)
 
 
-func _enter_development_gameplay_state() -> void:
-	start_transition_running = false
-	tutorial_prompt_visible = false
-	options_panel_open = false
+func _connect_viewport_resize() -> void:
+	var viewport: Viewport = get_viewport()
 
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	if viewport == null:
+		return
 
-	_stop_menu_idle_audio()
-	_stop_intro_narration()
-	_reset_intro_camera_animation_to_start()
-	_sync_master_volume_slider_to_audio()
+	if not viewport.size_changed.is_connected(
+		_apply_responsive_ui
+	):
+		viewport.size_changed.connect(
+			_apply_responsive_ui
+		)
 
-	if tutorial_prompt_label != null:
-		tutorial_prompt_label.visible = false
-		tutorial_prompt_label.modulate.a = 0.0
+	_apply_responsive_ui()
 
-	if main_menu_ui != null:
-		main_menu_ui.visible = false
-		main_menu_ui.modulate.a = 0.0
 
-	if options_panel != null:
-		options_panel.visible = false
+func _begin_playable_scene() -> void:
+	if initial_black_hold_duration > 0.0:
+		await get_tree().create_timer(
+			initial_black_hold_duration
+		).timeout
 
-	if menu_camera != null:
-		menu_camera.current = false
+	_force_train_dark()
 
-	if player_camera != null:
-		player_camera.current = true
+	await _fade_from_black()
+
+	_force_train_dark()
 
 	_set_player_enabled(true)
 	_set_flashlight_input_enabled(true)
 
-	_prepare_train_for_development_skip()
+	if (
+		show_flashlight_tutorial_prompt
+		and tutorial_prompt_label != null
+	):
+		if tutorial_prompt_delay > 0.0:
+			await get_tree().create_timer(
+				tutorial_prompt_delay
+			).timeout
 
-	if dev_skip_show_flashlight_prompt:
 		_show_flashlight_tutorial_prompt()
 
 
-func _prepare_train_for_development_skip() -> void:
-	if dev_skip_stop_wagon_shake:
-		_stop_wagon_shake_immediate()
-
-	if dev_skip_stop_outside_loop and outside_loop != null:
-		if outside_loop.has_method("smooth_stop"):
-			outside_loop.call("smooth_stop", 0.0)
-
-	if dev_skip_blackout_train_lights:
-		for flicker: TrainLightFlicker in train_light_flickers:
-			if flicker != null and is_instance_valid(flicker):
-				if flicker.has_method("blackout_with_final_flicker"):
-					flicker.call("blackout_with_final_flicker", 0.0)
-
-
-func _enter_menu_state() -> void:
-	start_transition_running = false
-	tutorial_prompt_visible = false
-	options_panel_open = false
-
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-
-	_set_flashlight_input_enabled(false)
-	_reset_intro_camera_animation_to_start()
-	_stop_intro_narration()
-	_sync_master_volume_slider_to_audio()
-
-	if tutorial_prompt_label != null:
-		tutorial_prompt_label.visible = false
-		tutorial_prompt_label.modulate.a = 0.0
-
-	if main_menu_ui != null:
-		main_menu_ui.visible = false
-		main_menu_ui.modulate.a = 1.0
-
-	if options_panel != null:
-		options_panel.visible = false
-
-	if menu_camera != null:
-		menu_camera.current = true
-
-	if player_camera != null:
-		player_camera.current = false
-
-	_set_main_menu_buttons_enabled(false)
-
-	await _settle_player_for_menu()
-
-	_set_player_enabled(false)
-
-	if main_menu_ui != null:
-		main_menu_ui.visible = true
-		main_menu_ui.modulate.a = 1.0
-
-	_set_options_panel_open(false)
-	_set_main_menu_buttons_enabled(true)
-
-	_apply_responsive_ui()
-
-	if start_wagon_shake_in_menu:
-		_start_wagon_shake()
-
-	_start_menu_idle_audio()
-
-
-func _settle_player_for_menu() -> void:
-	if player == null:
+func _fade_from_black() -> void:
+	if blackout_rect == null:
 		return
 
-	player.set_process_input(false)
-	player.set_process_unhandled_input(false)
-	player.set_physics_process(true)
+	var fade_duration: float = maxf(
+		scene_fade_in_duration,
+		0.0
+	)
 
-	for i in range(player_menu_settle_physics_frames):
-		await get_tree().physics_frame
-
-
-func _on_start_button_pressed() -> void:
-	if start_transition_running:
-		return
-
-	start_transition_running = true
-	options_panel_open = false
-
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	_set_flashlight_input_enabled(false)
-	_set_main_menu_buttons_enabled(false)
-
-	if options_panel != null:
-		options_panel.visible = false
-
-	_fade_out_menu_idle_audio()
-	_start_intro_narration_after_delay()
-	_start_game_transition()
-
-
-func _on_options_button_pressed() -> void:
-	if start_transition_running:
-		return
-
-	_set_options_panel_open(true)
-
-
-func _on_options_back_button_pressed() -> void:
-	if start_transition_running:
-		return
-
-	_set_options_panel_open(false)
-
-
-func _on_master_volume_slider_value_changed(value: float) -> void:
-	if updating_master_volume_slider:
-		return
-
-	if dream_intro_audio == null:
-		return
-
-	dream_intro_audio.set_master_volume_percent(value, true)
-
-
-func _set_options_panel_open(opened: bool) -> void:
-	options_panel_open = opened
-
-	if options_panel != null:
-		options_panel.visible = opened
-
-	_set_main_menu_buttons_visible(not opened)
-	_set_main_menu_buttons_enabled(not opened and not start_transition_running)
-
-	if opened:
-		if options_back_button != null:
-			options_back_button.grab_focus()
-	else:
-		if start_button != null and not start_transition_running:
-			start_button.grab_focus()
-
-
-func _set_main_menu_buttons_visible(visible: bool) -> void:
-	if start_button != null:
-		start_button.visible = visible
-
-	if options_button != null:
-		options_button.visible = visible
-
-	if quit_button != null:
-		quit_button.visible = visible
-
-
-func _set_main_menu_buttons_enabled(enabled: bool) -> void:
-	if start_button != null:
-		start_button.disabled = not enabled
-
-	if options_button != null:
-		options_button.disabled = not enabled
-
-	if quit_button != null:
-		quit_button.disabled = not enabled
-
-
-func _sync_master_volume_slider_to_audio() -> void:
-	if master_volume_slider == null:
-		return
-
-	updating_master_volume_slider = true
-
-	if dream_intro_audio != null:
-		master_volume_slider.value = dream_intro_audio.get_master_volume_percent()
-	else:
-		master_volume_slider.value = 100.0
-
-	updating_master_volume_slider = false
-
-
-func _start_game_transition() -> void:
-	await _fade_out_menu()
-	await _play_intro_camera_animation_after_delay()
-	_switch_to_player_camera()
-	await _run_train_stop_sequence()
-	_finish_start_transition()
-
-
-func _fade_out_menu() -> void:
-	if main_menu_ui == null:
+	if fade_duration <= 0.0:
+		blackout_rect.modulate.a = 0.0
+		blackout_rect.visible = false
 		return
 
 	var tween: Tween = create_tween()
 
 	tween.tween_property(
-		main_menu_ui,
+		blackout_rect,
 		"modulate:a",
 		0.0,
-		menu_fade_duration
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		fade_duration
+	).set_trans(Tween.TRANS_SINE).set_ease(
+		Tween.EASE_IN_OUT
+	)
 
 	await tween.finished
 
-	main_menu_ui.visible = false
-
-
-func _start_wagon_shake() -> void:
-	for wagon_shake: TrainWagonShake in train_wagon_shakes:
-		if wagon_shake != null and is_instance_valid(wagon_shake):
-			wagon_shake.start_shake()
-
-
-func _stop_wagon_shake() -> void:
-	for wagon_shake: TrainWagonShake in train_wagon_shakes:
-		if wagon_shake != null and is_instance_valid(wagon_shake):
-			wagon_shake.stop_shake()
-
-
-func _stop_wagon_shake_immediate() -> void:
-	for wagon_shake: TrainWagonShake in train_wagon_shakes:
-		if wagon_shake != null and is_instance_valid(wagon_shake):
-			wagon_shake.stop_shake_immediate()
-
-
-func _start_menu_idle_audio() -> void:
-	if not play_menu_idle_audio:
-		return
-
-	if dream_intro_audio == null:
-		return
-
-	dream_intro_audio.play_menu_idle()
-
-
-func _fade_out_menu_idle_audio() -> void:
-	if dream_intro_audio == null:
-		return
-
-	dream_intro_audio.fade_out_menu_idle(menu_idle_fade_out_duration)
-
-
-func _stop_menu_idle_audio() -> void:
-	if dream_intro_audio == null:
-		return
-
-	dream_intro_audio.stop_menu_idle()
-
-
-func _start_intro_narration_after_delay() -> void:
-	if not play_intro_narration:
-		return
-
-	if dream_intro_audio == null:
-		return
-
-	dream_intro_audio.intro_narration_volume_db = intro_narration_volume_db
-	dream_intro_audio.play_intro_narration_after_delay(intro_narration_start_delay)
-
-
-func _stop_intro_narration() -> void:
-	if dream_intro_audio == null:
-		return
-
-	dream_intro_audio.stop_intro_narration()
-
-
-func _reset_intro_camera_animation_to_start() -> void:
-	if camera_animation_player == null:
-		return
-
-	if not camera_animation_player.has_animation(intro_camera_animation_name):
-		return
-
-	camera_animation_player.play(intro_camera_animation_name)
-	camera_animation_player.seek(0.0, true)
-	camera_animation_player.pause()
-
-
-func _play_intro_camera_animation_after_delay() -> void:
-	if intro_camera_animation_start_delay > 0.0:
-		await get_tree().create_timer(intro_camera_animation_start_delay).timeout
-
-	await _play_intro_camera_animation()
-
-
-func _play_intro_camera_animation() -> void:
-	if camera_animation_player == null:
-		return
-
-	if not camera_animation_player.has_animation(intro_camera_animation_name):
-		push_warning("DreamIntroController: Intro camera animation not found: %s" % intro_camera_animation_name)
-		return
-
-	camera_animation_player.play(intro_camera_animation_name)
-	camera_animation_player.seek(0.0, true)
-
-	await camera_animation_player.animation_finished
-
-
-func _switch_to_player_camera() -> void:
-	if player_camera != null:
-		player_camera.current = true
-
-	if menu_camera != null:
-		menu_camera.current = false
-
-
-func _run_train_stop_sequence() -> void:
-	var slowdown_time: float = maxf(train_slowdown_duration, 0.0)
-	var blackout_delay: float = clampf(blackout_during_slowdown_delay, 0.0, slowdown_time)
-	var blackout_duration: float = maxf(blackout_final_flicker_duration, 0.0)
-
-	# The train stops feeling like a normal ride once the malfunction begins.
-	if stop_wagon_shake_when_malfunction_starts:
-		_stop_wagon_shake()
-
-	# Lights start flickering only after the camera intro animation is finished.
-	for flicker: TrainLightFlicker in train_light_flickers:
-		if flicker != null and is_instance_valid(flicker):
-			flicker.start_panic_flicker()
-
-	var alignment_wait: float = 0.0
-
-	if align_train_stop_to_loop_start and outside_loop != null:
-		if outside_loop.has_method("get_alignment_wait_for_smooth_stop"):
-			alignment_wait = float(outside_loop.call("get_alignment_wait_for_smooth_stop", slowdown_time))
-
-	if alignment_wait > 0.001:
-		await get_tree().create_timer(alignment_wait).timeout
-
-	if outside_loop != null:
-		outside_loop.call("smooth_stop", slowdown_time)
-
-	if blackout_delay > 0.0:
-		await get_tree().create_timer(blackout_delay).timeout
-
-	if not train_light_flickers.is_empty():
-		for flicker: TrainLightFlicker in train_light_flickers:
-			if flicker != null and is_instance_valid(flicker):
-				flicker.blackout_with_final_flicker(blackout_duration)
-
-		if blackout_duration > 0.0:
-			await get_tree().create_timer(blackout_duration).timeout
-	elif blackout_duration > 0.0:
-		await get_tree().create_timer(blackout_duration).timeout
-
-	var remaining_slowdown_time: float = slowdown_time - blackout_delay - blackout_duration
-
-	if remaining_slowdown_time > 0.0:
-		await get_tree().create_timer(remaining_slowdown_time).timeout
-
-	if train_stop_settle_delay > 0.0:
-		await get_tree().create_timer(train_stop_settle_delay).timeout
-
-
-func _finish_start_transition() -> void:
-	if main_menu_ui != null:
-		main_menu_ui.visible = false
-
-	_switch_to_player_camera()
-
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-
-	_set_player_enabled(true)
-	_set_flashlight_input_enabled(true)
-
-	if show_flashlight_tutorial_prompt:
-		_show_flashlight_tutorial_prompt()
-
-	start_transition_running = false
+	blackout_rect.visible = false
 
 
 func _show_flashlight_tutorial_prompt() -> void:
 	if tutorial_prompt_label == null:
 		return
 
-	if tutorial_prompt_tween != null and tutorial_prompt_tween.is_valid():
+	if (
+		tutorial_prompt_tween != null
+		and tutorial_prompt_tween.is_valid()
+	):
 		tutorial_prompt_tween.kill()
 
 	tutorial_prompt_visible = true
 
-	tutorial_prompt_label.text = flashlight_tutorial_text % flashlight_button_text
+	tutorial_prompt_label.text = (
+		flashlight_tutorial_text
+		% flashlight_button_text
+	)
+
 	tutorial_prompt_label.visible = true
 	tutorial_prompt_label.modulate.a = 0.0
 
 	tutorial_prompt_tween = create_tween()
+
 	tutorial_prompt_tween.tween_property(
 		tutorial_prompt_label,
 		"modulate:a",
 		1.0,
 		tutorial_prompt_fade_duration
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	).set_trans(Tween.TRANS_SINE).set_ease(
+		Tween.EASE_OUT
+	)
 
 
 func _hide_flashlight_tutorial_prompt() -> void:
 	if tutorial_prompt_label == null:
 		return
 
-	if tutorial_prompt_tween != null and tutorial_prompt_tween.is_valid():
+	if (
+		tutorial_prompt_tween != null
+		and tutorial_prompt_tween.is_valid()
+	):
 		tutorial_prompt_tween.kill()
 
 	tutorial_prompt_visible = false
 
 	tutorial_prompt_tween = create_tween()
+
 	tutorial_prompt_tween.tween_property(
 		tutorial_prompt_label,
 		"modulate:a",
 		0.0,
 		tutorial_prompt_fade_duration
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-	tutorial_prompt_tween.tween_callback(func() -> void:
-		if tutorial_prompt_label != null:
-			tutorial_prompt_label.visible = false
+	).set_trans(Tween.TRANS_SINE).set_ease(
+		Tween.EASE_IN_OUT
 	)
 
-
-func _on_quit_button_pressed() -> void:
-	get_tree().quit()
+	tutorial_prompt_tween.tween_callback(
+		func() -> void:
+			if tutorial_prompt_label != null:
+				tutorial_prompt_label.visible = false
+	)
 
 
 func _set_player_enabled(enabled: bool) -> void:
@@ -815,46 +493,61 @@ func _set_player_enabled(enabled: bool) -> void:
 		return
 
 	player.set_process_input(enabled)
-	player.set_physics_process(enabled)
 	player.set_process_unhandled_input(enabled)
+	player.set_physics_process(enabled)
 
 
 func _set_flashlight_input_enabled(enabled: bool) -> void:
 	if player_flashlight == null:
 		return
 
-	if player_flashlight.has_method("set_flashlight_input_enabled"):
-		player_flashlight.call("set_flashlight_input_enabled", enabled)
+	if player_flashlight.has_method(
+		"set_flashlight_input_enabled"
+	):
+		player_flashlight.call(
+			"set_flashlight_input_enabled",
+			enabled
+		)
 
 
 func _apply_responsive_ui() -> void:
-	if get_viewport() == null:
+	if tutorial_prompt_label == null:
 		return
 
-	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	var viewport: Viewport = get_viewport()
+
+	if viewport == null:
+		return
+
+	var viewport_size: Vector2 = (
+		viewport.get_visible_rect().size
+	)
 
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
 
-	var width_scale: float = viewport_size.x / reference_resolution.x
-	var height_scale: float = viewport_size.y / reference_resolution.y
-	var ui_scale: float = clampf(minf(width_scale, height_scale), min_ui_scale, max_ui_scale)
+	var width_scale: float = (
+		viewport_size.x / reference_resolution.x
+	)
 
-	var title_size: int = int(round(float(title_base_font_size) * ui_scale))
-	var button_size: int = int(round(float(button_base_font_size) * ui_scale))
-	var prompt_size: int = int(round(float(tutorial_prompt_font_size) * ui_scale))
+	var height_scale: float = (
+		viewport_size.y / reference_resolution.y
+	)
 
-	if title_label != null:
-		title_label.add_theme_font_size_override("font_size", title_size)
+	var ui_scale: float = clampf(
+		minf(width_scale, height_scale),
+		min_ui_scale,
+		max_ui_scale
+	)
 
-	if start_button != null:
-		start_button.add_theme_font_size_override("font_size", button_size)
+	var prompt_size: int = int(
+		round(
+			float(tutorial_prompt_font_size)
+			* ui_scale
+		)
+	)
 
-	if options_button != null:
-		options_button.add_theme_font_size_override("font_size", button_size)
-
-	if quit_button != null:
-		quit_button.add_theme_font_size_override("font_size", button_size)
-
-	if tutorial_prompt_label != null:
-		tutorial_prompt_label.add_theme_font_size_override("font_size", prompt_size)
+	tutorial_prompt_label.add_theme_font_size_override(
+		"font_size",
+		prompt_size
+	)
