@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://r2tirordoxkr"]
 
-[ext_resource type="Shader" uid="uid://bbd74w1s2sgst" path="res://assets/shaders/HorrrorFilter.gdshader" id="1_16hbm"]
+[ext_resource type="Shader" uid="uid://bbd74w1s2sgst" path="res://assets/shaders/HorrorFilter.gdshader" id="1_16hbm"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_k02gq"]
 shader = ExtResource("1_16hbm")

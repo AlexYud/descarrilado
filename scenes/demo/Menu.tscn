@@ -8,7 +8,7 @@
 [ext_resource type="Script" uid="uid://dfsn5nq0htc3d" path="res://scripts/train_wagon_shake.gd" id="9_dwddo"]
 [ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/ScreenBorderFilter.gdshader" id="10_c8kcl"]
 [ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="11_5cgqh"]
-[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/vhs_filter.tscn" id="15_h1mqy"]
+[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/horror_filter.tscn" id="15_h1mqy"]
 [ext_resource type="Script" uid="uid://53jqnhy61lp8" path="res://scripts/menu_controller.gd" id="15_yivn6"]
 [ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="16_a860f"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="16_h1mqy"]
@@ -434,7 +434,7 @@ fog_sun_scatter = 0.05
 fog_density = 0.075
 fog_sky_affect = 0.95
 fog_height = 1.7
-fog_height_density = 0.75
+fog_height_density = 0.5
 volumetric_fog_density = 0.006
 volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
 volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
@@ -703,7 +703,7 @@ script = ExtResource("1_oxrth")
 environment = SubResource("Environment_75e31")
 script = ExtResource("16_h1mqy")
 fog_density = 0.075
-fog_height_density = 0.75
+fog_height_density = 0.5
 moon_light_path = NodePath("../MoonLight")
 
 [node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1057088753]

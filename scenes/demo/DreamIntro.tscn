@@ -11,7 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
 [ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="13_e6tct"]
 [ext_resource type="PackedScene" uid="uid://dlqu0p3xmxe86" path="res://scenes/demo/persistent_audio.tscn" id="13_p1vbp"]
-[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/vhs_filter.tscn" id="14_uas77"]
+[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/horror_filter.tscn" id="14_uas77"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="16_cgaoe"]
 [ext_resource type="Script" uid="uid://ca5e4nnd25xr7" path="res://scripts/optimization/scene_performance_profile.gd" id="26_e6tct"]
 
