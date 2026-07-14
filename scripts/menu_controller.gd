@@ -102,12 +102,16 @@ const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 
 
 # ============================================================
-# CAMERA CUTSCENE
+# CAMERA CUTSCENES
 # ============================================================
 
-@export_category("Intro Cutscene")
+@export_category("Camera Cutscenes")
 
 @export var intro_animation_name: StringName = &"Intro"
+@export var brake_animation_name: StringName = &"BreakDip"
+
+@export var play_brake_animation: bool = true
+
 @export var menu_fade_duration: float = 2.0
 @export var intro_animation_start_delay: float = 0.0
 
@@ -118,19 +122,19 @@ const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 
 @export_category("Train Stop Sequence")
 
-@export var train_slowdown_duration: float = 4.0
+@export var train_slowdown_duration: float = 1.2
 
-## Panic flickering begins immediately.
-## This is the delay before the final blackout flicker.
-@export var blackout_during_slowdown_delay: float = 1.2
+## Panic flickering begins at the same moment as BrakeDip.
+## This controls how long it flickers before the final blackout.
+@export var blackout_during_slowdown_delay: float = 0.30
 
-## Duration of the final wagon-light flicker.
-@export var blackout_final_flicker_duration: float = 0.6
+## Duration of the final light flicker before all lights stay off.
+@export var blackout_final_flicker_duration: float = 0.40
 
-## Full-screen fade used to hide the scene change.
-@export var screen_blackout_fade_duration: float = 0.2
+## Full-screen fade used after the camera is looking down.
+@export var screen_blackout_fade_duration: float = 0.15
 
-## Time held fully black before loading DreamIntro.
+## Fully black pause before DreamIntro loads.
 @export var screen_blackout_hold_duration: float = 0.25
 
 
@@ -172,8 +176,6 @@ var options_panel: Control = null
 var options_back_button: Button = null
 var master_volume_slider: HSlider = null
 
-## Kept as Node instead of DreamIntroAudio so the controller
-## still works even if Godot has not refreshed the class_name yet.
 var persistent_audio: Node = null
 
 var train_light_flickers: Array[TrainLightFlicker] = []
@@ -294,7 +296,6 @@ func _find_persistent_audio() -> void:
 	if persistent_audio != null:
 		return
 
-	# Fallback in case the Autoload has an unexpected runtime name.
 	for child: Node in tree_root.get_children():
 		if (
 			child.has_method("play_menu_idle")
@@ -470,29 +471,20 @@ func _validate_scene_nodes() -> void:
 	if persistent_audio == null:
 		push_error(
 			"MenuController: PersistentAudio Autoload was not "
-			+ "found. Confirm the Autoload name is exactly "
-			+ "'PersistentAudio'."
+			+ "found."
 		)
-	else:
-		_validate_persistent_audio_methods()
 
-
-func _validate_persistent_audio_methods() -> void:
-	var required_methods: Array[StringName] = [
-		&"play_menu_idle",
-		&"fade_out_menu_idle",
-		&"play_intro_narration_after_delay",
-		&"set_master_volume_percent",
-		&"get_master_volume_percent"
-	]
-
-	for method_name: StringName in required_methods:
-		if not persistent_audio.has_method(method_name):
-			push_error(
-				"MenuController: PersistentAudio is missing "
-				+ "method: "
-				+ str(method_name)
-			)
+	if (
+		camera_animation_player != null
+		and play_brake_animation
+		and not camera_animation_player.has_animation(
+			brake_animation_name
+		)
+	):
+		push_warning(
+			"MenuController: Brake animation '%s' was not found."
+			% brake_animation_name
+		)
 
 
 # ============================================================
@@ -838,7 +830,7 @@ func _start_intro_narration() -> void:
 
 
 # ============================================================
-# MENU FADE AND CAMERA ANIMATION
+# MENU FADE AND INTRO CAMERA ANIMATION
 # ============================================================
 
 func _fade_out_menu() -> void:
@@ -904,6 +896,52 @@ func _play_intro_animation() -> void:
 
 
 # ============================================================
+# BRAKE ANIMATION
+# ============================================================
+
+func _start_brake_animation() -> void:
+	if not play_brake_animation:
+		return
+
+	if camera_animation_player == null:
+		return
+
+	if not camera_animation_player.has_animation(
+		brake_animation_name
+	):
+		push_warning(
+			"MenuController: Brake animation '%s' was not found."
+			% brake_animation_name
+		)
+		return
+
+	camera_animation_player.play(
+		brake_animation_name
+	)
+
+	camera_animation_player.seek(0.0, true)
+
+
+func _wait_for_brake_animation() -> void:
+	if not play_brake_animation:
+		return
+
+	if camera_animation_player == null:
+		return
+
+	if not camera_animation_player.is_playing():
+		return
+
+	if (
+		camera_animation_player.current_animation
+		!= String(brake_animation_name)
+	):
+		return
+
+	await camera_animation_player.animation_finished
+
+
+# ============================================================
 # TRAIN STOP AND LIGHT BLACKOUT
 # ============================================================
 
@@ -924,6 +962,11 @@ func _run_train_stop_sequence() -> void:
 		0.0
 	)
 
+	# All three start during the same frame:
+	# camera impact, train braking, and light malfunction.
+	_start_brake_animation()
+	_begin_train_slowdown(slowdown_time)
+
 	for light_flicker: TrainLightFlicker in (
 		train_light_flickers
 	):
@@ -932,8 +975,6 @@ func _run_train_stop_sequence() -> void:
 			and is_instance_valid(light_flicker)
 		):
 			light_flicker.start_panic_flicker()
-
-	_begin_train_slowdown(slowdown_time)
 
 	if blackout_delay > 0.0:
 		await get_tree().create_timer(
@@ -956,10 +997,11 @@ func _run_train_stop_sequence() -> void:
 			final_flicker_time
 		).timeout
 
-	var remaining_slowdown_time: float = (
+	var remaining_slowdown_time: float = maxf(
 		slowdown_time
 		- blackout_delay
-		- final_flicker_time
+		- final_flicker_time,
+		0.0
 	)
 
 	if remaining_slowdown_time > 0.0:
@@ -968,6 +1010,10 @@ func _run_train_stop_sequence() -> void:
 		).timeout
 
 	_finish_train_stop()
+
+	# Protect against very short slowdown settings.
+	# The scene will not fade until BrakeDip has reached its floor pose.
+	await _wait_for_brake_animation()
 
 	await _fade_screen_to_black()
 
