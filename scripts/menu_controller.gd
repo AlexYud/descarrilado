@@ -122,20 +122,20 @@ const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 
 @export_category("Train Stop Sequence")
 
-@export var train_slowdown_duration: float = 1.2
+@export var train_slowdown_duration: float = 0.8
 
 ## Panic flickering begins at the same moment as BrakeDip.
 ## This controls how long it flickers before the final blackout.
-@export var blackout_during_slowdown_delay: float = 0.30
+@export var blackout_during_slowdown_delay: float = 0.20
 
 ## Duration of the final light flicker before all lights stay off.
-@export var blackout_final_flicker_duration: float = 0.40
+@export var blackout_final_flicker_duration: float = 0.35
 
 ## Full-screen fade used after the camera is looking down.
-@export var screen_blackout_fade_duration: float = 0.15
+@export var screen_blackout_fade_duration: float = 0.06
 
 ## Fully black pause before DreamIntro loads.
-@export var screen_blackout_hold_duration: float = 0.25
+@export var screen_blackout_hold_duration: float = 0.05
 
 
 # ============================================================

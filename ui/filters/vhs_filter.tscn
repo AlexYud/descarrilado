@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://r2tirordoxkr"]
+
+[ext_resource type="Shader" uid="uid://bbd74w1s2sgst" path="res://assets/shaders/HorrrorFilter.gdshader" id="1_16hbm"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_k02gq"]
+shader = ExtResource("1_16hbm")
+shader_parameter/intensity = 0.4
+shader_parameter/soft_focus = 0.22
+shader_parameter/soft_focus_radius = 1.25
+shader_parameter/purple_strength = 0.48
+shader_parameter/desaturation = 0.1
+shader_parameter/contrast = 0.12
+shader_parameter/black_crush = 0.045
+shader_parameter/highlight_glow = 0.07
+shader_parameter/glow_threshold = 0.58
+shader_parameter/grain_strength = 0.026
+shader_parameter/grain_speed = 24.0
+shader_parameter/vignette_strength = 0.44
+shader_parameter/vignette_size = 0.64
+shader_parameter/vignette_softness = 0.46
+shader_parameter/exposure_drift = 0.008
+
+[node name="HorrorFilter" type="CanvasLayer" unique_id=931420031]
+layer = 900
+
+[node name="HorrorRect" type="ColorRect" parent="." unique_id=321750403]
+material = SubResource("ShaderMaterial_k02gq")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

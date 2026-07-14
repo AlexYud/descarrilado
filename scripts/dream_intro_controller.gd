@@ -1,24 +1,84 @@
 extends Node
 
-@export_category("Scene References")
-@export var player_path: String = "Player"
-@export var player_camera_path: String = "Head/Camera3D"
-@export var player_flashlight_path: String = "Player/Hand/SpotLight3D"
-@export var train_root_path: String = "Train"
-@export var ui_layer_path: String = "UI"
 
-## Existing node:
-## DreamIntro/TransitionBlackout/BlackoutRect
-@export var blackout_rect_path: NodePath
+# ============================================================
+# FIXED DREAM INTRO NODE PATHS
+# ============================================================
+
+const PLAYER_PATH := NodePath("Player")
+
+const PLAYER_CAMERA_PATH := NodePath(
+	"Player/Head/Camera3D"
+)
+
+const HEAD_RAISE_ANIMATION_PLAYER_PATH := NodePath(
+	"Player/Head/HeadRaiseAnimationPlayer"
+)
+
+const PLAYER_FLASHLIGHT_PATH := NodePath(
+	"Player/Hand/SpotLight3D"
+)
+
+const TRAIN_ROOT_PATH := NodePath("Train")
+const UI_LAYER_PATH := NodePath("UI")
+
+const BLACKOUT_RECT_PATH := NodePath(
+	"TransitionBlackout/BlackoutRect"
+)
+
+
+# ============================================================
+# SCENE TRANSITION
+# ============================================================
 
 @export_category("Scene Transition")
-@export var initial_black_hold_duration: float = 0.20
-@export var scene_fade_in_duration: float = 0.50
 
-@export_category("Stopped Train")
-@export var force_train_lights_off: bool = true
+## Briefly remains black while the new scene finishes loading.
+@export var initial_black_hold_duration: float = 0.04
+
+## Fast reveal designed to resemble one of the light flickers.
+@export var scene_fade_in_duration: float = 0.10
+
+
+# ============================================================
+# HEAD RAISE
+# ============================================================
+
+@export_category("Head Raise")
+
+@export var play_head_raise_animation: bool = true
+
+## Must exactly match the animation name inside:
+## Player/Head/HeadRaiseAnimationPlayer
+@export var head_raise_animation_name: StringName = &"HeadRaise"
+
+
+# ============================================================
+# WAGON LIGHT CONTINUITY
+# ============================================================
+
+@export_category("Wagon Light Continuity")
+
+## Restarts the wagon-light malfunction in the new scene so
+## the scene transition appears to be one continuous event.
+@export var continue_wagon_flicker_during_head_raise: bool = true
+
+## Time spent violently flickering after DreamIntro appears.
+@export var continuity_panic_flicker_duration: float = 0.70
+
+## Final unstable flicker before the wagon becomes dark.
+@export var continuity_final_flicker_duration: float = 0.35
+
+## Keeps every wagon light permanently off after the sequence.
+@export var force_train_lights_off_after_flicker: bool = true
+
+
+# ============================================================
+# FLASHLIGHT TUTORIAL
+# ============================================================
 
 @export_category("Flashlight Tutorial")
+
 @export var show_flashlight_tutorial_prompt: bool = true
 @export var tutorial_prompt_delay: float = 0.35
 
@@ -33,16 +93,31 @@ extends Node
 @export var tutorial_prompt_bottom_margin: float = 90.0
 @export var tutorial_prompt_fade_duration: float = 0.35
 
+
+# ============================================================
+# RESPONSIVE UI
+# ============================================================
+
 @export_category("Responsive UI")
-@export var reference_resolution: Vector2 = Vector2(1920.0, 1080.0)
+
+@export var reference_resolution: Vector2 = Vector2(
+	1920.0,
+	1080.0
+)
+
 @export var min_ui_scale: float = 0.85
 @export var max_ui_scale: float = 1.35
 
+
+# ============================================================
+# NODE REFERENCES
+# ============================================================
 
 var dream_root: Node = null
 
 var player: Node = null
 var player_camera: Camera3D = null
+var head_raise_animation_player: AnimationPlayer = null
 var player_flashlight: SpotLight3D = null
 
 var train_root: Node = null
@@ -55,33 +130,36 @@ var tutorial_prompt_label: Label = null
 var tutorial_prompt_tween: Tween = null
 var tutorial_prompt_visible: bool = false
 
+var head_raise_finished: bool = true
+
+var continuity_light_tween: Tween = null
+var continuity_light_sequence_finished: bool = true
+
+
+# ============================================================
+# STARTUP
+# ============================================================
 
 func _ready() -> void:
 	dream_root = get_parent()
 
 	_find_scene_nodes()
 	_collect_train_light_flickers()
+	_connect_head_raise_signal()
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 	if player_camera != null:
 		player_camera.current = true
 
-	if blackout_rect != null:
-		blackout_rect.visible = true
-		blackout_rect.color = Color.BLACK
-		blackout_rect.modulate.a = 1.0
-		blackout_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-		var blackout_parent: Node = blackout_rect.get_parent()
-
-		if blackout_parent is CanvasLayer:
-			(blackout_parent as CanvasLayer).layer = 1000
+	_prepare_blackout()
 
 	_set_player_enabled(false)
 	_set_flashlight_input_enabled(false)
 
-	_force_train_dark()
+	# Set the player camera to the lowered first frame while
+	# the screen is still completely black.
+	_prepare_head_raise_start_pose()
 
 	call_deferred("_finish_scene_setup")
 
@@ -101,68 +179,66 @@ func _finish_scene_setup() -> void:
 	_create_tutorial_prompt()
 	_connect_viewport_resize()
 
-	# Other wagon/light scripts may initialize after this controller.
-	# Reapply the dark state after their startup has completed.
+	# Allow all wagon and light scripts to complete their _ready()
+	# functions before beginning the continuation flicker.
 	await get_tree().process_frame
-	_force_train_dark()
-
 	await get_tree().physics_frame
-	_force_train_dark()
+
+	_prepare_train_for_transition()
 
 	await _begin_playable_scene()
 
 
+# ============================================================
+# FIND NODES
+# ============================================================
+
 func _find_scene_nodes() -> void:
-	player = _get_node_from_root(player_path)
-	train_root = _get_node_from_root(train_root_path)
-	ui_layer = _get_node_from_root(ui_layer_path) as CanvasLayer
-
-	if not blackout_rect_path.is_empty():
-		blackout_rect = (
-			get_node_or_null(blackout_rect_path)
-			as ColorRect
+	if dream_root == null:
+		push_error(
+			"DreamIntroController: DreamIntro root was not found."
 		)
+		return
 
-	if player == null and dream_root != null:
+	player = dream_root.get_node_or_null(PLAYER_PATH)
+
+	player_camera = (
+		dream_root.get_node_or_null(PLAYER_CAMERA_PATH)
+		as Camera3D
+	)
+
+	head_raise_animation_player = (
+		dream_root.get_node_or_null(
+			HEAD_RAISE_ANIMATION_PLAYER_PATH
+		)
+		as AnimationPlayer
+	)
+
+	player_flashlight = (
+		dream_root.get_node_or_null(PLAYER_FLASHLIGHT_PATH)
+		as SpotLight3D
+	)
+
+	train_root = dream_root.get_node_or_null(
+		TRAIN_ROOT_PATH
+	)
+
+	ui_layer = (
+		dream_root.get_node_or_null(UI_LAYER_PATH)
+		as CanvasLayer
+	)
+
+	blackout_rect = (
+		dream_root.get_node_or_null(BLACKOUT_RECT_PATH)
+		as ColorRect
+	)
+
+	# Fallback searches in case a node was moved slightly.
+	if player == null:
 		player = dream_root.find_child(
 			"Player",
 			true,
 			false
-		)
-
-	if train_root == null and dream_root != null:
-		train_root = dream_root.find_child(
-			"Train",
-			true,
-			false
-		)
-
-	if ui_layer == null and dream_root != null:
-		ui_layer = (
-			dream_root.find_child(
-				"UI",
-				true,
-				false
-			)
-			as CanvasLayer
-		)
-
-	if blackout_rect == null and dream_root != null:
-		blackout_rect = (
-			dream_root.find_child(
-				"BlackoutRect",
-				true,
-				false
-			)
-			as ColorRect
-		)
-
-	if player != null:
-		player_camera = (
-			player.get_node_or_null(
-				NodePath(player_camera_path)
-			)
-			as Camera3D
 		)
 
 	if player_camera == null and player != null:
@@ -175,10 +251,18 @@ func _find_scene_nodes() -> void:
 			as Camera3D
 		)
 
-	player_flashlight = (
-		_get_node_from_root(player_flashlight_path)
-		as SpotLight3D
-	)
+	if (
+		head_raise_animation_player == null
+		and player != null
+	):
+		head_raise_animation_player = (
+			player.find_child(
+				"HeadRaiseAnimationPlayer",
+				true,
+				false
+			)
+			as AnimationPlayer
+		)
 
 	if player_flashlight == null and player != null:
 		player_flashlight = (
@@ -190,6 +274,37 @@ func _find_scene_nodes() -> void:
 			as SpotLight3D
 		)
 
+	if train_root == null:
+		train_root = dream_root.find_child(
+			"Train",
+			true,
+			false
+		)
+
+	if ui_layer == null:
+		ui_layer = (
+			dream_root.find_child(
+				"UI",
+				true,
+				false
+			)
+			as CanvasLayer
+		)
+
+	if blackout_rect == null:
+		blackout_rect = (
+			dream_root.find_child(
+				"BlackoutRect",
+				true,
+				false
+			)
+			as ColorRect
+		)
+
+	_validate_scene_nodes()
+
+
+func _validate_scene_nodes() -> void:
 	if player == null:
 		push_error(
 			"DreamIntroController: Player was not found."
@@ -198,6 +313,24 @@ func _find_scene_nodes() -> void:
 	if player_camera == null:
 		push_error(
 			"DreamIntroController: Player Camera3D was not found."
+		)
+
+	if head_raise_animation_player == null:
+		push_warning(
+			"DreamIntroController: "
+			+ "HeadRaiseAnimationPlayer was not found at: "
+			+ str(HEAD_RAISE_ANIMATION_PLAYER_PATH)
+		)
+	elif (
+		play_head_raise_animation
+		and not head_raise_animation_player.has_animation(
+			head_raise_animation_name
+		)
+	):
+		push_warning(
+			"DreamIntroController: Head raise animation '%s' "
+			+ "was not found."
+			% head_raise_animation_name
 		)
 
 	if player_flashlight == null:
@@ -210,6 +343,12 @@ func _find_scene_nodes() -> void:
 			"DreamIntroController: Train root was not found."
 		)
 
+	if train_light_flickers.is_empty():
+		push_warning(
+			"DreamIntroController: No TrainLightFlicker nodes "
+			+ "were found under Train."
+		)
+
 	if ui_layer == null:
 		push_warning(
 			"DreamIntroController: UI CanvasLayer was not found. "
@@ -218,22 +357,211 @@ func _find_scene_nodes() -> void:
 
 	if blackout_rect == null:
 		push_error(
-			"DreamIntroController: BlackoutRect was not found. "
-			+ "Assign Blackout Rect Path."
+			"DreamIntroController: BlackoutRect was not found at: "
+			+ str(BLACKOUT_RECT_PATH)
 		)
 
 
-func _get_node_from_root(path_text: String) -> Node:
-	if dream_root == null:
-		return null
+# ============================================================
+# BLACKOUT
+# ============================================================
 
-	if path_text.strip_edges().is_empty():
-		return null
+func _prepare_blackout() -> void:
+	if blackout_rect == null:
+		return
 
-	return dream_root.get_node_or_null(
-		NodePath(path_text)
+	blackout_rect.visible = true
+	blackout_rect.color = Color.BLACK
+	blackout_rect.modulate.a = 1.0
+	blackout_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var blackout_parent: Node = blackout_rect.get_parent()
+
+	if blackout_parent is CanvasLayer:
+		(blackout_parent as CanvasLayer).layer = 1000
+
+
+func _fade_from_black() -> void:
+	if blackout_rect == null:
+		return
+
+	var fade_duration: float = maxf(
+		scene_fade_in_duration,
+		0.0
 	)
 
+	if fade_duration <= 0.0:
+		blackout_rect.modulate.a = 0.0
+		blackout_rect.visible = false
+		return
+
+	var tween: Tween = create_tween()
+
+	tween.tween_property(
+		blackout_rect,
+		"modulate:a",
+		0.0,
+		fade_duration
+	).set_trans(Tween.TRANS_SINE).set_ease(
+		Tween.EASE_IN_OUT
+	)
+
+	await tween.finished
+
+	blackout_rect.visible = false
+
+
+# ============================================================
+# HEAD RAISE ANIMATION
+# ============================================================
+
+func _connect_head_raise_signal() -> void:
+	if head_raise_animation_player == null:
+		return
+
+	if not head_raise_animation_player.animation_finished.is_connected(
+		_on_head_raise_animation_finished
+	):
+		head_raise_animation_player.animation_finished.connect(
+			_on_head_raise_animation_finished
+		)
+
+
+func _prepare_head_raise_start_pose() -> void:
+	if not _head_raise_is_available():
+		head_raise_finished = true
+		return
+
+	var head_raise_animation: Animation = (
+		head_raise_animation_player.get_animation(
+			head_raise_animation_name
+		)
+	)
+
+	if head_raise_animation != null:
+		head_raise_animation.loop_mode = Animation.LOOP_NONE
+
+	head_raise_finished = false
+
+	head_raise_animation_player.play(
+		head_raise_animation_name
+	)
+
+	head_raise_animation_player.seek(0.0, true)
+	head_raise_animation_player.pause()
+
+
+func _start_head_raise_animation() -> void:
+	if not _head_raise_is_available():
+		head_raise_finished = true
+		return
+
+	head_raise_finished = false
+
+	head_raise_animation_player.play(
+		head_raise_animation_name
+	)
+
+	head_raise_animation_player.seek(0.0, true)
+
+
+func _head_raise_is_available() -> bool:
+	if not play_head_raise_animation:
+		return false
+
+	if head_raise_animation_player == null:
+		return false
+
+	return head_raise_animation_player.has_animation(
+		head_raise_animation_name
+	)
+
+
+func _on_head_raise_animation_finished(
+	animation_name: StringName
+) -> void:
+	if animation_name != head_raise_animation_name:
+		return
+
+	head_raise_finished = true
+
+
+func _wait_for_head_raise_animation() -> void:
+	if head_raise_finished:
+		return
+
+	if not _head_raise_is_available():
+		head_raise_finished = true
+		return
+
+	var maximum_wait: float = 2.0
+
+	var head_raise_animation: Animation = (
+		head_raise_animation_player.get_animation(
+			head_raise_animation_name
+		)
+	)
+
+	if head_raise_animation != null:
+		maximum_wait = maxf(
+			head_raise_animation.length + 0.50,
+			0.50
+		)
+
+	var elapsed_time: float = 0.0
+
+	while (
+		not head_raise_finished
+		and elapsed_time < maximum_wait
+	):
+		await get_tree().process_frame
+		elapsed_time += get_process_delta_time()
+
+	head_raise_finished = true
+
+
+# ============================================================
+# PLAYABLE SCENE SEQUENCE
+# ============================================================
+
+func _begin_playable_scene() -> void:
+	if initial_black_hold_duration > 0.0:
+		await get_tree().create_timer(
+			initial_black_hold_duration
+		).timeout
+
+	# All three begin together:
+	# wagon malfunction, head raise, and fast black reveal.
+	_start_continuity_light_sequence()
+	_start_head_raise_animation()
+
+	await _fade_from_black()
+
+	# The reveal finishes quickly, but input remains disabled
+	# until the head movement and light malfunction are complete.
+	await _wait_for_head_raise_animation()
+	await _wait_for_continuity_light_sequence()
+
+	_force_train_dark()
+
+	_set_player_enabled(true)
+	_set_flashlight_input_enabled(true)
+
+	if (
+		show_flashlight_tutorial_prompt
+		and tutorial_prompt_label != null
+	):
+		if tutorial_prompt_delay > 0.0:
+			await get_tree().create_timer(
+				tutorial_prompt_delay
+			).timeout
+
+		_show_flashlight_tutorial_prompt()
+
+
+# ============================================================
+# TRAIN LIGHT CONTINUITY
+# ============================================================
 
 func _collect_train_light_flickers() -> void:
 	train_light_flickers.clear()
@@ -244,8 +572,12 @@ func _collect_train_light_flickers() -> void:
 	_find_train_light_flickers_recursive(train_root)
 
 
-func _find_train_light_flickers_recursive(node: Node) -> void:
-	var flicker: TrainLightFlicker = node as TrainLightFlicker
+func _find_train_light_flickers_recursive(
+	node: Node
+) -> void:
+	var flicker: TrainLightFlicker = (
+		node as TrainLightFlicker
+	)
 
 	if flicker != null:
 		if not train_light_flickers.has(flicker):
@@ -255,8 +587,127 @@ func _find_train_light_flickers_recursive(node: Node) -> void:
 		_find_train_light_flickers_recursive(child)
 
 
+func _prepare_train_for_transition() -> void:
+	if (
+		continue_wagon_flicker_during_head_raise
+		and not train_light_flickers.is_empty()
+	):
+		for flicker: TrainLightFlicker in train_light_flickers:
+			if flicker == null or not is_instance_valid(flicker):
+				continue
+
+			flicker.process_mode = Node.PROCESS_MODE_INHERIT
+
+		return
+
+	_force_train_dark()
+
+
+func _start_continuity_light_sequence() -> void:
+	if (
+		not continue_wagon_flicker_during_head_raise
+		or train_light_flickers.is_empty()
+	):
+		continuity_light_sequence_finished = true
+		_force_train_dark()
+		return
+
+	if (
+		continuity_light_tween != null
+		and continuity_light_tween.is_valid()
+	):
+		continuity_light_tween.kill()
+
+	continuity_light_sequence_finished = false
+
+	for flicker: TrainLightFlicker in train_light_flickers:
+		if flicker == null or not is_instance_valid(flicker):
+			continue
+
+		flicker.process_mode = Node.PROCESS_MODE_INHERIT
+
+		if flicker.has_method("start_panic_flicker"):
+			flicker.call("start_panic_flicker")
+
+	var panic_duration: float = maxf(
+		continuity_panic_flicker_duration,
+		0.0
+	)
+
+	var final_duration: float = maxf(
+		continuity_final_flicker_duration,
+		0.0
+	)
+
+	continuity_light_tween = create_tween()
+
+	if panic_duration > 0.0:
+		continuity_light_tween.tween_interval(
+			panic_duration
+		)
+
+	continuity_light_tween.tween_callback(
+		_begin_continuity_final_flicker
+	)
+
+	if final_duration > 0.0:
+		continuity_light_tween.tween_interval(
+			final_duration
+		)
+
+	continuity_light_tween.tween_callback(
+		_complete_continuity_light_sequence
+	)
+
+
+func _begin_continuity_final_flicker() -> void:
+	var final_duration: float = maxf(
+		continuity_final_flicker_duration,
+		0.0
+	)
+
+	for flicker: TrainLightFlicker in train_light_flickers:
+		if flicker == null or not is_instance_valid(flicker):
+			continue
+
+		if flicker.has_method("blackout_with_final_flicker"):
+			flicker.call(
+				"blackout_with_final_flicker",
+				final_duration
+			)
+
+
+func _complete_continuity_light_sequence() -> void:
+	_force_train_dark()
+	continuity_light_sequence_finished = true
+
+
+func _wait_for_continuity_light_sequence() -> void:
+	if continuity_light_sequence_finished:
+		return
+
+	var maximum_wait: float = (
+		maxf(continuity_panic_flicker_duration, 0.0)
+		+ maxf(continuity_final_flicker_duration, 0.0)
+		+ 0.75
+	)
+
+	var elapsed_time: float = 0.0
+
+	while (
+		not continuity_light_sequence_finished
+		and elapsed_time < maximum_wait
+	):
+		await get_tree().process_frame
+		elapsed_time += get_process_delta_time()
+
+	if not continuity_light_sequence_finished:
+		_complete_continuity_light_sequence()
+
+
 func _force_train_dark() -> void:
-	if not force_train_lights_off:
+	if not force_train_lights_off_after_flicker:
+		continuity_light_sequence_finished = true
 		return
 
 	for flicker: TrainLightFlicker in train_light_flickers:
@@ -269,15 +720,18 @@ func _force_train_dark() -> void:
 				0.0
 			)
 
-		# DreamIntro is the parked scene. Its wagon lights must
-		# remain in their final blackout state.
+		# Prevent the stopped train from turning its lights back on.
 		flicker.process_mode = Node.PROCESS_MODE_DISABLED
 
 	if train_root != null:
 		_disable_train_lights_recursive(train_root)
 
+	continuity_light_sequence_finished = true
 
-func _disable_train_lights_recursive(node: Node) -> void:
+
+func _disable_train_lights_recursive(
+	node: Node
+) -> void:
 	var light: Light3D = node as Light3D
 
 	if light != null:
@@ -287,6 +741,10 @@ func _disable_train_lights_recursive(node: Node) -> void:
 	for child: Node in node.get_children():
 		_disable_train_lights_recursive(child)
 
+
+# ============================================================
+# FLASHLIGHT TUTORIAL
+# ============================================================
 
 func _create_tutorial_prompt() -> void:
 	if ui_layer == null:
@@ -353,79 +811,6 @@ func _create_tutorial_prompt() -> void:
 	ui_layer.add_child(tutorial_prompt_label)
 
 
-func _connect_viewport_resize() -> void:
-	var viewport: Viewport = get_viewport()
-
-	if viewport == null:
-		return
-
-	if not viewport.size_changed.is_connected(
-		_apply_responsive_ui
-	):
-		viewport.size_changed.connect(
-			_apply_responsive_ui
-		)
-
-	_apply_responsive_ui()
-
-
-func _begin_playable_scene() -> void:
-	if initial_black_hold_duration > 0.0:
-		await get_tree().create_timer(
-			initial_black_hold_duration
-		).timeout
-
-	_force_train_dark()
-
-	await _fade_from_black()
-
-	_force_train_dark()
-
-	_set_player_enabled(true)
-	_set_flashlight_input_enabled(true)
-
-	if (
-		show_flashlight_tutorial_prompt
-		and tutorial_prompt_label != null
-	):
-		if tutorial_prompt_delay > 0.0:
-			await get_tree().create_timer(
-				tutorial_prompt_delay
-			).timeout
-
-		_show_flashlight_tutorial_prompt()
-
-
-func _fade_from_black() -> void:
-	if blackout_rect == null:
-		return
-
-	var fade_duration: float = maxf(
-		scene_fade_in_duration,
-		0.0
-	)
-
-	if fade_duration <= 0.0:
-		blackout_rect.modulate.a = 0.0
-		blackout_rect.visible = false
-		return
-
-	var tween: Tween = create_tween()
-
-	tween.tween_property(
-		blackout_rect,
-		"modulate:a",
-		0.0,
-		fade_duration
-	).set_trans(Tween.TRANS_SINE).set_ease(
-		Tween.EASE_IN_OUT
-	)
-
-	await tween.finished
-
-	blackout_rect.visible = false
-
-
 func _show_flashlight_tutorial_prompt() -> void:
 	if tutorial_prompt_label == null:
 		return
@@ -488,6 +873,10 @@ func _hide_flashlight_tutorial_prompt() -> void:
 	)
 
 
+# ============================================================
+# PLAYER CONTROL
+# ============================================================
+
 func _set_player_enabled(enabled: bool) -> void:
 	if player == null:
 		return
@@ -508,6 +897,26 @@ func _set_flashlight_input_enabled(enabled: bool) -> void:
 			"set_flashlight_input_enabled",
 			enabled
 		)
+
+
+# ============================================================
+# RESPONSIVE UI
+# ============================================================
+
+func _connect_viewport_resize() -> void:
+	var viewport: Viewport = get_viewport()
+
+	if viewport == null:
+		return
+
+	if not viewport.size_changed.is_connected(
+		_apply_responsive_ui
+	):
+		viewport.size_changed.connect(
+			_apply_responsive_ui
+		)
+
+	_apply_responsive_ui()
 
 
 func _apply_responsive_ui() -> void:
