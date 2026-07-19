@@ -96,7 +96,7 @@ mesh = SubResource("CapsuleMesh_tm2b5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -0.014)
 
 [node name="Camera3D" type="Camera3D" parent="Head" unique_id=608416810]
-transform = Transform3D(0.9986294, -0.05233595, 0, 0.024570243, 0.46882814, 0.88294756, -0.046209905, -0.88173735, 0.4694716, 0.042, -0.338, 0.12)
+transform = Transform3D(0.99862933, -0.052335948, 0, 0.024570243, 0.4688281, 0.88294756, -0.0462099, -0.8817373, 0.4694716, 0.042, -0.338, 0.12)
 far = 45.0
 
 [node name="InteractRay" type="RayCast3D" parent="Head/Camera3D" unique_id=1231366330]
