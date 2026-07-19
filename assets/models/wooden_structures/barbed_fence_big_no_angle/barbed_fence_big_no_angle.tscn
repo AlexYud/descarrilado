@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://yhsgwjxiv6d7"]
+
+[ext_resource type="PackedScene" uid="uid://jyieeiuwvc8j" path="res://assets/models/wooden_structures/barbed_fence_big_no_angle/barbed-fence-big-no-angle.glb" id="1_76fhi"]
+
+[node name="barbed-fence-big-no-angle" unique_id=1290455906 instance=ExtResource("1_76fhi")]

@@ -1,0 +1,15 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dk8afufga3uwt"]
+
+[ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="1_jyiym"]
+[ext_resource type="Texture2D" uid="uid://ds10kicdhdy71" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_AO_2K.jpg" id="2_fpkp5"]
+[ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="3_jqmfq"]
+
+[resource]
+albedo_texture = ExtResource("1_jyiym")
+roughness = 0.95
+normal_enabled = true
+normal_scale = 0.6
+normal_texture = ExtResource("3_jqmfq")
+ao_enabled = true
+ao_texture = ExtResource("2_fpkp5")
+uv1_scale = Vector3(18, 8, 1)

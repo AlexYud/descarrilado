@@ -1,0 +1,5 @@
+[gd_scene format=3 uid="uid://dwba3i74cp2x2"]
+
+[ext_resource type="PackedScene" uid="uid://bhw0ojkvyyoci" path="res://assets/models/trains/train_tracks/train_tracks.glb" id="1_1jr0y"]
+
+[node name="train_tracks" unique_id=751656909 instance=ExtResource("1_1jr0y")]

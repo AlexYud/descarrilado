@@ -1,0 +1,17 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bk7o8n2yai2lw"]
+
+[ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="1_maorc"]
+[ext_resource type="Texture2D" uid="uid://dpqnwsopm1kl3" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_AmbientOcclusion.jpg" id="2_f8bh6"]
+[ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="3_0kpub"]
+[ext_resource type="Texture2D" uid="uid://d1eh74l6cwprs" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Roughness.jpg" id="4_36pyi"]
+
+[resource]
+albedo_texture = ExtResource("1_maorc")
+roughness = 0.9
+roughness_texture = ExtResource("4_36pyi")
+normal_enabled = true
+normal_scale = 0.5
+normal_texture = ExtResource("3_0kpub")
+ao_enabled = true
+ao_texture = ExtResource("2_f8bh6")
+uv1_scale = Vector3(18, 8, 0)
