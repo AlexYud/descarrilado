@@ -1,6 +1,5 @@
 [gd_scene format=4 uid="uid://06oh821c5qmw"]
 
-[ext_resource type="Script" uid="uid://dd8orrwaa337n" path="res://scripts/moving_train_path.gd" id="1_h1mqy"]
 [ext_resource type="Script" uid="uid://ca5e4nnd25xr7" path="res://scripts/optimization/scene_performance_profile.gd" id="1_oxrth"]
 [ext_resource type="PackedScene" uid="uid://dlqu0p3xmxe86" path="res://scenes/demo/persistent_audio.tscn" id="6_75e31"]
 [ext_resource type="PackedScene" uid="uid://7kkkb8wgn686" path="res://assets/models/trees/custom_tree/tree_test.tscn" id="7_75e31"]
@@ -8,98 +7,89 @@
 [ext_resource type="Script" uid="uid://dfsn5nq0htc3d" path="res://scripts/train_wagon_shake.gd" id="9_dwddo"]
 [ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/ScreenBorderFilter.gdshader" id="10_c8kcl"]
 [ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="11_5cgqh"]
-[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/horror_filter.tscn" id="15_h1mqy"]
 [ext_resource type="Script" uid="uid://53jqnhy61lp8" path="res://scripts/menu_controller.gd" id="15_yivn6"]
 [ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="16_a860f"]
-[ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="16_h1mqy"]
+[ext_resource type="Script" uid="uid://gtdbxpouee6t" path="res://scripts/menu/menu_scenery_loop.gd" id="16_k02gq"]
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="17_c0uau"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="18_koxw5"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="19_bbdlh"]
 
-[sub_resource type="Curve3D" id="Curve3D_3lhsg"]
-closed = true
-_data = {
-"points": PackedVector3Array(1.8491821, 0, 62.872612, -1.8491821, 0, -62.872612, 215.8499, 0.43440557, 10.327759, 49.0036, 0, 49.928253, -49.0036, 0, -49.928253, 171.8669, -0.00012207031, -211.29028, 70.26941, 0, 0, -70.26941, 0, 0, -18.600086, -0.00012207031, -262.14313, 49.928223, 0, -55.475815, -49.928223, 0, 55.475815, -200.74577, -0.00012207031, -201.1197, -0.9246216, 0, -50.852856, 0.9246216, 0, 50.852856, -252.52324, -0.00012207031, -24.521633, -60.098846, 0, -55.4758, 60.098846, 0, 55.4758, -187.8014, -0.00024414063, 145.60426, -46.229797, 0, 0, 46.229797, 0, 0, -2.8819466, -0.00024414063, 202.92929, -53.626587, 0, 43.456085, 53.626587, 0, -43.456085, 161.69637, -0.00036621094, 147.45349),
-"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0)
-}
-point_count = 8
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
-[sub_resource type="Animation" id="Animation_75e31"]
+[sub_resource type="Animation" id="Animation_yivn6"]
 resource_name = "BreakDip"
-length = 0.7
+length = 0.9
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig/MenuCamera:position")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.07, 0.18, 0.38, 0.54, 0.7),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
-"update": 0,
-"values": [Vector3(1.2429873, 1.3033586, -2.510588), Vector3(1.243, 1.335, -2.32), Vector3(1.27, 1.18, -2.36), Vector3(1.3, 0.94, -2.4), Vector3(1.28, 1, -2.38), Vector3(1.285, 0.965, -2.39)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig/MenuCamera:rotation")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.07, 0.18, 0.38, 0.54, 0.7),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
-"update": 0,
-"values": [Vector3(0, 0.007317608, 0), Vector3(0.13962634, 0.006981317, -0.017453292), Vector3(-0.5235988, 0.006981317, 0.04363323), Vector3(-1.1868238, 0.006981317, 0.06981317), Vector3(-0.9948377, 0.006981317, 0.04363323), Vector3(-1.0821041, 0.006981317, 0.05235988)]
-}
-
-[sub_resource type="Animation" id="Animation_hnogt"]
-resource_name = "Intro"
-length = 22.0
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig/MenuCamera:position")
+tracks/0/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:position")
 tracks/0/interp = 2
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 3.986301, 10.027652, 12.002501, 22),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.07, 0.18, 0.31, 0.46, 0.67, 0.9),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(-2.592936, 0.8023112, 5.919642), Vector3(-2.7539492, 0.81907415, 4.5638475), Vector3(-0.0075565577, 0.5956362, 4.520511), Vector3(-0.0013424158, 1.2178907, 4.5153604), Vector3(1.2429873, 1.3033586, -2.510588)]
+"values": [Vector3(1.2430003, 1.5, 2.7890015), Vector3(1.247, 1.515, 2.8), Vector3(1.225, 1.355, 2.665), Vector3(1.252, 1.43, 2.725), Vector3(1.236, 1.385, 2.69), Vector3(1.243, 1.33, 2.705), Vector3(1.243, 1.3, 2.715)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig/MenuCamera:rotation")
+tracks/1/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:rotation")
 tracks/1/interp = 2
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 3.986301, 10.027652, 12.002501, 22),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.07, 0.18, 0.31, 0.46, 0.67, 0.9),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(0, 4.4703217e-08, 0), Vector3(0, -1.5656769, 0), Vector3(0, 0.007317639, 0), Vector3(0, -1.4901071e-08, 0), Vector3(0, 0.007317608, 0)]
+"values": [Vector3(0, 0, 0), Vector3(0.034906585, -0.0052359877, 0.010471975), Vector3(-0.31415927, 0.017453292, -0.05235988), Vector3(-0.12217305, -0.008726646, 0.02617994), Vector3(-0.2268928, 0.0052359877, -0.017453292), Vector3(-0.7330383, 0, -0.008726646), Vector3(-1.0821041, 0, 0)]
 }
 
-[sub_resource type="Animation" id="Animation_7koiu"]
+[sub_resource type="Animation" id="Animation_h1mqy"]
+resource_name = "Intro"
+length = 28.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 12.033334, 20.066668, 26.366667, 28.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-2.9904487, 1.059118, 61.976364), Vector3(-2.988, 3.741468, 37.909), Vector3(2.714, 3.741, 3.987), Vector3(2.7, 1.5, 2.789), Vector3(1.243, 1.5, 2.789)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:rotation")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 12.033334, 20.066668, 26.367844, 28.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_k02gq"]
 length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
-tracks/0/enabled = false
-tracks/0/path = NodePath("MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig/MenuCamera:position")
+tracks/0/enabled = true
+tracks/0/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:position")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector3(-3.50528, 1.4659159, 6.7380085)]
+"values": [Vector3(-2.9904487, 3.3668664, 50.923565)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
-tracks/1/enabled = false
-tracks/1/path = NodePath("MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig/MenuCamera:rotation")
+tracks/1/enabled = true
+tracks/1/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:rotation")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
@@ -109,11 +99,11 @@ tracks/1/keys = {
 "values": [Vector3(0, 0, 0)]
 }
 
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_7yl7e"]
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_k02gq"]
 _data = {
-&"BreakDip": SubResource("Animation_75e31"),
-&"Intro": SubResource("Animation_hnogt"),
-&"RESET": SubResource("Animation_7koiu")
+&"BreakDip": SubResource("Animation_yivn6"),
+&"Intro": SubResource("Animation_h1mqy"),
+&"RESET": SubResource("Animation_k02gq")
 }
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_hnogt"]
@@ -408,137 +398,86 @@ detiling_shift = 0.25
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_16kht"), SubResource("Terrain3DMeshAsset_yivn6")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_svmu2"), SubResource("Terrain3DTextureAsset_uas77")])
 
-[sub_resource type="Environment" id="Environment_75e31"]
-background_mode = 1
-background_color = Color(0.023529412, 0.015686275, 0.043137256, 1)
-background_energy_multiplier = 0.32
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_otg26"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_3lhsg"]
+material = SubResource("StandardMaterial3D_otg26")
+size = Vector3(70, 0.2, 32)
+
+[sub_resource type="Environment" id="Environment_h1mqy"]
 ambient_light_source = 2
-ambient_light_color = Color(0.12941177, 0.09411765, 0.18039216, 1)
-ambient_light_sky_contribution = 0.0
-ambient_light_energy = 0.24
-reflected_light_source = 1
-tonemap_mode = 3
-tonemap_exposure = 0.9
-tonemap_white = 6.0
-tonemap_agx_contrast = 1.45
-ssao_enabled = true
-ssao_radius = 0.7
-ssao_intensity = 1.25
-ssao_power = 1.3
-ssao_detail = 0.32
-ssao_sharpness = 0.92
-fog_enabled = true
-fog_light_color = Color(0.26666668, 0.21176471, 0.3137255, 1)
-fog_light_energy = 0.31
-fog_sun_scatter = 0.05
-fog_density = 0.075
-fog_sky_affect = 0.95
-fog_height = 1.7
-fog_height_density = 0.5
-volumetric_fog_density = 0.006
-volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
-volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
-volumetric_fog_emission_energy = 0.06
-volumetric_fog_gi_inject = 0.0
-volumetric_fog_length = 30.0
-volumetric_fog_sky_affect = 0.6
-volumetric_fog_temporal_reprojection_amount = 0.82
-adjustment_enabled = true
-adjustment_brightness = 0.96
-adjustment_contrast = 1.08
-adjustment_saturation = 0.84
+ambient_light_color = Color(0.45840502, 0.45840508, 0.45840502, 1)
 
 [node name="Menu" type="Node3D" unique_id=405065868]
 
-[node name="TransitionBlackout" type="CanvasLayer" parent="." unique_id=1145815311]
-layer = 1000
+[node name="StationaryTrain" type="Node3D" parent="." unique_id=600593851]
 
-[node name="BlackoutRect" type="ColorRect" parent="TransitionBlackout" unique_id=1701669306]
-modulate = Color(1, 1, 1, 0)
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-color = Color(0, 0, 0, 1)
-
-[node name="MovingTrainSystem" type="Node3D" parent="." unique_id=1668450054]
-
-[node name="TrainPath" type="Path3D" parent="MovingTrainSystem" unique_id=1012589356]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.483627, 0, 31.447342)
-curve = SubResource("Curve3D_3lhsg")
-script = ExtResource("1_h1mqy")
-
-[node name="WagonFollow" type="PathFollow3D" parent="MovingTrainSystem/TrainPath" unique_id=1069720268]
-transform = Transform3D(0.99949884, 0, 0.029396834, 0, 0.99999756, 0, -0.029396834, 0, 0.99949884, 215.8499, 0.43440557, 10.327759)
-rotation_mode = 1
-
-[node name="TrainWagon" parent="MovingTrainSystem/TrainPath/WagonFollow" unique_id=1144106481 instance=ExtResource("8_ih62m")]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0, 0)
+[node name="FrontWagon1" parent="StationaryTrain" unique_id=1144106481 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, -42)
 script = ExtResource("9_dwddo")
 
-[node name="Box" type="CSGBox3D" parent="MovingTrainSystem/TrainPath/WagonFollow/TrainWagon" unique_id=1219150128]
+[node name="FrontWagon2" parent="StationaryTrain" unique_id=1681351422 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, -28)
+script = ExtResource("9_dwddo")
+
+[node name="FrontWagon3" parent="StationaryTrain" unique_id=440689681 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, -14)
+script = ExtResource("9_dwddo")
+
+[node name="PlayerWagon" parent="StationaryTrain" unique_id=412339701 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 0)
+script = ExtResource("9_dwddo")
+
+[node name="Box" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=922282902]
 transform = Transform3D(0.9971597, 0, -0.07531636, 0, 1, 0, 0.07531636, 0, 0.9971597, -1.4880449, 0.33455998, 4.8023667)
 use_collision = true
 size = Vector3(0.57942873, 0.50733644, 1.8264542)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="Box2" type="CSGBox3D" parent="MovingTrainSystem/TrainPath/WagonFollow/TrainWagon" unique_id=1842943313]
+[node name="Box2" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=1945559192]
 transform = Transform3D(0.98740816, 0, 0.15819329, 0, 1, 0, -0.15819329, 0, 0.98740816, -1.5118499, 0.8953204, 4.4026804)
 use_collision = true
 size = Vector3(0.57942873, 0.6104492, 0.8493099)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="Box3" type="CSGBox3D" parent="MovingTrainSystem/TrainPath/WagonFollow/TrainWagon" unique_id=1798237459]
+[node name="Box3" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=463316652]
 transform = Transform3D(0.9911154, 0, -0.13300459, 0, 1, 0, 0.13300459, 0, 0.9911154, -1.649408, 1.4218502, 4.352147)
 use_collision = true
 size = Vector3(0.57942873, 0.44240722, 0.47735882)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="Box4" type="CSGBox3D" parent="MovingTrainSystem/TrainPath/WagonFollow/TrainWagon" unique_id=1023673956]
+[node name="Box4" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=1847213552]
 transform = Transform3D(0.97732484, 0, -0.21174562, 0, 1, 0, 0.21174562, 0, 0.97732484, -1.5230355, 0.7474967, 5.211193)
 use_collision = true
 size = Vector3(0.36246827, 0.2848541, 0.6270832)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="WagonFollow2" type="PathFollow3D" parent="MovingTrainSystem/TrainPath" unique_id=196787861]
-transform = Transform3D(0.99949884, 0, 0.029396834, 0, 0.99999756, 0, -0.029396834, 0, 0.99949884, 215.8499, 0.43440557, 10.327759)
-rotation_mode = 1
-
-[node name="TrainWagon2" parent="MovingTrainSystem/TrainPath/WagonFollow2" unique_id=1155990580 instance=ExtResource("8_ih62m")]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0, 0)
+[node name="RearWagon1" parent="StationaryTrain" unique_id=1551748756 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 14)
 script = ExtResource("9_dwddo")
 
-[node name="WagonFollow3" type="PathFollow3D" parent="MovingTrainSystem/TrainPath" unique_id=1583320473]
-transform = Transform3D(0.99949884, 0, 0.029396834, 0, 0.99999756, 0, -0.029396834, 0, 0.99949884, 215.8499, 0.43440557, 10.327759)
-rotation_mode = 1
-
-[node name="TrainWagon3" parent="MovingTrainSystem/TrainPath/WagonFollow3" unique_id=289638817 instance=ExtResource("8_ih62m")]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0, 0)
+[node name="RearWagon2" parent="StationaryTrain" unique_id=350488916 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 28)
 script = ExtResource("9_dwddo")
 
-[node name="WagonFollow4" type="PathFollow3D" parent="MovingTrainSystem/TrainPath" unique_id=226282430]
-transform = Transform3D(0.99949884, 0, 0.029396834, 0, 0.99999756, 0, -0.029396834, 0, 0.99949884, 215.8499, 0.43440557, 10.327759)
-rotation_mode = 1
-
-[node name="TrainWagon4" parent="MovingTrainSystem/TrainPath/WagonFollow4" unique_id=829505221 instance=ExtResource("8_ih62m")]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0, 0)
+[node name="RearWagon3" parent="StationaryTrain" unique_id=784199764 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 42)
 script = ExtResource("9_dwddo")
 
-[node name="MenuCameraRig" type="Node3D" parent="MovingTrainSystem/TrainPath/WagonFollow4" unique_id=1843942066]
+[node name="RearWagon4" parent="StationaryTrain" unique_id=617725135 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 56)
+script = ExtResource("9_dwddo")
 
-[node name="MenuCamera" type="Camera3D" parent="MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig" unique_id=347395798]
-transform = Transform3D(0.9999793, 0, 0.0073175877, 0, 1.0000025, 0, -0.0073175877, 0, 0.9999793, 1.2429873, 1.3033586, -2.510588)
-current = true
-far = 55.0
+[node name="MenuCameraRig" type="Node3D" parent="StationaryTrain" unique_id=777347420]
 
-[node name="CameraAnimationPlayer" type="AnimationPlayer" parent="MovingTrainSystem/TrainPath/WagonFollow4/MenuCameraRig" unique_id=1883923507]
-root_node = NodePath("../../../../..")
-libraries/ = SubResource("AnimationLibrary_7yl7e")
-speed_scale = 0.75
+[node name="CameraImpactPivot" type="Node3D" parent="StationaryTrain/MenuCameraRig" unique_id=94320063]
+
+[node name="MenuCamera" type="Camera3D" parent="StationaryTrain/MenuCameraRig/CameraImpactPivot" unique_id=1714279033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9904487, 3.3668664, 50.923565)
+
+[node name="CameraAnimationPlayer" type="AnimationPlayer" parent="StationaryTrain/MenuCameraRig" unique_id=659608686]
+root_node = NodePath("../../..")
+libraries/ = SubResource("AnimationLibrary_k02gq")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
 layer = 10
@@ -691,6 +630,7 @@ data_directory = "res://dd"
 material = SubResource("Terrain3DMaterial_7i7gg")
 assets = SubResource("Terrain3DAssets_uas77")
 top_level = true
+visible = false
 metadata/_edit_lock_ = true
 
 [node name="MenuController" type="Node" parent="." unique_id=443031550]
@@ -699,23 +639,367 @@ script = ExtResource("15_yivn6")
 [node name="PerformanceProfile" type="Node3D" parent="." unique_id=1513184291]
 script = ExtResource("1_oxrth")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=758050473]
-environment = SubResource("Environment_75e31")
-script = ExtResource("16_h1mqy")
-fog_density = 0.075
-fog_height_density = 0.5
-moon_light_path = NodePath("../MoonLight")
+[node name="SceneryLoop" type="Node3D" parent="." unique_id=658662519]
+script = ExtResource("16_k02gq")
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1057088753]
-transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947142, -0.59080726, 0.6561579, 0, 0, 0)
-light_color = Color(0.7176471, 0.6862745, 0.81960785, 1)
-light_energy = 0.9
-light_specular = 0.28
-shadow_bias = 0.08
-shadow_normal_bias = 1.25
-shadow_opacity = 0.55
-directional_shadow_mode = 0
-directional_shadow_fade_start = 0.72
-directional_shadow_max_distance = 28.0
+[node name="ChunkA" type="Node3D" parent="SceneryLoop" unique_id=524059456]
 
-[node name="HorrorFilter" parent="." unique_id=931420031 instance=ExtResource("15_h1mqy")]
+[node name="LeftForest" type="Node3D" parent="SceneryLoop/ChunkA" unique_id=744117888]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkA/LeftForest" unique_id=796797615 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, -15, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkA/LeftForest" unique_id=1875025551 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -25, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkA/LeftForest" unique_id=1246827813 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, -16.448156, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkA/LeftForest" unique_id=972235674 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, -20.039845, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkA/LeftForest" unique_id=2102127661 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, -16.384506, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkA/LeftForest" unique_id=726330628 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, -22.512241, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkA/LeftForest" unique_id=1044591985 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, -15.836932, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkA/LeftForest" unique_id=826513352 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, -19.733498, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkA/LeftForest" unique_id=1680778435 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, -23.371614, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkA/LeftForest" unique_id=851049656 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, -15.029146, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkA/LeftForest" unique_id=1823407051 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, -19.159367, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkA/LeftForest" unique_id=52053897 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, -22.648724, 0, -0.1851492)
+
+[node name="RightForest" type="Node3D" parent="SceneryLoop/ChunkA" unique_id=2007076410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkA/RightForest" unique_id=633025127 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, 25.112856, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkA/RightForest" unique_id=872824609 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 15.112856, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkA/RightForest" unique_id=1157035501 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, 23.6647, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkA/RightForest" unique_id=234264313 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, 20.073011, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkA/RightForest" unique_id=1014467390 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, 23.72835, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkA/RightForest" unique_id=1532526430 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, 17.600615, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkA/RightForest" unique_id=230681200 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, 24.275923, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkA/RightForest" unique_id=1132843604 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, 20.379358, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkA/RightForest" unique_id=1981600036 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, 16.741241, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkA/RightForest" unique_id=461694274 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 25.08371, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkA/RightForest" unique_id=1914818119 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, 20.95349, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkA/RightForest" unique_id=1480289719 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, 17.464132, 0, -0.1851492)
+
+[node name="Details" type="Node3D" parent="SceneryLoop/ChunkA" unique_id=71117394]
+
+[node name="Ground" type="MeshInstance3D" parent="SceneryLoop/ChunkA" unique_id=1849423360]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+mesh = SubResource("BoxMesh_3lhsg")
+
+[node name="ChunkB" type="Node3D" parent="SceneryLoop" unique_id=345572969]
+
+[node name="LeftForest" type="Node3D" parent="SceneryLoop/ChunkB" unique_id=630358812]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkB/LeftForest" unique_id=299208201 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, -15, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkB/LeftForest" unique_id=339730476 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -25, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkB/LeftForest" unique_id=1717867482 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, -16.448156, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkB/LeftForest" unique_id=1306026220 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, -20.039845, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkB/LeftForest" unique_id=368549945 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, -16.384506, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkB/LeftForest" unique_id=396768090 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, -22.512241, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkB/LeftForest" unique_id=298311130 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, -15.836932, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkB/LeftForest" unique_id=1860587602 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, -19.733498, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkB/LeftForest" unique_id=569848549 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, -23.371614, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkB/LeftForest" unique_id=938297340 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, -15.029146, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkB/LeftForest" unique_id=1934635941 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, -19.159367, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkB/LeftForest" unique_id=1995064088 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, -22.648724, 0, -0.1851492)
+
+[node name="RightForest" type="Node3D" parent="SceneryLoop/ChunkB" unique_id=1418146313]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkB/RightForest" unique_id=391937620 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, 25.112856, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkB/RightForest" unique_id=1724696736 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 15.112856, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkB/RightForest" unique_id=644263315 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, 23.6647, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkB/RightForest" unique_id=827241836 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, 20.073011, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkB/RightForest" unique_id=737329162 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, 23.72835, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkB/RightForest" unique_id=996801079 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, 17.600615, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkB/RightForest" unique_id=1881281401 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, 24.275923, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkB/RightForest" unique_id=895592536 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, 20.379358, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkB/RightForest" unique_id=1356362937 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, 16.741241, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkB/RightForest" unique_id=290380985 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 25.08371, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkB/RightForest" unique_id=183770343 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, 20.95349, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkB/RightForest" unique_id=1914489644 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, 17.464132, 0, -0.1851492)
+
+[node name="Details" type="Node3D" parent="SceneryLoop/ChunkB" unique_id=1631830470]
+
+[node name="Ground" type="MeshInstance3D" parent="SceneryLoop/ChunkB" unique_id=53508669]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+mesh = SubResource("BoxMesh_3lhsg")
+
+[node name="ChunkC" type="Node3D" parent="SceneryLoop" unique_id=367273544]
+
+[node name="LeftForest" type="Node3D" parent="SceneryLoop/ChunkC" unique_id=1263485529]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkC/LeftForest" unique_id=366054364 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, -15, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkC/LeftForest" unique_id=2023646381 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -25, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkC/LeftForest" unique_id=232484788 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, -16.448156, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkC/LeftForest" unique_id=1643846175 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, -20.039845, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkC/LeftForest" unique_id=1384975745 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, -16.384506, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkC/LeftForest" unique_id=1767154087 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, -22.512241, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkC/LeftForest" unique_id=490185531 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, -15.836932, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkC/LeftForest" unique_id=536576433 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, -19.733498, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkC/LeftForest" unique_id=40305213 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, -23.371614, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkC/LeftForest" unique_id=2033962551 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, -15.029146, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkC/LeftForest" unique_id=2109917892 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, -19.159367, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkC/LeftForest" unique_id=1647052846 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, -22.648724, 0, -0.1851492)
+
+[node name="RightForest" type="Node3D" parent="SceneryLoop/ChunkC" unique_id=1483799445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkC/RightForest" unique_id=1538421216 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, 25.112856, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkC/RightForest" unique_id=1785653420 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 15.112856, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkC/RightForest" unique_id=16665267 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, 23.6647, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkC/RightForest" unique_id=938051394 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, 20.073011, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkC/RightForest" unique_id=1815253825 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, 23.72835, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkC/RightForest" unique_id=878606882 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, 17.600615, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkC/RightForest" unique_id=1675309514 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, 24.275923, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkC/RightForest" unique_id=1781456243 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, 20.379358, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkC/RightForest" unique_id=1989136826 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, 16.741241, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkC/RightForest" unique_id=1593969681 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 25.08371, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkC/RightForest" unique_id=455843226 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, 20.95349, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkC/RightForest" unique_id=1433477383 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, 17.464132, 0, -0.1851492)
+
+[node name="Details" type="Node3D" parent="SceneryLoop/ChunkC" unique_id=37765881]
+
+[node name="Ground" type="MeshInstance3D" parent="SceneryLoop/ChunkC" unique_id=1896404466]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+mesh = SubResource("BoxMesh_3lhsg")
+
+[node name="ChunkD" type="Node3D" parent="SceneryLoop" unique_id=697328500]
+
+[node name="LeftForest" type="Node3D" parent="SceneryLoop/ChunkD" unique_id=799824478]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkD/LeftForest" unique_id=1888094769 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, -15, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkD/LeftForest" unique_id=2163274 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -25, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkD/LeftForest" unique_id=1592740089 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, -16.448156, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkD/LeftForest" unique_id=1170073461 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, -20.039845, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkD/LeftForest" unique_id=1321704929 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, -16.384506, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkD/LeftForest" unique_id=219954622 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, -22.512241, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkD/LeftForest" unique_id=323956356 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, -15.836932, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkD/LeftForest" unique_id=738019438 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, -19.733498, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkD/LeftForest" unique_id=191081984 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, -23.371614, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkD/LeftForest" unique_id=400287196 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, -15.029146, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkD/LeftForest" unique_id=886876513 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, -19.159367, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkD/LeftForest" unique_id=1942522310 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, -22.648724, 0, -0.1851492)
+
+[node name="RightForest" type="Node3D" parent="SceneryLoop/ChunkD" unique_id=723143431]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, 0)
+
+[node name="tree_test" parent="SceneryLoop/ChunkD/RightForest" unique_id=428727635 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.64391506, 0, -0.4747351, 0, 0.8, 0, 0.4747351, 0, 0.64391506, 25.112856, 0, -16)
+
+[node name="tree_test2" parent="SceneryLoop/ChunkD/RightForest" unique_id=1244729320 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 15.112856, 0, 16)
+
+[node name="tree_test3" parent="SceneryLoop/ChunkD/RightForest" unique_id=728347491 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.9799247, 0, 0.19936793, 0, 1, 0, -0.19936793, 0, 0.9799247, 23.6647, 0, 1.5245857)
+
+[node name="tree_test4" parent="SceneryLoop/ChunkD/RightForest" unique_id=1099221286 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.7674512, 0, 0.22587316, 0, 0.8, 0, -0.22587316, 0, -0.7674512, 20.073011, 0, 8.80673)
+
+[node name="tree_test5" parent="SceneryLoop/ChunkD/RightForest" unique_id=1034865270 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.24868995, 0, 0.96858317, 0, 1, 0, -0.96858317, 0, 0.24868995, 23.72835, 0, 13.784794)
+
+[node name="tree_test6" parent="SceneryLoop/ChunkD/RightForest" unique_id=1171282920 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.48184818, 0, 0.507762, 0, 0.7, 0, -0.507762, 0, 0.48184818, 17.600615, 0, -5.9713726)
+
+[node name="tree_test7" parent="SceneryLoop/ChunkD/RightForest" unique_id=1622116588 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.8284544, 0, 0.35165802, 0, 0.9, 0, -0.35165802, 0, 0.8284544, 24.275923, 0, -8.6640215)
+
+[node name="tree_test8" parent="SceneryLoop/ChunkD/RightForest" unique_id=1720273097 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.7547096, 0, 0.656059, 0, 1, 0, -0.656059, 0, 0.7547096, 20.379358, 0, -13.067323)
+
+[node name="tree_test9" parent="SceneryLoop/ChunkD/RightForest" unique_id=1491190470 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.49242356, 0, 0.87035567, 0, 1, 0, -0.87035567, 0, 0.49242356, 16.741241, 0, 4.5334377)
+
+[node name="tree_test10" parent="SceneryLoop/ChunkD/RightForest" unique_id=768492503 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.65532166, 0, -0.45886117, 0, 0.8, 0, 0.45886117, 0, 0.65532166, 25.08371, 0, 7.7857914)
+
+[node name="tree_test11" parent="SceneryLoop/ChunkD/RightForest" unique_id=867257322 instance=ExtResource("7_75e31")]
+transform = Transform3D(-0.6057112, 0, 0.665668, 0, 0.9, 0, -0.665668, 0, -0.6057112, 20.95349, 0, -3.0178967)
+
+[node name="tree_test12" parent="SceneryLoop/ChunkD/RightForest" unique_id=2133219796 instance=ExtResource("7_75e31")]
+transform = Transform3D(0.35267425, 0, 1.0419314, 0, 1.1, 0, -1.0419314, 0, 0.35267425, 17.464132, 0, -0.1851492)
+
+[node name="Details" type="Node3D" parent="SceneryLoop/ChunkD" unique_id=330934659]
+
+[node name="Ground" type="MeshInstance3D" parent="SceneryLoop/ChunkD" unique_id=181513432]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+mesh = SubResource("BoxMesh_3lhsg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=99141160]
+environment = SubResource("Environment_h1mqy")
+
+[node name="TransitionBlackout" type="CanvasLayer" parent="." unique_id=1145815311]
+layer = 1000
+
+[node name="BlackoutRect" type="ColorRect" parent="TransitionBlackout" unique_id=1701669306]
+modulate = Color(1, 1, 1, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+color = Color(0, 0, 0, 1)

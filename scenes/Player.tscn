@@ -93,10 +93,10 @@ visible = false
 mesh = SubResource("CapsuleMesh_tm2b5")
 
 [node name="Head" type="Node3D" parent="." unique_id=607507967]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.014)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -0.014)
 
 [node name="Camera3D" type="Camera3D" parent="Head" unique_id=608416810]
-transform = Transform3D(0.9986295, -0.05233596, 0, 0.024570247, 0.4688282, 0.88294756, -0.04620991, -0.8817375, 0.4694716, 0.042, -0.338, 0.12)
+transform = Transform3D(0.99862945, -0.052335955, 0, 0.024570245, 0.46882817, 0.88294756, -0.046209905, -0.8817374, 0.4694716, 0.042, -0.338, 0.12)
 far = 45.0
 
 [node name="InteractRay" type="RayCast3D" parent="Head/Camera3D" unique_id=1231366330]

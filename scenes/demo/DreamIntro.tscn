@@ -365,14 +365,14 @@ script = ExtResource("26_e6tct")
 script = ExtResource("1_2xo7o")
 
 [node name="Player" parent="." unique_id=1340821127 instance=ExtResource("1_rhmqu")]
-transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 1.2429868, 0.93259716, 24.306492)
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 1.243, 0.9, 2.789)
 
 [node name="Train" type="Node3D" parent="." unique_id=1716082974]
 
 [node name="Wagons" type="Node3D" parent="Train" unique_id=430028723]
 
 [node name="TrainWagon" parent="Train/Wagons" unique_id=1144106481 instance=ExtResource("2_5acte")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 0.67661524)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 
 [node name="Box" type="CSGBox3D" parent="Train/Wagons/TrainWagon" unique_id=1276679142]
 transform = Transform3D(0.9971597, 0, -0.07531636, 0, 1, 0, 0.07531636, 0, 0.9971597, -1.4880449, 0.33455998, 4.8023667)
@@ -399,13 +399,10 @@ size = Vector3(0.36246827, 0.2848541, 0.6270832)
 material = SubResource("StandardMaterial3D_yilg7")
 
 [node name="TrainWagon2" parent="Train/Wagons" unique_id=392497124 instance=ExtResource("2_5acte")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 13.731697)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 14)
 
 [node name="TrainWagon3" parent="Train/Wagons" unique_id=250228809 instance=ExtResource("2_5acte")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, -12.490075)
-
-[node name="TrainWagon4" parent="Train/Wagons" unique_id=1125605507 instance=ExtResource("2_5acte")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28603935, 26.801626)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -14)
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
 layer = 10

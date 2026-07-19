@@ -1,57 +1,67 @@
 [gd_scene format=3 uid="uid://dechhjfthr7jj"]
 
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="1_a7tex"]
+[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/horror_filter.tscn" id="2_u1huc"]
 
-[sub_resource type="Environment" id="Environment_a7tex"]
+[sub_resource type="Environment" id="Environment_xbqfk"]
 background_mode = 1
-background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
-background_energy_multiplier = 0.35
+background_color = Color(0.023529412, 0.015686275, 0.043137256, 1)
+background_energy_multiplier = 0.32
 ambient_light_source = 2
-ambient_light_color = Color(0.06666667, 0.09019608, 0.13333334, 1)
-ambient_light_sky_contribution = 0.25
-ambient_light_energy = 0.16
-tonemap_mode = 2
-tonemap_exposure = 0.75
+ambient_light_color = Color(0.12941177, 0.09411765, 0.18039216, 1)
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 0.24
+reflected_light_source = 1
+tonemap_mode = 3
+tonemap_exposure = 0.9
+tonemap_white = 6.0
 tonemap_agx_contrast = 1.45
+ssao_enabled = true
+ssao_radius = 0.7
+ssao_intensity = 1.25
+ssao_power = 1.3
+ssao_detail = 0.32
+ssao_sharpness = 0.92
 fog_enabled = true
-fog_light_color = Color(0.37254903, 0.43529412, 0.50980395, 1)
-fog_light_energy = 0.28
-fog_density = 0.045
-fog_height_density = 0.1
-volumetric_fog_density = 0.028
-volumetric_fog_albedo = Color(0.37254903, 0.43529412, 0.50980395, 1)
-volumetric_fog_length = 80.0
+fog_light_color = Color(0.26666668, 0.21176471, 0.3137255, 1)
+fog_light_energy = 0.31
+fog_sun_scatter = 0.05
+fog_density = 0.075
+fog_sky_affect = 0.95
+fog_height = 1.7
+fog_height_density = 0.5
+volumetric_fog_density = 0.006
+volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
+volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
+volumetric_fog_emission_energy = 0.06
+volumetric_fog_gi_inject = 0.0
+volumetric_fog_length = 30.0
+volumetric_fog_sky_affect = 0.6
+volumetric_fog_temporal_reprojection_amount = 0.82
 adjustment_enabled = true
-adjustment_brightness = 0.82
-adjustment_contrast = 1.22
-adjustment_saturation = 0.72
+adjustment_brightness = 0.96
+adjustment_contrast = 1.08
+adjustment_saturation = 0.84
 
 [node name="WorldEnvironmentStore" type="Node3D" unique_id=1748959053]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=216745188]
-environment = SubResource("Environment_a7tex")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1427911949]
+environment = SubResource("Environment_xbqfk")
 script = ExtResource("1_a7tex")
-background_color = Color(0.011764706, 0.019607844, 0.02745098, 1)
-background_energy = 0.35
-ambient_color = Color(0.06666667, 0.09019608, 0.13333334, 1)
-ambient_energy = 0.16
-fog_color = Color(0.37254903, 0.43529412, 0.50980395, 1)
-fog_energy = 0.28
-fog_density = 0.045
-fog_height_density = 0.1
-volumetric_fog_density = 0.028
-volumetric_fog_length = 80.0
-exposure = 0.75
-brightness = 0.82
-contrast = 1.22
-saturation = 0.72
+fog_density = 0.075
+fog_height_density = 0.5
 moon_light_path = NodePath("../MoonLight")
-moon_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
-moon_energy = 0.85
-moon_shadow_enabled = true
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=2108800892]
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1302958029]
 transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947142, -0.59080726, 0.6561579, 0, 0, 0)
-light_color = Color(0.61960787, 0.72156864, 0.84705883, 1)
-light_energy = 0.85
-shadow_enabled = true
+light_color = Color(0.7176471, 0.6862745, 0.81960785, 1)
+light_energy = 0.9
+light_specular = 0.28
+shadow_bias = 0.08
+shadow_normal_bias = 1.25
+shadow_opacity = 0.55
+directional_shadow_mode = 0
+directional_shadow_fade_start = 0.72
+directional_shadow_max_distance = 28.0
+
+[node name="HorrorFilter" parent="." unique_id=931420031 instance=ExtResource("2_u1huc")]

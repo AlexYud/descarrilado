@@ -6,17 +6,23 @@ extends Node
 # ============================================================
 
 const MENU_CAMERA_PATH := NodePath(
-	"MovingTrainSystem/TrainPath/WagonFollow4/"
-	+ "MenuCameraRig/MenuCamera"
+	"StationaryTrain/MenuCameraRig/"
+	+ "CameraImpactPivot/MenuCamera"
 )
 
 const CAMERA_ANIMATION_PLAYER_PATH := NodePath(
-	"MovingTrainSystem/TrainPath/WagonFollow4/"
-	+ "MenuCameraRig/CameraAnimationPlayer"
+	"StationaryTrain/MenuCameraRig/"
+	+ "CameraAnimationPlayer"
 )
 
-const MOVING_TRAIN_PATH := NodePath(
-	"MovingTrainSystem/TrainPath"
+## Contains the five stationary wagon instances.
+const STATIONARY_TRAIN_PATH := NodePath(
+	"StationaryTrain"
+)
+
+## Moves to create the illusion that the train is travelling.
+const SCENERY_LOOP_PATH := NodePath(
+	"SceneryLoop"
 )
 
 const BLACKOUT_RECT_PATH := NodePath(
@@ -108,6 +114,8 @@ const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 @export_category("Camera Cutscenes")
 
 @export var intro_animation_name: StringName = &"Intro"
+
+## Keep this spelling identical to your animation.
 @export var brake_animation_name: StringName = &"BreakDip"
 
 @export var play_brake_animation: bool = true
@@ -122,19 +130,19 @@ const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 
 @export_category("Train Stop Sequence")
 
+## Controls how quickly the moving scenery stops.
 @export var train_slowdown_duration: float = 0.8
 
-## Panic flickering begins at the same moment as BrakeDip.
-## This controls how long it flickers before the final blackout.
+## Panic flickering begins together with BreakDip.
 @export var blackout_during_slowdown_delay: float = 0.20
 
-## Duration of the final light flicker before all lights stay off.
+## Duration of the final wagon-light flicker.
 @export var blackout_final_flicker_duration: float = 0.35
 
-## Full-screen fade used after the camera is looking down.
+## Fast blackout that resembles a light pulse.
 @export var screen_blackout_fade_duration: float = 0.06
 
-## Fully black pause before DreamIntro loads.
+## Brief fully black pause before DreamIntro loads.
 @export var screen_blackout_hold_duration: float = 0.05
 
 
@@ -160,7 +168,9 @@ var menu_root: Node = null
 
 var menu_camera: Camera3D = null
 var camera_animation_player: AnimationPlayer = null
-var moving_train: Node = null
+
+var stationary_train: Node = null
+var scenery_loop: Node = null
 
 var blackout_rect: ColorRect = null
 
@@ -180,7 +190,7 @@ var persistent_audio: Node = null
 
 var train_light_flickers: Array[TrainLightFlicker] = []
 
-var train_slowdown_tween: Tween = null
+var scenery_slowdown_tween: Tween = null
 
 var transition_running: bool = false
 var options_panel_open: bool = false
@@ -220,8 +230,12 @@ func _find_scene_nodes() -> void:
 		as AnimationPlayer
 	)
 
-	moving_train = menu_root.get_node_or_null(
-		MOVING_TRAIN_PATH
+	stationary_train = menu_root.get_node_or_null(
+		STATIONARY_TRAIN_PATH
+	)
+
+	scenery_loop = menu_root.get_node_or_null(
+		SCENERY_LOOP_PATH
 	)
 
 	blackout_rect = (
@@ -395,21 +409,32 @@ func _find_ui_fallbacks() -> void:
 func _validate_scene_nodes() -> void:
 	if menu_camera == null:
 		push_error(
-			"MenuController: MenuCamera was not found at: "
+			"MenuController: New MenuCamera was not found at: "
 			+ str(MENU_CAMERA_PATH)
 		)
 
 	if camera_animation_player == null:
 		push_error(
-			"MenuController: CameraAnimationPlayer was not "
+			"MenuController: New CameraAnimationPlayer was not "
 			+ "found at: "
 			+ str(CAMERA_ANIMATION_PLAYER_PATH)
 		)
 
-	if moving_train == null:
+	if stationary_train == null:
 		push_error(
-			"MenuController: TrainPath was not found at: "
-			+ str(MOVING_TRAIN_PATH)
+			"MenuController: StationaryTrain was not found at: "
+			+ str(STATIONARY_TRAIN_PATH)
+		)
+
+	if scenery_loop == null:
+		push_error(
+			"MenuController: SceneryLoop was not found at: "
+			+ str(SCENERY_LOOP_PATH)
+		)
+	elif not scenery_loop.has_method("smooth_stop"):
+		push_warning(
+			"MenuController: SceneryLoop does not have a "
+			+ "smooth_stop() method."
 		)
 
 	if blackout_rect == null:
@@ -476,6 +501,17 @@ func _validate_scene_nodes() -> void:
 
 	if (
 		camera_animation_player != null
+		and not camera_animation_player.has_animation(
+			intro_animation_name
+		)
+	):
+		push_error(
+			"MenuController: Intro animation '%s' was not found."
+			% intro_animation_name
+		)
+
+	if (
+		camera_animation_player != null
 		and play_brake_animation
 		and not camera_animation_player.has_animation(
 			brake_animation_name
@@ -494,15 +530,17 @@ func _validate_scene_nodes() -> void:
 func _collect_train_light_flickers() -> void:
 	train_light_flickers.clear()
 
-	if moving_train == null:
+	if stationary_train == null:
 		return
 
-	_find_train_light_flickers_recursive(moving_train)
+	_find_train_light_flickers_recursive(
+		stationary_train
+	)
 
 	if train_light_flickers.is_empty():
 		push_warning(
 			"MenuController: No TrainLightFlicker nodes "
-			+ "were found under TrainPath."
+			+ "were found under StationaryTrain."
 		)
 
 
@@ -670,10 +708,6 @@ func _prepare_camera_animation() -> void:
 	if not camera_animation_player.has_animation(
 		intro_animation_name
 	):
-		push_error(
-			"MenuController: Animation '%s' was not found."
-			% intro_animation_name
-		)
 		return
 
 	camera_animation_player.play(
@@ -771,7 +805,9 @@ func _sync_master_volume_slider_to_audio() -> void:
 			"get_master_volume_percent"
 		)
 
-		master_volume_slider.value = float(saved_volume)
+		master_volume_slider.value = float(
+			saved_volume
+		)
 	else:
 		master_volume_slider.value = 100.0
 
@@ -830,7 +866,7 @@ func _start_intro_narration() -> void:
 
 
 # ============================================================
-# MENU FADE AND INTRO CAMERA ANIMATION
+# MENU FADE AND INTRO ANIMATION
 # ============================================================
 
 func _fade_out_menu() -> void:
@@ -844,7 +880,9 @@ func _fade_out_menu() -> void:
 		"modulate:a",
 		0.0,
 		maxf(menu_fade_duration, 0.0)
-	).set_trans(Tween.TRANS_SINE).set_ease(
+	).set_trans(
+		Tween.TRANS_SINE
+	).set_ease(
 		Tween.EASE_IN_OUT
 	)
 
@@ -942,7 +980,7 @@ func _wait_for_brake_animation() -> void:
 
 
 # ============================================================
-# TRAIN STOP AND LIGHT BLACKOUT
+# STOP SEQUENCE
 # ============================================================
 
 func _run_train_stop_sequence() -> void:
@@ -962,10 +1000,8 @@ func _run_train_stop_sequence() -> void:
 		0.0
 	)
 
-	# All three start during the same frame:
-	# camera impact, train braking, and light malfunction.
 	_start_brake_animation()
-	_begin_train_slowdown(slowdown_time)
+	_begin_scenery_slowdown(slowdown_time)
 
 	for light_flicker: TrainLightFlicker in (
 		train_light_flickers
@@ -1009,12 +1045,9 @@ func _run_train_stop_sequence() -> void:
 			remaining_slowdown_time
 		).timeout
 
-	_finish_train_stop()
+	_finish_scenery_stop()
 
-	# Protect against very short slowdown settings.
-	# The scene will not fade until BrakeDip has reached its floor pose.
 	await _wait_for_brake_animation()
-
 	await _fade_screen_to_black()
 
 	if screen_blackout_hold_duration > 0.0:
@@ -1023,83 +1056,108 @@ func _run_train_stop_sequence() -> void:
 		).timeout
 
 
-func _begin_train_slowdown(duration: float) -> void:
-	if moving_train == null:
+# ============================================================
+# SCENERY BRAKING
+# ============================================================
+
+func _begin_scenery_slowdown(duration: float) -> void:
+	if scenery_loop == null:
 		return
 
-	if moving_train.has_method("smooth_stop"):
-		moving_train.call(
+	if scenery_loop.has_method("smooth_stop"):
+		scenery_loop.call(
 			"smooth_stop",
 			duration
 		)
 		return
 
 	if not _node_has_property(
-		moving_train,
+		scenery_loop,
 		&"movement_speed"
 	):
 		push_warning(
-			"MenuController: TrainPath has no "
-			+ "movement_speed property or smooth_stop() method."
+			"MenuController: SceneryLoop has no smooth_stop() "
+			+ "method or movement_speed property."
 		)
 		return
 
-	if train_slowdown_tween != null:
-		train_slowdown_tween.kill()
+	if scenery_slowdown_tween != null:
+		if scenery_slowdown_tween.is_valid():
+			scenery_slowdown_tween.kill()
 
 	var current_speed: float = float(
-		moving_train.get("movement_speed")
+		scenery_loop.get("movement_speed")
 	)
 
 	if duration <= 0.0:
-		moving_train.set("movement_speed", 0.0)
+		_set_scenery_loop_speed(0.0)
 		return
 
-	train_slowdown_tween = create_tween()
+	scenery_slowdown_tween = create_tween()
 
-	train_slowdown_tween.tween_method(
-		_set_moving_train_speed,
+	scenery_slowdown_tween.tween_method(
+		_set_scenery_loop_speed,
 		current_speed,
 		0.0,
 		duration
-	).set_trans(Tween.TRANS_SINE).set_ease(
+	).set_trans(
+		Tween.TRANS_SINE
+	).set_ease(
 		Tween.EASE_IN_OUT
 	)
 
 
-func _set_moving_train_speed(speed: float) -> void:
-	if moving_train == null:
+func _set_scenery_loop_speed(speed: float) -> void:
+	if scenery_loop == null:
+		return
+
+	if scenery_loop.has_method("set_loop_speed"):
+		scenery_loop.call(
+			"set_loop_speed",
+			speed
+		)
 		return
 
 	if _node_has_property(
-		moving_train,
+		scenery_loop,
 		&"movement_speed"
 	):
-		moving_train.set(
+		scenery_loop.set(
 			"movement_speed",
 			speed
 		)
 
 
-func _finish_train_stop() -> void:
-	if moving_train == null:
+func _finish_scenery_stop() -> void:
+	if scenery_loop == null:
+		return
+
+	if scenery_loop.has_method("stop_immediate"):
+		scenery_loop.call("stop_immediate")
+		return
+
+	if scenery_loop.has_method("set_loop_speed"):
+		scenery_loop.call(
+			"set_loop_speed",
+			0.0
+		)
 		return
 
 	if _node_has_property(
-		moving_train,
+		scenery_loop,
 		&"movement_speed"
 	):
-		moving_train.set(
+		scenery_loop.set(
 			"movement_speed",
 			0.0
 		)
 
 	if _node_has_property(
-		moving_train,
-		&"move_train"
+		scenery_loop,
+		&"active"
 	):
-		moving_train.set(
-			"move_train",
+		scenery_loop.set(
+			"active",
 			false
 		)
 
@@ -1121,6 +1179,10 @@ func _node_has_property(
 
 	return false
 
+
+# ============================================================
+# SCREEN BLACKOUT
+# ============================================================
 
 func _fade_screen_to_black() -> void:
 	if blackout_rect == null:
@@ -1145,7 +1207,9 @@ func _fade_screen_to_black() -> void:
 		"modulate:a",
 		1.0,
 		fade_duration
-	).set_trans(Tween.TRANS_SINE).set_ease(
+	).set_trans(
+		Tween.TRANS_SINE
+	).set_ease(
 		Tween.EASE_IN_OUT
 	)
 
