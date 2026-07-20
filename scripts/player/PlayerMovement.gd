@@ -45,37 +45,77 @@ var bob_time: float = 0.0
 
 var original_camera_position: Vector3 = Vector3.ZERO
 var original_hand_position: Vector3 = Vector3.ZERO
+var gameplay_camera_rotation: Vector3 = Vector3.ZERO
+
+var cutscene_camera_controlled: bool = false
 
 
-func setup(player_node: CharacterBody3D, audio_node: PlayerAudioController) -> void:
+func setup(
+	player_node: CharacterBody3D,
+	audio_node: PlayerAudioController
+) -> void:
 	player = player_node
 	audio_controller = audio_node
 
 	head = player.get_node("Head") as Node3D
 	camera = player.get_node("Head/Camera3D") as Camera3D
 	hand = player.get_node("Hand") as Node3D
-	flashlight = player.get_node("Hand/SpotLight3D") as SpotLight3D
-	collider = player.get_node("CollisionShape3D") as CollisionShape3D
+	flashlight = player.get_node(
+		"Hand/SpotLight3D"
+	) as SpotLight3D
+	collider = player.get_node(
+		"CollisionShape3D"
+	) as CollisionShape3D
 
-	original_camera_position = camera.position
+	# The head-raise animation may already have applied its first key
+	# before setup runs, so camera.position must not be captured here.
+	original_camera_position = Vector3.ZERO
+	gameplay_camera_rotation = Vector3.ZERO
 	original_hand_position = hand.position
 
 	_apply_floor_settings()
 
 
-func handle_input(event: InputEvent, block_look: bool) -> void:
-	if block_look:
+func handle_input(
+	event: InputEvent,
+	block_look: bool
+) -> void:
+	if block_look or cutscene_camera_controlled:
 		return
 
 	if event is InputEventMouseMotion:
-		var mouse_event: InputEventMouseMotion = event as InputEventMouseMotion
-		look_yaw += mouse_event.relative.x * camera_sensitivity
-		look_pitch += mouse_event.relative.y * camera_sensitivity
-		look_pitch = clampf(look_pitch, -35.0, 75.0)
+		var mouse_event: InputEventMouseMotion = (
+			event as InputEventMouseMotion
+		)
+
+		look_yaw += (
+			mouse_event.relative.x
+			* camera_sensitivity
+		)
+
+		look_pitch += (
+			mouse_event.relative.y
+			* camera_sensitivity
+		)
+
+		look_pitch = clampf(
+			look_pitch,
+			-35.0,
+			75.0
+		)
 
 
-func physics_update(delta: float, movement_frozen: bool) -> void:
+func physics_update(
+	delta: float,
+	movement_frozen: bool
+) -> void:
 	_apply_floor_settings()
+
+	if cutscene_camera_controlled:
+		_apply_gravity_only(delta)
+		player.move_and_slide()
+		return
+
 	_apply_look(delta)
 
 	if movement_frozen:
@@ -85,16 +125,96 @@ func physics_update(delta: float, movement_frozen: bool) -> void:
 		return
 
 	var move_dir: Vector3 = _get_move_direction()
-	var wants_crouch: bool = Input.is_action_pressed("crouch")
-	var wants_sprint: bool = Input.is_action_pressed("sprint") and not wants_crouch
-	var current_speed: float = _get_current_speed(wants_crouch, wants_sprint)
+	var wants_crouch: bool = Input.is_action_pressed(
+		"crouch"
+	)
+	var wants_sprint: bool = (
+		Input.is_action_pressed("sprint")
+		and not wants_crouch
+	)
+	var current_speed: float = _get_current_speed(
+		wants_crouch,
+		wants_sprint
+	)
 
-	_apply_horizontal_movement(move_dir, current_speed, delta)
-	_apply_vertical_movement(delta, wants_crouch)
-	_update_crouch(delta, wants_crouch)
-	_update_view_effects(delta, move_dir, wants_crouch, wants_sprint)
+	_apply_horizontal_movement(
+		move_dir,
+		current_speed,
+		delta
+	)
+	_apply_vertical_movement(
+		delta,
+		wants_crouch
+	)
+	_update_crouch(
+		delta,
+		wants_crouch
+	)
+	_update_view_effects(
+		delta,
+		move_dir,
+		wants_crouch,
+		wants_sprint
+	)
 
 	player.move_and_slide()
+
+
+func begin_cutscene_camera_control(
+	final_camera_position: Vector3,
+	final_camera_rotation: Vector3
+) -> void:
+	cutscene_camera_controlled = true
+
+	original_camera_position = final_camera_position
+	gameplay_camera_rotation = final_camera_rotation
+
+	look_yaw = 0.0
+	look_pitch = 0.0
+	bob_time = 0.0
+
+	if player != null:
+		player.velocity.x = 0.0
+		player.velocity.z = 0.0
+
+	if head != null:
+		head.rotation.y = 0.0
+
+	if audio_controller != null:
+		audio_controller.stop_footsteps()
+
+
+func end_cutscene_camera_control() -> void:
+	cutscene_camera_controlled = false
+
+	look_yaw = 0.0
+	look_pitch = -rad_to_deg(
+		gameplay_camera_rotation.x
+	)
+	bob_time = 0.0
+
+	var final_offset: Vector3 = Vector3(
+		0.0,
+		crouch_offset,
+		0.0
+	)
+
+	if head != null:
+		head.rotation.y = 0.0
+
+	if camera != null:
+		camera.position = (
+			original_camera_position
+			+ final_offset
+		)
+		camera.rotation = gameplay_camera_rotation
+		camera.fov = BASE_FOV
+
+	if hand != null:
+		hand.position = (
+			original_hand_position
+			+ final_offset
+		)
 
 
 func force_stop_immediately() -> void:
@@ -112,14 +232,27 @@ func force_stop_immediately() -> void:
 	if audio_controller != null:
 		audio_controller.stop_footsteps()
 
-	var final_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
+	if cutscene_camera_controlled:
+		return
+
+	var final_offset: Vector3 = Vector3(
+		0.0,
+		crouch_offset,
+		0.0
+	)
 
 	if camera != null:
-		camera.position = original_camera_position + final_offset
+		camera.position = (
+			original_camera_position
+			+ final_offset
+		)
 		camera.fov = BASE_FOV
 
 	if hand != null:
-		hand.position = original_hand_position + final_offset
+		hand.position = (
+			original_hand_position
+			+ final_offset
+		)
 
 
 func _apply_floor_settings() -> void:
@@ -127,7 +260,9 @@ func _apply_floor_settings() -> void:
 		return
 
 	player.floor_snap_length = stair_snap_length
-	player.floor_max_angle = deg_to_rad(max_floor_angle_degrees)
+	player.floor_max_angle = deg_to_rad(
+		max_floor_angle_degrees
+	)
 
 
 func _apply_look(delta: float) -> void:
@@ -135,15 +270,34 @@ func _apply_look(delta: float) -> void:
 	camera.rotation.x = -deg_to_rad(look_pitch)
 
 	if flashlight != null:
-		flashlight.rotation.x = lerpf(flashlight.rotation.x, camera.rotation.x, delta * flashlight_lerp_speed)
-		flashlight.rotation.y = lerpf(flashlight.rotation.y, head.rotation.y, delta * flashlight_lerp_speed)
+		flashlight.rotation.x = lerpf(
+			flashlight.rotation.x,
+			camera.rotation.x,
+			delta * flashlight_lerp_speed
+		)
+
+		flashlight.rotation.y = lerpf(
+			flashlight.rotation.y,
+			head.rotation.y,
+			delta * flashlight_lerp_speed
+		)
 
 
 func _get_move_direction() -> Vector3:
-	var input_x: float = Input.get_axis("left", "right")
-	var input_z: float = Input.get_axis("down", "up")
+	var input_x: float = Input.get_axis(
+		"left",
+		"right"
+	)
+	var input_z: float = Input.get_axis(
+		"down",
+		"up"
+	)
 
-	var dir: Vector3 = head.basis.x * input_x + (-head.basis.z * input_z)
+	var dir: Vector3 = (
+		head.basis.x * input_x
+		+ -head.basis.z * input_z
+	)
+
 	dir.y = 0.0
 
 	if dir.length() > 0.0:
@@ -152,27 +306,58 @@ func _get_move_direction() -> Vector3:
 	return Vector3.ZERO
 
 
-func _get_current_speed(wants_crouch: bool, wants_sprint: bool) -> float:
+func _get_current_speed(
+	wants_crouch: bool,
+	wants_sprint: bool
+) -> float:
 	if wants_crouch:
 		return CROUCH_SPEED
+
 	if wants_sprint:
 		return SPRINT_SPEED
+
 	return WALK_SPEED
 
 
-func _apply_horizontal_movement(move_dir: Vector3, speed: float, delta: float) -> void:
-	var target_velocity: Vector3 = move_dir * speed
-	player.velocity.x = lerpf(player.velocity.x, target_velocity.x, player_acceleration * delta)
-	player.velocity.z = lerpf(player.velocity.z, target_velocity.z, player_acceleration * delta)
+func _apply_horizontal_movement(
+	move_dir: Vector3,
+	speed: float,
+	delta: float
+) -> void:
+	var target_velocity: Vector3 = (
+		move_dir * speed
+	)
+
+	player.velocity.x = lerpf(
+		player.velocity.x,
+		target_velocity.x,
+		player_acceleration * delta
+	)
+
+	player.velocity.z = lerpf(
+		player.velocity.z,
+		target_velocity.z,
+		player_acceleration * delta
+	)
 
 
-func _apply_vertical_movement(delta: float, wants_crouch: bool) -> void:
+func _apply_vertical_movement(
+	delta: float,
+	wants_crouch: bool
+) -> void:
 	if not player.is_on_floor():
-		player.velocity.y -= gravity_force * delta
-	elif Input.is_action_just_pressed("jump") and not wants_crouch:
+		player.velocity.y -= (
+			gravity_force * delta
+		)
+	elif (
+		Input.is_action_just_pressed("jump")
+		and not wants_crouch
+	):
 		player.velocity.y = jump_force
 	else:
-		player.velocity.y = -grounded_stick_velocity
+		player.velocity.y = (
+			-grounded_stick_velocity
+		)
 
 
 func _apply_gravity_only(delta: float) -> void:
@@ -180,46 +365,133 @@ func _apply_gravity_only(delta: float) -> void:
 	player.velocity.z = 0.0
 
 	if not player.is_on_floor():
-		player.velocity.y -= gravity_force * delta
+		player.velocity.y -= (
+			gravity_force * delta
+		)
 	else:
-		player.velocity.y = -grounded_stick_velocity
+		player.velocity.y = (
+			-grounded_stick_velocity
+		)
 
 
-func _update_crouch(delta: float, wants_crouch: bool) -> void:
+func _update_crouch(
+	delta: float,
+	wants_crouch: bool
+) -> void:
 	is_crouching = wants_crouch
 
-	var target_offset: float = CROUCH_HEIGHT if wants_crouch else 0.0
-	crouch_offset = lerpf(crouch_offset, target_offset, delta * CROUCH_ACC)
+	var target_offset: float = (
+		CROUCH_HEIGHT
+		if wants_crouch
+		else 0.0
+	)
 
-	if collider != null and collider.shape is CapsuleShape3D:
-		var capsule: CapsuleShape3D = collider.shape as CapsuleShape3D
-		var crouch_amount: float = clampf(absf(crouch_offset / CROUCH_HEIGHT), 0.0, 1.0)
-		var target_height: float = lerpf(STAND_HEIGHT, CROUCH_COLLIDER_HEIGHT, crouch_amount)
-		capsule.height = lerpf(capsule.height, target_height, delta * CROUCH_ACC * 1.5)
+	crouch_offset = lerpf(
+		crouch_offset,
+		target_offset,
+		delta * CROUCH_ACC
+	)
+
+	if (
+		collider != null
+		and collider.shape is CapsuleShape3D
+	):
+		var capsule: CapsuleShape3D = (
+			collider.shape as CapsuleShape3D
+		)
+
+		var crouch_amount: float = clampf(
+			absf(
+				crouch_offset
+				/ CROUCH_HEIGHT
+			),
+			0.0,
+			1.0
+		)
+
+		var target_height: float = lerpf(
+			STAND_HEIGHT,
+			CROUCH_COLLIDER_HEIGHT,
+			crouch_amount
+		)
+
+		capsule.height = lerpf(
+			capsule.height,
+			target_height,
+			delta * CROUCH_ACC * 1.5
+		)
 
 
-func _update_view_effects(delta: float, move_dir: Vector3, wants_crouch: bool, wants_sprint: bool) -> void:
-	var final_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
-	var horizontal_speed: float = Vector2(player.velocity.x, player.velocity.z).length()
+func _update_view_effects(
+	delta: float,
+	move_dir: Vector3,
+	wants_crouch: bool,
+	wants_sprint: bool
+) -> void:
+	var final_offset: Vector3 = Vector3(
+		0.0,
+		crouch_offset,
+		0.0
+	)
 
-	if move_dir.length() > 0.01 and player.is_on_floor():
-		bob_time += delta * maxf(horizontal_speed, 1.0)
-		final_offset += _headbob(bob_time)
+	var horizontal_speed: float = Vector2(
+		player.velocity.x,
+		player.velocity.z
+	).length()
+
+	if (
+		move_dir.length() > 0.01
+		and player.is_on_floor()
+	):
+		bob_time += (
+			delta
+			* maxf(horizontal_speed, 1.0)
+		)
+
+		final_offset += _headbob(
+			bob_time
+		)
 
 		if audio_controller != null:
-			audio_controller.update_footsteps(bob_time, wants_crouch, wants_sprint)
+			audio_controller.update_footsteps(
+				bob_time,
+				wants_crouch,
+				wants_sprint
+			)
 	else:
 		bob_time = 0.0
 
 		if audio_controller != null:
 			audio_controller.stop_footsteps()
 
-	camera.position = camera.position.lerp(original_camera_position + final_offset, delta * camera_lerp_speed)
-	hand.position = hand.position.lerp(original_hand_position + final_offset, delta * camera_lerp_speed)
+	camera.position = camera.position.lerp(
+		original_camera_position
+		+ final_offset,
+		delta * camera_lerp_speed
+	)
 
-	var fov_speed: float = clampf(horizontal_speed, 0.0, SPRINT_SPEED * 2.0)
-	var target_fov: float = BASE_FOV + FOV_CHANGE * fov_speed
-	camera.fov = lerpf(camera.fov, target_fov, delta * 8.0)
+	hand.position = hand.position.lerp(
+		original_hand_position
+		+ final_offset,
+		delta * camera_lerp_speed
+	)
+
+	var fov_speed: float = clampf(
+		horizontal_speed,
+		0.0,
+		SPRINT_SPEED * 2.0
+	)
+
+	var target_fov: float = (
+		BASE_FOV
+		+ FOV_CHANGE * fov_speed
+	)
+
+	camera.fov = lerpf(
+		camera.fov,
+		target_fov,
+		delta * 8.0
+	)
 
 
 func _update_frozen_view(delta: float) -> void:
@@ -228,15 +500,42 @@ func _update_frozen_view(delta: float) -> void:
 	if audio_controller != null:
 		audio_controller.stop_footsteps()
 
-	var final_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
+	var final_offset: Vector3 = Vector3(
+		0.0,
+		crouch_offset,
+		0.0
+	)
 
-	camera.position = camera.position.lerp(original_camera_position + final_offset, delta * camera_lerp_speed)
-	hand.position = hand.position.lerp(original_hand_position + final_offset, delta * camera_lerp_speed)
-	camera.fov = lerpf(camera.fov, BASE_FOV, delta * 8.0)
+	camera.position = camera.position.lerp(
+		original_camera_position
+		+ final_offset,
+		delta * camera_lerp_speed
+	)
+
+	hand.position = hand.position.lerp(
+		original_hand_position
+		+ final_offset,
+		delta * camera_lerp_speed
+	)
+
+	camera.fov = lerpf(
+		camera.fov,
+		BASE_FOV,
+		delta * 8.0
+	)
 
 
 func _headbob(time: float) -> Vector3:
 	var pos: Vector3 = Vector3.ZERO
-	pos.y = sin(time * BOB_FREQ) * BOB_AMP
-	pos.x = cos(time * BOB_FREQ / 2.0) * BOB_AMP
+
+	pos.y = (
+		sin(time * BOB_FREQ)
+		* BOB_AMP
+	)
+
+	pos.x = (
+		cos(time * BOB_FREQ / 2.0)
+		* BOB_AMP
+	)
+
 	return pos

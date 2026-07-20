@@ -565,30 +565,15 @@ func _wait_for_head_raise_animation() -> void:
 		head_raise_finished = true
 		return
 
-	var maximum_wait: float = 2.0
-
-	var head_raise_animation: Animation = (
-		head_raise_animation_player.get_animation(
-			head_raise_animation_name
-		)
-	)
-
-	if head_raise_animation != null:
-		maximum_wait = maxf(
-			head_raise_animation.length + 0.50,
-			0.50
+	# Wait for the real signal so pausing the game cannot make
+	# the control lock expire before the animation finishes.
+	while not head_raise_finished:
+		var finished_animation_name: StringName = (
+			await head_raise_animation_player.animation_finished
 		)
 
-	var elapsed_time: float = 0.0
-
-	while (
-		not head_raise_finished
-		and elapsed_time < maximum_wait
-	):
-		await get_tree().process_frame
-		elapsed_time += get_process_delta_time()
-
-	head_raise_finished = true
+		if finished_animation_name == head_raise_animation_name:
+			head_raise_finished = true
 
 
 # ============================================================
@@ -608,15 +593,16 @@ func _begin_playable_scene() -> void:
 
 	await _fade_from_black()
 
-	# The reveal finishes quickly, but input remains disabled
-	# until the head movement and light malfunction are complete.
+	# Input remains disabled until the real animation completion.
 	await _wait_for_head_raise_animation()
-	await _wait_for_continuity_light_sequence()
-
-	_force_train_dark()
 
 	_set_player_enabled(true)
 	_set_flashlight_input_enabled(true)
+
+	# This normally completed during the longer head raise.
+	await _wait_for_continuity_light_sequence()
+
+	_force_train_dark()
 
 	if (
 		show_flashlight_tutorial_prompt
@@ -952,6 +938,15 @@ func _set_player_enabled(enabled: bool) -> void:
 	if player == null:
 		return
 
+	if player.has_method("set_cutscene_frozen"):
+		player.call(
+			"set_cutscene_frozen",
+			not enabled
+		)
+		return
+
+	# Fallback for a different Player scene without the
+	# dedicated cutscene-freeze interface.
 	player.set_process_input(enabled)
 	player.set_process_unhandled_input(enabled)
 	player.set_physics_process(enabled)
