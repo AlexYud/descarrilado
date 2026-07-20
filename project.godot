@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 
 DialogueManager="*uid://ce4t2jp8vp1ce"
 PersistentAudio="*uid://dlqu0p3xmxe86"
+GameSettings="*uid://bus3wptgjmwl2"
 
 [display]
 

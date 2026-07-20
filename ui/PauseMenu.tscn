@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://bn1h2vof881ma"]
+
+[ext_resource type="Script" uid="uid://cp1jco5f77ghd" path="res://scripts/ui/pause_menu.gd" id="1_8tehv"]
+[ext_resource type="PackedScene" uid="uid://226bthejacww" path="res://ui/OptionsPanel.tscn" id="1_c7v6e"]
+
+[node name="PauseMenu" type="CanvasLayer" unique_id=1457676507]
+layer = 100
+script = ExtResource("1_8tehv")
+
+[node name="PauseRoot" type="Control" parent="." unique_id=1375476052]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DimBackground" type="ColorRect" parent="PauseRoot" unique_id=198667458]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.70000005)
+
+[node name="MenuCenter" type="CenterContainer" parent="PauseRoot" unique_id=1273761733]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PauseWindow" type="PanelContainer" parent="PauseRoot/MenuCenter" unique_id=1863765579]
+custom_minimum_size = Vector2(520, 360)
+layout_mode = 2
+
+[node name="PauseMargin" type="MarginContainer" parent="PauseRoot/MenuCenter/PauseWindow" unique_id=2125250707]
+layout_mode = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 48
+
+[node name="PauseVBox" type="VBoxContainer" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin" unique_id=2026993534]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="PauseTitle" type="Label" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=1028547576]
+layout_mode = 2
+text = "Paused"
+
+[node name="ResumeButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=883567585]
+layout_mode = 2
+text = "Resume"
+
+[node name="OptionsButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=1429061518]
+layout_mode = 2
+text = "Options
+"
+
+[node name="MainMenuButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=1800400126]
+layout_mode = 2
+text = "Return to Main Menu"
+
+[node name="OptionsPanel" parent="PauseRoot" unique_id=132118116 instance=ExtResource("1_c7v6e")]
+layout_mode = 1
+offset_left = -360.0
+offset_top = -240.0
+offset_right = 360.0
+offset_bottom = 240.0

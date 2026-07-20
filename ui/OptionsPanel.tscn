@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://226bthejacww"]
+
+[ext_resource type="Script" uid="uid://bv0602pwe87nt" path="res://scripts/ui/options_panel.gd" id="1_8b3e1"]
+
+[node name="OptionsPanel" type="PanelContainer" unique_id=132118116]
+custom_minimum_size = Vector2(720, 480)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -96.0
+offset_top = -58.0
+offset_right = 96.0
+offset_bottom = 58.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_8b3e1")
+
+[node name="OptionsMargin" type="MarginContainer" parent="." unique_id=490332840]
+layout_mode = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 36
+
+[node name="OptionsVBox" type="VBoxContainer" parent="OptionsMargin" unique_id=247466834]
+layout_mode = 2
+
+[node name="OptionsTitle" type="Label" parent="OptionsMargin/OptionsVBox" unique_id=186427042]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Options"
+
+[node name="OptionsTabs" type="TabContainer" parent="OptionsMargin/OptionsVBox" unique_id=671055078]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Audio" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=368117221]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="AudioVBox" type="VBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio" unique_id=1749015814]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MasterVolumeRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox" unique_id=13100987]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MasterVolumeLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=1708331874]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Master Volume"
+
+[node name="MasterVolumeSlider" type="HSlider" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=1787014724]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 100.0
+
+[node name="OptionsBackButton" type="Button" parent="OptionsMargin/OptionsVBox" unique_id=326004359]
+layout_mode = 2
+text = "Back"

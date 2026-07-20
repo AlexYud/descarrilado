@@ -54,6 +54,20 @@ const BLACKOUT_RECT_PATH := NodePath(
 
 
 # ============================================================
+# PLAYER GROUNDING
+# ============================================================
+
+@export_category("Player Grounding")
+
+## Grounds the CharacterBody3D while the screen is still black.
+## This prevents gravity from causing a visible drop when gameplay begins.
+@export var snap_player_to_floor_before_intro: bool = true
+
+## Maximum downward distance checked for the train floor.
+@export_range(0.1, 5.0, 0.1) var player_floor_snap_distance: float = 2.0
+
+
+# ============================================================
 # WAGON LIGHT CONTINUITY
 # ============================================================
 
@@ -184,6 +198,7 @@ func _finish_scene_setup() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
+	_snap_player_to_floor_before_intro()
 	_prepare_train_for_transition()
 
 	await _begin_playable_scene()
@@ -409,6 +424,62 @@ func _fade_from_black() -> void:
 	await tween.finished
 
 	blackout_rect.visible = false
+
+
+# ============================================================
+# PLAYER GROUNDING
+# ============================================================
+
+func _snap_player_to_floor_before_intro() -> void:
+	if not snap_player_to_floor_before_intro:
+		return
+
+	var player_body: CharacterBody3D = player as CharacterBody3D
+
+	if player_body == null:
+		push_warning(
+			"DreamIntroController: Player is not a CharacterBody3D. "
+			+ "The pre-intro floor snap was skipped."
+		)
+		return
+
+	var snap_distance: float = maxf(
+		player_floor_snap_distance,
+		0.0
+	)
+
+	if snap_distance <= 0.0:
+		return
+
+	var snap_motion: Vector3 = Vector3.DOWN * snap_distance
+	var floor_collision: KinematicCollision3D = (
+		player_body.move_and_collide(
+			snap_motion,
+			true
+		)
+	)
+
+	if floor_collision == null:
+		push_warning(
+			(
+				"DreamIntroController: No floor was found within "
+				+ "%.2f meters below Player. "
+				+ "The pre-intro floor snap was skipped."
+			)
+			% snap_distance
+		)
+		return
+
+	if floor_collision.get_normal().dot(Vector3.UP) < 0.4:
+		push_warning(
+			"DreamIntroController: The collision found below Player "
+			+ "does not look like a floor. The pre-intro snap was skipped."
+		)
+		return
+
+	player_body.velocity = Vector3.ZERO
+	player_body.move_and_collide(snap_motion)
+	player_body.velocity = Vector3.ZERO
 
 
 # ============================================================
@@ -656,7 +727,7 @@ func _start_continuity_light_sequence() -> void:
 		)
 
 	continuity_light_tween.tween_callback(
-		_complete_continuity_light_sequence
+			_complete_continuity_light_sequence
 	)
 
 

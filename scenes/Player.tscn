@@ -12,6 +12,8 @@
 [ext_resource type="Script" uid="uid://cfvq3wbgpg0u7" path="res://scripts/player/PlayerInteraction.gd" id="9_d3wef"]
 [ext_resource type="Script" uid="uid://b2ltsypk5gd1d" path="res://scripts/ui/InventoryUI.gd" id="9_o4126"]
 [ext_resource type="Script" uid="uid://wbwivqq87ip5" path="res://scripts/player/PlayerInspect.gd" id="11_o4126"]
+[ext_resource type="PackedScene" uid="uid://bn1h2vof881ma" path="res://ui/PauseMenu.tscn" id="13_lkdrv"]
+[ext_resource type="PackedScene" uid="uid://06oh821c5qmw" path="res://scenes/demo/Menu.tscn" id="14_p7iby"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_vmcb2"]
 height = 1.93676
@@ -20,30 +22,30 @@ height = 1.93676
 
 [sub_resource type="Animation" id="Animation_o4126"]
 resource_name = "HeadRaise"
-length = 1.25
+length = 6.3
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
 tracks/0/path = NodePath(".:position")
-tracks/0/interp = 1
+tracks/0/interp = 2
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.18, 0.45, 0.78, 1.08, 1.25),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.65, 1.45, 1.95, 3.15, 4.35, 5.3, 6.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(0.042, -0.338, 0.12), Vector3(0.035, -0.305, 0.105), Vector3(0.024, -0.22, 0.075), Vector3(0.012, -0.105, 0.035), Vector3(-0.003, 0.015, -0.008), Vector3(0, 0, 0)]
+"values": [Vector3(0.042, -0.338, 0.12), Vector3(0.046, -0.348, 0.122), Vector3(0.033, -0.286, 0.102), Vector3(0.039, -0.303, 0.108), Vector3(0.019, -0.195, 0.067), Vector3(-0.008, -0.078, 0.025), Vector3(-0.004, 0.01, -0.004), Vector3(0, 0, 0)]
 }
 tracks/1/type = "value"
 tracks/1/imported = false
 tracks/1/enabled = true
 tracks/1/path = NodePath(".:rotation")
-tracks/1/interp = 1
+tracks/1/interp = 2
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.18, 0.45, 0.78, 1.08, 1.25),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.65, 1.45, 1.95, 3.15, 4.35, 5.3, 6.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
 "update": 0,
-"values": [Vector3(-1.0821041, 0, 0.05235988), Vector3(-1.012291, 0, 0.04712389), Vector3(-0.75049156, 0, 0.034906585), Vector3(-0.38397244, 0, 0.017453292), Vector3(0.05235988, 0, -0.06981317), Vector3(0, 0, 0)]
+"values": [Vector3(-1.0821041, 0, 0.05235988), Vector3(-1.1082841, -0.012217305, 0.06632251), Vector3(-0.89884454, 0.02094395, 0.040142573), Vector3(-0.9599311, 0.008726646, 0.05235988), Vector3(-0.57595867, -0.03141593, 0.02443461), Vector3(-0.2268928, 0.034906585, -0.015707964), Vector3(0.034906585, -0.010471975, 0.0052359877), Vector3(0, 0, 0)]
 }
 
 [sub_resource type="Animation" id="Animation_lkdrv"]
@@ -184,3 +186,6 @@ script = ExtResource("11_o4126")
 
 [node name="InteractionController" type="Node" parent="." unique_id=2016440755]
 script = ExtResource("9_d3wef")
+
+[node name="PauseMenu" parent="." unique_id=1457676507 instance=ExtResource("13_lkdrv")]
+main_menu_scene = ExtResource("14_p7iby")
