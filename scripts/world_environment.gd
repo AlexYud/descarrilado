@@ -3,6 +3,23 @@ extends WorldEnvironment
 class_name HorrorNightEnvironment
 
 
+enum EnvironmentProfile {
+	DREAM_INTRO,
+	MAIN_MENU
+}
+
+
+# ============================================================
+# SCENE PROFILE
+# ============================================================
+
+@export_category("Scene Profile")
+
+@export var profile: EnvironmentProfile = (
+	EnvironmentProfile.DREAM_INTRO
+)
+
+
 # ============================================================
 # EDITOR CONTROL
 # ============================================================
@@ -20,307 +37,58 @@ class_name HorrorNightEnvironment
 
 
 # ============================================================
-# NIGHT PALETTE
+# OPTIONAL TUNING
 # ============================================================
 
-@export_category("Night Palette")
+@export_category("Optional Tuning")
 
-## Nearly black violet background.
-@export var background_color: Color = Color("#06040b")
-
-@export_range(0.0, 2.0, 0.01)
-var background_energy: float = 0.32
+@export_range(0.5, 1.5, 0.05)
+var exterior_visibility: float = 1.0
 
 
-## Muted violet ambient light.
-## This colors shadows without making the whole scene purple.
-@export var ambient_color: Color = Color("#21182e")
-
-@export_range(0.0, 2.0, 0.01)
-var ambient_energy: float = 0.24
+@export_range(0.5, 1.5, 0.05)
+var interior_fill: float = 1.0
 
 
-## Kept at zero because this setup uses a flat background color.
-@export_range(0.0, 1.0, 0.01)
-var ambient_sky_contribution: float = 0.0
-
-
-## Disables environment reflections to reduce overly shiny
-## surfaces and save a small amount of rendering work.
-@export var disable_environment_reflections: bool = true
+@export_range(0.0, 1.8, 0.05)
+var fog_amount: float = 1.0
 
 
 # ============================================================
-# REGULAR FOG
+# MENU DISTANCE FOG
 # ============================================================
 
-@export_category("Fog - Main Atmosphere")
+@export_category("Menu Distance Fog")
 
-## Main fog effect.
-## This is regular exponential fog, not volumetric fog.
-@export var fog_enabled: bool = true
-
-
-## Muted purple-gray mist.
-## Avoid making this too saturated or too bright.
-@export var fog_color: Color = Color("#443650")
+## Distance where menu fog begins.
+@export_range(0.0, 100.0, 1.0)
+var menu_fog_begin: float = 11.0
 
 
-## Controls how much the fog color contributes to the scene.
-@export_range(0.0, 2.0, 0.01)
-var fog_energy: float = 0.31
+## At this distance the scenery is almost completely hidden.
+@export_range(1.0, 150.0, 1.0)
+var menu_fog_end: float = 30.0
 
 
-## Overall fog amount.
-## 0.032 provides visible mist while preserving nearby detail.
-@export_range(0.0, 0.2, 0.001)
-var fog_density: float = 0.032
-
-
-## Height where the ground-fog layer begins.
-## Raise this slightly if your terrain is higher than Y = 0.
-@export_range(-20.0, 20.0, 0.05)
-var fog_height: float = 1.70
-
-
-## Positive values make the fog denser below Fog Height.
-## This creates mist around the terrain and lower parts of trees.
-@export_range(-1.0, 1.0, 0.005)
-var fog_height_density: float = 0.055
-
-
-## Allows the fog to blend the sky/background into the forest.
-@export_range(0.0, 1.0, 0.01)
-var fog_sky_affect: float = 0.95
-
-
-## Very subtle moon scattering through the mist.
-@export_range(0.0, 1.0, 0.01)
-var fog_moon_scatter: float = 0.05
+## Controls how quickly the distant scenery disappears.
+@export_range(0.1, 4.0, 0.05)
+var menu_fog_curve: float = 1.35
 
 
 # ============================================================
-# VOLUMETRIC FOG
+# MOON
 # ============================================================
 
-@export_category("Volumetric Fog - Optional")
+@export_category("Moon")
 
-## Keep disabled for the normal performance profile.
-@export var volumetric_fog_enabled: bool = false
-
-
-@export_range(0.0, 0.1, 0.001)
-var volumetric_fog_density: float = 0.006
-
-
-## Keep volumetric albedo fairly neutral.
-## Moon and environment colors provide the purple tint.
-@export var volumetric_fog_albedo: Color = Color("#b9b1c5")
-
-
-@export var volumetric_fog_emission: Color = Color("#160f1d")
-
-
-@export_range(0.0, 2.0, 0.01)
-var volumetric_fog_emission_energy: float = 0.06
-
-
-## Shorter rendering distance improves performance.
-@export_range(8.0, 128.0, 1.0)
-var volumetric_fog_length: float = 30.0
-
-
-@export_range(0.5, 8.0, 0.1)
-var volumetric_fog_detail_spread: float = 2.0
-
-
-## Slight forward scattering resembles natural mist.
-@export_range(-1.0, 1.0, 0.01)
-var volumetric_fog_anisotropy: float = 0.20
-
-
-@export_range(0.0, 1.0, 0.01)
-var volumetric_fog_sky_affect: float = 0.60
-
-
-## Keep these at zero for a cheaper setup.
-@export_range(0.0, 1.0, 0.01)
-var volumetric_fog_ambient_inject: float = 0.0
-
-
-@export_range(0.0, 1.0, 0.01)
-var volumetric_fog_gi_inject: float = 0.0
-
-
-@export var volumetric_fog_temporal_reprojection: bool = true
-
-
-@export_range(0.0, 1.0, 0.01)
-var volumetric_fog_temporal_reprojection_amount: float = 0.82
-
-
-# ============================================================
-# TONEMAPPING
-# ============================================================
-
-@export_category("Tonemapping")
-
-@export_enum(
-	"Linear",
-	"Reinhardt",
-	"Filmic",
-	"ACES",
-	"AgX"
-)
-var tonemap_mode: int = Environment.TONE_MAPPER_ACES
-
-
-@export_range(0.1, 4.0, 0.01)
-var exposure: float = 0.90
-
-
-## Preserves bright wagon lights and flashlight highlights.
-@export_range(1.0, 16.0, 0.1)
-var tonemap_white: float = 6.0
-
-
-# ============================================================
-# IMAGE MOOD
-# ============================================================
-
-@export_category("Image Mood")
-
-@export_range(0.1, 2.0, 0.01)
-var brightness: float = 0.96
-
-
-@export_range(0.1, 2.0, 0.01)
-var contrast: float = 1.08
-
-
-@export_range(0.0, 2.0, 0.01)
-var saturation: float = 0.84
-
-
-# ============================================================
-# SCREEN-SPACE AMBIENT OCCLUSION
-# ============================================================
-
-@export_category("SSAO - Optional Depth")
-
-## Adds grounding around corners, seats, furniture,
-## tree trunks, walls, and props.
-@export var ssao_enabled: bool = true
-
-
-@export_range(0.0, 5.0, 0.05)
-var ssao_intensity: float = 1.25
-
-
-## Small radius avoids large dirty halos.
-@export_range(0.05, 5.0, 0.05)
-var ssao_radius: float = 0.70
-
-
-@export_range(0.1, 8.0, 0.05)
-var ssao_power: float = 1.30
-
-
-@export_range(0.0, 1.0, 0.01)
-var ssao_detail: float = 0.32
-
-
-@export_range(0.0, 1.0, 0.01)
-var ssao_horizon: float = 0.06
-
-
-@export_range(0.0, 1.0, 0.01)
-var ssao_sharpness: float = 0.92
-
-
-## Ambient occlusion should mainly affect indirect light.
-@export_range(0.0, 1.0, 0.01)
-var ssao_light_affect: float = 0.0
-
-
-@export_range(0.0, 1.0, 0.01)
-var ssao_material_ao_affect: float = 0.0
-
-
-# ============================================================
-# EXPENSIVE EFFECTS
-# ============================================================
-
-@export_category("Expensive Effects")
-
-## The custom horror screen filter already handles softness,
-## grain, vignette, and highlight treatment.
-@export var glow_enabled: bool = false
-
-@export var ssil_enabled: bool = false
-
-@export var ssr_enabled: bool = false
-
-@export var sdfgi_enabled: bool = false
-
-
-# ============================================================
-# MOON LIGHT
-# ============================================================
-
-@export_category("Moon Light")
-
-## Can be "../MoonLight" when MoonLight is a sibling.
-## When empty, the script searches for a node named MoonLight.
+## Leave empty if the node is named MoonLight.
 @export var moon_light_path: NodePath
 
-
-@export var configure_moon_light: bool = true
-
-
-## Pale lavender-blue moonlight.
-@export var moon_color: Color = Color("#b7afd1")
-
-
-@export_range(0.0, 8.0, 0.01)
-var moon_energy: float = 0.90
-
-
 @export var moon_angle_degrees: Vector3 = Vector3(
-	-42.0,
-	-28.0,
+	-38.0,
+	-32.0,
 	0.0
 )
-
-
-## Reduces shiny, plastic-looking reflections.
-@export_range(0.0, 1.0, 0.01)
-var moon_specular: float = 0.28
-
-
-## Optional because forests can contain many shadow casters.
-@export var moon_shadow_enabled: bool = false
-
-
-## Used only when moon shadows are enabled.
-@export_range(5.0, 100.0, 1.0)
-var moon_shadow_max_distance: float = 28.0
-
-
-@export_range(0.0, 1.0, 0.01)
-var moon_shadow_fade_start: float = 0.72
-
-
-@export_range(0.0, 1.0, 0.01)
-var moon_shadow_opacity: float = 0.55
-
-
-@export_range(0.0, 2.0, 0.001)
-var moon_shadow_bias: float = 0.08
-
-
-@export_range(0.0, 10.0, 0.01)
-var moon_shadow_normal_bias: float = 1.25
 
 
 # ============================================================
@@ -329,438 +97,471 @@ var moon_shadow_normal_bias: float = 1.25
 
 func _ready() -> void:
 	if apply_on_ready:
-		apply_environment()
+		call_deferred("apply_environment")
 
 
 # ============================================================
-# ENVIRONMENT SETUP
+# ENVIRONMENT APPLICATION
 # ============================================================
 
 func apply_environment() -> void:
+	_make_environment_local()
+
+	if environment == null:
+		return
+
+	var settings: Dictionary = _get_profile_settings()
+
+	var exterior: float = clampf(
+		exterior_visibility,
+		0.5,
+		1.5
+	)
+
+	var interior: float = clampf(
+		interior_fill,
+		0.5,
+		1.5
+	)
+
+	var fog_strength: float = clampf(
+		fog_amount,
+		0.0,
+		1.8
+	)
+
+	_apply_background(
+		environment,
+		settings,
+		exterior
+	)
+
+	_apply_ambient_light(
+		environment,
+		settings,
+		interior
+	)
+
+	_apply_fog(
+		environment,
+		settings,
+		exterior,
+		fog_strength
+	)
+
+	_apply_tonemapping(
+		environment,
+		settings
+	)
+
+	_apply_image_adjustments(
+		environment,
+		settings
+	)
+
+	_apply_ssao(
+		environment,
+		settings
+	)
+
+	_disable_expensive_effects(environment)
+
+	_apply_moon_light(
+		settings,
+		exterior
+	)
+
+
+func _make_environment_local() -> void:
 	if environment == null:
 		environment = Environment.new()
+		environment.resource_local_to_scene = true
+		return
 
-	var env: Environment = environment
+	if environment.resource_local_to_scene:
+		return
 
-	_apply_background(env)
-	_apply_ambient_light(env)
-	_apply_regular_fog(env)
-	_apply_volumetric_fog(env)
-	_apply_tonemapping(env)
-	_apply_image_adjustments(env)
-	_apply_ssao(env)
-	_disable_unused_effects(env)
-
-	if configure_moon_light:
-		_apply_moon_light()
-
-
-func _apply_background(env: Environment) -> void:
-	_safe_set(
-		env,
-		"background_mode",
-		Environment.BG_COLOR
+	var local_environment: Environment = (
+		environment.duplicate(true)
+		as Environment
 	)
 
-	_safe_set(
-		env,
-		"background_color",
-		background_color
+	if local_environment == null:
+		return
+
+	local_environment.resource_local_to_scene = true
+	environment = local_environment
+
+
+# ============================================================
+# PROFILE VALUES
+# ============================================================
+
+func _get_profile_settings() -> Dictionary:
+	match profile:
+		EnvironmentProfile.MAIN_MENU:
+			return _get_main_menu_profile()
+
+		_:
+			return _get_dream_intro_profile()
+
+
+func _get_dream_intro_profile() -> Dictionary:
+	## Dream Intro remains unchanged.
+	return {
+		"background_color": Color("#050916"),
+		"background_energy": 0.22,
+
+		"ambient_color": Color("#3f5068"),
+		"ambient_energy": 0.12,
+
+		"fog_color": Color("#2c3c4f"),
+		"fog_energy": 0.27,
+		"fog_density": 0.035,
+		"fog_height": 1.30,
+		"fog_height_density": 0.12,
+		"fog_sky_affect": 0.88,
+		"fog_sun_scatter": 0.06,
+
+		"exposure": 0.92,
+		"agx_contrast": 1.15,
+		"brightness": 0.98,
+		"contrast": 1.03,
+		"saturation": 0.82,
+
+		"ssao_intensity": 0.95,
+
+		"moon_color": Color("#8fa8c4"),
+		"moon_energy": 0.1,
+		"moon_specular": 0.08,
+		"moon_shadow_opacity": 0.72,
+		"moon_volumetric_energy": 0.20
+	}
+
+
+func _get_main_menu_profile() -> Dictionary:
+	return {
+		"background_color": Color("#091225"),
+		"background_energy": 0.32,
+
+		"ambient_color": Color("#566c87"),
+		"ambient_energy": 0.18,
+
+		## Dark blue fog matching the menu background.
+		"fog_color": Color("#111a2b"),
+		"fog_energy": 0.55,
+
+		## In depth mode this is the maximum fog opacity.
+		"fog_density": 0.98,
+
+		"fog_height": 1.30,
+		"fog_height_density": 0.0,
+		"fog_sky_affect": 1.0,
+		"fog_sun_scatter": 0.04,
+
+		"exposure": 0.98,
+		"agx_contrast": 1.10,
+		"brightness": 1.0,
+		"contrast": 1.02,
+		"saturation": 0.84,
+
+		"ssao_intensity": 0.80,
+
+		"moon_color": Color("#9db7d2"),
+		"moon_energy": 0.53,
+		"moon_specular": 0.10,
+		"moon_shadow_opacity": 0.66,
+		"moon_volumetric_energy": 0.24
+	}
+
+
+# ============================================================
+# BACKGROUND
+# ============================================================
+
+func _apply_background(
+	env: Environment,
+	settings: Dictionary,
+	exterior: float
+) -> void:
+	env.background_mode = Environment.BG_COLOR
+
+	env.background_color = settings[
+		"background_color"
+	]
+
+	env.background_energy_multiplier = (
+		float(settings["background_energy"])
+		* exterior
 	)
 
-	_safe_set(
-		env,
-		"background_energy_multiplier",
-		background_energy
-	)
 
+# ============================================================
+# AMBIENT LIGHT
+# ============================================================
 
-func _apply_ambient_light(env: Environment) -> void:
-	_safe_set(
-		env,
-		"ambient_light_source",
+func _apply_ambient_light(
+	env: Environment,
+	settings: Dictionary,
+	interior: float
+) -> void:
+	env.ambient_light_source = (
 		Environment.AMBIENT_SOURCE_COLOR
 	)
 
-	_safe_set(
-		env,
-		"ambient_light_color",
-		ambient_color
+	env.ambient_light_color = settings[
+		"ambient_color"
+	]
+
+	env.ambient_light_energy = (
+		float(settings["ambient_energy"])
+		* interior
 	)
 
-	_safe_set(
-		env,
-		"ambient_light_energy",
-		ambient_energy
+	env.ambient_light_sky_contribution = 0.0
+
+	env.reflected_light_source = (
+		Environment.REFLECTION_SOURCE_DISABLED
 	)
 
-	_safe_set(
-		env,
-		"ambient_light_sky_contribution",
-		ambient_sky_contribution
+
+# ============================================================
+# FOG
+# ============================================================
+
+func _apply_fog(
+	env: Environment,
+	settings: Dictionary,
+	exterior: float,
+	fog_strength: float
+) -> void:
+	env.fog_enabled = fog_strength > 0.0
+
+	env.fog_light_color = settings["fog_color"]
+
+	env.fog_light_energy = (
+		float(settings["fog_energy"])
+		* exterior
 	)
 
-	if disable_environment_reflections:
-		_safe_set(
+	env.fog_height = float(
+		settings["fog_height"]
+	)
+
+	env.fog_height_density = (
+		float(settings["fog_height_density"])
+		* fog_strength
+	)
+
+	env.fog_sky_affect = float(
+		settings["fog_sky_affect"]
+	)
+
+	env.fog_sun_scatter = float(
+		settings["fog_sun_scatter"]
+	)
+
+	env.fog_aerial_perspective = 0.0
+
+	if profile == EnvironmentProfile.MAIN_MENU:
+		_apply_menu_distance_fog(
 			env,
-			"reflected_light_source",
-			Environment.REFLECTION_SOURCE_DISABLED
+			settings,
+			fog_strength
 		)
 	else:
-		_safe_set(
+		_apply_dream_exponential_fog(
 			env,
-			"reflected_light_source",
-			Environment.REFLECTION_SOURCE_BG
+			settings,
+			fog_strength
 		)
 
+	env.volumetric_fog_enabled = false
 
-func _apply_regular_fog(env: Environment) -> void:
-	_safe_set(
-		env,
-		"fog_enabled",
-		fog_enabled
-	)
 
-	_safe_set(
-		env,
-		"fog_mode",
-		Environment.FOG_MODE_EXPONENTIAL
-	)
+func _apply_dream_exponential_fog(
+	env: Environment,
+	settings: Dictionary,
+	fog_strength: float
+) -> void:
+	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
 
-	_safe_set(
-		env,
-		"fog_light_color",
-		fog_color
-	)
-
-	_safe_set(
-		env,
-		"fog_light_energy",
-		fog_energy
-	)
-
-	_safe_set(
-		env,
-		"fog_density",
-		fog_density
-	)
-
-	_safe_set(
-		env,
-		"fog_height",
-		fog_height
-	)
-
-	_safe_set(
-		env,
-		"fog_height_density",
-		fog_height_density
-	)
-
-	_safe_set(
-		env,
-		"fog_sky_affect",
-		fog_sky_affect
-	)
-
-	_safe_set(
-		env,
-		"fog_sun_scatter",
-		fog_moon_scatter
-	)
-
-	_safe_set(
-		env,
-		"fog_aerial_perspective",
-		0.0
+	env.fog_density = (
+		float(settings["fog_density"])
+		* fog_strength
 	)
 
 
-func _apply_volumetric_fog(env: Environment) -> void:
-	_safe_set(
-		env,
-		"volumetric_fog_enabled",
-		volumetric_fog_enabled
+func _apply_menu_distance_fog(
+	env: Environment,
+	settings: Dictionary,
+	fog_strength: float
+) -> void:
+	env.fog_mode = Environment.FOG_MODE_DEPTH
+
+	## Depth-fog density represents maximum opacity.
+	env.fog_density = clampf(
+		float(settings["fog_density"])
+		* fog_strength,
+		0.0,
+		1.0
 	)
 
-	_safe_set(
-		env,
-		"volumetric_fog_density",
-		volumetric_fog_density
+	env.fog_depth_begin = menu_fog_begin
+
+	env.fog_depth_end = maxf(
+		menu_fog_end,
+		menu_fog_begin + 1.0
 	)
 
-	_safe_set(
-		env,
-		"volumetric_fog_albedo",
-		volumetric_fog_albedo
+	env.fog_depth_curve = menu_fog_curve
+
+
+# ============================================================
+# TONEMAPPING
+# ============================================================
+
+func _apply_tonemapping(
+	env: Environment,
+	settings: Dictionary
+) -> void:
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX
+
+	env.tonemap_exposure = float(
+		settings["exposure"]
 	)
 
-	_safe_set(
-		env,
-		"volumetric_fog_emission",
-		volumetric_fog_emission
+	env.tonemap_agx_contrast = float(
+		settings["agx_contrast"]
 	)
 
-	_safe_set(
-		env,
-		"volumetric_fog_emission_energy",
-		volumetric_fog_emission_energy
+	env.tonemap_agx_white = 16.29
+
+
+func _apply_image_adjustments(
+	env: Environment,
+	settings: Dictionary
+) -> void:
+	env.adjustment_enabled = true
+
+	env.adjustment_brightness = float(
+		settings["brightness"]
 	)
 
-	_safe_set(
-		env,
-		"volumetric_fog_length",
-		volumetric_fog_length
+	env.adjustment_contrast = float(
+		settings["contrast"]
 	)
 
-	_safe_set(
-		env,
-		"volumetric_fog_detail_spread",
-		volumetric_fog_detail_spread
-	)
-
-	_safe_set(
-		env,
-		"volumetric_fog_anisotropy",
-		volumetric_fog_anisotropy
-	)
-
-	_safe_set(
-		env,
-		"volumetric_fog_sky_affect",
-		volumetric_fog_sky_affect
-	)
-
-	_safe_set(
-		env,
-		"volumetric_fog_ambient_inject",
-		volumetric_fog_ambient_inject
-	)
-
-	_safe_set(
-		env,
-		"volumetric_fog_gi_inject",
-		volumetric_fog_gi_inject
-	)
-
-	_safe_set(
-		env,
-		"volumetric_fog_temporal_reprojection_enabled",
-		volumetric_fog_temporal_reprojection
-	)
-
-	_safe_set(
-		env,
-		"volumetric_fog_temporal_reprojection_amount",
-		volumetric_fog_temporal_reprojection_amount
-	)
-
-
-func _apply_tonemapping(env: Environment) -> void:
-	_safe_set(
-		env,
-		"tonemap_mode",
-		tonemap_mode
-	)
-
-	_safe_set(
-		env,
-		"tonemap_exposure",
-		exposure
-	)
-
-	_safe_set(
-		env,
-		"tonemap_white",
-		tonemap_white
-	)
-
-
-func _apply_image_adjustments(env: Environment) -> void:
-	_safe_set(
-		env,
-		"adjustment_enabled",
-		true
-	)
-
-	_safe_set(
-		env,
-		"adjustment_brightness",
-		brightness
-	)
-
-	_safe_set(
-		env,
-		"adjustment_contrast",
-		contrast
-	)
-
-	_safe_set(
-		env,
-		"adjustment_saturation",
-		saturation
-	)
-
-
-func _apply_ssao(env: Environment) -> void:
-	_safe_set(
-		env,
-		"ssao_enabled",
-		ssao_enabled
-	)
-
-	_safe_set(
-		env,
-		"ssao_intensity",
-		ssao_intensity
-	)
-
-	_safe_set(
-		env,
-		"ssao_radius",
-		ssao_radius
-	)
-
-	_safe_set(
-		env,
-		"ssao_power",
-		ssao_power
-	)
-
-	_safe_set(
-		env,
-		"ssao_detail",
-		ssao_detail
-	)
-
-	_safe_set(
-		env,
-		"ssao_horizon",
-		ssao_horizon
-	)
-
-	_safe_set(
-		env,
-		"ssao_sharpness",
-		ssao_sharpness
-	)
-
-	_safe_set(
-		env,
-		"ssao_light_affect",
-		ssao_light_affect
-	)
-
-	_safe_set(
-		env,
-		"ssao_ao_channel_affect",
-		ssao_material_ao_affect
-	)
-
-
-func _disable_unused_effects(env: Environment) -> void:
-	_safe_set(
-		env,
-		"glow_enabled",
-		glow_enabled
-	)
-
-	_safe_set(
-		env,
-		"ssil_enabled",
-		ssil_enabled
-	)
-
-	_safe_set(
-		env,
-		"ssr_enabled",
-		ssr_enabled
-	)
-
-	_safe_set(
-		env,
-		"sdfgi_enabled",
-		sdfgi_enabled
+	env.adjustment_saturation = float(
+		settings["saturation"]
 	)
 
 
 # ============================================================
-# MOON LIGHT SETUP
+# SSAO
 # ============================================================
 
-func _apply_moon_light() -> void:
-	var moon_light: DirectionalLight3D = _find_moon_light()
+func _apply_ssao(
+	env: Environment,
+	settings: Dictionary
+) -> void:
+	env.ssao_enabled = true
 
-	if moon_light == null:
+	env.ssao_intensity = float(
+		settings["ssao_intensity"]
+	)
+
+	env.ssao_radius = 0.55
+	env.ssao_power = 1.20
+	env.ssao_detail = 0.30
+	env.ssao_horizon = 0.04
+	env.ssao_sharpness = 0.86
+	env.ssao_light_affect = 0.0
+	env.ssao_ao_channel_affect = 0.0
+
+
+func _disable_expensive_effects(
+	env: Environment
+) -> void:
+	env.glow_enabled = false
+	env.ssil_enabled = false
+	env.ssr_enabled = false
+	env.sdfgi_enabled = false
+	env.volumetric_fog_enabled = false
+
+
+# ============================================================
+# MOON
+# ============================================================
+
+func _apply_moon_light(
+	settings: Dictionary,
+	exterior: float
+) -> void:
+	var moon: DirectionalLight3D = _find_moon_light()
+
+	if moon == null:
 		push_warning(
 			"HorrorNightEnvironment: MoonLight was not found. "
 			+ "Assign Moon Light Path or name the node MoonLight."
 		)
 		return
 
-	moon_light.light_color = moon_color
-	moon_light.light_energy = moon_energy
-	moon_light.rotation_degrees = moon_angle_degrees
-	moon_light.shadow_enabled = moon_shadow_enabled
+	moon.light_color = settings["moon_color"]
 
-	_safe_set(
-		moon_light,
-		"light_specular",
-		moon_specular
+	moon.light_energy = (
+		float(settings["moon_energy"])
+		* exterior
 	)
 
-	_safe_set(
-		moon_light,
-		"directional_shadow_mode",
-		DirectionalLight3D.SHADOW_ORTHOGONAL
+	moon.light_indirect_energy = 0.0
+
+	moon.light_specular = float(
+		settings["moon_specular"]
 	)
 
-	_safe_set(
-		moon_light,
-		"directional_shadow_max_distance",
-		moon_shadow_max_distance
+	moon.rotation_degrees = moon_angle_degrees
+
+	moon.shadow_enabled = true
+
+	moon.directional_shadow_mode = (
+		DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	)
 
-	_safe_set(
-		moon_light,
-		"directional_shadow_fade_start",
-		moon_shadow_fade_start
+	moon.directional_shadow_split_1 = 0.25
+
+	moon.directional_shadow_max_distance = 42.0
+
+	moon.directional_shadow_fade_start = 0.82
+
+	moon.directional_shadow_blend_splits = false
+
+	moon.directional_shadow_pancake_size = 12.0
+
+	moon.shadow_opacity = float(
+		settings["moon_shadow_opacity"]
 	)
 
-	_safe_set(
-		moon_light,
-		"directional_shadow_blend_splits",
-		false
-	)
+	moon.shadow_bias = 0.035
 
-	_safe_set(
-		moon_light,
-		"shadow_opacity",
-		moon_shadow_opacity
-	)
+	moon.shadow_normal_bias = 0.65
 
-	_safe_set(
-		moon_light,
-		"shadow_bias",
-		moon_shadow_bias
-	)
+	moon.shadow_blur = 1.55
 
-	_safe_set(
-		moon_light,
-		"shadow_normal_bias",
-		moon_shadow_normal_bias
+	moon.light_volumetric_fog_energy = float(
+		settings["moon_volumetric_energy"]
 	)
 
 
 func _find_moon_light() -> DirectionalLight3D:
 	if not moon_light_path.is_empty():
-		var assigned_light: DirectionalLight3D = (
+		var assigned_moon: DirectionalLight3D = (
 			get_node_or_null(moon_light_path)
 			as DirectionalLight3D
 		)
 
-		if assigned_light != null:
-			return assigned_light
+		if assigned_moon != null:
+			return assigned_moon
 
 	var scene_parent: Node = get_parent()
 
@@ -775,35 +576,3 @@ func _find_moon_light() -> DirectionalLight3D:
 		)
 		as DirectionalLight3D
 	)
-
-
-# ============================================================
-# SAFE PROPERTY HELPERS
-# ============================================================
-
-func _safe_set(
-	target: Object,
-	property_name: String,
-	value: Variant
-) -> void:
-	if target == null:
-		return
-
-	if _has_property(target, property_name):
-		target.set(property_name, value)
-
-
-func _has_property(
-	target: Object,
-	property_name: String
-) -> bool:
-	if target == null:
-		return false
-
-	for property_info: Dictionary in target.get_property_list():
-		if str(
-			property_info.get("name", "")
-		) == property_name:
-			return true
-
-	return false

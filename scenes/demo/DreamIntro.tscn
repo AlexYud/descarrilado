@@ -327,45 +327,6 @@ detiling_shift = 0.25
 mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_16kht"), SubResource("Terrain3DMeshAsset_yilg7")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_uas77"), SubResource("Terrain3DTextureAsset_svmu2")])
 
-[sub_resource type="Environment" id="Environment_p1vbp"]
-background_mode = 1
-background_color = Color(0.023529412, 0.015686275, 0.043137256, 1)
-background_energy_multiplier = 0.34
-ambient_light_source = 2
-ambient_light_color = Color(0.12941177, 0.09411765, 0.18039216, 1)
-ambient_light_sky_contribution = 0.25
-ambient_light_energy = 0.24
-reflected_light_source = 1
-tonemap_mode = 3
-tonemap_exposure = 0.9
-tonemap_white = 6.0
-tonemap_agx_contrast = 1.45
-ssao_enabled = true
-ssao_radius = 0.7
-ssao_intensity = 1.25
-ssao_power = 1.3
-ssao_detail = 0.32
-ssao_sharpness = 0.92
-fog_enabled = true
-fog_light_color = Color(0.21960784, 0.17254902, 0.27058825, 1)
-fog_light_energy = 0.26
-fog_sun_scatter = 0.05
-fog_density = 0.024
-fog_sky_affect = 0.95
-fog_height_density = 0.11
-volumetric_fog_density = 0.007
-volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
-volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
-volumetric_fog_emission_energy = 0.06
-volumetric_fog_gi_inject = 0.0
-volumetric_fog_length = 32.0
-volumetric_fog_sky_affect = 0.6
-volumetric_fog_temporal_reprojection_amount = 0.82
-adjustment_enabled = true
-adjustment_brightness = 0.96
-adjustment_contrast = 1.08
-adjustment_saturation = 0.84
-
 [sub_resource type="MultiMesh" id="MultiMesh_ama2p"]
 transform_format = 1
 instance_count = 36
@@ -413,6 +374,48 @@ transform_format = 1
 instance_count = 20
 mesh = ExtResource("31_s6y51")
 buffer = PackedFloat32Array(1.8271652, 0, -0.81330633, -4.9109178, 0, 2, 0, 0, 0.81330633, 0, 1.8271652, 12.554826, 1.5, 0, 0, -3.7751188, 0, 1.5, 0, 0, 0, 0, 1.5, 11.921107, 0.47811508, 0, 0.8782972, -4.657814, 0, 1, 0, 0, -0.8782972, 0, 0.47811508, 9.073571, 1.3930465, 0, 0.97438264, -4.525746, 0, 1.7, 0, 0, -0.97438264, 0, 1.3930465, 9.291315, 0.17492414, 0, 0.98458195, -4.2478895, 0, 1, 0, 0, -0.98458195, 0, 0.17492414, 7.839595, -1.3372513, 0, 1.4871984, -4.2478895, 0, 2, 0, 0, -1.4871984, 0, -1.3372513, 1.9542868, -1.0029385, 0, 1.1153986, -4.8240795, 0, 1.5, 0, 0, -1.1153986, 0, -1.0029385, -0.9693768, -1.4414871, 0, 0.41486746, -4.752561, 0, 1.5, 0, 0, -0.41486746, 0, -1.4414871, -5.5683503, -1.9219828, 0, 0.5531565, -4.296942, 0, 2, 0, 0, -0.5531565, 0, -1.9219828, -8.768136, -1.4262913, 0, -0.7250465, -4.90649, 0, 1.5999999, 0, 0, 0.7250465, 0, -1.4262913, -11.613855, -1.7994479, 0, 0.8729185, 4.546775, 0, 2, 0, 0, -0.8729185, 0, -1.7994479, -9.861014, -1.4991896, 0, 0.049299076, 3.3907614, 0, 1.5000002, 0, 0, -0.049299076, 0, -1.4991896, -9.264967, -0.5067229, 0, -0.86210895, 4.179393, 0, 1, 0, 0, 0.86210895, 0, -0.5067229, -6.3899584, -1.4243177, 0, -0.9280723, 4.054552, 0, 1.7, 0, 0, 0.9280723, 0, -1.4243177, -6.611926, -0.20718886, 0, -0.9783009, 3.7291336, 0, 1, 0, 0, 0.9783009, 0, -0.20718886, -5.170121, 1.2876507, 0, -1.530345, 3.5357075, 0, 2, 0, 0, 1.530345, 0, 1.2876507, 0.7120068, 0.96573794, 0, -1.1477587, 4.0154963, 0, 1.5, 0, 0, 1.1477587, 0, 0.96573794, 3.6530285, 1.4270732, 0, -0.46201923, 3.7928667, 0, 1.5, 0, 0, 0.46201923, 0, 1.4270732, 8.247165, 1.9027641, 0, -0.61602557, 3.2323294, 0, 2, 0, 0, 0.61602557, 0, 1.9027641, 11.430249, 1.4493502, 0, 0.67777824, 3.7480202, 0, 1.5999997, 0, 0, -0.67777824, 0, 1.4493502, 14.294465)
+
+[sub_resource type="Environment" id="Environment_vqhyl"]
+resource_local_to_scene = true
+background_mode = 1
+background_color = Color(0.019607844, 0.03529412, 0.08627451, 1)
+background_energy_multiplier = 0.11
+ambient_light_source = 2
+ambient_light_color = Color(0.24705882, 0.3137255, 0.40784314, 1)
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 0.06
+reflected_light_source = 1
+tonemap_mode = 4
+tonemap_exposure = 0.92
+tonemap_white = 6.0
+tonemap_agx_contrast = 1.15
+ssao_enabled = true
+ssao_radius = 0.55
+ssao_intensity = 0.95
+ssao_power = 1.2
+ssao_detail = 0.3
+ssao_horizon = 0.04
+ssao_sharpness = 0.86
+fog_enabled = true
+fog_light_color = Color(0.17254902, 0.23529412, 0.30980393, 1)
+fog_light_energy = 0.135
+fog_sun_scatter = 0.06
+fog_density = 0.063
+fog_sky_affect = 0.88
+fog_height = 1.3
+fog_height_density = 0.216
+volumetric_fog_density = 0.006
+volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
+volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
+volumetric_fog_emission_energy = 0.06
+volumetric_fog_gi_inject = 0.0
+volumetric_fog_length = 30.0
+volumetric_fog_sky_affect = 0.6
+volumetric_fog_temporal_reprojection_amount = 0.82
+adjustment_enabled = true
+adjustment_brightness = 0.98
+adjustment_contrast = 1.03
+adjustment_saturation = 0.82
 
 [node name="DreamIntro" type="Node3D" unique_id=405065868]
 
@@ -486,32 +489,6 @@ assets = SubResource("Terrain3DAssets_uas77")
 top_level = true
 metadata/_edit_lock_ = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1378756397]
-environment = SubResource("Environment_p1vbp")
-script = ExtResource("16_cgaoe")
-background_energy = 0.34
-ambient_sky_contribution = 0.25
-fog_color = Color(0.21960784, 0.17254902, 0.27058825, 1)
-fog_energy = 0.26
-fog_density = 0.024
-fog_height = 0.0
-fog_height_density = 0.11
-volumetric_fog_density = 0.007
-volumetric_fog_length = 32.0
-moon_light_path = NodePath("../MoonLight")
-
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=743826153]
-transform = Transform3D(0.8829473, 0.31413782, -0.34888536, 0, 0.7431448, 0.6691306, 0.46947142, -0.59080726, 0.6561579, 0, 0, 0)
-light_color = Color(0.7176471, 0.6862745, 0.81960785, 1)
-light_energy = 0.9
-light_specular = 0.28
-shadow_bias = 0.08
-shadow_normal_bias = 1.25
-shadow_opacity = 0.55
-directional_shadow_mode = 0
-directional_shadow_fade_start = 0.72
-directional_shadow_max_distance = 28.0
-
 [node name="TransitionBlackout" type="CanvasLayer" parent="." unique_id=607709047]
 layer = 1000
 
@@ -528,8 +505,6 @@ mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="PersistentAudio" parent="." unique_id=442030015 instance=ExtResource("13_p1vbp")]
-
-[node name="HorrorFilter" parent="." unique_id=931420031 instance=ExtResource("14_uas77")]
 
 [node name="Scenery" type="Node3D" parent="." unique_id=1137576190]
 
@@ -3557,4 +3532,33 @@ visible = false
 
 [node name="medium_foliage_20" parent="Scenery/ChunkC/Details/MediumFoliage01" unique_id=1838766471 instance=ExtResource("32_pvasd")]
 transform = Transform3D(1.4493502, 0, 0.67777824, 0, 1.5999997, 0, -0.67777824, 0, 1.4493502, 3.7480202, 0, 14.294465)
+visible = false
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=649187259]
+environment = SubResource("Environment_vqhyl")
+script = ExtResource("16_cgaoe")
+exterior_visibility = 0.5
+interior_fill = 0.5
+fog_amount = 1.8
+moon_light_path = NodePath("../MoonLight")
+
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=813238547]
+transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)
+light_color = Color(0.56078434, 0.65882355, 0.76862746, 1)
+light_energy = 0.05
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.2
+light_specular = 0.08
+shadow_enabled = true
+shadow_bias = 0.035
+shadow_normal_bias = 0.65
+shadow_opacity = 0.72
+shadow_blur = 1.55
+directional_shadow_mode = 1
+directional_shadow_split_1 = 0.25
+directional_shadow_fade_start = 0.82
+directional_shadow_max_distance = 42.0
+directional_shadow_pancake_size = 12.0
+
+[node name="HorrorFilter" parent="." unique_id=931420031 instance=ExtResource("14_uas77")]
 visible = false
