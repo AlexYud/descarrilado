@@ -2,7 +2,7 @@ extends Node
 class_name PlayerMovementController
 
 const WALK_SPEED: float = 2.0
-const SPRINT_SPEED: float = 4.0
+const SPRINT_SPEED: float = 40.0
 const CROUCH_SPEED: float = 1.0
 
 const CROUCH_HEIGHT: float = -0.25
