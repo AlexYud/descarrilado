@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/Player.tscn" id="1_rhmqu"]
 [ext_resource type="PackedScene" uid="uid://bepla6bqlsog4" path="res://scenes/assets/train_wagon.tscn" id="2_5acte"]
 [ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/ScreenBorderFilter.gdshader" id="5_7koiu"]
+[ext_resource type="PackedScene" uid="uid://dwba3i74cp2x2" path="res://assets/models/trains/train_tracks/train_tracks.tscn" id="5_p1vbp"]
 [ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="9_1look"]
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="10_7i7gg"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="11_svmu2"]
@@ -11,8 +12,10 @@
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="12_p1vbp"]
 [ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="13_e6tct"]
 [ext_resource type="PackedScene" uid="uid://dlqu0p3xmxe86" path="res://scenes/demo/persistent_audio.tscn" id="13_p1vbp"]
-[ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="13_uas77"]
-[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/horror_filter.tscn" id="14_vm3m4"]
+[ext_resource type="PackedScene" uid="uid://c1g3v4a70kd07" path="res://assets/models/wooden_structures/barbed_fence_big_no_angle/barbed_fence_big_no_angle_collision.tscn" id="14_uas77"]
+[ext_resource type="PackedScene" uid="uid://c3qpe0fpk4bl6" path="res://scenes/assets/fence_door_interactable.tscn" id="14_vm3m4"]
+[ext_resource type="ArrayMesh" uid="uid://dxqmf5cmopbbr" path="res://assets/models/wooden_structures/barbed_fence_big_no_angle/barbed_fence_big_no_angle_mesh.tres" id="15_2r5dj"]
+[ext_resource type="Script" uid="uid://4yswxcq5pnqg" path="res://scripts/tools/forest_multi_mesh_baker.gd" id="16_16kht"]
 [ext_resource type="Script" uid="uid://ca5e4nnd25xr7" path="res://scripts/optimization/scene_performance_profile.gd" id="26_e6tct"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
@@ -48,7 +51,7 @@ seamless = true
 [sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_7i7gg"]
 _shader_parameters = {
 &"bias_distance": 512.0,
-&"blend_sharpness": 0.5,
+&"blend_sharpness": 0.0,
 &"depth_blur": 0.0,
 &"enable_macro_variation": true,
 &"enable_projection": true,
@@ -312,47 +315,11 @@ texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_
 [sub_resource type="BoxMesh" id="BoxMesh_3lhsg"]
 size = Vector3(10, 10, 20)
 
-[sub_resource type="Environment" id="Environment_uas77"]
-resource_local_to_scene = true
-background_mode = 1
-background_color = Color(0.019607844, 0.03529412, 0.08627451, 1)
-background_energy_multiplier = 0.11
-ambient_light_source = 2
-ambient_light_color = Color(0.24705882, 0.3137255, 0.40784314, 1)
-ambient_light_sky_contribution = 0.0
-ambient_light_energy = 0.06
-reflected_light_source = 1
-tonemap_mode = 4
-tonemap_exposure = 0.92
-tonemap_white = 6.0
-tonemap_agx_contrast = 1.15
-ssao_enabled = true
-ssao_radius = 0.55
-ssao_intensity = 0.95
-ssao_power = 1.2
-ssao_detail = 0.3
-ssao_horizon = 0.04
-ssao_sharpness = 0.86
-fog_enabled = true
-fog_light_color = Color(0.17254902, 0.23529412, 0.30980393, 1)
-fog_light_energy = 0.135
-fog_sun_scatter = 0.06
-fog_density = 0.063
-fog_sky_affect = 0.88
-fog_height = 1.3
-fog_height_density = 0.216
-volumetric_fog_density = 0.006
-volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
-volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
-volumetric_fog_emission_energy = 0.06
-volumetric_fog_gi_inject = 0.0
-volumetric_fog_length = 30.0
-volumetric_fog_sky_affect = 0.6
-volumetric_fog_temporal_reprojection_amount = 0.82
-adjustment_enabled = true
-adjustment_brightness = 0.98
-adjustment_contrast = 1.03
-adjustment_saturation = 0.82
+[sub_resource type="MultiMesh" id="MultiMesh_vm3m4"]
+transform_format = 1
+instance_count = 82
+mesh = ExtResource("15_2r5dj")
+buffer = PackedFloat32Array(0.9945921, 0, 0.103858374, -3.706, 0, 1, 0, 0.64, -0.103858374, 0, 0.9945921, 33.033, 0.9926442, 0, -0.12106828, -3.706, 0, 1, 0, 0.64, 0.12106828, 0, 0.9926442, 31.277157, 0.99354005, 0, 0.11348237, -3.706, 0, 1, 0, 0.64, -0.11348237, 0, 0.99354005, 29.528025, 0.99470866, 0, -0.10273582, -3.706, 0, 1, 0, 0.64, 0.10273582, 0, 0.99470866, 27.770273, 0.962671, 0, 0.2706743, -3.8572586, 0, 1, 0, 0.64, -0.2706743, 0, 0.962671, 26.04723, 0.9922363, 0, -0.12436655, -3.9841506, 0, 1, 0, 0.64, 0.12436655, 0, 0.9922363, 24.310312, 0.9999187, 0, -0.012744553, -3.8676589, 0, 1, 0, 0.64, 0.012744553, 0, 0.9999187, 22.561495, 0.9972942, 0, -0.07351428, -3.78583, 0, 1, 0, 0.64, 0.07351428, 0, 0.9972942, 20.80812, 0.97710234, 0, 0.2127701, -3.9248786, 0, 1, 0, 0.64, -0.2127701, 0, 0.97710234, 19.075865, 0.98778397, 0, -0.15582958, -3.9657109, 0, 1, 0, 0.64, 0.15582958, 0, 0.98778397, 17.339617, 0.99925774, 0, 0.038522333, -3.8743238, 0, 1, 0, 0.64, -0.038522333, 0, 0.99925774, 15.587708, 0.9986541, 0, -0.051864523, -3.857635, 0, 1, 0, 0.64, 0.051864523, 0, 0.9986541, 13.825327, 0.98396236, 0, 0.17837624, -3.9696627, 0, 1, 0, 0.64, -0.17837624, 0, 0.98396236, 12.073556, 0.9852661, 0, -0.17102881, -3.9696627, 0, 1, 0, 0.64, 0.17102881, 0, 0.9852661, 10.336556, 0.9962978, 0, 0.085969925, -3.8941433, 0, 1, 0, 0.64, -0.085969925, 0, 0.9962978, 8.59215, 0.99994266, 0, -0.0107142925, -3.9552991, 0, 1, 0, 0.64, 0.0107142925, 0, 0.99994266, 6.8263264, 0.9968642, 0, -0.07913205, -3.8606148, 0, 1, 0, 0.64, 0.07913205, 0, 0.9968642, 5.0657825, 0.969872, 0, 0.24361505, -3.9953108, 0, 1, 0, 0.64, -0.24361502, 0, 0.9698721, 3.3485844, 0.97753197, 0, -0.21078701, -4.0243063, 0, 1, 0, 0.64, 0.21078701, 0, 0.97753215, 1.6424435, 0.9309921, 0, 0.365039, -4.1618314, 0, 1, 0, 0.64, -0.36503893, 0, 0.9309923, -0.03930586, 0.9973468, 0, -0.07279456, -4.407589, 0, 1, 0, 0.64, 0.07279454, 0, 0.9973471, -1.7288879, 0.92835486, 0, -0.3716947, -4.0266647, 0, 1, 0, 0.64, 0.37169462, 0, 0.92835516, -3.4184701, 0.9948771, 0, 0.10109037, -3.7843628, 0, 1, 0, 0.64, -0.10109028, 0, 0.99487746, -5.109317, 0.97511894, 0, -0.22168177, -3.6684794, 0, 1, 0, 0.64, 0.22168174, 0, 0.9751193, -6.8475704, 0.9891947, 0, 0.14660673, -3.600003, 0, 1, 0, 0.64, -0.14660661, 0, 0.98919505, -8.575289, 0.9995095, 0, 0.03131119, -3.7474914, 0, 1, 0, 0.64, -0.03131111, 0, 0.9995099, -10.339879, 0.9973376, 0, -0.07292059, -3.705352, 0, 1, 0, 0.64, 0.072920635, 0, 0.99733794, -12.109736, 0.96253616, 0, 0.27115294, -3.87391, 0, 1, 0, 0.64, -0.2711528, 0, 0.9625365, -13.837455, 0.98211473, 0, -0.18828273, -3.9371192, 0, 1, 0, 0.64, 0.18828271, 0, 0.9821151, -15.554639, 0.998867, 0, -0.047586456, -3.7369566, 0, 1, 0, 0.64, 0.047586516, 0, 0.99886733, -17.287624, 0.9950773, 0, 0.09909977, -3.7790961, 0, 1, 0, 0.64, -0.09909966, 0, 0.99507767, -19.02061, 0.97753173, 0, -0.21078722, -3.6684802, 0, 1, 0, 0.64, 0.21078724, 0, 0.97753215, -20.74833, 0.9591114, 0, 0.28302822, -3.7316892, 0, 1, 0, 0.64, -0.283028, 0, 0.95911175, -22.44971, 0.98619795, 0, -0.16556871, -3.8370378, 0, 1, 0, 0.64, 0.16556871, 0, 0.9861984, -24.166895, 0.9993104, 0, -0.037124276, -3.66848, 0, 1, 0, 0.64, 0.037124336, 0, 0.99931085, -25.915684, 0.98032755, 0, 0.19737649, -3.8107007, 0, 1, 0, 0.64, -0.19737631, 0, 0.98032796, -27.675007, 0.9428221, 0, -0.33329603, -3.694817, 0, 1, 0, 0.64, 0.333296, 0, 0.9428226, -29.355318, 0.9289806, 0, 0.37012827, -3.7264216, 0, 1, 0, 0.64, -0.37012795, 0, 0.92898095, -31.00929, 0.99999946, 0, -0.0008299053, -4.047735, 0, 1, 0, 0.64, 0.0008301139, 0, 0.99999994, -32.705406, -0.99504477, 0, -0.099429354, 3.4850311, 0, 1, 0, 0.64, 0.099429354, 0, -0.99504477, -32.974083, -0.9920954, 0, 0.12548645, 3.4772148, 0, 1, 0, 0.64, -0.12548645, 0, -0.9920954, -31.218258, -0.9940354, 0, -0.10905795, 3.4694266, 0, 1, 0, 0.64, 0.10905795, 0, -0.9940354, -29.469147, -0.9942414, 0, 0.10716327, 3.4616003, 0, 1, 0, 0.64, -0.10716327, 0, -0.9942414, -27.711407, -0.96386653, 0, -0.26638576, 3.605187, 0, 1, 0, 0.64, 0.26638576, 0, -0.96386653, -25.98771, -0.99167275, 0, 0.12878287, 3.7243457, 0, 1, 0, 0.64, -0.12878287, 0, -0.99167275, -24.250244, -0.9998522, 0, 0.017196175, 3.600068, 0, 1, 0, 0.64, -0.017196175, 0, -0.9998522, -22.501965, -0.996957, 0, 0.07795356, 3.5104308, 0, 1, 0, 0.64, -0.07795356, 0, -0.996957, -20.748972, -0.97804, 0, -0.20841785, 3.641768, 0, 1, 0, 0.64, 0.20841785, 0, -0.97804, -19.016113, -0.98708034, 0, 0.16022573, 3.6748714, 0, 1, 0, 0.64, -0.16022573, 0, -0.98708034, -17.279697, -0.99941945, 0, -0.03407315, 3.5756855, 0, 1, 0, 0.64, 0.03407315, 0, -0.99941945, -15.528219, -0.9984133, 0, 0.056310035, 3.5511498, 0, 1, 0, 0.64, -0.056310035, 0, -0.9984133, -13.765928, -0.9847468, 0, -0.17399381, 3.6553774, 0, 1, 0, 0.64, 0.17399381, 0, -0.9847468, -12.013676, -0.98449475, 0, 0.17541365, 3.647644, 0, 1, 0, 0.64, -0.17541365, 0, -0.98449475, -10.276694, -0.99667066, 0, -0.08153346, 3.5643606, 0, 1, 0, 0.64, 0.08153346, 0, -0.99667066, -8.5326395, -0.9998851, 0, 0.015165983, 3.6176543, 0, 1, 0, 0.64, -0.015165983, 0, -0.9998851, -6.7665615, -0.99650204, 0, 0.08356945, 3.515132, 0, 1, 0, 0.64, -0.08356945, 0, -0.99650204, -5.0064554, -0.99951047, 0, -0.03128004, 3.488186, 0, 1, 0, 0.64, 0.031279936, 0, -0.9995106, -3.2226777, -0.966987, 0, -0.25482577, 3.707559, 0, 1, 0, 0.64, 0.25482568, 0, -0.96698725, -1.4737339, -0.76565343, 0.027790146, -0.6426527, 4.467154, 0.021285841, 0.99961376, 0.017866313, 0.64, 0.64290094, 0, -0.7659493, 0.028883405, -0.5415596, 0.1004072, -0.83464485, 5.72583, 0.041312326, 0.99482095, 0.09287079, 0.5093357, 0.8396468, 0.015813906, -0.5429028, 1.1552553, -0.540133, 0.16955957, -0.82432157, 7.1842475, 0.09293035, 0.9855199, 0.14182523, 0.3117237, 0.8364331, 0, -0.5480692, 2.113093, -0.5735518, 0.27937704, -0.7700567, 8.556953, 0.16688213, 0.96018153, 0.22405775, -0.019838333, 0.8019904, 1.27985835e-08, -0.5973369, 3.1168354, -0.36422268, 0.13433203, 0.9215731, 6.6329775, 0.04937427, 0.99093646, -0.12492909, 0.39115798, -0.93000203, 0, -0.36755416, 8.634347, -0.5685849, 0.092819475, 0.81737137, 5.09945, 0.053004578, 0.99568295, -0.07619693, 0.55700576, -0.820915, 1.8599983e-09, -0.5710503, 9.455854, -0.80349725, 0, 0.59530884, 3.8621817, -0.012226666, 0.99978906, -0.016502524, 0.64, -0.5951831, -0.02053837, -0.803328, 10.633015, -0.9970031, 0, 0.07736011, 3.2834034, 0, 1, 0, 0.64, -0.07736021, 0, -0.99700344, 12.168202, -0.9637339, 0, -0.26686493, 3.4442692, 0, 1, 0, 0.64, 0.26686484, 0, -0.9637342, 13.896651, -0.98126674, 0, 0.19265337, 3.499833, 0, 1, 0, 0.64, -0.19265322, 0, -0.98126715, 15.614101, -0.9986452, 0, 0.05203317, 3.291955, 0, 1, 0, 0.64, -0.05203317, 0, -0.99864554, 17.34618, -0.9955088, 0, -0.09466851, 3.326377, 0, 1, 0, 0.64, 0.09466848, 0, -0.99550897, 19.079334, -0.97658366, 0, 0.21513738, 3.2080717, 0, 1, 0, 0.64, -0.21513733, 0, -0.9765839, 20.806543, -0.9603619, 0, -0.2787552, 3.2637043, 0, 1, 0, 0.64, 0.2787551, 0, -0.9603624, 22.508184, -0.9854511, 0, 0.16995777, 3.3614073, 0, 1, 0, 0.64, -0.16995771, 0, -0.9854515, 24.225826, -0.99913526, 0, 0.041573033, 3.1850653, 0, 1, 0, 0.64, -0.04157304, 0, -0.9991357, 25.97385, -0.9811965, 0, -0.19300996, 3.3194518, 0, 1, 0, 0.64, 0.1930098, 0, -0.9811971, 27.733791, -0.9413288, 0, 0.33749026, 3.1960897, 0, 1, 0, 0.64, -0.33749014, 0, -0.94132924, 29.41356, -0.93061906, 0, -0.3659885, 3.2203288, 0, 1, 0, 0.64, 0.36598825, 0, -0.9306196, 31.067661, -0.9999859, 0, 0.0052821524, 3.534089, 0, 1, 0, 0.64, -0.0052821413, 0, -0.99998623, 32.765194, -0.27560094, 0.31656894, 0.90764993, 8.189091, 0.09197713, 0.9485696, -0.3029127, 0.016359955, -0.9568615, -5.517277e-09, -0.29054394, 8.094182, -0.38449302, 0.29399627, 0.87506086, 9.789363, 0.074216396, 0.9547063, -0.28814507, -0.5023436, -0.9201396, -0.045845922, -0.38889754, 7.4776406, -0.68148273, 0.29260734, -0.6707921, 9.828555, 0.19174533, 0.95596063, 0.22219995, -0.44308, 0.706268, 0.022804119, -0.7075771, 4.260524, 0.6777215, 0.29179677, 0.6749429, 9.828555, -0.1910767, 0.9562456, -0.2215485, -0.44308, -0.7100582, 0.021182297, 0.70382404, 4.260524)
 
 [node name="DreamIntro" type="Node3D" unique_id=405065868]
 
@@ -406,6 +373,29 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 14)
 [node name="TrainWagon3" parent="Train/Wagons" unique_id=250228809 instance=ExtResource("2_5acte")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -14)
 
+[node name="TrainWagon4" parent="Train/Wagons" unique_id=241722208 instance=ExtResource("2_5acte")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -28)
+
+[node name="TrainWagon5" parent="Train/Wagons" unique_id=603123730 instance=ExtResource("2_5acte")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 28)
+
+[node name="TrainTracks" type="Node3D" parent="Train" unique_id=1253031481]
+
+[node name="train_tracks" parent="Train/TrainTracks" unique_id=751656909 instance=ExtResource("5_p1vbp")]
+transform = Transform3D(-3.628045e-08, 0, 0.83, 0, 0.83, 0, -0.83, 0, -3.628045e-08, 0, 0.16, 0)
+
+[node name="train_tracks2" parent="Train/TrainTracks" unique_id=1043450558 instance=ExtResource("5_p1vbp")]
+transform = Transform3D(-3.628045e-08, 0, 0.83, 0, 0.83, 0, -0.83, 0, -3.628045e-08, 0, 0.16, 14)
+
+[node name="train_tracks3" parent="Train/TrainTracks" unique_id=1257700827 instance=ExtResource("5_p1vbp")]
+transform = Transform3D(-3.628045e-08, 0, 0.83, 0, 0.83, 0, -0.83, 0, -3.628045e-08, 0, 0.16, -14)
+
+[node name="train_tracks4" parent="Train/TrainTracks" unique_id=1209585483 instance=ExtResource("5_p1vbp")]
+transform = Transform3D(-3.628045e-08, 0, 0.83, 0, 0.83, 0, -0.83, 0, -3.628045e-08, 0, 0.16, -28)
+
+[node name="train_tracks5" parent="Train/TrainTracks" unique_id=454677791 instance=ExtResource("5_p1vbp")]
+transform = Transform3D(-3.628045e-08, 0, 0.83, 0, 0.83, 0, -0.83, 0, -3.628045e-08, 0, 0.16, 28)
+
 [node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
 layer = 10
 
@@ -448,9 +438,10 @@ color = Color(0, 0, 0, 1)
 [node name="PersistentAudio" parent="." unique_id=442030015 instance=ExtResource("13_p1vbp")]
 
 [node name="CityBlockout" type="Node3D" parent="." unique_id=1480771236]
+transform = Transform3D(0.47131094, 0, 0.8819671, 0, 1, 0, -0.8819671, 0, 0.47131094, 658.1666, -194.49289, -540.78815)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="CityBlockout" unique_id=274956535]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 552.8645, -95.084755, -368.58722)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.92728, -1.7443647, -82.77214)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D" unique_id=1273603941]
@@ -458,7 +449,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="CityBlockout" unique_id=238018069]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 552.8645, -95.084755, -339.00128)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 22.92728, -1.7443647, -53.186207)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D2" unique_id=1863202952]
@@ -466,7 +457,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D3" type="MeshInstance3D" parent="CityBlockout" unique_id=614176601]
-transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, 514.5833, -95.084755, -366.84067)
+transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, -15.353909, -1.7443647, -81.02559)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D3" unique_id=682984968]
@@ -474,7 +465,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D4" type="MeshInstance3D" parent="CityBlockout" unique_id=2075746925]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 482.64893, -95.084755, -340.74783)
+transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, -47.288296, -1.7443647, -54.93276)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D4" unique_id=2128533049]
@@ -482,7 +473,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D5" type="MeshInstance3D" parent="CityBlockout" unique_id=2116741587]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 507.40363, -95.084755, -325.45734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.533596, -1.7443647, -39.64226)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D5" unique_id=133787010]
@@ -490,7 +481,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D6" type="MeshInstance3D" parent="CityBlockout" unique_id=1985700924]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 507.40363, -93.95651, -295.8714)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -22.533596, -0.61612225, -10.056323)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D6" unique_id=1493758322]
@@ -498,7 +489,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D7" type="MeshInstance3D" parent="CityBlockout" unique_id=488074313]
-transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, 475.40027, -93.95651, -312.1006)
+transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, -54.536953, -0.61612225, -26.285511)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D7" unique_id=1400668406]
@@ -506,7 +497,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D8" type="MeshInstance3D" parent="CityBlockout" unique_id=131415505]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 535.33234, -95.084755, -311.56976)
+transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 5.395115, -1.7443647, -25.754688)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D8" unique_id=1828449941]
@@ -514,7 +505,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D9" type="MeshInstance3D" parent="CityBlockout" unique_id=963425516]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 651.863, -95.084755, -368.58722)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121.92575, -1.7443647, -82.77214)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D9" unique_id=453756379]
@@ -522,7 +513,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D10" type="MeshInstance3D" parent="CityBlockout" unique_id=1786367714]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 651.863, -95.084755, -339.00128)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 121.92575, -1.7443647, -53.186207)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D10" unique_id=1085346882]
@@ -530,7 +521,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D11" type="MeshInstance3D" parent="CityBlockout" unique_id=1656708494]
-transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, 613.5818, -95.084755, -366.84067)
+transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, 83.64456, -1.7443647, -81.02559)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D11" unique_id=1705607010]
@@ -538,7 +529,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D12" type="MeshInstance3D" parent="CityBlockout" unique_id=36239461]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 581.6474, -95.084755, -340.74783)
+transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 51.71018, -1.7443647, -54.93276)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D12" unique_id=417339569]
@@ -546,7 +537,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D13" type="MeshInstance3D" parent="CityBlockout" unique_id=621590081]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 606.4021, -95.084755, -325.45734)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.464874, -1.7443647, -39.64226)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D13" unique_id=1091536423]
@@ -554,7 +545,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D14" type="MeshInstance3D" parent="CityBlockout" unique_id=1368860832]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 606.4021, -93.95651, -295.8714)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 76.464874, -0.61612225, -10.056323)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D14" unique_id=764887770]
@@ -562,7 +553,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D15" type="MeshInstance3D" parent="CityBlockout" unique_id=1479992595]
-transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, 574.39874, -93.95651, -312.1006)
+transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, 44.46152, -0.61612225, -26.285511)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D15" unique_id=98565896]
@@ -570,7 +561,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D16" type="MeshInstance3D" parent="CityBlockout" unique_id=229003216]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 634.3308, -95.084755, -311.56976)
+transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 104.393585, -1.7443647, -25.754688)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D16" unique_id=1510037550]
@@ -578,7 +569,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D17" type="MeshInstance3D" parent="CityBlockout" unique_id=409777974]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 482.94852, -95.084755, -406.8341)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.988705, -1.7443647, -121.01903)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D17" unique_id=252740161]
@@ -586,7 +577,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D18" type="MeshInstance3D" parent="CityBlockout" unique_id=1124502769]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 482.94852, -95.084755, -377.24817)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -46.988705, -1.7443647, -91.43309)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D18" unique_id=1775551939]
@@ -594,7 +585,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D19" type="MeshInstance3D" parent="CityBlockout" unique_id=419045512]
-transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, 444.66733, -95.084755, -405.08755)
+transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, -85.2699, -1.7443647, -119.27248)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D19" unique_id=480134036]
@@ -602,7 +593,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D20" type="MeshInstance3D" parent="CityBlockout" unique_id=590312222]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 412.73294, -95.084755, -378.99472)
+transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, -117.204285, -1.7443647, -93.17964)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D20" unique_id=237318328]
@@ -610,7 +601,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D21" type="MeshInstance3D" parent="CityBlockout" unique_id=1959679664]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 437.48764, -95.084755, -363.70422)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -92.449585, -1.7443647, -77.889145)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D21" unique_id=1942695536]
@@ -618,7 +609,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D22" type="MeshInstance3D" parent="CityBlockout" unique_id=2129916487]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 437.48764, -93.95651, -334.1183)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -92.449585, -0.61612225, -48.30321)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D22" unique_id=928395790]
@@ -626,7 +617,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D23" type="MeshInstance3D" parent="CityBlockout" unique_id=993134700]
-transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, 405.48428, -93.95651, -350.34747)
+transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, -124.45294, -0.61612225, -64.532394)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D23" unique_id=69081980]
@@ -634,7 +625,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D24" type="MeshInstance3D" parent="CityBlockout" unique_id=1820728175]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 465.41635, -95.084755, -349.81665)
+transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, -64.520874, -1.7443647, -64.00157)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D24" unique_id=1515586739]
@@ -642,7 +633,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D25" type="MeshInstance3D" parent="CityBlockout" unique_id=1135540852]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 599.56934, -95.084755, -373.17096)
+transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 69.63211, -1.7443647, -87.35588)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D25" unique_id=731078260]
@@ -650,7 +641,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D26" type="MeshInstance3D" parent="CityBlockout" unique_id=1238904]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, 570.41455, -95.084755, -368.1384)
+transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, 40.47733, -1.7443647, -82.32332)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D26" unique_id=367178150]
@@ -658,7 +649,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D27" type="MeshInstance3D" parent="CityBlockout" unique_id=430800713]
-transform = Transform3D(-0.31448853, 0, -0.94926125, 0, 1, 0, 0.94926125, 0, -0.31448853, 591.3366, -95.084755, -410.59717)
+transform = Transform3D(-0.31448853, 0, -0.94926125, 0, 1, 0, 0.94926125, 0, -0.31448853, 61.399387, -1.7443647, -124.78209)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D27" unique_id=1038788429]
@@ -666,7 +657,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D28" type="MeshInstance3D" parent="CityBlockout" unique_id=1295727651]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 560.192, -95.084755, -437.62778)
+transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 30.254795, -1.7443647, -151.8127)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D28" unique_id=1040014194]
@@ -674,7 +665,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D29" type="MeshInstance3D" parent="CityBlockout" unique_id=194468788]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 549.3351, -95.084755, -410.63293)
+transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 19.397861, -1.7443647, -124.817856)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D29" unique_id=1489962697]
@@ -682,7 +673,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D30" type="MeshInstance3D" parent="CityBlockout" unique_id=849482653]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, 520.1803, -93.95651, -405.60034)
+transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, -9.756924, -0.61612225, -119.78526)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D30" unique_id=917810490]
@@ -690,7 +681,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D31" type="MeshInstance3D" parent="CityBlockout" unique_id=1538610344]
-transform = Transform3D(0.77415407, 0, 0.6329972, 0, 1, 0, -0.6329972, 0, 0.77415407, 530.72925, -93.95651, -439.89792)
+transform = Transform3D(0.77415407, 0, 0.6329972, 0, 1, 0, -0.6329972, 0, 0.77415407, 0.7920265, -0.61612225, -154.08284)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D31" unique_id=2037691818]
@@ -698,7 +689,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D32" type="MeshInstance3D" parent="CityBlockout" unique_id=1129967749]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 540.40063, -95.084755, -380.74893)
+transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 10.463413, -1.7443647, -94.93385)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D32" unique_id=1222990526]
@@ -706,7 +697,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D33" type="MeshInstance3D" parent="CityBlockout" unique_id=977748603]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 485.11133, -95.084755, -248.84445)
+transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, -44.825893, -1.7443647, 36.970623)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D33" unique_id=1066354201]
@@ -714,7 +705,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D34" type="MeshInstance3D" parent="CityBlockout" unique_id=1799491749]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, 455.95654, -95.084755, -243.81189)
+transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, -73.98068, -1.7443647, 42.003185)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D34" unique_id=1711794421]
@@ -722,7 +713,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D35" type="MeshInstance3D" parent="CityBlockout" unique_id=524912972]
-transform = Transform3D(-0.31448853, 0, -0.94926125, 0, 1, 0, 0.94926125, 0, -0.31448853, 476.8786, -95.084755, -286.27066)
+transform = Transform3D(-0.31448853, 0, -0.94926125, 0, 1, 0, 0.94926125, 0, -0.31448853, -53.05862, -1.7443647, -0.45558453)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D35" unique_id=230504027]
@@ -730,7 +721,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D36" type="MeshInstance3D" parent="CityBlockout" unique_id=1196795058]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 445.734, -95.084755, -313.30127)
+transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, -84.20322, -1.7443647, -27.486195)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D36" unique_id=697542817]
@@ -738,7 +729,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D37" type="MeshInstance3D" parent="CityBlockout" unique_id=750716880]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 434.87708, -95.084755, -286.30643)
+transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, -95.06015, -1.7443647, -0.49135113)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D37" unique_id=1496116709]
@@ -746,7 +737,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D38" type="MeshInstance3D" parent="CityBlockout" unique_id=1954894761]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, 405.7223, -93.95651, -281.27383)
+transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, -124.214935, -0.61612225, 4.5412416)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D38" unique_id=72432791]
@@ -754,7 +745,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D39" type="MeshInstance3D" parent="CityBlockout" unique_id=1613892200]
-transform = Transform3D(0.77415407, 0, 0.6329972, 0, 1, 0, -0.6329972, 0, 0.77415407, 416.27124, -93.95651, -315.5714)
+transform = Transform3D(0.77415407, 0, 0.6329972, 0, 1, 0, -0.6329972, 0, 0.77415407, -113.665985, -0.61612225, -29.756336)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D39" unique_id=2069096773]
@@ -762,7 +753,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D40" type="MeshInstance3D" parent="CityBlockout" unique_id=766032551]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 425.94263, -95.084755, -256.42242)
+transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, -103.9946, -1.7443647, 29.39265)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D40" unique_id=1245332375]
@@ -770,7 +761,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D41" type="MeshInstance3D" parent="CityBlockout" unique_id=1331747841]
-transform = Transform3D(0.80526346, 0, 0.5929172, 0, 1, 0, -0.5929172, 0, 0.80526346, 528.9355, -95.084755, -270.34897)
+transform = Transform3D(0.80526346, 0, 0.5929172, 0, 1, 0, -0.5929172, 0, 0.80526346, -1.0017357, -1.7443647, 15.466107)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D41" unique_id=1092337625]
@@ -778,7 +769,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D42" type="MeshInstance3D" parent="CityBlockout" unique_id=659899520]
-transform = Transform3D(-0.5929172, 0, 0.80526346, 0, 1, 0, -0.80526346, 0, -0.5929172, 546.4775, -95.084755, -246.52448)
+transform = Transform3D(-0.5929172, 0, 0.80526346, 0, 1, 0, -0.80526346, 0, -0.5929172, 16.540257, -1.7443647, 39.2906)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D42" unique_id=1921000376]
@@ -786,7 +777,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D43" type="MeshInstance3D" parent="CityBlockout" unique_id=1023230592]
-transform = Transform3D(0.98967475, 0, 0.1433322, 0, 1, 0, -0.1433322, 0, 0.98967475, 499.1446, -95.084755, -246.24496)
+transform = Transform3D(0.98967475, 0, 0.1433322, 0, 1, 0, -0.1433322, 0, 0.98967475, -30.79263, -1.7443647, 39.57011)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D43" unique_id=1243923012]
@@ -794,7 +785,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D44" type="MeshInstance3D" parent="CityBlockout" unique_id=1866927546]
-transform = Transform3D(-0.1433322, 0, 0.98967475, 0, 1, 0, -0.98967475, 0, -0.1433322, 488.8999, -95.084755, -206.29895)
+transform = Transform3D(-0.1433322, 0, 0.98967475, 0, 1, 0, -0.98967475, 0, -0.1433322, -41.03732, -1.7443647, 79.51613)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D44" unique_id=1092314920]
@@ -802,7 +793,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D45" type="MeshInstance3D" parent="CityBlockout" unique_id=846152872]
-transform = Transform3D(0.80526346, 0, 0.5929172, 0, 1, 0, -0.5929172, 0, 0.80526346, 517.89996, -95.084755, -208.66351)
+transform = Transform3D(0.80526346, 0, 0.5929172, 0, 1, 0, -0.5929172, 0, 0.80526346, -12.037258, -1.7443647, 77.151566)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D45" unique_id=241448468]
@@ -810,7 +801,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D46" type="MeshInstance3D" parent="CityBlockout" unique_id=1300965961]
-transform = Transform3D(-0.5929172, 0, 0.80526346, 0, 1, 0, -0.80526346, 0, -0.5929172, 535.442, -93.95651, -184.83905)
+transform = Transform3D(-0.5929172, 0, 0.80526346, 0, 1, 0, -0.80526346, 0, -0.5929172, 5.504795, -0.61612225, 100.97603)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D46" unique_id=527543441]
@@ -818,7 +809,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D47" type="MeshInstance3D" parent="CityBlockout" unique_id=1153042890]
-transform = Transform3D(-0.9124222, 0, 0.40925035, 0, 1, 0, -0.40925035, 0, -0.9124222, 500.04825, -93.95651, -178.93251)
+transform = Transform3D(-0.9124222, 0, 0.40925035, 0, 1, 0, -0.40925035, 0, -0.9124222, -29.888973, -0.61612225, 106.88257)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D47" unique_id=616851462]
@@ -826,7 +817,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D48" type="MeshInstance3D" parent="CityBlockout" unique_id=1017402234]
-transform = Transform3D(-0.1433322, 0, 0.98967475, 0, 1, 0, -0.98967475, 0, -0.1433322, 548.6241, -95.084755, -214.03983)
+transform = Transform3D(-0.1433322, 0, 0.98967475, 0, 1, 0, -0.98967475, 0, -0.1433322, 18.686863, -1.7443647, 71.77525)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D48" unique_id=136722918]
@@ -834,7 +825,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D49" type="MeshInstance3D" parent="CityBlockout" unique_id=37778145]
-transform = Transform3D(0.14588279, 0, -0.9893019, 0, 1, 0, 0.9893019, 0, 0.14588279, 557.48517, -95.084755, -193.58604)
+transform = Transform3D(0.14588279, 0, -0.9893019, 0, 1, 0, 0.9893019, 0, 0.14588279, 27.547947, -1.7443647, 92.229034)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D49" unique_id=1812063503]
@@ -842,7 +833,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D50" type="MeshInstance3D" parent="CityBlockout" unique_id=35185110]
-transform = Transform3D(-0.9412633, 0, 0.33767328, 0, 1, 0, -0.33767328, 0, -0.9412633, 599.4181, -95.084755, -171.62904)
+transform = Transform3D(-0.9412633, 0, 0.33767328, 0, 1, 0, -0.33767328, 0, -0.9412633, 69.480865, -1.7443647, 114.186035)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D50" unique_id=1951391218]
@@ -850,7 +841,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D51" type="MeshInstance3D" parent="CityBlockout" unique_id=1890408583]
-transform = Transform3D(-0.33767328, 0, -0.9412633, 0, 1, 0, 0.9412633, 0, -0.33767328, 627.20435, -95.084755, -202.1014)
+transform = Transform3D(-0.33767328, 0, -0.9412633, 0, 1, 0, 0.9412633, 0, -0.33767328, 97.26712, -1.7443647, 83.713684)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D51" unique_id=1161495452]
@@ -858,7 +849,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D52" type="MeshInstance3D" parent="CityBlockout" unique_id=1862975428]
-transform = Transform3D(-0.9893019, 0, -0.14588274, 0, 1, 0, 0.14588274, 0, -0.9893019, 600.4839, -95.084755, -213.61705)
+transform = Transform3D(-0.9893019, 0, -0.14588274, 0, 1, 0, 0.14588274, 0, -0.9893019, 70.54666, -1.7443647, 72.19803)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D52" unique_id=1071780284]
@@ -866,7 +857,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D53" type="MeshInstance3D" parent="CityBlockout" unique_id=1583657309]
-transform = Transform3D(0.14588279, 0, -0.9893019, 0, 1, 0, 0.9893019, 0, 0.14588279, 596.1678, -93.95651, -242.88649)
+transform = Transform3D(0.14588279, 0, -0.9893019, 0, 1, 0, 0.9893019, 0, 0.14588279, 66.23056, -0.61612225, 42.928585)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D53" unique_id=780378340]
@@ -874,7 +865,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D54" type="MeshInstance3D" parent="CityBlockout" unique_id=732523802]
-transform = Transform3D(0.61382174, 0, -0.7894446, 0, 1, 0, 0.7894446, 0, 0.61382174, 630.19635, -93.95651, -231.49962)
+transform = Transform3D(0.61382174, 0, -0.7894446, 0, 1, 0, 0.7894446, 0, 0.61382174, 100.259125, -0.61612225, 54.315456)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D54" unique_id=544261344]
@@ -882,7 +873,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D55" type="MeshInstance3D" parent="CityBlockout" unique_id=862886143]
-transform = Transform3D(-0.33767328, 0, -0.9412633, 0, 1, 0, 0.9412633, 0, -0.33767328, 570.828, -95.084755, -223.2817)
+transform = Transform3D(-0.33767328, 0, -0.9412633, 0, 1, 0, 0.9412633, 0, -0.33767328, 40.89078, -1.7443647, 62.533382)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D55" unique_id=1743301518]
@@ -890,7 +881,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D56" type="MeshInstance3D" parent="CityBlockout" unique_id=55038921]
-transform = Transform3D(0.5729909, 0, -0.8195618, 0, 1, 0, 0.8195618, 0, 0.5729909, 582.2246, -95.084755, -119.97827)
+transform = Transform3D(0.5729909, 0, -0.8195618, 0, 1, 0, 0.8195618, 0, 0.5729909, 52.287388, -1.7443647, 165.8368)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D56" unique_id=330195263]
@@ -898,7 +889,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D57" type="MeshInstance3D" parent="CityBlockout" unique_id=158241352]
-transform = Transform3D(0.8195618, 0, 0.5729909, 0, 1, 0, -0.5729909, 0, 0.8195618, 557.97705, -95.084755, -103.02582)
+transform = Transform3D(0.8195618, 0, 0.5729909, 0, 1, 0, -0.5729909, 0, 0.8195618, 28.03983, -1.7443647, 182.78926)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D57" unique_id=2117737204]
@@ -906,7 +897,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D58" type="MeshInstance3D" parent="CityBlockout" unique_id=558680447]
-transform = Transform3D(0.11901865, 0, -0.9928921, 0, 1, 0, 0.9928921, 0, 0.11901865, 558.8584, -95.084755, -150.35133)
+transform = Transform3D(0.11901865, 0, -0.9928921, 0, 1, 0, 0.9928921, 0, 0.11901865, 28.921177, -1.7443647, 135.46375)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D58" unique_id=1018550155]
@@ -914,7 +905,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D59" type="MeshInstance3D" parent="CityBlockout" unique_id=603891334]
-transform = Transform3D(0.9928921, 0, 0.11901865, 0, 1, 0, -0.11901865, 0, 0.9928921, 519.17566, -95.084755, -161.57256)
+transform = Transform3D(0.9928921, 0, 0.11901865, 0, 1, 0, -0.11901865, 0, 0.9928921, -10.761562, -1.7443647, 124.24252)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D59" unique_id=573000886]
@@ -922,7 +913,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D60" type="MeshInstance3D" parent="CityBlockout" unique_id=1838576339]
-transform = Transform3D(0.5729909, 0, -0.8195618, 0, 1, 0, 0.8195618, 0, 0.5729909, 520.8283, -95.084755, -132.52322)
+transform = Transform3D(0.5729909, 0, -0.8195618, 0, 1, 0, 0.8195618, 0, 0.5729909, -9.108913, -1.7443647, 153.29185)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D60" unique_id=713573776]
@@ -930,7 +921,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D61" type="MeshInstance3D" parent="CityBlockout" unique_id=1486997225]
-transform = Transform3D(0.8195618, 0, 0.5729909, 0, 1, 0, -0.5729909, 0, 0.8195618, 496.5808, -93.95651, -115.57071)
+transform = Transform3D(0.8195618, 0, 0.5729909, 0, 1, 0, -0.5729909, 0, 0.8195618, -33.35641, -0.61612225, 170.24437)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D61" unique_id=1860631387]
@@ -938,7 +929,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D62" type="MeshInstance3D" parent="CityBlockout" unique_id=595694333]
-transform = Transform3D(0.43150315, 0, 0.9021114, 0, 1, 0, -0.9021114, 0, 0.43150315, 491.54407, -93.95651, -151.09872)
+transform = Transform3D(0.43150315, 0, 0.9021114, 0, 1, 0, -0.9021114, 0, 0.43150315, -38.393154, -0.61612225, 134.71635)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D62" unique_id=130651549]
@@ -946,38 +937,351 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
 omni_range = 20.0
 
 [node name="MeshInstance3D63" type="MeshInstance3D" parent="CityBlockout" unique_id=1355439993]
-transform = Transform3D(0.9928921, 0, 0.11901865, 0, 1, 0, -0.11901865, 0, 0.9928921, 525.4495, -95.084755, -101.6765)
+transform = Transform3D(0.9928921, 0, 0.11901865, 0, 1, 0, -0.11901865, 0, 0.9928921, -4.4876976, -1.7443647, 184.13858)
 mesh = SubResource("BoxMesh_3lhsg")
 
 [node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D63" unique_id=2028386551]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
 omni_range = 20.0
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1227854072]
-environment = SubResource("Environment_uas77")
-script = ExtResource("13_uas77")
-exterior_visibility = 0.5
-interior_fill = 0.5
-fog_amount = 1.8
-moon_light_path = NodePath("../MoonLight")
+[node name="Scenery" type="Node3D" parent="." unique_id=1263090054]
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1638772995]
-transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)
-light_color = Color(0.56078434, 0.65882355, 0.76862746, 1)
-light_energy = 0.05
-light_indirect_energy = 0.0
-light_volumetric_fog_energy = 0.2
-light_specular = 0.08
-shadow_enabled = true
-shadow_bias = 0.035
-shadow_normal_bias = 0.65
-shadow_opacity = 0.72
-shadow_blur = 1.55
-directional_shadow_mode = 1
-directional_shadow_split_1 = 0.25
-directional_shadow_fade_start = 0.82
-directional_shadow_max_distance = 42.0
-directional_shadow_pancake_size = 12.0
+[node name="DoorController" parent="Scenery" unique_id=944800287 instance=ExtResource("14_vm3m4")]
+transform = Transform3D(-0.016075056, 0.23726434, -0.97131264, -0.013875036, 0.97129107, 0.23748907, 0.9997745, 0.017294649, -0.012321565, 10.326787, -1.3286178, 4.8851957)
 
-[node name="HorrorFilter" parent="." unique_id=931420031 instance=ExtResource("14_vm3m4")]
+[node name="Fences" type="Node3D" parent="Scenery" unique_id=607440531]
+
+[node name="BarbedFenceBigNoAngle" type="Node3D" parent="Scenery/Fences" unique_id=224708527]
+
+[node name="BarbedFenceBigNoAngleMultiMesh" type="MultiMeshInstance3D" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=563267901]
+multimesh = SubResource("MultiMesh_vm3m4")
+script = ExtResource("16_16kht")
+source_name_prefix = "barbed-fence-big-no-angle"
+
+[node name="barbed-fence-big-no-angle" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1290455906 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9945921, 0, 0.103858374, 0, 1, 0, -0.103858374, 0, 0.9945921, -3.706, 0.64, 33.033)
+visible = false
+
+[node name="barbed-fence-big-no-angle2" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2027074039 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9926442, 0, -0.12106828, 0, 1, 0, 0.12106828, 0, 0.9926442, -3.706, 0.64, 31.277157)
+visible = false
+
+[node name="barbed-fence-big-no-angle3" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=981325594 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.99354005, 0, 0.11348237, 0, 1, 0, -0.11348237, 0, 0.99354005, -3.706, 0.64, 29.528025)
+visible = false
+
+[node name="barbed-fence-big-no-angle4" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1215798448 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.99470866, 0, -0.10273582, 0, 1, 0, 0.10273582, 0, 0.99470866, -3.706, 0.64, 27.770273)
+visible = false
+
+[node name="barbed-fence-big-no-angle5" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1189850815 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.962671, 0, 0.2706743, 0, 1, 0, -0.2706743, 0, 0.962671, -3.8572586, 0.64, 26.04723)
+visible = false
+
+[node name="barbed-fence-big-no-angle6" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=809149781 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9922363, 0, -0.12436655, 0, 1, 0, 0.12436655, 0, 0.9922363, -3.9841506, 0.64, 24.310312)
+visible = false
+
+[node name="barbed-fence-big-no-angle7" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1729192171 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9999187, 0, -0.012744553, 0, 1, 0, 0.012744553, 0, 0.9999187, -3.8676589, 0.64, 22.561495)
+visible = false
+
+[node name="barbed-fence-big-no-angle8" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2056496257 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9972942, 0, -0.07351428, 0, 1, 0, 0.07351428, 0, 0.9972942, -3.78583, 0.64, 20.80812)
+visible = false
+
+[node name="barbed-fence-big-no-angle9" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1961484643 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.97710234, 0, 0.2127701, 0, 1, 0, -0.2127701, 0, 0.97710234, -3.9248786, 0.64, 19.075865)
+visible = false
+
+[node name="barbed-fence-big-no-angle10" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1056270403 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.98778397, 0, -0.15582958, 0, 1, 0, 0.15582958, 0, 0.98778397, -3.9657109, 0.64, 17.339617)
+visible = false
+
+[node name="barbed-fence-big-no-angle11" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1357768279 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.99925774, 0, 0.038522333, 0, 1, 0, -0.038522333, 0, 0.99925774, -3.8743238, 0.64, 15.587708)
+visible = false
+
+[node name="barbed-fence-big-no-angle12" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2057143617 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9986541, 0, -0.051864523, 0, 1, 0, 0.051864523, 0, 0.9986541, -3.857635, 0.64, 13.825327)
+visible = false
+
+[node name="barbed-fence-big-no-angle13" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2040105944 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.98396236, 0, 0.17837624, 0, 1, 0, -0.17837624, 0, 0.98396236, -3.9696627, 0.64, 12.073556)
+visible = false
+
+[node name="barbed-fence-big-no-angle14" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=583973625 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9852661, 0, -0.17102881, 0, 1, 0, 0.17102881, 0, 0.9852661, -3.9696627, 0.64, 10.336556)
+visible = false
+
+[node name="barbed-fence-big-no-angle15" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=721406310 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9962978, 0, 0.085969925, 0, 1, 0, -0.085969925, 0, 0.9962978, -3.8941433, 0.64, 8.59215)
+visible = false
+
+[node name="barbed-fence-big-no-angle16" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=630620361 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.99994266, 0, -0.0107142925, 0, 1, 0, 0.0107142925, 0, 0.99994266, -3.9552991, 0.64, 6.8263264)
+visible = false
+
+[node name="barbed-fence-big-no-angle17" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1034239589 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9968642, 0, -0.07913205, 0, 1, 0, 0.07913205, 0, 0.9968642, -3.8606148, 0.64, 5.0657825)
+visible = false
+
+[node name="barbed-fence-big-no-angle18" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=833926946 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.969872, 0, 0.24361505, 0, 1, 0, -0.24361502, 0, 0.9698721, -3.9953108, 0.64, 3.3485844)
+visible = false
+
+[node name="barbed-fence-big-no-angle19" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=588453122 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.97753197, 0, -0.21078701, 0, 1, 0, 0.21078701, 0, 0.97753215, -4.0243063, 0.64, 1.6424435)
+visible = false
+
+[node name="barbed-fence-big-no-angle20" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=530213623 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9309921, 0, 0.365039, 0, 1, 0, -0.36503893, 0, 0.9309923, -4.1618314, 0.64, -0.03930586)
+visible = false
+
+[node name="barbed-fence-big-no-angle21" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=14673412 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9973468, 0, -0.07279456, 0, 1, 0, 0.07279454, 0, 0.9973471, -4.407589, 0.64, -1.7288879)
+visible = false
+
+[node name="barbed-fence-big-no-angle22" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1833721654 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.92835486, 0, -0.3716947, 0, 1, 0, 0.37169462, 0, 0.92835516, -4.0266647, 0.64, -3.4184701)
+visible = false
+
+[node name="barbed-fence-big-no-angle23" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2017653667 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9948771, 0, 0.10109037, 0, 1, 0, -0.10109028, 0, 0.99487746, -3.7843628, 0.64, -5.109317)
+visible = false
+
+[node name="barbed-fence-big-no-angle24" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1801607539 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.97511894, 0, -0.22168177, 0, 1, 0, 0.22168174, 0, 0.9751193, -3.6684794, 0.64, -6.8475704)
+visible = false
+
+[node name="barbed-fence-big-no-angle25" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=833495341 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9891947, 0, 0.14660673, 0, 1, 0, -0.14660661, 0, 0.98919505, -3.600003, 0.64, -8.575289)
+visible = false
+
+[node name="barbed-fence-big-no-angle26" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1296478194 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9995095, 0, 0.03131119, 0, 1, 0, -0.03131111, 0, 0.9995099, -3.7474914, 0.64, -10.339879)
+visible = false
+
+[node name="barbed-fence-big-no-angle27" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=595838077 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9973376, 0, -0.07292059, 0, 1, 0, 0.072920635, 0, 0.99733794, -3.705352, 0.64, -12.109736)
+visible = false
+
+[node name="barbed-fence-big-no-angle28" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1475100367 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.96253616, 0, 0.27115294, 0, 1, 0, -0.2711528, 0, 0.9625365, -3.87391, 0.64, -13.837455)
+visible = false
+
+[node name="barbed-fence-big-no-angle29" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1456067382 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.98211473, 0, -0.18828273, 0, 1, 0, 0.18828271, 0, 0.9821151, -3.9371192, 0.64, -15.554639)
+visible = false
+
+[node name="barbed-fence-big-no-angle30" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2012610439 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.998867, 0, -0.047586456, 0, 1, 0, 0.047586516, 0, 0.99886733, -3.7369566, 0.64, -17.287624)
+visible = false
+
+[node name="barbed-fence-big-no-angle31" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=777175165 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9950773, 0, 0.09909977, 0, 1, 0, -0.09909966, 0, 0.99507767, -3.7790961, 0.64, -19.02061)
+visible = false
+
+[node name="barbed-fence-big-no-angle32" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1539671533 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.97753173, 0, -0.21078722, 0, 1, 0, 0.21078724, 0, 0.97753215, -3.6684802, 0.64, -20.74833)
+visible = false
+
+[node name="barbed-fence-big-no-angle33" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=156540654 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9591114, 0, 0.28302822, 0, 1, 0, -0.283028, 0, 0.95911175, -3.7316892, 0.64, -22.44971)
+visible = false
+
+[node name="barbed-fence-big-no-angle34" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2115631729 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.98619795, 0, -0.16556871, 0, 1, 0, 0.16556871, 0, 0.9861984, -3.8370378, 0.64, -24.166895)
+visible = false
+
+[node name="barbed-fence-big-no-angle35" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1991345594 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9993104, 0, -0.037124276, 0, 1, 0, 0.037124336, 0, 0.99931085, -3.66848, 0.64, -25.915684)
+visible = false
+
+[node name="barbed-fence-big-no-angle36" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=712385621 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.98032755, 0, 0.19737649, 0, 1, 0, -0.19737631, 0, 0.98032796, -3.8107007, 0.64, -27.675007)
+visible = false
+
+[node name="barbed-fence-big-no-angle37" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1521129772 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9428221, 0, -0.33329603, 0, 1, 0, 0.333296, 0, 0.9428226, -3.694817, 0.64, -29.355318)
+visible = false
+
+[node name="barbed-fence-big-no-angle38" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1506299121 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.9289806, 0, 0.37012827, 0, 1, 0, -0.37012795, 0, 0.92898095, -3.7264216, 0.64, -31.00929)
+visible = false
+
+[node name="barbed-fence-big-no-angle39" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=750463694 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.99999946, 0, -0.0008299053, 0, 1, 0, 0.0008301139, 0, 0.99999994, -4.047735, 0.64, -32.705406)
+visible = false
+
+[node name="barbed-fence-big-no-angle40" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=307951101 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.99504477, 0, -0.099429354, 0, 1, 0, 0.099429354, 0, -0.99504477, 3.4850311, 0.64, -32.974083)
+visible = false
+
+[node name="barbed-fence-big-no-angle41" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1162044593 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9920954, 0, 0.12548645, 0, 1, 0, -0.12548645, 0, -0.9920954, 3.4772148, 0.64, -31.218258)
+visible = false
+
+[node name="barbed-fence-big-no-angle42" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=987905404 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9940354, 0, -0.10905795, 0, 1, 0, 0.10905795, 0, -0.9940354, 3.4694266, 0.64, -29.469147)
+visible = false
+
+[node name="barbed-fence-big-no-angle43" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=375020908 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9942414, 0, 0.10716327, 0, 1, 0, -0.10716327, 0, -0.9942414, 3.4616003, 0.64, -27.711407)
+visible = false
+
+[node name="barbed-fence-big-no-angle44" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1285896346 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.96386653, 0, -0.26638576, 0, 1, 0, 0.26638576, 0, -0.96386653, 3.605187, 0.64, -25.98771)
+visible = false
+
+[node name="barbed-fence-big-no-angle45" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=762166752 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.99167275, 0, 0.12878287, 0, 1, 0, -0.12878287, 0, -0.99167275, 3.7243457, 0.64, -24.250244)
+visible = false
+
+[node name="barbed-fence-big-no-angle46" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=389951756 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9998522, 0, 0.017196175, 0, 1, 0, -0.017196175, 0, -0.9998522, 3.600068, 0.64, -22.501965)
+visible = false
+
+[node name="barbed-fence-big-no-angle47" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1972284615 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.996957, 0, 0.07795356, 0, 1, 0, -0.07795356, 0, -0.996957, 3.5104308, 0.64, -20.748972)
+visible = false
+
+[node name="barbed-fence-big-no-angle48" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=2020011727 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.97804, 0, -0.20841785, 0, 1, 0, 0.20841785, 0, -0.97804, 3.641768, 0.64, -19.016113)
+visible = false
+
+[node name="barbed-fence-big-no-angle49" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1815464241 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.98708034, 0, 0.16022573, 0, 1, 0, -0.16022573, 0, -0.98708034, 3.6748714, 0.64, -17.279697)
+visible = false
+
+[node name="barbed-fence-big-no-angle50" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=632248063 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.99941945, 0, -0.03407315, 0, 1, 0, 0.03407315, 0, -0.99941945, 3.5756855, 0.64, -15.528219)
+visible = false
+
+[node name="barbed-fence-big-no-angle51" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=768185712 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9984133, 0, 0.056310035, 0, 1, 0, -0.056310035, 0, -0.9984133, 3.5511498, 0.64, -13.765928)
+visible = false
+
+[node name="barbed-fence-big-no-angle52" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=486650615 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9847468, 0, -0.17399381, 0, 1, 0, 0.17399381, 0, -0.9847468, 3.6553774, 0.64, -12.013676)
+visible = false
+
+[node name="barbed-fence-big-no-angle53" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=769652377 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.98449475, 0, 0.17541365, 0, 1, 0, -0.17541365, 0, -0.98449475, 3.647644, 0.64, -10.276694)
+visible = false
+
+[node name="barbed-fence-big-no-angle54" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1594241669 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.99667066, 0, -0.08153346, 0, 1, 0, 0.08153346, 0, -0.99667066, 3.5643606, 0.64, -8.5326395)
+visible = false
+
+[node name="barbed-fence-big-no-angle55" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1476779879 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9998851, 0, 0.015165983, 0, 1, 0, -0.015165983, 0, -0.9998851, 3.6176543, 0.64, -6.7665615)
+visible = false
+
+[node name="barbed-fence-big-no-angle56" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=951160085 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.99650204, 0, 0.08356945, 0, 1, 0, -0.08356945, 0, -0.99650204, 3.515132, 0.64, -5.0064554)
+visible = false
+
+[node name="barbed-fence-big-no-angle57" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=222757405 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.99951047, 0, -0.03128004, 0, 1, 0, 0.031279936, 0, -0.9995106, 3.488186, 0.64, -3.2226777)
+visible = false
+
+[node name="barbed-fence-big-no-angle58" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=414022885 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.966987, 0, -0.25482577, 0, 1, 0, 0.25482568, 0, -0.96698725, 3.707559, 0.64, -1.4737339)
+visible = false
+
+[node name="barbed-fence-big-no-angle59" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1712013816 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.76565343, 0.027790146, -0.6426527, 0.021285841, 0.99961376, 0.017866313, 0.64290094, 0, -0.7659493, 4.467154, 0.64, 0.028883405)
+visible = false
+
+[node name="barbed-fence-big-no-angle60" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1002204957 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.5415596, 0.1004072, -0.83464485, 0.041312326, 0.99482095, 0.09287079, 0.8396468, 0.015813906, -0.5429028, 5.72583, 0.5093357, 1.1552553)
+visible = false
+
+[node name="barbed-fence-big-no-angle61" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1452241910 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.540133, 0.16955957, -0.82432157, 0.09293035, 0.9855199, 0.14182523, 0.8364331, 0, -0.5480692, 7.1842475, 0.3117237, 2.113093)
+visible = false
+
+[node name="barbed-fence-big-no-angle62" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=25389139 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.5735518, 0.27937704, -0.7700567, 0.16688213, 0.96018153, 0.22405775, 0.8019904, 1.27985835e-08, -0.5973369, 8.556953, -0.019838333, 3.1168354)
+visible = false
+
+[node name="barbed-fence-big-no-angle63" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1995817 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.36422268, 0.13433203, 0.9215731, 0.04937427, 0.99093646, -0.12492909, -0.93000203, 0, -0.36755416, 6.6329775, 0.39115798, 8.634347)
+visible = false
+
+[node name="barbed-fence-big-no-angle64" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=559758562 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.5685849, 0.092819475, 0.81737137, 0.053004578, 0.99568295, -0.07619693, -0.820915, 1.8599983e-09, -0.5710503, 5.09945, 0.55700576, 9.455854)
+visible = false
+
+[node name="barbed-fence-big-no-angle65" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1400257205 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.80349725, 0, 0.59530884, -0.012226666, 0.99978906, -0.016502524, -0.5951831, -0.02053837, -0.803328, 3.8621817, 0.64, 10.633015)
+visible = false
+
+[node name="barbed-fence-big-no-angle66" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1255762826 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9970031, 0, 0.07736011, 0, 1, 0, -0.07736021, 0, -0.99700344, 3.2834034, 0.64, 12.168202)
+visible = false
+
+[node name="barbed-fence-big-no-angle67" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=793431033 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9637339, 0, -0.26686493, 0, 1, 0, 0.26686484, 0, -0.9637342, 3.4442692, 0.64, 13.896651)
+visible = false
+
+[node name="barbed-fence-big-no-angle68" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=532502337 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.98126674, 0, 0.19265337, 0, 1, 0, -0.19265322, 0, -0.98126715, 3.499833, 0.64, 15.614101)
+visible = false
+
+[node name="barbed-fence-big-no-angle69" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=226629656 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9986452, 0, 0.05203317, 0, 1, 0, -0.05203317, 0, -0.99864554, 3.291955, 0.64, 17.34618)
+visible = false
+
+[node name="barbed-fence-big-no-angle70" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=210912022 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9955088, 0, -0.09466851, 0, 1, 0, 0.09466848, 0, -0.99550897, 3.326377, 0.64, 19.079334)
+visible = false
+
+[node name="barbed-fence-big-no-angle71" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1339950745 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.97658366, 0, 0.21513738, 0, 1, 0, -0.21513733, 0, -0.9765839, 3.2080717, 0.64, 20.806543)
+visible = false
+
+[node name="barbed-fence-big-no-angle72" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=245309905 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9603619, 0, -0.2787552, 0, 1, 0, 0.2787551, 0, -0.9603624, 3.2637043, 0.64, 22.508184)
+visible = false
+
+[node name="barbed-fence-big-no-angle73" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=823413019 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9854511, 0, 0.16995777, 0, 1, 0, -0.16995771, 0, -0.9854515, 3.3614073, 0.64, 24.225826)
+visible = false
+
+[node name="barbed-fence-big-no-angle74" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=14568280 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.99913526, 0, 0.041573033, 0, 1, 0, -0.04157304, 0, -0.9991357, 3.1850653, 0.64, 25.97385)
+visible = false
+
+[node name="barbed-fence-big-no-angle75" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1550027860 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9811965, 0, -0.19300996, 0, 1, 0, 0.1930098, 0, -0.9811971, 3.3194518, 0.64, 27.733791)
+visible = false
+
+[node name="barbed-fence-big-no-angle76" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1369269373 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9413288, 0, 0.33749026, 0, 1, 0, -0.33749014, 0, -0.94132924, 3.1960897, 0.64, 29.41356)
+visible = false
+
+[node name="barbed-fence-big-no-angle77" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=142662442 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.93061906, 0, -0.3659885, 0, 1, 0, 0.36598825, 0, -0.9306196, 3.2203288, 0.64, 31.067661)
+visible = false
+
+[node name="barbed-fence-big-no-angle78" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1901103516 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.9999859, 0, 0.0052821524, 0, 1, 0, -0.0052821413, 0, -0.99998623, 3.534089, 0.64, 32.765194)
+visible = false
+
+[node name="barbed-fence-big-no-angle79" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1101772284 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.27560094, 0.31656894, 0.90764993, 0.09197713, 0.9485696, -0.3029127, -0.9568615, -5.517277e-09, -0.29054394, 8.189091, 0.016359955, 8.094182)
+visible = false
+
+[node name="barbed-fence-big-no-angle80" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1015561905 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.38449302, 0.29399627, 0.87506086, 0.074216396, 0.9547063, -0.28814507, -0.9201396, -0.045845922, -0.38889754, 9.789363, -0.5023436, 7.4776406)
+visible = false
+
+[node name="barbed-fence-big-no-angle81" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=747524595 instance=ExtResource("14_uas77")]
+transform = Transform3D(-0.68148273, 0.29260734, -0.6707921, 0.19174533, 0.95596063, 0.22219995, 0.706268, 0.022804119, -0.7075771, 9.828555, -0.44308, 4.260524)
+visible = false
+
+[node name="barbed-fence-big-no-angle82" parent="Scenery/Fences/BarbedFenceBigNoAngle" unique_id=1360856679 instance=ExtResource("14_uas77")]
+transform = Transform3D(0.6777215, 0.29179677, 0.6749429, -0.1910767, 0.9562456, -0.2215485, -0.7100582, 0.021182297, 0.70382404, 9.828555, -0.44308, 4.260524)
 visible = false
