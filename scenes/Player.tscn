@@ -98,7 +98,7 @@ mesh = SubResource("CapsuleMesh_tm2b5")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.014)
 
 [node name="Camera3D" type="Camera3D" parent="Head" unique_id=608416810]
-transform = Transform3D(0.99862915, -0.052335944, 0, 0.024570238, 0.46882805, 0.88294756, -0.046209894, -0.88173723, 0.4694716, 0.042, -0.338, 0.12)
+transform = Transform3D(0.9986291, -0.052335944, 0, 0.024570236, 0.46882805, 0.88294756, -0.04620989, -0.88173723, 0.4694716, 0.042, -0.338, 0.12)
 
 [node name="InteractRay" type="RayCast3D" parent="Head/Camera3D" unique_id=1231366330]
 target_position = Vector3(0, 0, -1)
@@ -122,7 +122,7 @@ light_projector = ExtResource("2_ck06t")
 light_specular = 0.8
 shadow_enabled = true
 shadow_blur = 0.5
-spot_range = 17.0
+spot_range = 20.0
 spot_attenuation = 1.2
 spot_angle = 20.0
 script = ExtResource("4_nxtpx")
@@ -134,7 +134,7 @@ light_indirect_energy = 0.0
 light_volumetric_fog_energy = 0.0
 light_specular = 0.1
 shadow_blur = 0.2
-spot_range = 16.0
+spot_range = 20.0
 spot_attenuation = 0.7
 spot_angle = 48.0
 
