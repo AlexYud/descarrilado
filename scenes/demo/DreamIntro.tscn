@@ -238,9 +238,9 @@ adjustment_saturation = 0.82
 
 [node name="PerformanceProfile" type="Node3D" parent="." unique_id=1513184291]
 script = ExtResource("26_e6tct")
-camera_far_distance = 1000.0
-geometry_render_distance = 1000.0
-light_fade_begin = 100.0
+camera_far_distance = 1500.0
+geometry_render_distance = 1500.0
+light_fade_begin = 1000.0
 light_fade_length = 500.0
 
 [node name="DreamIntroController" type="Node" parent="." unique_id=288397973]
@@ -1204,16 +1204,15 @@ visible = false
 [node name="Photo" parent="Scenery/Items" unique_id=88594973 instance=ExtResource("26_romvk")]
 transform = Transform3D(0.81849927, 0.56716347, -0.091568194, -0.114143446, 0.3167493, 0.9416165, 0.5630547, -0.76026034, 0.3239968, 37.16495, -3.0711966, 17.209661)
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1299161062]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1555852770]
 environment = SubResource("Environment_romvk")
 script = ExtResource("13_uas77")
 exterior_visibility = 0.5
 interior_fill = 0.5
 fog_amount = 1.8
-low_altitude_fog_density_multiplier = 0.0
 moon_light_path = NodePath("../MoonLight")
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1844682340]
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1177983779]
 transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)
 light_color = Color(0.56078434, 0.65882355, 0.76862746, 1)
 light_energy = 0.05

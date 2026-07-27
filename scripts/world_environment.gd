@@ -75,7 +75,7 @@ var fog_amount: float = 1.0
 @export var fog_reduction_end_altitude: float = -8.0
 
 @export_range(0.0, 1.0, 0.01)
-var low_altitude_fog_density_multiplier: float = 0.02
+var low_altitude_fog_density_multiplier: float = 0.05
 
 @export_range(0.0, 1.0, 0.01)
 var low_altitude_height_density_multiplier: float = 0.0

@@ -1,7 +1,7 @@
 extends Node
 class_name PlayerInteractionController
 
-@export var interaction_distance: float = 1.0
+@export var interaction_distance: float = 2.0
 
 var player: CharacterBody3D = null
 var interact_ray: RayCast3D = null

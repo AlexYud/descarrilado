@@ -1,12 +1,18 @@
 extends Node
 class_name PlayerInspectController
 
+
 enum InspectState {
 	CLOSED,
 	OPENING,
 	VIEWING,
 	CLOSING
 }
+
+
+const INSPECT_RENDER_LAYER_NUMBER: int = 20
+const INSPECT_RENDER_LAYER_MASK: int = 1 << 19
+
 
 @export var inspect_distance: float = 0.28
 @export var min_inspect_distance: float = 0.20
@@ -15,12 +21,49 @@ enum InspectState {
 @export var transition_speed: float = 6.0
 @export var rotate_speed: float = 0.01
 
+
+# ============================================================
+# INSPECTION LIGHT
+# ============================================================
+
+@export_category("Inspection Light")
+
+## Hidden presentation light styled like the player's flashlight.
+@export var inspect_light_enabled: bool = true
+
+@export var inspect_light_color: Color = Color("#d7e5ff")
+
+@export_range(0.0, 16.0, 0.1)
+var inspect_light_energy: float = 2.0
+
+@export_range(0.1, 5.0, 0.05)
+var inspect_light_range: float = 1.25
+
+## This is the cone's angular radius, not its full diameter.
+@export_range(5.0, 89.0, 1.0)
+var inspect_light_angle: float = 48.0
+
+@export_range(0.0, 2.0, 0.05)
+var inspect_light_distance_attenuation: float = 0.65
+
+@export_range(0.0, 2.0, 0.05)
+var inspect_light_angle_attenuation: float = 0.80
+
+## Slightly offset from the camera for more natural highlights.
+@export var inspect_light_position: Vector3 = Vector3(
+	0.055,
+	0.045,
+	0.015
+)
+
+
 var player: CharacterBody3D = null
 var camera: Camera3D = null
 var inventory_ui_controller: InventoryUIController = null
 var inventory_controller: PlayerInventoryController = null
 
 var inspect_anchor: Node3D = null
+var inspect_light: SpotLight3D = null
 var inspect_overlay_layer: CanvasLayer = null
 var inspect_overlay_root: Control = null
 var close_button: Button = null
@@ -41,11 +84,20 @@ var to_transform: Transform3D
 func setup(player_node: CharacterBody3D) -> void:
 	player = player_node
 	camera = player.get_node("Head/Camera3D") as Camera3D
-	inventory_ui_controller = player.get_node("InventoryUIController") as InventoryUIController
-	inventory_controller = player.get_node("InventoryController") as PlayerInventoryController
+
+	inventory_ui_controller = (
+		player.get_node("InventoryUIController")
+		as InventoryUIController
+	)
+
+	inventory_controller = (
+		player.get_node("InventoryController")
+		as PlayerInventoryController
+	)
 
 	_remove_old_runtime_nodes()
 	_build_inspect_anchor()
+	_build_inspect_light()
 	_build_overlay()
 	_set_inspect_distance(inspect_distance)
 
@@ -61,6 +113,7 @@ func open_world(inspectable: Inspectable) -> bool:
 		return false
 
 	var visual: Node3D = inspectable.get_visual_node()
+
 	if visual == null:
 		return false
 
@@ -69,9 +122,11 @@ func open_world(inspectable: Inspectable) -> bool:
 
 	var duplicated: Node = visual.duplicate()
 	var visual_copy: Node3D = duplicated as Node3D
+
 	if visual_copy == null:
 		if duplicated != null:
 			duplicated.queue_free()
+
 		return false
 
 	source_visual = visual
@@ -79,10 +134,17 @@ func open_world(inspectable: Inspectable) -> bool:
 
 	current_visual_copy = visual_copy
 	_get_runtime_parent().add_child(current_visual_copy)
-	current_visual_copy.global_transform = source_visual.global_transform
+	_prepare_visual_for_inspection(current_visual_copy)
+
+	current_visual_copy.global_transform = (
+		source_visual.global_transform
+	)
 
 	from_transform = source_visual.global_transform
-	to_transform = _get_inspect_target_transform(current_visual_copy)
+
+	to_transform = _get_inspect_target_transform(
+		current_visual_copy
+	)
 
 	transition_t = 0.0
 	state = InspectState.OPENING
@@ -92,13 +154,21 @@ func open_world(inspectable: Inspectable) -> bool:
 	if inspect_overlay_layer != null:
 		inspect_overlay_layer.visible = true
 
+	_set_inspect_light_active(true)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
 	return true
 
 
 func open_inventory(slot_data: Dictionary) -> bool:
-	var template_variant: Variant = slot_data.get("inspect_visual_template", null)
-	var template_node: Node3D = template_variant as Node3D
+	var template_variant: Variant = slot_data.get(
+		"inspect_visual_template",
+		null
+	)
+
+	var template_node: Node3D = (
+		template_variant as Node3D
+	)
 
 	if template_node == null:
 		return false
@@ -108,17 +178,32 @@ func open_inventory(slot_data: Dictionary) -> bool:
 
 	var duplicated: Node = template_node.duplicate()
 	var visual_copy: Node3D = duplicated as Node3D
+
 	if visual_copy == null:
 		if duplicated != null:
 			duplicated.queue_free()
+
 		return false
 
 	source_visual = null
 	current_visual_copy = visual_copy
-	_get_runtime_parent().add_child(current_visual_copy)
 
-	from_transform = _get_inventory_spawn_transform(current_visual_copy)
-	to_transform = _get_inspect_target_transform(current_visual_copy)
+	_get_runtime_parent().add_child(
+		current_visual_copy
+	)
+
+	_prepare_visual_for_inspection(
+		current_visual_copy
+	)
+
+	from_transform = _get_inventory_spawn_transform(
+		current_visual_copy
+	)
+
+	to_transform = _get_inspect_target_transform(
+		current_visual_copy
+	)
+
 	current_visual_copy.global_transform = from_transform
 
 	transition_t = 0.0
@@ -129,23 +214,38 @@ func open_inventory(slot_data: Dictionary) -> bool:
 	if inspect_overlay_layer != null:
 		inspect_overlay_layer.visible = true
 
+	_set_inspect_light_active(true)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
 	return true
 
 
-func close(keep_mouse_visible: bool = false) -> void:
-	if state == InspectState.CLOSED or current_visual_copy == null:
+func close(
+	keep_mouse_visible: bool = false
+) -> void:
+	if (
+		state == InspectState.CLOSED
+		or current_visual_copy == null
+	):
 		_force_close_immediate()
+
 		if keep_mouse_visible:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+			Input.set_mouse_mode(
+				Input.MOUSE_MODE_VISIBLE
+			)
+
 		return
 
-	from_transform = current_visual_copy.global_transform
+	from_transform = (
+		current_visual_copy.global_transform
+	)
 
 	if is_instance_valid(source_visual):
 		to_transform = source_visual.global_transform
 	else:
-		to_transform = _get_inventory_spawn_transform(current_visual_copy)
+		to_transform = _get_inventory_spawn_transform(
+			current_visual_copy
+		)
 
 	transition_t = 0.0
 	state = InspectState.CLOSING
@@ -154,92 +254,237 @@ func close(keep_mouse_visible: bool = false) -> void:
 
 
 func handle_input(event: InputEvent) -> void:
-	if state != InspectState.VIEWING or current_visual_copy == null:
+	if (
+		state != InspectState.VIEWING
+		or current_visual_copy == null
+	):
 		return
 
 	if event is InputEventMouseButton:
-		var mouse_button: InputEventMouseButton = event as InputEventMouseButton
+		var mouse_button: InputEventMouseButton = (
+			event as InputEventMouseButton
+		)
 
-		if mouse_button.button_index == MOUSE_BUTTON_LEFT:
+		if (
+			mouse_button.button_index
+			== MOUSE_BUTTON_LEFT
+		):
 			is_dragging = mouse_button.pressed
 			return
 
-		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_set_inspect_distance(current_inspect_distance - zoom_step)
-			current_visual_copy.global_position = inspect_anchor.global_position
+		if (
+			mouse_button.pressed
+			and mouse_button.button_index
+			== MOUSE_BUTTON_WHEEL_UP
+		):
+			_set_inspect_distance(
+				current_inspect_distance - zoom_step
+			)
+
+			current_visual_copy.global_position = (
+				inspect_anchor.global_position
+			)
+
 			return
 
-		if mouse_button.pressed and mouse_button.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_set_inspect_distance(current_inspect_distance + zoom_step)
-			current_visual_copy.global_position = inspect_anchor.global_position
+		if (
+			mouse_button.pressed
+			and mouse_button.button_index
+			== MOUSE_BUTTON_WHEEL_DOWN
+		):
+			_set_inspect_distance(
+				current_inspect_distance + zoom_step
+			)
+
+			current_visual_copy.global_position = (
+				inspect_anchor.global_position
+			)
+
 			return
 
-	elif event is InputEventMouseMotion and is_dragging:
-		var mouse_motion: InputEventMouseMotion = event as InputEventMouseMotion
-		current_visual_copy.rotate_y(-mouse_motion.relative.x * rotate_speed)
-		current_visual_copy.rotate_x(-mouse_motion.relative.y * rotate_speed)
+	elif (
+		event is InputEventMouseMotion
+		and is_dragging
+	):
+		var mouse_motion: InputEventMouseMotion = (
+			event as InputEventMouseMotion
+		)
+
+		current_visual_copy.rotate_y(
+			-mouse_motion.relative.x
+			* rotate_speed
+		)
+
+		current_visual_copy.rotate_x(
+			-mouse_motion.relative.y
+			* rotate_speed
+		)
 
 
 func _process(delta: float) -> void:
 	if state == InspectState.OPENING:
-		transition_t = minf(transition_t + delta * transition_speed, 1.0)
-		_apply_interpolated_transform(from_transform, to_transform, transition_t)
+		transition_t = minf(
+			transition_t
+			+ delta * transition_speed,
+			1.0
+		)
+
+		_apply_interpolated_transform(
+			from_transform,
+			to_transform,
+			transition_t
+		)
 
 		if transition_t >= 1.0:
 			state = InspectState.VIEWING
 
 	elif state == InspectState.CLOSING:
-		transition_t = minf(transition_t + delta * transition_speed, 1.0)
-		_apply_interpolated_transform(from_transform, to_transform, transition_t)
+		transition_t = minf(
+			transition_t
+			+ delta * transition_speed,
+			1.0
+		)
+
+		_apply_interpolated_transform(
+			from_transform,
+			to_transform,
+			transition_t
+		)
 
 		if transition_t >= 1.0:
 			_finish_close()
 
 
-func _apply_interpolated_transform(start_transform: Transform3D, end_transform: Transform3D, t: float) -> void:
+func _apply_interpolated_transform(
+	start_transform: Transform3D,
+	end_transform: Transform3D,
+	t: float
+) -> void:
 	if current_visual_copy == null:
 		return
 
-	var start_pos: Vector3 = start_transform.origin
-	var end_pos: Vector3 = end_transform.origin
-	var pos: Vector3 = start_pos.lerp(end_pos, t)
+	var start_pos: Vector3 = (
+		start_transform.origin
+	)
 
-	var start_quat: Quaternion = start_transform.basis.get_rotation_quaternion()
-	var end_quat: Quaternion = end_transform.basis.get_rotation_quaternion()
-	var rot: Quaternion = start_quat.slerp(end_quat, t)
+	var end_pos: Vector3 = (
+		end_transform.origin
+	)
 
-	var start_scale: Vector3 = start_transform.basis.get_scale()
-	var end_scale: Vector3 = end_transform.basis.get_scale()
-	var scale: Vector3 = start_scale.lerp(end_scale, t)
+	var pos: Vector3 = start_pos.lerp(
+		end_pos,
+		t
+	)
 
-	current_visual_copy.global_transform = Transform3D(Basis(rot).scaled(scale), pos)
+	var start_quat: Quaternion = (
+		start_transform.basis
+		.get_rotation_quaternion()
+	)
+
+	var end_quat: Quaternion = (
+		end_transform.basis
+		.get_rotation_quaternion()
+	)
+
+	var rot: Quaternion = start_quat.slerp(
+		end_quat,
+		t
+	)
+
+	var start_scale: Vector3 = (
+		start_transform.basis.get_scale()
+	)
+
+	var end_scale: Vector3 = (
+		end_transform.basis.get_scale()
+	)
+
+	var scale: Vector3 = start_scale.lerp(
+		end_scale,
+		t
+	)
+
+	current_visual_copy.global_transform = (
+		Transform3D(
+			Basis(rot).scaled(scale),
+			pos
+		)
+	)
 
 
-func _get_inspect_target_transform(reference_node: Node3D) -> Transform3D:
-	var target_rotation: Quaternion = inspect_anchor.global_transform.basis.get_rotation_quaternion()
-	var target_scale: Vector3 = reference_node.global_transform.basis.get_scale()
-	return Transform3D(Basis(target_rotation).scaled(target_scale), inspect_anchor.global_transform.origin)
+func _get_inspect_target_transform(
+	reference_node: Node3D
+) -> Transform3D:
+	var target_rotation: Quaternion = (
+		inspect_anchor.global_transform.basis
+		.get_rotation_quaternion()
+	)
+
+	var target_scale: Vector3 = (
+		reference_node.global_transform.basis
+		.get_scale()
+	)
+
+	return Transform3D(
+		Basis(target_rotation).scaled(target_scale),
+		inspect_anchor.global_transform.origin
+	)
 
 
-func _get_inventory_spawn_transform(reference_node: Node3D) -> Transform3D:
-	var cam_basis: Basis = camera.global_transform.basis
-	var spawn_pos: Vector3 = camera.global_position + (-cam_basis.z * 0.22) + (cam_basis.x * 0.16) + (-cam_basis.y * 0.16)
-	var target_rotation: Quaternion = inspect_anchor.global_transform.basis.get_rotation_quaternion()
-	var target_scale: Vector3 = reference_node.global_transform.basis.get_scale()
-	return Transform3D(Basis(target_rotation).scaled(target_scale), spawn_pos)
+func _get_inventory_spawn_transform(
+	reference_node: Node3D
+) -> Transform3D:
+	var cam_basis: Basis = (
+		camera.global_transform.basis
+	)
+
+	var spawn_pos: Vector3 = (
+		camera.global_position
+		+ (-cam_basis.z * 0.22)
+		+ (cam_basis.x * 0.16)
+		+ (-cam_basis.y * 0.16)
+	)
+
+	var target_rotation: Quaternion = (
+		inspect_anchor.global_transform.basis
+		.get_rotation_quaternion()
+	)
+
+	var target_scale: Vector3 = (
+		reference_node.global_transform.basis
+		.get_scale()
+	)
+
+	return Transform3D(
+		Basis(target_rotation).scaled(target_scale),
+		spawn_pos
+	)
 
 
 func _get_runtime_parent() -> Node:
 	if player.get_tree().current_scene != null:
 		return player.get_tree().current_scene
+
 	return player.get_parent()
 
 
-func _set_inspect_distance(new_distance: float) -> void:
-	current_inspect_distance = clampf(new_distance, min_inspect_distance, max_inspect_distance)
+func _set_inspect_distance(
+	new_distance: float
+) -> void:
+	current_inspect_distance = clampf(
+		new_distance,
+		min_inspect_distance,
+		max_inspect_distance
+	)
 
 	if inspect_anchor != null:
-		inspect_anchor.position = Vector3(0.0, 0.0, -current_inspect_distance)
+		inspect_anchor.position = Vector3(
+			0.0,
+			0.0,
+			-current_inspect_distance
+		)
+
+	_aim_inspect_light()
 
 
 func _finish_close() -> void:
@@ -257,10 +502,16 @@ func _finish_close() -> void:
 	if inspect_overlay_layer != null:
 		inspect_overlay_layer.visible = false
 
+	_set_inspect_light_active(false)
+
 	if keep_mouse_visible_on_finish:
-		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+		Input.set_mouse_mode(
+			Input.MOUSE_MODE_VISIBLE
+		)
 	else:
-		Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		Input.set_mouse_mode(
+			Input.MOUSE_MODE_CAPTURED
+		)
 
 
 func _force_close_immediate() -> void:
@@ -280,13 +531,36 @@ func _force_close_immediate() -> void:
 	if inspect_overlay_layer != null:
 		inspect_overlay_layer.visible = false
 
+	_set_inspect_light_active(false)
+
+
+# ============================================================
+# RUNTIME NODES
+# ============================================================
 
 func _remove_old_runtime_nodes() -> void:
-	var old_anchor: Node = camera.get_node_or_null("InspectAnchor")
+	var old_anchor: Node = (
+		camera.get_node_or_null("InspectAnchor")
+	)
+
 	if old_anchor != null:
 		old_anchor.queue_free()
 
-	var old_overlay: Node = player.get_node_or_null("InspectOverlayRuntime")
+	var old_light: Node = (
+		camera.get_node_or_null(
+			"InspectLightRuntime"
+		)
+	)
+
+	if old_light != null:
+		old_light.queue_free()
+
+	var old_overlay: Node = (
+		player.get_node_or_null(
+			"InspectOverlayRuntime"
+		)
+	)
+
 	if old_overlay != null:
 		old_overlay.queue_free()
 
@@ -295,6 +569,103 @@ func _build_inspect_anchor() -> void:
 	inspect_anchor = Node3D.new()
 	inspect_anchor.name = "InspectAnchor"
 	camera.add_child(inspect_anchor)
+
+
+func _build_inspect_light() -> void:
+	inspect_light = SpotLight3D.new()
+	inspect_light.name = "InspectLightRuntime"
+	inspect_light.position = inspect_light_position
+	inspect_light.light_color = inspect_light_color
+	inspect_light.light_energy = inspect_light_energy
+	inspect_light.light_indirect_energy = 0.0
+	inspect_light.light_specular = 0.45
+	inspect_light.light_volumetric_fog_energy = 0.0
+
+	inspect_light.light_bake_mode = (
+		Light3D.BAKE_DISABLED
+	)
+
+	inspect_light.light_cull_mask = (
+		INSPECT_RENDER_LAYER_MASK
+	)
+
+	inspect_light.spot_range = (
+		inspect_light_range
+	)
+
+	inspect_light.spot_angle = (
+		inspect_light_angle
+	)
+
+	inspect_light.spot_attenuation = (
+		inspect_light_distance_attenuation
+	)
+
+	inspect_light.spot_angle_attenuation = (
+		inspect_light_angle_attenuation
+	)
+
+	inspect_light.shadow_enabled = false
+	inspect_light.visible = false
+
+	camera.add_child(inspect_light)
+
+	camera.cull_mask |= (
+		INSPECT_RENDER_LAYER_MASK
+	)
+
+
+func _set_inspect_light_active(
+	is_active: bool
+) -> void:
+	if inspect_light == null:
+		return
+
+	inspect_light.visible = (
+		is_active
+		and inspect_light_enabled
+	)
+
+
+func _aim_inspect_light() -> void:
+	if (
+		inspect_light == null
+		or inspect_anchor == null
+	):
+		return
+
+	if not inspect_light.is_inside_tree():
+		return
+
+	if inspect_light.global_position.is_equal_approx(
+		inspect_anchor.global_position
+	):
+		return
+
+	inspect_light.look_at(
+		inspect_anchor.global_position,
+		Vector3.UP
+	)
+
+
+func _prepare_visual_for_inspection(
+	node: Node
+) -> void:
+	var visual_instance: VisualInstance3D = (
+		node as VisualInstance3D
+	)
+
+	if (
+		visual_instance != null
+		and not (visual_instance is Light3D)
+	):
+		visual_instance.set_layer_mask_value(
+			INSPECT_RENDER_LAYER_NUMBER,
+			true
+		)
+
+	for child in node.get_children():
+		_prepare_visual_for_inspection(child)
 
 
 func _build_overlay() -> void:
@@ -306,9 +677,18 @@ func _build_overlay() -> void:
 
 	inspect_overlay_root = Control.new()
 	inspect_overlay_root.name = "InspectOverlayRoot"
-	inspect_overlay_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	inspect_overlay_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inspect_overlay_layer.add_child(inspect_overlay_root)
+
+	inspect_overlay_root.set_anchors_preset(
+		Control.PRESET_FULL_RECT
+	)
+
+	inspect_overlay_root.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
+	)
+
+	inspect_overlay_layer.add_child(
+		inspect_overlay_root
+	)
 
 	close_button = Button.new()
 	close_button.text = "OK"
@@ -320,17 +700,35 @@ func _build_overlay() -> void:
 	close_button.offset_top = -70.0
 	close_button.offset_right = 70.0
 	close_button.offset_bottom = -20.0
-	close_button.mouse_filter = Control.MOUSE_FILTER_STOP
-	close_button.pressed.connect(_on_close_button_pressed)
+
+	close_button.mouse_filter = (
+		Control.MOUSE_FILTER_STOP
+	)
+
+	close_button.pressed.connect(
+		_on_close_button_pressed
+	)
+
 	inspect_overlay_root.add_child(close_button)
 
 
 func _on_close_button_pressed() -> void:
-	var return_to_inventory: bool = inventory_ui_controller != null and inventory_ui_controller.should_return_to_inventory_after_inspect()
+	var return_to_inventory: bool = (
+		inventory_ui_controller != null
+		and inventory_ui_controller
+		.should_return_to_inventory_after_inspect()
+	)
 
 	close(return_to_inventory)
 
-	if return_to_inventory and inventory_controller != null and inventory_ui_controller != null:
-		inventory_ui_controller.show_inventory(inventory_controller.get_slots())
+	if (
+		return_to_inventory
+		and inventory_controller != null
+		and inventory_ui_controller != null
+	):
+		inventory_ui_controller.show_inventory(
+			inventory_controller.get_slots()
+		)
+
 	elif inventory_ui_controller != null:
 		inventory_ui_controller.close()
