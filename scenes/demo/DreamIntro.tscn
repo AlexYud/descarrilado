@@ -17,7 +17,6 @@
 [ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="13_e6tct"]
 [ext_resource type="PackedScene" uid="uid://dk5ipx83ffm3n" path="res://assets/models/foliage/ground_leaves_01/ground_leaves_01.glb" id="13_j607m"]
 [ext_resource type="PackedScene" uid="uid://dlqu0p3xmxe86" path="res://scenes/demo/persistent_audio.tscn" id="13_p1vbp"]
-[ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="13_uas77"]
 [ext_resource type="PackedScene" uid="uid://c1g3v4a70kd07" path="res://assets/models/wooden_structures/barbed_fence_big_no_angle/barbed_fence_big_no_angle_collision.tscn" id="14_uas77"]
 [ext_resource type="PackedScene" uid="uid://c3qpe0fpk4bl6" path="res://scenes/assets/fence_door_interactable.tscn" id="14_vm3m4"]
 [ext_resource type="PackedScene" uid="uid://d381k85kk5m32" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01.glb" id="14_yilg7"]
@@ -25,8 +24,9 @@
 [ext_resource type="PackedScene" uid="uid://d04vkx5ch4v2a" path="res://assets/models/foliage/tall_thin_foliage_02/tall_thin_foliage_02.glb" id="15_j607m"]
 [ext_resource type="Script" uid="uid://4yswxcq5pnqg" path="res://scripts/tools/forest_multi_mesh_baker.gd" id="16_16kht"]
 [ext_resource type="PackedScene" uid="uid://bakfamynp8mmt" path="res://assets/models/foliage/white_flower_01/white_flower_01.glb" id="16_ywnw5"]
+[ext_resource type="PackedScene" uid="uid://cc3lcbf670moa" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02.glb" id="17_e6tct"]
 [ext_resource type="Script" uid="uid://ca5e4nnd25xr7" path="res://scripts/optimization/scene_performance_profile.gd" id="26_e6tct"]
-[ext_resource type="PackedScene" uid="uid://b331d0p4fp5l7" path="res://scenes/assets/photo.tscn" id="26_romvk"]
+[ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="27_romvk"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -37,11 +37,11 @@ shader_parameter/inner_radius = 0.38
 shader_parameter/outer_radius = 0.85
 shader_parameter/intensity = 1.0
 
-[sub_resource type="Gradient" id="Gradient_icw3b"]
+[sub_resource type="Gradient" id="Gradient_e6tct"]
 offsets = PackedFloat32Array(0.2, 1)
 colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_dlv62"]
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_romvk"]
 noise_type = 2
 frequency = 0.03
 cellular_jitter = 3.0
@@ -53,15 +53,15 @@ domain_warp_fractal_type = 2
 domain_warp_fractal_lacunarity = 1.5
 domain_warp_fractal_gain = 1.0
 
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_1look"]
-noise = SubResource("FastNoiseLite_dlv62")
-color_ramp = SubResource("Gradient_icw3b")
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_j64lv"]
+noise = SubResource("FastNoiseLite_romvk")
+color_ramp = SubResource("Gradient_e6tct")
 seamless = true
 
-[sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_7i7gg"]
+[sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_pyuur"]
 _shader_parameters = {
 &"bias_distance": 512.0,
-&"blend_sharpness": 1.0,
+&"blend_sharpness": 0.0,
 &"depth_blur": 0.0,
 &"enable_macro_variation": true,
 &"enable_projection": true,
@@ -74,7 +74,7 @@ _shader_parameters = {
 &"noise1_offset": Vector2(0.5, 0.5),
 &"noise1_scale": 0.04,
 &"noise2_scale": 0.076,
-&"noise_texture": SubResource("NoiseTexture2D_1look"),
+&"noise_texture": SubResource("NoiseTexture2D_j64lv"),
 &"projection_threshold": 0.8
 }
 world_background = 0
@@ -127,7 +127,7 @@ lod0_range = 128.0
 name = "ground_leaves_01"
 id = 5
 scene_file = ExtResource("13_j607m")
-density = 1.0
+density = 0.5
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 128.0
@@ -159,6 +159,15 @@ last_lod = 0
 last_shadow_lod = 0
 lod0_range = 128.0
 
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vqhyl"]
+name = "medium_foliage_02"
+id = 9
+scene_file = ExtResource("17_e6tct")
+density = 0.4
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_svmu2"]
 name = "Poliigon_GrassPatchyGround_4585_BaseColor"
 albedo_texture = ExtResource("9_1look")
@@ -166,7 +175,7 @@ normal_texture = ExtResource("10_7i7gg")
 normal_depth = 0.35
 ao_strength = 0.4
 roughness = 0.8
-uv_scale = 1.0
+uv_scale = 0.5
 detiling_rotation = 0.25
 detiling_shift = 0.25
 
@@ -175,12 +184,12 @@ name = "GroundDirtWeedsPatchy004_COL_2K"
 id = 1
 albedo_texture = ExtResource("11_svmu2")
 normal_texture = ExtResource("12_p1vbp")
-uv_scale = 0.75
+uv_scale = 0.5
 detiling_rotation = 0.25
 detiling_shift = 0.25
 
 [sub_resource type="Terrain3DAssets" id="Terrain3DAssets_uas77"]
-mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_j607m"), SubResource("Terrain3DMeshAsset_yilg7"), SubResource("Terrain3DMeshAsset_ywnw5"), SubResource("Terrain3DMeshAsset_e6tct"), SubResource("Terrain3DMeshAsset_romvk"), SubResource("Terrain3DMeshAsset_j64lv"), SubResource("Terrain3DMeshAsset_pyuur"), SubResource("Terrain3DMeshAsset_scb0d"), SubResource("Terrain3DMeshAsset_rhjrb")])
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_j607m"), SubResource("Terrain3DMeshAsset_yilg7"), SubResource("Terrain3DMeshAsset_ywnw5"), SubResource("Terrain3DMeshAsset_e6tct"), SubResource("Terrain3DMeshAsset_romvk"), SubResource("Terrain3DMeshAsset_j64lv"), SubResource("Terrain3DMeshAsset_pyuur"), SubResource("Terrain3DMeshAsset_scb0d"), SubResource("Terrain3DMeshAsset_rhjrb"), SubResource("Terrain3DMeshAsset_vqhyl")])
 texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_svmu2"), SubResource("Terrain3DTextureAsset_uas77")])
 
 [sub_resource type="BoxMesh" id="BoxMesh_3lhsg"]
@@ -192,7 +201,7 @@ instance_count = 82
 mesh = ExtResource("15_2r5dj")
 buffer = PackedFloat32Array(0.9945921, 0, 0.103858374, -3.706, 0, 1, 0, 0.64, -0.103858374, 0, 0.9945921, 33.033, 0.9926442, 0, -0.12106828, -3.706, 0, 1, 0, 0.64, 0.12106828, 0, 0.9926442, 31.277157, 0.99354005, 0, 0.11348237, -3.706, 0, 1, 0, 0.64, -0.11348237, 0, 0.99354005, 29.528025, 0.99470866, 0, -0.10273582, -3.706, 0, 1, 0, 0.64, 0.10273582, 0, 0.99470866, 27.770273, 0.962671, 0, 0.2706743, -3.8572586, 0, 1, 0, 0.64, -0.2706743, 0, 0.962671, 26.04723, 0.9922363, 0, -0.12436655, -3.9841506, 0, 1, 0, 0.64, 0.12436655, 0, 0.9922363, 24.310312, 0.9999187, 0, -0.012744553, -3.8676589, 0, 1, 0, 0.64, 0.012744553, 0, 0.9999187, 22.561495, 0.9972942, 0, -0.07351428, -3.78583, 0, 1, 0, 0.64, 0.07351428, 0, 0.9972942, 20.80812, 0.97710234, 0, 0.2127701, -3.9248786, 0, 1, 0, 0.64, -0.2127701, 0, 0.97710234, 19.075865, 0.98778397, 0, -0.15582958, -3.9657109, 0, 1, 0, 0.64, 0.15582958, 0, 0.98778397, 17.339617, 0.99925774, 0, 0.038522333, -3.8743238, 0, 1, 0, 0.64, -0.038522333, 0, 0.99925774, 15.587708, 0.9986541, 0, -0.051864523, -3.857635, 0, 1, 0, 0.64, 0.051864523, 0, 0.9986541, 13.825327, 0.98396236, 0, 0.17837624, -3.9696627, 0, 1, 0, 0.64, -0.17837624, 0, 0.98396236, 12.073556, 0.9852661, 0, -0.17102881, -3.9696627, 0, 1, 0, 0.64, 0.17102881, 0, 0.9852661, 10.336556, 0.9962978, 0, 0.085969925, -3.8941433, 0, 1, 0, 0.64, -0.085969925, 0, 0.9962978, 8.59215, 0.99994266, 0, -0.0107142925, -3.9552991, 0, 1, 0, 0.64, 0.0107142925, 0, 0.99994266, 6.8263264, 0.9968642, 0, -0.07913205, -3.8606148, 0, 1, 0, 0.64, 0.07913205, 0, 0.9968642, 5.0657825, 0.969872, 0, 0.24361505, -3.9953108, 0, 1, 0, 0.64, -0.24361502, 0, 0.9698721, 3.3485844, 0.97753197, 0, -0.21078701, -4.0243063, 0, 1, 0, 0.64, 0.21078701, 0, 0.97753215, 1.6424435, 0.9309921, 0, 0.365039, -4.1618314, 0, 1, 0, 0.64, -0.36503893, 0, 0.9309923, -0.03930586, 0.9973468, 0, -0.07279456, -4.407589, 0, 1, 0, 0.64, 0.07279454, 0, 0.9973471, -1.7288879, 0.92835486, 0, -0.3716947, -4.0266647, 0, 1, 0, 0.64, 0.37169462, 0, 0.92835516, -3.4184701, 0.9948771, 0, 0.10109037, -3.7843628, 0, 1, 0, 0.64, -0.10109028, 0, 0.99487746, -5.109317, 0.97511894, 0, -0.22168177, -3.6684794, 0, 1, 0, 0.64, 0.22168174, 0, 0.9751193, -6.8475704, 0.9891947, 0, 0.14660673, -3.600003, 0, 1, 0, 0.64, -0.14660661, 0, 0.98919505, -8.575289, 0.9995095, 0, 0.03131119, -3.7474914, 0, 1, 0, 0.64, -0.03131111, 0, 0.9995099, -10.339879, 0.9973376, 0, -0.07292059, -3.705352, 0, 1, 0, 0.64, 0.072920635, 0, 0.99733794, -12.109736, 0.96253616, 0, 0.27115294, -3.87391, 0, 1, 0, 0.64, -0.2711528, 0, 0.9625365, -13.837455, 0.98211473, 0, -0.18828273, -3.9371192, 0, 1, 0, 0.64, 0.18828271, 0, 0.9821151, -15.554639, 0.998867, 0, -0.047586456, -3.7369566, 0, 1, 0, 0.64, 0.047586516, 0, 0.99886733, -17.287624, 0.9950773, 0, 0.09909977, -3.7790961, 0, 1, 0, 0.64, -0.09909966, 0, 0.99507767, -19.02061, 0.97753173, 0, -0.21078722, -3.6684802, 0, 1, 0, 0.64, 0.21078724, 0, 0.97753215, -20.74833, 0.9591114, 0, 0.28302822, -3.7316892, 0, 1, 0, 0.64, -0.283028, 0, 0.95911175, -22.44971, 0.98619795, 0, -0.16556871, -3.8370378, 0, 1, 0, 0.64, 0.16556871, 0, 0.9861984, -24.166895, 0.9993104, 0, -0.037124276, -3.66848, 0, 1, 0, 0.64, 0.037124336, 0, 0.99931085, -25.915684, 0.98032755, 0, 0.19737649, -3.8107007, 0, 1, 0, 0.64, -0.19737631, 0, 0.98032796, -27.675007, 0.9428221, 0, -0.33329603, -3.694817, 0, 1, 0, 0.64, 0.333296, 0, 0.9428226, -29.355318, 0.9289806, 0, 0.37012827, -3.7264216, 0, 1, 0, 0.64, -0.37012795, 0, 0.92898095, -31.00929, 0.99999946, 0, -0.0008299053, -4.047735, 0, 1, 0, 0.64, 0.0008301139, 0, 0.99999994, -32.705406, -0.99504477, 0, -0.099429354, 3.4850311, 0, 1, 0, 0.64, 0.099429354, 0, -0.99504477, -32.974083, -0.9920954, 0, 0.12548645, 3.4772148, 0, 1, 0, 0.64, -0.12548645, 0, -0.9920954, -31.218258, -0.9940354, 0, -0.10905795, 3.4694266, 0, 1, 0, 0.64, 0.10905795, 0, -0.9940354, -29.469147, -0.9942414, 0, 0.10716327, 3.4616003, 0, 1, 0, 0.64, -0.10716327, 0, -0.9942414, -27.711407, -0.96386653, 0, -0.26638576, 3.605187, 0, 1, 0, 0.64, 0.26638576, 0, -0.96386653, -25.98771, -0.99167275, 0, 0.12878287, 3.7243457, 0, 1, 0, 0.64, -0.12878287, 0, -0.99167275, -24.250244, -0.9998522, 0, 0.017196175, 3.600068, 0, 1, 0, 0.64, -0.017196175, 0, -0.9998522, -22.501965, -0.996957, 0, 0.07795356, 3.5104308, 0, 1, 0, 0.64, -0.07795356, 0, -0.996957, -20.748972, -0.97804, 0, -0.20841785, 3.641768, 0, 1, 0, 0.64, 0.20841785, 0, -0.97804, -19.016113, -0.98708034, 0, 0.16022573, 3.6748714, 0, 1, 0, 0.64, -0.16022573, 0, -0.98708034, -17.279697, -0.99941945, 0, -0.03407315, 3.5756855, 0, 1, 0, 0.64, 0.03407315, 0, -0.99941945, -15.528219, -0.9984133, 0, 0.056310035, 3.5511498, 0, 1, 0, 0.64, -0.056310035, 0, -0.9984133, -13.765928, -0.9847468, 0, -0.17399381, 3.6553774, 0, 1, 0, 0.64, 0.17399381, 0, -0.9847468, -12.013676, -0.98449475, 0, 0.17541365, 3.647644, 0, 1, 0, 0.64, -0.17541365, 0, -0.98449475, -10.276694, -0.99667066, 0, -0.08153346, 3.5643606, 0, 1, 0, 0.64, 0.08153346, 0, -0.99667066, -8.5326395, -0.9998851, 0, 0.015165983, 3.6176543, 0, 1, 0, 0.64, -0.015165983, 0, -0.9998851, -6.7665615, -0.99650204, 0, 0.08356945, 3.515132, 0, 1, 0, 0.64, -0.08356945, 0, -0.99650204, -5.0064554, -0.99951047, 0, -0.03128004, 3.488186, 0, 1, 0, 0.64, 0.031279936, 0, -0.9995106, -3.2226777, -0.966987, 0, -0.25482577, 3.707559, 0, 1, 0, 0.64, 0.25482568, 0, -0.96698725, -1.4737339, -0.76565343, 0.027790146, -0.6426527, 4.467154, 0.021285841, 0.99961376, 0.017866313, 0.64, 0.64290094, 0, -0.7659493, 0.028883405, -0.5415596, 0.1004072, -0.83464485, 5.72583, 0.041312326, 0.99482095, 0.09287079, 0.5093357, 0.8396468, 0.015813906, -0.5429028, 1.1552553, -0.540133, 0.16955957, -0.82432157, 7.1842475, 0.09293035, 0.9855199, 0.14182523, 0.3117237, 0.8364331, 0, -0.5480692, 2.113093, -0.5735518, 0.27937704, -0.7700567, 8.556953, 0.16688213, 0.96018153, 0.22405775, -0.019838333, 0.8019904, 1.27985835e-08, -0.5973369, 3.1168354, -0.3219319, 0.14337793, 0.93584335, 6.3122807, 0.052360572, 0.98965, -0.13360935, 0.39115798, -0.9453138, 0.005988206, -0.32610732, 9.147476, -0.3919562, 0.090924725, 0.9154798, 4.699834, 0.053004574, 0.99568295, -0.07619694, 0.55700576, -0.9184555, 0.018658752, -0.39508367, 9.759827, -0.926154, -0.0051015643, 0.3771115, 3.5888674, -0.012226665, 0.99978906, -0.016502524, 0.64, -0.3769476, -0.01989469, -0.9260213, 10.928374, -0.9970031, 0, 0.07736011, 3.1815517, 0, 1, 0, 0.64, -0.07736021, 0, -0.99700344, 12.61316, -0.9637339, 0, -0.26686493, 3.350672, 0, 1, 0, 0.64, 0.26686484, 0, -0.9637342, 14.303472, -0.98126674, 0, 0.19265337, 3.4351096, 0, 1, 0, 0.64, -0.19265322, 0, -0.98126715, 16.002441, -0.9986452, 0, 0.05203317, 3.22004, 0, 1, 0, 0.64, -0.05203317, 0, -0.99864554, 17.73452, -0.9955088, 0, -0.09466851, 3.2524643, 0, 1, 0, 0.64, 0.09466848, 0, -0.99550897, 19.445385, -0.97658366, 0, 0.21513738, 3.134159, 0, 1, 0, 0.64, -0.21513733, 0, -0.9765839, 21.172594, -0.9603619, 0, -0.2787552, 3.1897917, 0, 1, 0, 0.64, 0.2787551, 0, -0.9603624, 22.874235, -0.9854511, 0, 0.16995777, 3.2874947, 0, 1, 0, 0.64, -0.16995771, 0, -0.9854515, 24.591877, -0.99913526, 0, 0.041573033, 3.1111526, 0, 1, 0, 0.64, -0.04157304, 0, -0.9991357, 26.339901, -0.9811965, 0, -0.19300996, 3.2455392, 0, 1, 0, 0.64, 0.1930098, 0, -0.9811971, 28.099842, -0.9413288, 0, 0.33749026, 3.1221771, 0, 1, 0, 0.64, -0.33749014, 0, -0.94132924, 29.779612, -0.93061906, 0, -0.3659885, 3.1464162, 0, 1, 0, 0.64, 0.36598825, 0, -0.9306196, 31.433712, -0.9999859, 0, 0.0052821524, 3.4601765, 0, 1, 0, 0.64, -0.0052821413, 0, -0.99998623, 33.13125, -0.45511067, 0.29944405, 0.83857477, 7.8019676, 0.08925374, 0.9523567, -0.2916345, 0.016359955, -0.88595027, -0.05788002, -0.46015435, 8.505766, -0.57640535, 0.29941797, 0.76033264, 9.184476, 0.21170197, 0.9534018, -0.2149578, -0.4852934, -0.7892651, 0.03706104, -0.6129339, 7.552879, -0.68148273, 0.29260734, -0.6707921, 9.828555, 0.19174533, 0.95596063, 0.22219995, -0.44308, 0.706268, 0.022804119, -0.7075771, 4.260524, 0.6777215, 0.29179677, 0.6749429, 9.828555, -0.1910767, 0.9562456, -0.2215485, -0.44308, -0.7100582, 0.021182297, 0.70382404, 4.260524)
 
-[sub_resource type="Environment" id="Environment_romvk"]
+[sub_resource type="Environment" id="Environment_j64lv"]
 resource_local_to_scene = true
 background_mode = 1
 background_color = Color(0.019607844, 0.03529412, 0.08627451, 1)
@@ -328,7 +337,7 @@ script = ExtResource("13_e6tct")
 
 [node name="Terrain3D" type="Terrain3D" parent="." unique_id=729808578]
 data_directory = "res://dd"
-material = SubResource("Terrain3DMaterial_7i7gg")
+material = SubResource("Terrain3DMaterial_pyuur")
 assets = SubResource("Terrain3DAssets_uas77")
 top_level = true
 metadata/_edit_lock_ = true
@@ -351,7 +360,7 @@ color = Color(0, 0, 0, 1)
 [node name="PersistentAudio" parent="." unique_id=442030015 instance=ExtResource("13_p1vbp")]
 
 [node name="CityBlockout" type="Node3D" parent="." unique_id=1480771236]
-transform = Transform3D(0.47131094, 0, 0.8819671, 0, 1, 0, -0.8819671, 0, 0.47131094, 658.1666, -194.49289, -540.78815)
+transform = Transform3D(0.47131094, 0, 0.8819671, 0, 1, 0, -0.8819671, 0, 0.47131094, 487.71063, -194.49289, -411.48553)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="CityBlockout" unique_id=274956535]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.92728, -1.7443647, -82.77214)
@@ -1201,18 +1210,12 @@ visible = false
 
 [node name="Items" type="Node3D" parent="Scenery" unique_id=834316605]
 
-[node name="Photo" parent="Scenery/Items" unique_id=88594973 instance=ExtResource("26_romvk")]
-transform = Transform3D(0.81849927, 0.56716347, -0.091568194, -0.114143446, 0.3167493, 0.9416165, 0.5630547, -0.76026034, 0.3239968, 37.16495, -3.0711966, 17.209661)
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1555852770]
-environment = SubResource("Environment_romvk")
-script = ExtResource("13_uas77")
-exterior_visibility = 0.5
-interior_fill = 0.5
-fog_amount = 1.8
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1814593848]
+environment = SubResource("Environment_j64lv")
+script = ExtResource("27_romvk")
 moon_light_path = NodePath("../MoonLight")
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1177983779]
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=941099668]
 transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)
 light_color = Color(0.56078434, 0.65882355, 0.76862746, 1)
 light_energy = 0.05

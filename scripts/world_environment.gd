@@ -43,15 +43,15 @@ enum EnvironmentProfile {
 @export_category("Optional Tuning")
 
 @export_range(0.5, 1.5, 0.05)
-var exterior_visibility: float = 1.0
+var exterior_visibility: float = 0.5
 
 
 @export_range(0.5, 1.5, 0.05)
-var interior_fill: float = 1.0
+var interior_fill: float = 0.5
 
 
 @export_range(0.0, 1.8, 0.05)
-var fog_amount: float = 1.0
+var fog_amount: float = 1.8
 
 
 # ============================================================
@@ -599,10 +599,10 @@ func _get_main_menu_profile() -> Dictionary:
 		"ssao_intensity": 0.80,
 
 		"moon_color": Color("#9db7d2"),
-		"moon_energy": 0.53,
+		"moon_energy": 0.85,
 		"moon_specular": 0.10,
 		"moon_shadow_opacity": 0.66,
-		"moon_volumetric_energy": 0.24
+		"moon_volumetric_energy": 0.20
 	}
 
 

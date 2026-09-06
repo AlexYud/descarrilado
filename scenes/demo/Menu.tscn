@@ -361,25 +361,10 @@ color = Color(0, 0, 0, 1)
 environment = SubResource("Environment_yivn6")
 script = ExtResource("13_75e31")
 profile = 1
-exterior_visibility = 0.5
-interior_fill = 0.5
-fog_amount = 1.8
-reduce_fog_below_altitude = null
-fog_altitude_target_path = null
-fog_reduction_start_altitude = null
-fog_reduction_end_altitude = null
-low_altitude_fog_density_multiplier = null
-low_altitude_height_density_multiplier = null
-fog_height_follows_descent = null
 moon_light_path = NodePath("../MoonLight")
 
 [node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=294457578]
 transform = Transform3D(0.848048, 0.3262509, -0.4175821, 0, 0.7880109, 0.6156615, 0.5299192, -0.52211064, 0.668271, 0, 0, 0)
-light_color = Color(0.6156863, 0.7176471, 0.8235294, 1)
-light_energy = 0.265
-light_indirect_energy = 0.0
-light_volumetric_fog_energy = 0.24
-light_specular = 0.1
 shadow_enabled = true
 shadow_bias = 0.035
 shadow_normal_bias = 0.65
