@@ -4,11 +4,23 @@ extends SpotLight3D
 @export var flashlight_starts_on: bool = false
 @export var flashlight_input_enabled: bool = true
 
+@export_category("Startup Flicker")
+@export var startup_flicker_enabled: bool = true
+@export var startup_flicker_chance_percent: int = 70
+@export var startup_flicker_duration_min: float = 0.65
+@export var startup_flicker_duration_max: float = 1.0
+@export var startup_flicker_on_time_min: float = 0.08
+@export var startup_flicker_on_time_max: float = 0.28
+@export var startup_flicker_off_time_min: float = 0.045
+@export var startup_flicker_off_time_max: float = 0.16
+
+@export_category("Continuous Flicker")
 @export var flicker_enabled: bool = false
 @export var flicker_chance_percent: int = 10
 @export var flicker_interval_min: float = 0.05
 @export var flicker_interval_max: float = 0.2
 
+@export_category("Beam Movement")
 # 0m = most centered
 # 3m or more = default hand feel
 @export var shift_reference_distance: float = 3.0
@@ -35,6 +47,11 @@ var flashlight_on: bool = true
 var flicker_timer: float = 0.0
 var flicker_forced_off: bool = false
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+var startup_flicker_active: bool = false
+var startup_flicker_timer: float = 0.0
+var startup_flicker_time_remaining: float = 0.0
+var startup_flicker_forced_off: bool = false
 
 var player: Node = null
 var camera: Camera3D = null
@@ -81,13 +98,20 @@ func _process(delta: float) -> void:
 	if _can_toggle_flashlight() and Input.is_action_just_pressed("flashlight"):
 		flashlight_on = not flashlight_on
 
+		if flashlight_on:
+			_begin_startup_flicker()
+		else:
+			_reset_light_effects()
+
 	_update_dynamic_flashlight(delta)
 
 	if _should_emit_light():
-		_update_flicker(delta)
+		if startup_flicker_active:
+			_update_startup_flicker(delta)
+		else:
+			_update_flicker(delta)
 	else:
-		flicker_timer = 0.0
-		flicker_forced_off = false
+		_reset_light_effects()
 		visible = false
 
 
@@ -96,8 +120,7 @@ func set_flashlight_input_enabled(enabled: bool) -> void:
 
 	if not flashlight_input_enabled:
 		flashlight_on = false
-		flicker_timer = 0.0
-		flicker_forced_off = false
+		_reset_light_effects()
 		visible = false
 
 
@@ -278,6 +301,86 @@ func _add_excluded_rids(node: Node) -> void:
 
 	for child in node.get_children():
 		_add_excluded_rids(child)
+
+
+func _begin_startup_flicker() -> void:
+	flicker_timer = 0.0
+	flicker_forced_off = false
+
+	var should_flicker: bool = (
+		startup_flicker_enabled
+		and rng.randf_range(0.0, 100.0)
+		< clampf(float(startup_flicker_chance_percent), 0.0, 100.0)
+	)
+
+	if not should_flicker:
+		_reset_startup_flicker()
+		visible = true
+		return
+
+	startup_flicker_active = true
+	startup_flicker_forced_off = false
+	startup_flicker_time_remaining = _random_flicker_duration(
+		startup_flicker_duration_min,
+		startup_flicker_duration_max
+	)
+	startup_flicker_timer = _random_flicker_duration(
+		startup_flicker_on_time_min,
+		startup_flicker_on_time_max
+	)
+	visible = true
+
+
+func _update_startup_flicker(delta: float) -> void:
+	startup_flicker_time_remaining -= delta
+
+	if startup_flicker_time_remaining <= 0.0:
+		_reset_startup_flicker()
+		visible = true
+		return
+
+	startup_flicker_timer -= delta
+
+	if startup_flicker_timer > 0.0:
+		visible = not startup_flicker_forced_off
+		return
+
+	if startup_flicker_forced_off:
+		startup_flicker_forced_off = false
+		startup_flicker_timer = _random_flicker_duration(
+			startup_flicker_on_time_min,
+			startup_flicker_on_time_max
+		)
+	else:
+		startup_flicker_forced_off = true
+		startup_flicker_timer = _random_flicker_duration(
+			startup_flicker_off_time_min,
+			startup_flicker_off_time_max
+		)
+
+	visible = not startup_flicker_forced_off
+
+
+func _random_flicker_duration(
+	minimum_duration: float,
+	maximum_duration: float
+) -> float:
+	var safe_minimum: float = maxf(minimum_duration, 0.001)
+	var safe_maximum: float = maxf(maximum_duration, safe_minimum)
+	return rng.randf_range(safe_minimum, safe_maximum)
+
+
+func _reset_startup_flicker() -> void:
+	startup_flicker_active = false
+	startup_flicker_timer = 0.0
+	startup_flicker_time_remaining = 0.0
+	startup_flicker_forced_off = false
+
+
+func _reset_light_effects() -> void:
+	_reset_startup_flicker()
+	flicker_timer = 0.0
+	flicker_forced_off = false
 
 
 func _update_flicker(delta: float) -> void:

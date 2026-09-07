@@ -9,6 +9,19 @@ enum EnvironmentProfile {
 }
 
 
+const QUALITY_LOW: int = 0
+const QUALITY_MEDIUM: int = 1
+const QUALITY_HIGH: int = 2
+
+const BASE_BRIGHTNESS_META: StringName = (
+	&"game_settings_base_brightness"
+)
+
+const BASE_ADJUSTMENT_ENABLED_META: StringName = (
+	&"game_settings_base_adjustment_enabled"
+)
+
+
 # ============================================================
 # SCENE PROFILE
 # ============================================================
@@ -168,6 +181,13 @@ var _runtime_values_ready: bool = false
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
+		if not GameSettings.quality_preset_changed.is_connected(
+			_on_quality_preset_changed
+		):
+			GameSettings.quality_preset_changed.connect(
+				_on_quality_preset_changed
+			)
+
 		_fog_altitude_target = _find_altitude_target()
 
 	if apply_on_ready:
@@ -224,6 +244,7 @@ func apply_environment() -> void:
 		return
 
 	var settings: Dictionary = _get_profile_settings()
+	var quality_preset: int = _get_quality_preset()
 
 	var exterior: float = clampf(
 		exterior_visibility,
@@ -281,15 +302,19 @@ func apply_environment() -> void:
 
 	_apply_ssao(
 		environment,
-		settings
+		settings,
+		quality_preset
 	)
 
 	_disable_expensive_effects(environment)
 
 	_apply_moon_light(
 		settings,
-		exterior
+		exterior,
+		quality_preset
 	)
+
+	_reapply_saved_brightness(settings)
 
 
 func _cache_runtime_values(
@@ -349,6 +374,48 @@ func _make_environment_local() -> void:
 
 	local_environment.resource_local_to_scene = true
 	environment = local_environment
+
+
+func _get_quality_preset() -> int:
+	if Engine.is_editor_hint():
+		return QUALITY_HIGH
+
+	return clampi(
+		GameSettings.get_quality_preset(),
+		QUALITY_LOW,
+		QUALITY_HIGH
+	)
+
+
+func _on_quality_preset_changed(
+	_preset: int
+) -> void:
+	apply_environment()
+
+
+func _reapply_saved_brightness(
+	settings: Dictionary
+) -> void:
+	if Engine.is_editor_hint():
+		return
+
+	if environment == null:
+		return
+
+	environment.set_meta(
+		BASE_BRIGHTNESS_META,
+		float(settings["brightness"])
+	)
+
+	environment.set_meta(
+		BASE_ADJUSTMENT_ENABLED_META,
+		true
+	)
+
+	GameSettings.set_brightness_percent(
+		GameSettings.get_brightness_percent(),
+		false
+	)
 
 
 # ============================================================
@@ -787,19 +854,31 @@ func _apply_image_adjustments(
 
 func _apply_ssao(
 	env: Environment,
-	settings: Dictionary
+	settings: Dictionary,
+	quality_preset: int
 ) -> void:
+	if quality_preset == QUALITY_LOW:
+		env.ssao_enabled = false
+		return
+
 	env.ssao_enabled = true
 
 	env.ssao_intensity = float(
 		settings["ssao_intensity"]
 	)
 
-	env.ssao_radius = 0.55
-	env.ssao_power = 1.20
-	env.ssao_detail = 0.30
+	if quality_preset == QUALITY_MEDIUM:
+		env.ssao_radius = 0.50
+		env.ssao_power = 1.15
+		env.ssao_detail = 0.15
+		env.ssao_sharpness = 0.82
+	else:
+		env.ssao_radius = 0.55
+		env.ssao_power = 1.20
+		env.ssao_detail = 0.30
+		env.ssao_sharpness = 0.86
+
 	env.ssao_horizon = 0.04
-	env.ssao_sharpness = 0.86
 	env.ssao_light_affect = 0.0
 	env.ssao_ao_channel_affect = 0.0
 
@@ -820,7 +899,8 @@ func _disable_expensive_effects(
 
 func _apply_moon_light(
 	settings: Dictionary,
-	exterior: float
+	exterior: float,
+	quality_preset: int
 ) -> void:
 	var moon: DirectionalLight3D = _find_moon_light()
 
@@ -846,17 +926,11 @@ func _apply_moon_light(
 	)
 
 	moon.rotation_degrees = moon_angle_degrees
-	moon.shadow_enabled = true
 
-	moon.directional_shadow_mode = (
-		DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	_apply_moon_shadow_quality(
+		moon,
+		quality_preset
 	)
-
-	moon.directional_shadow_split_1 = 0.25
-	moon.directional_shadow_max_distance = 42.0
-	moon.directional_shadow_fade_start = 0.82
-	moon.directional_shadow_blend_splits = false
-	moon.directional_shadow_pancake_size = 12.0
 
 	moon.shadow_opacity = float(
 		settings["moon_shadow_opacity"]
@@ -869,6 +943,55 @@ func _apply_moon_light(
 	moon.light_volumetric_fog_energy = float(
 		settings["moon_volumetric_energy"]
 	)
+
+
+func _apply_moon_shadow_quality(
+	moon: DirectionalLight3D,
+	quality_preset: int
+) -> void:
+	if (
+		quality_preset == QUALITY_LOW
+		and profile == EnvironmentProfile.MAIN_MENU
+	):
+		moon.shadow_enabled = false
+		return
+
+	moon.shadow_enabled = true
+
+	if quality_preset == QUALITY_LOW:
+		moon.directional_shadow_mode = (
+			DirectionalLight3D.SHADOW_ORTHOGONAL
+		)
+
+		moon.directional_shadow_max_distance = 20.0
+		moon.directional_shadow_fade_start = 0.75
+		moon.directional_shadow_blend_splits = false
+		moon.directional_shadow_pancake_size = 10.0
+		return
+
+	if quality_preset == QUALITY_MEDIUM:
+		moon.directional_shadow_mode = (
+			DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+		)
+
+		moon.directional_shadow_split_1 = 0.25
+		moon.directional_shadow_max_distance = 32.0
+		moon.directional_shadow_fade_start = 0.80
+		moon.directional_shadow_blend_splits = false
+		moon.directional_shadow_pancake_size = 12.0
+		return
+
+	moon.directional_shadow_mode = (
+		DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	)
+
+	moon.directional_shadow_split_1 = 0.10
+	moon.directional_shadow_split_2 = 0.25
+	moon.directional_shadow_split_3 = 0.50
+	moon.directional_shadow_max_distance = 42.0
+	moon.directional_shadow_fade_start = 0.82
+	moon.directional_shadow_blend_splits = true
+	moon.directional_shadow_pancake_size = 12.0
 
 
 func _find_moon_light() -> DirectionalLight3D:

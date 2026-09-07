@@ -131,7 +131,10 @@ func play_intro_narration_after_delay(start_delay: float) -> void:
 	var current_request_id: int = narration_request_id
 
 	if start_delay > 0.0:
-		await get_tree().create_timer(start_delay).timeout
+		await get_tree().create_timer(
+			start_delay,
+			false
+		).timeout
 
 	if current_request_id != narration_request_id:
 		return

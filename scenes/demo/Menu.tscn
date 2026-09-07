@@ -15,6 +15,8 @@
 [ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://ui/filters/horror_filter.tscn" id="14_yivn6"]
 [ext_resource type="Script" uid="uid://53jqnhy61lp8" path="res://scripts/menu_controller.gd" id="15_yivn6"]
 [ext_resource type="Script" uid="uid://gtdbxpouee6t" path="res://scripts/menu/menu_scenery_loop.gd" id="16_k02gq"]
+[ext_resource type="PackedScene" uid="uid://bn1h2vof881ma" path="res://ui/PauseMenu.tscn" id="17_pause_menu"]
+[ext_resource type="Script" path="res://scripts/ui/menu_cinematic_pause.gd" id="18_pause_bridge"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -322,6 +324,76 @@ layout_mode = 1
 offset_right = 40.0
 offset_bottom = 23.0
 script = ExtResource("11_5cgqh")
+
+[node name="CinematicHUD" type="CanvasLayer" parent="."]
+layer = 900
+
+[node name="SkipPrompt" type="PanelContainer" parent="CinematicHUD"]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -310.0
+offset_top = -96.0
+offset_right = -32.0
+offset_bottom = -30.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="SkipMargin" type="MarginContainer" parent="CinematicHUD/SkipPrompt"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 12
+
+[node name="SkipVBox" type="VBoxContainer" parent="CinematicHUD/SkipPrompt/SkipMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SkipLabel" type="Label" parent="CinematicHUD/SkipPrompt/SkipMargin/SkipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Hold Space to Skip"
+horizontal_alignment = 2
+
+[node name="SkipProgress" type="ProgressBar" parent="CinematicHUD/SkipPrompt/SkipMargin/SkipVBox"]
+custom_minimum_size = Vector2(0, 7)
+layout_mode = 2
+max_value = 1.0
+step = 0.001
+show_percentage = false
+
+[node name="LoadingHUD" type="CanvasLayer" parent="."]
+layer = 1001
+
+[node name="LoadingLabel" type="Label" parent="LoadingHUD"]
+visible = false
+anchors_preset = 8
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -190.0
+offset_top = -70.0
+offset_right = -32.0
+offset_bottom = -32.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 18
+text = "Loading..."
+horizontal_alignment = 2
+
+[node name="CinematicPauseMenu" parent="." instance=ExtResource("17_pause_menu")]
+layer = 100
+pause_input_enabled = false
+reload_current_scene_on_main_menu = true
+
+[node name="CinematicPauseController" type="Node" parent="."]
+script = ExtResource("18_pause_bridge")
 
 [node name="PersistentAudio" parent="." unique_id=442030015 instance=ExtResource("6_75e31")]
 

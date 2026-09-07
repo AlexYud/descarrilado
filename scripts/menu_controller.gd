@@ -72,6 +72,19 @@ const MASTER_VOLUME_SLIDER_PATH := NodePath(
 	+ "MasterVolumeRow/MasterVolumeSlider"
 )
 
+const CINEMATIC_SKIP_PROMPT_PATH := NodePath(
+	"CinematicHUD/SkipPrompt"
+)
+
+const CINEMATIC_SKIP_PROGRESS_PATH := NodePath(
+	"CinematicHUD/SkipPrompt/SkipMargin/SkipVBox/"
+	+ "SkipProgress"
+)
+
+const CINEMATIC_LOADING_LABEL_PATH := NodePath(
+	"LoadingHUD/LoadingLabel"
+)
+
 const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 
 
@@ -161,6 +174,16 @@ var playable_scene_path: String = (
 
 
 # ============================================================
+# CINEMATIC SKIP
+# ============================================================
+
+@export_category("Cinematic Skip")
+
+@export var skip_action_name: StringName = &"skip_cinematic"
+@export var skip_hold_duration: float = 1.25
+
+
+# ============================================================
 # NODE REFERENCES
 # ============================================================
 
@@ -186,6 +209,10 @@ var options_panel: Control = null
 var options_back_button: Button = null
 var master_volume_slider: HSlider = null
 
+var cinematic_skip_prompt: Control = null
+var cinematic_skip_progress: ProgressBar = null
+var cinematic_loading_label: Label = null
+
 var persistent_audio: Node = null
 
 var train_light_flickers: Array[TrainLightFlicker] = []
@@ -195,6 +222,17 @@ var scenery_slowdown_tween: Tween = null
 var transition_running: bool = false
 var options_panel_open: bool = false
 var updating_master_volume_slider: bool = false
+
+var skip_hold_elapsed: float = 0.0
+var skip_waiting_for_release: bool = false
+var skip_requested: bool = false
+
+var playable_scene_load_path: String = ""
+var playable_scene_load_started: bool = false
+var playable_scene_load_failed: bool = false
+var loaded_playable_scene: PackedScene = null
+var scene_change_requested: bool = false
+var scene_change_fade_finished: bool = false
 
 
 # ============================================================
@@ -209,6 +247,12 @@ func _ready() -> void:
 	_connect_buttons()
 	_connect_viewport()
 	_prepare_menu_state()
+
+
+func _process(delta: float) -> void:
+	_update_playable_scene_preload()
+	_advance_playable_scene_change()
+	_update_cinematic_skip(delta)
 
 
 func _find_scene_nodes() -> void:
@@ -290,6 +334,27 @@ func _find_scene_nodes() -> void:
 			MASTER_VOLUME_SLIDER_PATH
 		)
 		as HSlider
+	)
+
+	cinematic_skip_prompt = (
+		menu_root.get_node_or_null(
+			CINEMATIC_SKIP_PROMPT_PATH
+		)
+		as Control
+	)
+
+	cinematic_skip_progress = (
+		menu_root.get_node_or_null(
+			CINEMATIC_SKIP_PROGRESS_PATH
+		)
+		as ProgressBar
+	)
+
+	cinematic_loading_label = (
+		menu_root.get_node_or_null(
+			CINEMATIC_LOADING_LABEL_PATH
+		)
+		as Label
 	)
 
 	_find_persistent_audio()
@@ -493,6 +558,32 @@ func _validate_scene_nodes() -> void:
 		master_volume_slider.max_value = 100.0
 		master_volume_slider.step = 1.0
 
+	if cinematic_skip_prompt == null:
+		push_warning(
+			"MenuController: Cinematic SkipPrompt was not found."
+		)
+
+	if cinematic_skip_progress == null:
+		push_warning(
+			"MenuController: Cinematic SkipProgress was not found."
+		)
+	else:
+		cinematic_skip_progress.min_value = 0.0
+		cinematic_skip_progress.max_value = 1.0
+		cinematic_skip_progress.value = 0.0
+		cinematic_skip_progress.show_percentage = false
+
+	if not InputMap.has_action(skip_action_name):
+		push_error(
+			"MenuController: Input action '%s' was not found."
+			% skip_action_name
+		)
+
+	if cinematic_loading_label == null:
+		push_warning(
+			"MenuController: Cinematic LoadingLabel was not found."
+		)
+
 	if persistent_audio == null:
 		push_error(
 			"MenuController: PersistentAudio Autoload was not "
@@ -620,6 +711,8 @@ func _on_start_button_pressed() -> void:
 		return
 
 	transition_running = true
+	_begin_cinematic_skip()
+	_start_playable_scene_preload()
 
 	_set_options_panel_open(false)
 	_set_main_menu_buttons_enabled(false)
@@ -633,7 +726,8 @@ func _on_start_button_pressed() -> void:
 
 	if intro_animation_start_delay > 0.0:
 		await get_tree().create_timer(
-			intro_animation_start_delay
+			intro_animation_start_delay,
+			false
 		).timeout
 
 	await _play_intro_animation()
@@ -643,6 +737,7 @@ func _on_start_button_pressed() -> void:
 		_open_playable_scene()
 	else:
 		transition_running = false
+		_reset_cinematic_skip()
 
 
 func _on_options_button_pressed() -> void:
@@ -663,6 +758,106 @@ func _on_quit_button_pressed() -> void:
 	get_tree().quit()
 
 
+func is_cinematic_transition_running() -> bool:
+	return transition_running and not skip_requested
+
+
+# ============================================================
+# CINEMATIC SKIP
+# ============================================================
+
+func _begin_cinematic_skip() -> void:
+	skip_requested = false
+	skip_hold_elapsed = 0.0
+	skip_waiting_for_release = (
+		InputMap.has_action(skip_action_name)
+		and Input.is_action_pressed(skip_action_name)
+	)
+
+	if cinematic_skip_prompt != null:
+		cinematic_skip_prompt.show()
+
+	_set_cinematic_skip_progress(0.0)
+
+
+func _update_cinematic_skip(delta: float) -> void:
+	if not transition_running or skip_requested:
+		return
+
+	if not InputMap.has_action(skip_action_name):
+		return
+
+	var skip_held: bool = Input.is_action_pressed(
+		skip_action_name
+	)
+
+	if skip_waiting_for_release:
+		if not skip_held:
+			skip_waiting_for_release = false
+		return
+
+	if not skip_held:
+		skip_hold_elapsed = 0.0
+		_set_cinematic_skip_progress(0.0)
+		return
+
+	var required_hold_time: float = maxf(
+		skip_hold_duration,
+		0.05
+	)
+
+	skip_hold_elapsed += delta
+	_set_cinematic_skip_progress(
+		clampf(
+			skip_hold_elapsed / required_hold_time,
+			0.0,
+			1.0
+		)
+	)
+
+	if skip_hold_elapsed >= required_hold_time:
+		_skip_to_playable_scene()
+
+
+func _skip_to_playable_scene() -> void:
+	if skip_requested or not transition_running:
+		return
+
+	skip_requested = true
+	_set_cinematic_skip_progress(1.0)
+
+	if persistent_audio != null:
+		if persistent_audio.has_method(
+			"stop_intro_narration"
+		):
+			persistent_audio.call("stop_intro_narration")
+
+		if persistent_audio.has_method("stop_menu_idle"):
+			persistent_audio.call("stop_menu_idle")
+
+	_open_playable_scene()
+
+
+func _set_cinematic_skip_progress(value: float) -> void:
+	if cinematic_skip_progress != null:
+		cinematic_skip_progress.value = clampf(
+			value,
+			0.0,
+			1.0
+		)
+
+
+func _reset_cinematic_skip() -> void:
+	skip_hold_elapsed = 0.0
+	skip_waiting_for_release = false
+	skip_requested = false
+
+	if cinematic_skip_prompt != null:
+		cinematic_skip_prompt.hide()
+
+	_set_cinematic_skip_progress(0.0)
+
+
 # ============================================================
 # INITIAL MENU STATE
 # ============================================================
@@ -670,6 +865,8 @@ func _on_quit_button_pressed() -> void:
 func _prepare_menu_state() -> void:
 	transition_running = false
 	options_panel_open = false
+	_reset_playable_scene_load()
+	_reset_cinematic_skip()
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -688,6 +885,9 @@ func _prepare_menu_state() -> void:
 		blackout_rect.visible = true
 		blackout_rect.color = Color.BLACK
 		blackout_rect.modulate.a = 0.0
+
+	if cinematic_loading_label != null:
+		cinematic_loading_label.hide()
 
 	_set_options_panel_open(false)
 	_set_main_menu_buttons_enabled(true)
@@ -1014,7 +1214,8 @@ func _run_train_stop_sequence() -> void:
 
 	if blackout_delay > 0.0:
 		await get_tree().create_timer(
-			blackout_delay
+			blackout_delay,
+			false
 		).timeout
 
 	for light_flicker: TrainLightFlicker in (
@@ -1030,7 +1231,8 @@ func _run_train_stop_sequence() -> void:
 
 	if final_flicker_time > 0.0:
 		await get_tree().create_timer(
-			final_flicker_time
+			final_flicker_time,
+			false
 		).timeout
 
 	var remaining_slowdown_time: float = maxf(
@@ -1042,7 +1244,8 @@ func _run_train_stop_sequence() -> void:
 
 	if remaining_slowdown_time > 0.0:
 		await get_tree().create_timer(
-			remaining_slowdown_time
+			remaining_slowdown_time,
+			false
 		).timeout
 
 	_finish_scenery_stop()
@@ -1052,7 +1255,8 @@ func _run_train_stop_sequence() -> void:
 
 	if screen_blackout_hold_duration > 0.0:
 		await get_tree().create_timer(
-			screen_blackout_hold_duration
+			screen_blackout_hold_duration,
+			false
 		).timeout
 
 
@@ -1305,15 +1509,163 @@ func _apply_responsive_ui() -> void:
 # ============================================================
 
 func _open_playable_scene() -> void:
+	if scene_change_requested:
+		return
+
 	if playable_scene_path.strip_edges().is_empty():
 		push_error(
 			"MenuController: Playable scene path is empty."
 		)
 		transition_running = false
+		_reset_cinematic_skip()
 		return
 
-	var result: Error = get_tree().change_scene_to_file(
-		playable_scene_path
+	if cinematic_skip_prompt != null:
+		cinematic_skip_prompt.hide()
+
+	scene_change_requested = true
+	scene_change_fade_finished = false
+	_start_playable_scene_preload()
+
+	if blackout_rect == null:
+		_on_scene_change_fade_finished()
+		return
+
+	blackout_rect.visible = true
+	blackout_rect.color = Color.BLACK
+
+	if blackout_rect.modulate.a >= 0.99:
+		blackout_rect.modulate.a = 1.0
+		_on_scene_change_fade_finished()
+		return
+
+	var blackout_tween: Tween = create_tween()
+	blackout_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	blackout_tween.tween_property(
+		blackout_rect,
+		"modulate:a",
+		1.0,
+		0.12
+	)
+	blackout_tween.finished.connect(
+		_on_scene_change_fade_finished
+	)
+
+
+func _start_playable_scene_preload() -> void:
+	if playable_scene_load_started:
+		return
+
+	if loaded_playable_scene != null:
+		return
+
+	var target_path: String = playable_scene_path.strip_edges()
+
+	if target_path.is_empty():
+		return
+
+	playable_scene_load_path = target_path
+
+	var existing_status: ResourceLoader.ThreadLoadStatus = (
+		ResourceLoader.load_threaded_get_status(target_path)
+	)
+
+	if existing_status == ResourceLoader.THREAD_LOAD_LOADED:
+		_store_loaded_playable_scene()
+		return
+
+	if existing_status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		playable_scene_load_started = true
+		return
+
+	var request_result: Error = ResourceLoader.load_threaded_request(
+		target_path,
+		"PackedScene",
+		false
+	)
+
+	if request_result == OK:
+		playable_scene_load_started = true
+		return
+
+	playable_scene_load_failed = true
+	push_error(
+		"MenuController: Failed to begin loading '%s'. Error: %s"
+		% [target_path, error_string(request_result)]
+	)
+
+
+func _update_playable_scene_preload() -> void:
+	if not playable_scene_load_started:
+		return
+
+	if playable_scene_load_failed:
+		return
+
+	if loaded_playable_scene != null:
+		return
+
+	var load_status: ResourceLoader.ThreadLoadStatus = (
+		ResourceLoader.load_threaded_get_status(
+			playable_scene_load_path
+		)
+	)
+
+	match load_status:
+		ResourceLoader.THREAD_LOAD_LOADED:
+			_store_loaded_playable_scene()
+		ResourceLoader.THREAD_LOAD_FAILED, ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			playable_scene_load_failed = true
+			push_error(
+				"MenuController: Background loading failed for '%s'."
+				% playable_scene_load_path
+			)
+
+
+func _store_loaded_playable_scene() -> void:
+	var loaded_resource: Resource = ResourceLoader.load_threaded_get(
+		playable_scene_load_path
+	)
+
+	loaded_playable_scene = loaded_resource as PackedScene
+	playable_scene_load_started = true
+
+	if loaded_playable_scene == null:
+		playable_scene_load_failed = true
+		push_error(
+			"MenuController: Loaded resource '%s' is not a PackedScene."
+			% playable_scene_load_path
+		)
+
+
+func _on_scene_change_fade_finished() -> void:
+	scene_change_fade_finished = true
+	_advance_playable_scene_change()
+
+
+func _advance_playable_scene_change() -> void:
+	if not scene_change_requested:
+		return
+
+	if not scene_change_fade_finished:
+		return
+
+	if playable_scene_load_failed:
+		_recover_from_playable_scene_load_failure()
+		return
+
+	if loaded_playable_scene == null:
+		if cinematic_loading_label != null:
+			cinematic_loading_label.show()
+		return
+
+	if cinematic_loading_label != null:
+		cinematic_loading_label.hide()
+
+	scene_change_requested = false
+
+	var result: Error = get_tree().change_scene_to_packed(
+		loaded_playable_scene
 	)
 
 	if result != OK:
@@ -1325,4 +1677,37 @@ func _open_playable_scene() -> void:
 			]
 		)
 
-		transition_running = false
+		_recover_from_playable_scene_load_failure()
+
+
+func _recover_from_playable_scene_load_failure() -> void:
+	transition_running = false
+	scene_change_requested = false
+	scene_change_fade_finished = false
+	_reset_cinematic_skip()
+
+	if cinematic_loading_label != null:
+		cinematic_loading_label.hide()
+
+	if blackout_rect != null:
+		blackout_rect.modulate.a = 0.0
+
+	if main_menu_ui != null:
+		main_menu_ui.show()
+		main_menu_ui.modulate = Color.WHITE
+
+	if left_panel != null:
+		left_panel.show()
+		left_panel.modulate = Color.WHITE
+
+	_set_main_menu_buttons_enabled(true)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+
+
+func _reset_playable_scene_load() -> void:
+	playable_scene_load_path = ""
+	playable_scene_load_started = false
+	playable_scene_load_failed = false
+	loaded_playable_scene = null
+	scene_change_requested = false
+	scene_change_fade_finished = false

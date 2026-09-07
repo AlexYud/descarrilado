@@ -1,7 +1,12 @@
 extends CanvasLayer
 class_name PauseMenuController
 
+signal pause_opened
+signal pause_closed
+
 @export var main_menu_scene: PackedScene
+@export var pause_input_enabled: bool = true
+@export var reload_current_scene_on_main_menu: bool = false
 
 @onready var pause_root: Control = $PauseRoot
 @onready var menu_center: CenterContainer = $PauseRoot/MenuCenter
@@ -59,9 +64,20 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not pause_input_enabled:
+		return
+
 	if not event.is_action_pressed("ui_cancel"):
 		return
 
+	if event.is_echo():
+		return
+
+	handle_pause_action()
+	get_viewport().set_input_as_handled()
+
+
+func handle_pause_action() -> void:
 	if pause_open:
 		if options_panel.is_open():
 			_show_pause_buttons()
@@ -70,7 +86,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	else:
 		open_pause_menu()
 
-	get_viewport().set_input_as_handled()
+
+func set_pause_input_enabled(enabled: bool) -> void:
+	pause_input_enabled = enabled
 
 
 func open_pause_menu() -> void:
@@ -82,6 +100,7 @@ func open_pause_menu() -> void:
 	menu_center.show()
 	options_panel.hide()
 
+	pause_opened.emit()
 	get_tree().paused = true
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -100,6 +119,7 @@ func resume_game() -> void:
 
 	get_tree().paused = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	pause_closed.emit()
 
 
 func is_open() -> bool:
@@ -133,7 +153,10 @@ func _on_options_back_requested() -> void:
 
 
 func _on_main_menu_button_pressed() -> void:
-	if main_menu_scene == null:
+	if (
+		not reload_current_scene_on_main_menu
+		and main_menu_scene == null
+	):
 		push_error(
 			"PauseMenu: Assign the main Menu scene to Main Menu Scene in the Inspector."
 		)
@@ -145,10 +168,16 @@ func _on_main_menu_button_pressed() -> void:
 	pause_open = false
 	get_tree().paused = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	pause_closed.emit()
 
-	var change_error: Error = get_tree().change_scene_to_packed(
-		main_menu_scene
-	)
+	var change_error: Error
+
+	if reload_current_scene_on_main_menu:
+		change_error = get_tree().reload_current_scene()
+	else:
+		change_error = get_tree().change_scene_to_packed(
+			main_menu_scene
+		)
 
 	if change_error != OK:
 		push_error(
@@ -159,10 +188,13 @@ func _on_main_menu_button_pressed() -> void:
 		pause_open = true
 		pause_root.show()
 		menu_center.show()
+		pause_opened.emit()
 		get_tree().paused = true
 		main_menu_button.grab_focus()
 
 
 func _exit_tree() -> void:
 	if pause_open:
+		pause_open = false
 		get_tree().paused = false
+		pause_closed.emit()

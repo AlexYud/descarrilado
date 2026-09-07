@@ -99,7 +99,10 @@ func blackout_with_final_flicker(duration: float = 0.8) -> void:
 	flicker_timer = 0.0
 
 	if duration > 0.0:
-		await get_tree().create_timer(duration).timeout
+		await get_tree().create_timer(
+			duration,
+			false
+		).timeout
 
 	blackout_lights()
 
@@ -163,7 +166,10 @@ func _do_flicker() -> void:
 				light.visible = false
 				light.light_energy = 0.0
 
-		await get_tree().create_timer(current_hard_duration).timeout
+		await get_tree().create_timer(
+			current_hard_duration,
+			false
+		).timeout
 
 		if blackout_active:
 			hard_flicker_running = false
