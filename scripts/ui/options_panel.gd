@@ -6,6 +6,7 @@ signal back_requested
 const QUALITY_LOW: int = 0
 const QUALITY_MEDIUM: int = 1
 const QUALITY_HIGH: int = 2
+const QUALITY_ULTRA: int = 3
 
 const DISPLAY_WINDOWED: int = 0
 const DISPLAY_FULLSCREEN: int = 1
@@ -208,6 +209,7 @@ func _populate_graphics_options() -> void:
 	quality_option.add_item(tr("QUALITY_LOW"), QUALITY_LOW)
 	quality_option.add_item(tr("QUALITY_MEDIUM"), QUALITY_MEDIUM)
 	quality_option.add_item(tr("QUALITY_HIGH"), QUALITY_HIGH)
+	quality_option.add_item(tr("QUALITY_ULTRA"), QUALITY_ULTRA)
 
 	display_mode_option.clear()
 	display_mode_option.add_item(

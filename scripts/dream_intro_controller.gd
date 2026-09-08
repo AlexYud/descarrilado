@@ -160,6 +160,7 @@ func _ready() -> void:
 
 	_find_scene_nodes()
 	_collect_train_light_flickers()
+	_validate_scene_nodes()
 	_connect_head_raise_signal()
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -333,9 +334,6 @@ func _find_scene_nodes() -> void:
 			)
 			as ColorRect
 		)
-
-	_validate_scene_nodes()
-
 
 func _validate_scene_nodes() -> void:
 	if player == null:

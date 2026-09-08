@@ -91,6 +91,9 @@ msgstr "Média"
 msgid "QUALITY_HIGH"
 msgstr "Alta"
 
+msgid "QUALITY_ULTRA"
+msgstr "Ultra"
+
 msgid "DISPLAY_WINDOWED"
 msgstr "Janela"
 

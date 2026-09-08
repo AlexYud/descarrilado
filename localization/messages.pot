@@ -86,6 +86,9 @@ msgstr ""
 msgid "QUALITY_HIGH"
 msgstr ""
 
+msgid "QUALITY_ULTRA"
+msgstr ""
+
 msgid "DISPLAY_WINDOWED"
 msgstr ""
 

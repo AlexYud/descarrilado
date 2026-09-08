@@ -16,6 +16,7 @@ enum GraphicsQuality {
 	LOW,
 	MEDIUM,
 	HIGH,
+	ULTRA,
 }
 
 enum DisplayMode {
@@ -275,7 +276,7 @@ func set_quality_preset(
 	var new_value: int = clampi(
 		value,
 		GraphicsQuality.LOW,
-		GraphicsQuality.HIGH
+		GraphicsQuality.ULTRA
 	)
 
 	if quality_preset == new_value:
@@ -682,7 +683,7 @@ func _sanitize_values() -> void:
 	quality_preset = clampi(
 		quality_preset,
 		GraphicsQuality.LOW,
-		GraphicsQuality.HIGH
+		GraphicsQuality.ULTRA
 	)
 	display_mode = clampi(
 		display_mode,

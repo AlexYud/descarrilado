@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" uid="uid://cc3lcbf670moa" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02.glb" id="17_e6tct"]
 [ext_resource type="Script" uid="uid://ca5e4nnd25xr7" path="res://scripts/optimization/scene_performance_profile.gd" id="26_e6tct"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/world_environment.gd" id="27_romvk"]
+[ext_resource type="Script" uid="uid://c33mwk4p5fq3f" path="res://scripts/environment/ultra_weather_layer.gd" id="28_ultra_weather"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -339,6 +340,7 @@ script = ExtResource("13_e6tct")
 data_directory = "res://dd"
 material = SubResource("Terrain3DMaterial_pyuur")
 assets = SubResource("Terrain3DAssets_uas77")
+free_editor_textures = false
 top_level = true
 metadata/_edit_lock_ = true
 
@@ -1214,6 +1216,9 @@ visible = false
 environment = SubResource("Environment_j64lv")
 script = ExtResource("27_romvk")
 moon_light_path = NodePath("../MoonLight")
+
+[node name="UltraWeatherLayer" type="Node3D" parent="."]
+script = ExtResource("28_ultra_weather")
 
 [node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=941099668]
 transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)

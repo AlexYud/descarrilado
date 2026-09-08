@@ -91,6 +91,9 @@ msgstr "Medium"
 msgid "QUALITY_HIGH"
 msgstr "High"
 
+msgid "QUALITY_ULTRA"
+msgstr "Ultra"
+
 msgid "DISPLAY_WINDOWED"
 msgstr "Windowed"
 

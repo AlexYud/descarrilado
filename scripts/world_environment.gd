@@ -12,6 +12,7 @@ enum EnvironmentProfile {
 const QUALITY_LOW: int = 0
 const QUALITY_MEDIUM: int = 1
 const QUALITY_HIGH: int = 2
+const QUALITY_ULTRA: int = 3
 
 const BASE_BRIGHTNESS_META: StringName = (
 	&"game_settings_base_brightness"
@@ -306,7 +307,10 @@ func apply_environment() -> void:
 		quality_preset
 	)
 
-	_disable_expensive_effects(environment)
+	_apply_expensive_effects(
+		environment,
+		quality_preset
+	)
 
 	_apply_moon_light(
 		settings,
@@ -383,7 +387,7 @@ func _get_quality_preset() -> int:
 	return clampi(
 		GameSettings.get_quality_preset(),
 		QUALITY_LOW,
-		QUALITY_HIGH
+		QUALITY_ULTRA
 	)
 
 
@@ -883,14 +887,42 @@ func _apply_ssao(
 	env.ssao_ao_channel_affect = 0.0
 
 
-func _disable_expensive_effects(
-	env: Environment
+func _apply_expensive_effects(
+	env: Environment,
+	quality_preset: int
 ) -> void:
 	env.glow_enabled = false
 	env.ssil_enabled = false
-	env.ssr_enabled = false
 	env.sdfgi_enabled = false
-	env.volumetric_fog_enabled = false
+
+	var ultra_enabled: bool = (
+		quality_preset == QUALITY_ULTRA
+		and profile == EnvironmentProfile.DREAM_INTRO
+	)
+
+	env.ssr_enabled = ultra_enabled
+	env.volumetric_fog_enabled = ultra_enabled
+
+	if not ultra_enabled:
+		return
+
+	env.ssr_max_steps = 72
+	env.ssr_fade_in = 0.12
+	env.ssr_fade_out = 2.4
+	env.ssr_depth_tolerance = 0.18
+
+	env.volumetric_fog_density = 0.0025
+	env.volumetric_fog_albedo = Color("#a8b8c7")
+	env.volumetric_fog_emission = Color("#101823")
+	env.volumetric_fog_emission_energy = 0.035
+	env.volumetric_fog_anisotropy = 0.34
+	env.volumetric_fog_length = 46.0
+	env.volumetric_fog_detail_spread = 1.85
+	env.volumetric_fog_gi_inject = 0.0
+	env.volumetric_fog_ambient_inject = 0.18
+	env.volumetric_fog_sky_affect = 0.72
+	env.volumetric_fog_temporal_reprojection_enabled = true
+	env.volumetric_fog_temporal_reprojection_amount = 0.82
 
 
 # ============================================================
@@ -940,8 +972,10 @@ func _apply_moon_light(
 	moon.shadow_normal_bias = 0.65
 	moon.shadow_blur = 1.55
 
-	moon.light_volumetric_fog_energy = float(
-		settings["moon_volumetric_energy"]
+	moon.light_volumetric_fog_energy = (
+		float(settings["moon_volumetric_energy"])
+		if quality_preset == QUALITY_ULTRA
+		else 0.0
 	)
 
 
