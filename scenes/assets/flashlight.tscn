@@ -18,8 +18,8 @@ radius = 0.025
 transform = Transform3D(-0.8146565, 0.57799464, 0.04750765, -0.034482196, 0.033497933, -0.9988438, -0.5789176, -0.81535274, -0.0073587783, 0, 0, 0)
 script = ExtResource("1_lkaa1")
 item_id = "flashlight"
-item_name = "Railway Shift Flashlight"
-item_description = "A heavy-duty flashlight issued for night patrols around the station grounds. The handle is worn smooth from years of use, and the metal casing is scratched where it clipped against keys, fences, and rusted rails. Its beam is stronger than it looks, but never quite reaches as far as Juliana needs it to. In the dark, it feels less like protection and more like permission to see things she would be better off missing."
+item_name = "ITEM_FLASHLIGHT_NAME"
+item_description = "ITEM_FLASHLIGHT_DESCRIPTION"
 
 [node name="Visual" type="MeshInstance3D" parent="." unique_id=7185311]
 transform = Transform3D(0.99999994, 0, 2.3283064e-10, 0, 1, 0, 3.0267984e-09, 0, 1, 0, 0, 0)

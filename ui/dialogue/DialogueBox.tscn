@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cdr71vk7hbsph" path="res://ui/dialogue/DialogueBox.gd" id="1_jlwca"]
 
 [node name="DialogueBox" type="CanvasLayer" unique_id=316858389]
+auto_translate_mode = 1
 script = ExtResource("1_jlwca")
 
 [node name="Root" type="Control" parent="." unique_id=1813859167]
@@ -27,14 +28,14 @@ layout_mode = 2
 
 [node name="MessageLabel" type="Label" parent="Root/BottomMargin/Panel/VBox" unique_id=521202641]
 layout_mode = 2
-text = "Dialogue text here"
+text = "DIALOGUE_PLACEHOLDER"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
 [node name="HintLabel" type="Label" parent="Root/BottomMargin/Panel/VBox" unique_id=9767359]
 layout_mode = 2
-text = "Press enter to continue"
+text = "DIALOGUE_CONTINUE_HINT"
 horizontal_alignment = 1
 autowrap_mode = 2
 

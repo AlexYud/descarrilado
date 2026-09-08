@@ -10,10 +10,10 @@ class_name DoorController
 @export var starts_locked: bool = false
 @export var required_key_id: String = ""
 
-@export var closed_prompt_text: String = "[E] Open"
-@export var opened_prompt_text: String = "[E] Close"
-@export var locked_prompt_text: String = "[Locked]"
-@export var unlock_prompt_text: String = "[E] Unlock"
+@export var closed_prompt_text: String = "PROMPT_OPEN"
+@export var opened_prompt_text: String = "PROMPT_CLOSE"
+@export var locked_prompt_text: String = "PROMPT_LOCKED"
+@export var unlock_prompt_text: String = "PROMPT_UNLOCK"
 
 var is_open: bool = false
 var is_locked: bool = false

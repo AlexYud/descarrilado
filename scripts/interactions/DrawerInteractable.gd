@@ -6,8 +6,8 @@ class_name DrawerInteractable
 @export var move_speed: float = 6.0
 @export var starts_open: bool = false
 
-@export var closed_prompt_text: String = "[E] Open"
-@export var opened_prompt_text: String = "[E] Close"
+@export var closed_prompt_text: String = "PROMPT_OPEN"
+@export var opened_prompt_text: String = "PROMPT_CLOSE"
 
 var is_open: bool = false
 var closed_local_position: Vector3 = Vector3.ZERO

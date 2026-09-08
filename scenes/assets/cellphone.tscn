@@ -16,8 +16,8 @@ size = Vector3(0.076, 0.164, 0.009)
 transform = Transform3D(0.11585604, -0.99326605, 4.341704e-08, 0, -4.371139e-08, -1, 0.99326605, 0.11585604, -5.0642286e-09, 0, 0, 0)
 script = ExtResource("1_p2xuj")
 item_id = "cellphone"
-item_name = "Juliana’s Cellphone"
-item_description = "A cheap phone with a cracked corner and fingerprints ground into the glass. The battery drains too fast, the signal dies at the worst moments, and Sophia’s name still sits near the top of the call history like a wound that refuses to close. There are unsent messages, half-written notes, and one voice recording Juliana doesn’t remember making. Every time she opens it, it feels less like a tool and more like evidence."
+item_name = "ITEM_CELLPHONE_NAME"
+item_description = "ITEM_CELLPHONE_DESCRIPTION"
 
 [node name="Visual" type="MeshInstance3D" parent="." unique_id=970519405]
 mesh = SubResource("BoxMesh_vcsgt")

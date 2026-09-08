@@ -7,6 +7,8 @@ signal window_resolution_changed(resolution: Vector2i)
 signal vsync_changed(enabled: bool)
 signal fps_limit_changed(limit: int)
 signal brightness_changed(percent: float)
+signal text_language_changed(locale: String)
+signal voice_language_changed(locale: String)
 signal mouse_sensitivity_changed(percent: float)
 signal invert_y_changed(enabled: bool)
 
@@ -34,6 +36,20 @@ const WINDOW_RESOLUTION_KEY: String = "window_resolution"
 const VSYNC_KEY: String = "vsync_enabled"
 const FPS_LIMIT_KEY: String = "fps_limit"
 const BRIGHTNESS_KEY: String = "brightness_percent"
+
+const LANGUAGE_SECTION: String = "language"
+const TEXT_LOCALE_KEY: String = "text_locale"
+const VOICE_LOCALE_KEY: String = "voice_locale"
+
+const LOCALE_ENGLISH: String = "en"
+const LOCALE_BRAZILIAN_PORTUGUESE: String = "pt_BR"
+const DEFAULT_TEXT_LOCALE: String = LOCALE_ENGLISH
+const DEFAULT_VOICE_LOCALE: String = LOCALE_ENGLISH
+
+const SUPPORTED_VOICE_LOCALES: Array[String] = [
+	LOCALE_ENGLISH,
+	LOCALE_BRAZILIAN_PORTUGUESE,
+]
 
 const CONTROLS_SECTION: String = "controls"
 const MOUSE_SENSITIVITY_KEY: String = (
@@ -93,6 +109,9 @@ var fps_limit: int = DEFAULT_FPS_LIMIT
 var brightness_percent: float = (
 	DEFAULT_BRIGHTNESS_PERCENT
 )
+
+var text_locale: String = DEFAULT_TEXT_LOCALE
+var voice_locale: String = DEFAULT_VOICE_LOCALE
 
 var mouse_sensitivity_percent: float = (
 	DEFAULT_MOUSE_SENSITIVITY_PERCENT
@@ -186,6 +205,17 @@ func save_settings() -> void:
 		GRAPHICS_SECTION,
 		BRIGHTNESS_KEY,
 		brightness_percent
+	)
+
+	config.set_value(
+		LANGUAGE_SECTION,
+		TEXT_LOCALE_KEY,
+		text_locale
+	)
+	config.set_value(
+		LANGUAGE_SECTION,
+		VOICE_LOCALE_KEY,
+		voice_locale
 	)
 
 	config.set_value(
@@ -384,6 +414,63 @@ func get_brightness_percent() -> float:
 	return brightness_percent
 
 
+func set_text_locale(
+	value: String,
+	save_after_change: bool = true
+) -> void:
+	var new_locale: String = _sanitize_text_locale(value)
+
+	if text_locale == new_locale:
+		_apply_text_locale()
+		return
+
+	text_locale = new_locale
+	_apply_text_locale()
+	text_language_changed.emit(text_locale)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_text_locale() -> String:
+	return text_locale
+
+
+func get_supported_text_locales() -> PackedStringArray:
+	var loaded_locales: PackedStringArray = (
+		TranslationServer.get_loaded_locales()
+	)
+
+	if not loaded_locales.has(LOCALE_ENGLISH):
+		loaded_locales.append(LOCALE_ENGLISH)
+
+	return loaded_locales
+
+
+func set_voice_locale(
+	value: String,
+	save_after_change: bool = true
+) -> void:
+	var new_locale: String = _sanitize_voice_locale(value)
+
+	if voice_locale == new_locale:
+		return
+
+	voice_locale = new_locale
+	voice_language_changed.emit(voice_locale)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_voice_locale() -> String:
+	return voice_locale
+
+
+func get_supported_voice_locales() -> PackedStringArray:
+	return PackedStringArray(SUPPORTED_VOICE_LOCALES)
+
+
 func set_mouse_sensitivity_percent(
 	value: float,
 	save_after_change: bool = true
@@ -488,6 +575,8 @@ func _set_default_values() -> void:
 	vsync_enabled = DEFAULT_VSYNC_ENABLED
 	fps_limit = DEFAULT_FPS_LIMIT
 	brightness_percent = DEFAULT_BRIGHTNESS_PERCENT
+	text_locale = DEFAULT_TEXT_LOCALE
+	voice_locale = DEFAULT_VOICE_LOCALE
 
 	mouse_sensitivity_percent = (
 		DEFAULT_MOUSE_SENSITIVITY_PERCENT
@@ -552,6 +641,21 @@ func _load_values_from_config(config: ConfigFile) -> void:
 		)
 	)
 
+	text_locale = str(
+		config.get_value(
+			LANGUAGE_SECTION,
+			TEXT_LOCALE_KEY,
+			DEFAULT_TEXT_LOCALE
+		)
+	)
+	voice_locale = str(
+		config.get_value(
+			LANGUAGE_SECTION,
+			VOICE_LOCALE_KEY,
+			DEFAULT_VOICE_LOCALE
+		)
+	)
+
 	mouse_sensitivity_percent = float(
 		config.get_value(
 			CONTROLS_SECTION,
@@ -594,6 +698,8 @@ func _sanitize_values() -> void:
 		MIN_BRIGHTNESS_PERCENT,
 		MAX_BRIGHTNESS_PERCENT
 	)
+	text_locale = _sanitize_text_locale(text_locale)
+	voice_locale = _sanitize_voice_locale(voice_locale)
 
 	mouse_sensitivity_percent = clampf(
 		mouse_sensitivity_percent,
@@ -609,13 +715,36 @@ func _sanitize_resolution(value: Vector2i) -> Vector2i:
 	)
 
 
+func _sanitize_text_locale(value: String) -> String:
+	var supported_locales: PackedStringArray = (
+		get_supported_text_locales()
+	)
+
+	if supported_locales.has(value):
+		return value
+
+	return DEFAULT_TEXT_LOCALE
+
+
+func _sanitize_voice_locale(value: String) -> String:
+	if SUPPORTED_VOICE_LOCALES.has(value):
+		return value
+
+	return DEFAULT_VOICE_LOCALE
+
+
 func _apply_all_settings() -> void:
+	_apply_text_locale()
 	_apply_master_volume()
 	_apply_quality_preset()
 	_apply_display_mode()
 	_apply_vsync()
 	_apply_fps_limit()
 	_apply_brightness()
+
+
+func _apply_text_locale() -> void:
+	TranslationServer.set_locale(text_locale)
 
 
 func _apply_master_volume() -> void:

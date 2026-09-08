@@ -15,8 +15,8 @@ size = Vector3(0.18, 0.1, 0.009)
 [node name="Photo" type="Node3D" unique_id=88594973]
 transform = Transform3D(-3.994908e-08, 0.20015459, -0.97976416, 1.7741382e-08, 0.97976434, 0.20015456, 1, -9.386381e-09, -4.2691703e-08, 0, 0, 0)
 script = ExtResource("1_28ayv")
-inspect_name = "Old Childhood Photo"
-inspect_description = "A faded photograph of Juliana and Sophia as children, smiling on a train platform under a washed-out summer sky. Sophia is leaning into her, fearless and bright, while Juliana looks at the camera like she already knows happiness never stays still for long. The edges are curled, the back is stained, and someone has pressed a thumb so hard against one corner it nearly tore. It smells faintly of dust, old paper, and rain trapped in memory."
+inspect_name = "ITEM_STATION_PHOTO_NAME"
+inspect_description = "ITEM_STATION_PHOTO_DESCRIPTION"
 
 [node name="Visual" type="MeshInstance3D" parent="." unique_id=1511137268]
 transform = Transform3D(1, -2.6645353e-15, 7.1054274e-15, 1.7763568e-15, 1.0000002, 1.4901161e-08, -7.1054274e-15, -1.4901161e-08, 1.0000002, 0, 0.01150465, 0.002350092)

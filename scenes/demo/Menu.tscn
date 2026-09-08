@@ -232,6 +232,7 @@ root_node = NodePath("../../..")
 libraries/ = SubResource("AnimationLibrary_k02gq")
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
+auto_translate_mode = 1
 layer = 10
 
 [node name="ScreenBorderFilter" type="ColorRect" parent="UI" unique_id=2064593270]
@@ -286,7 +287,7 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=645727401]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
-text = "Unrailed"
+text = "GAME_TITLE"
 
 [node name="MenuSpacer01" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1050070901]
 custom_minimum_size = Vector2(0, 80)
@@ -295,21 +296,21 @@ layout_mode = 2
 [node name="StartButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1809137748]
 custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
-text = "Start"
+text = "MENU_START"
 flat = true
 alignment = 0
 
 [node name="OptionsButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1635031449]
 custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
-text = "Options"
+text = "MENU_OPTIONS"
 flat = true
 alignment = 0
 
 [node name="QuitButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=50317622]
 custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
-text = "Quit"
+text = "MENU_QUIT"
 flat = true
 alignment = 0
 
@@ -326,6 +327,7 @@ offset_bottom = 23.0
 script = ExtResource("11_5cgqh")
 
 [node name="CinematicHUD" type="CanvasLayer" parent="."]
+auto_translate_mode = 1
 layer = 900
 
 [node name="SkipPrompt" type="PanelContainer" parent="CinematicHUD"]
@@ -357,7 +359,7 @@ theme_override_constants/separation = 8
 [node name="SkipLabel" type="Label" parent="CinematicHUD/SkipPrompt/SkipMargin/SkipVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Hold Space to Skip"
+text = "CINEMATIC_HOLD_SKIP"
 horizontal_alignment = 2
 
 [node name="SkipProgress" type="ProgressBar" parent="CinematicHUD/SkipPrompt/SkipMargin/SkipVBox"]
@@ -368,6 +370,7 @@ step = 0.001
 show_percentage = false
 
 [node name="LoadingHUD" type="CanvasLayer" parent="."]
+auto_translate_mode = 1
 layer = 1001
 
 [node name="LoadingLabel" type="Label" parent="LoadingHUD"]
@@ -384,7 +387,7 @@ offset_bottom = -32.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_font_sizes/font_size = 18
-text = "Loading..."
+text = "COMMON_LOADING"
 horizontal_alignment = 2
 
 [node name="CinematicPauseMenu" parent="." instance=ExtResource("17_pause_menu")]

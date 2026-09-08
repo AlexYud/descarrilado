@@ -99,6 +99,7 @@ func setup(player_node: CharacterBody3D) -> void:
 	_build_inspect_anchor()
 	_build_inspect_light()
 	_build_overlay()
+	_connect_language_settings()
 	_set_inspect_distance(inspect_distance)
 
 	set_process(true)
@@ -691,7 +692,7 @@ func _build_overlay() -> void:
 	)
 
 	close_button = Button.new()
-	close_button.text = "OK"
+	close_button.text = tr("COMMON_OK")
 	close_button.anchor_left = 0.5
 	close_button.anchor_top = 1.0
 	close_button.anchor_right = 0.5
@@ -710,6 +711,20 @@ func _build_overlay() -> void:
 	)
 
 	inspect_overlay_root.add_child(close_button)
+
+
+func _connect_language_settings() -> void:
+	if not GameSettings.text_language_changed.is_connected(
+		_on_text_language_changed
+	):
+		GameSettings.text_language_changed.connect(
+			_on_text_language_changed
+		)
+
+
+func _on_text_language_changed(_locale: String) -> void:
+	if close_button != null:
+		close_button.text = tr("COMMON_OK")
 
 
 func _on_close_button_pressed() -> void:

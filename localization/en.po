@@ -1,0 +1,208 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Unrailed\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Main menu and cinematic
+msgid "GAME_TITLE"
+msgstr "Unrailed"
+
+msgid "MENU_START"
+msgstr "Start"
+
+msgid "MENU_OPTIONS"
+msgstr "Options"
+
+msgid "MENU_QUIT"
+msgstr "Quit"
+
+msgid "CINEMATIC_HOLD_SKIP"
+msgstr "Hold Space to Skip"
+
+msgid "COMMON_LOADING"
+msgstr "Loading..."
+
+# Pause menu
+msgid "PAUSE_TITLE"
+msgstr "Paused"
+
+msgid "PAUSE_RESUME"
+msgstr "Resume"
+
+msgid "PAUSE_RETURN_MAIN_MENU"
+msgstr "Return to Main Menu"
+
+# Options
+msgid "OPTIONS_TITLE"
+msgstr "Options"
+
+msgid "OPTIONS_TAB_AUDIO"
+msgstr "Audio"
+
+msgid "OPTIONS_TAB_GRAPHICS"
+msgstr "Graphics"
+
+msgid "OPTIONS_TAB_CONTROLS"
+msgstr "Controls"
+
+msgid "OPTIONS_TAB_LANGUAGE"
+msgstr "Language"
+
+msgid "OPTIONS_MASTER_VOLUME"
+msgstr "Master Volume"
+
+msgid "OPTIONS_QUALITY"
+msgstr "Quality"
+
+msgid "OPTIONS_DISPLAY_MODE"
+msgstr "Display Mode"
+
+msgid "OPTIONS_RESOLUTION"
+msgstr "Resolution"
+
+msgid "OPTIONS_VSYNC"
+msgstr "VSync"
+
+msgid "OPTIONS_FPS_LIMIT"
+msgstr "FPS Limit"
+
+msgid "OPTIONS_BRIGHTNESS"
+msgstr "Brightness"
+
+msgid "OPTIONS_BACK"
+msgstr "Back"
+
+msgid "OPTIONS_TEXT_LANGUAGE"
+msgstr "Text Language"
+
+msgid "OPTIONS_VOICE_LANGUAGE"
+msgstr "Voice Language"
+
+msgid "QUALITY_LOW"
+msgstr "Low"
+
+msgid "QUALITY_MEDIUM"
+msgstr "Medium"
+
+msgid "QUALITY_HIGH"
+msgstr "High"
+
+msgid "DISPLAY_WINDOWED"
+msgstr "Windowed"
+
+msgid "DISPLAY_BORDERLESS_FULLSCREEN"
+msgstr "Borderless Fullscreen"
+
+msgid "DISPLAY_EXCLUSIVE_FULLSCREEN"
+msgstr "Exclusive Fullscreen"
+
+msgid "FPS_UNCAPPED"
+msgstr "Uncapped"
+
+# Interaction and tutorial prompts
+msgid "PROMPT_INTERACT"
+msgstr "[E] Interact"
+
+msgid "PROMPT_PICK_UP"
+msgstr "[E] Pick Up"
+
+msgid "PROMPT_OPEN"
+msgstr "[E] Open"
+
+msgid "PROMPT_CLOSE"
+msgstr "[E] Close"
+
+msgid "PROMPT_LOCKED"
+msgstr "[Locked]"
+
+msgid "PROMPT_UNLOCK"
+msgstr "[E] Unlock"
+
+#. TRANSLATORS: %s is the configured flashlight key.
+msgid "TUTORIAL_FLASHLIGHT"
+msgstr "Press %s to turn on the flashlight"
+
+# Inventory and inspection
+msgid "INVENTORY_TITLE"
+msgstr "Inventory"
+
+msgid "INVENTORY_INSPECT"
+msgstr "Inspect"
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the slot number.
+msgid "INVENTORY_SLOT_EMPTY"
+msgstr "Slot {slot}\nEmpty"
+
+#. TRANSLATORS: Keep {slot} and {item}; they are replaced at runtime.
+msgid "INVENTORY_SLOT_ITEM"
+msgstr "Slot {slot}\n{item}"
+
+msgid "INVENTORY_INSPECT_HINT"
+msgstr "Left drag: rotate    Wheel: zoom    Right click: back"
+
+msgid "INVENTORY_USE"
+msgstr "Use"
+
+msgid "COMMON_OK"
+msgstr "OK"
+
+# Dialogue
+msgid "DIALOGUE_CONTINUE_HINT"
+msgstr "Press Enter or click to continue"
+
+msgid "DIALOGUE_PLACEHOLDER"
+msgstr "Hello."
+
+# Generic editor defaults
+msgid "ITEM_GENERIC_NEW"
+msgstr "New Item"
+
+msgid "ITEM_GENERIC_INSPECTABLE"
+msgstr "Inspectable Item"
+
+# Chapter 1 items
+msgid "ITEM_MEDICAL_PRESCRIPTION_NAME"
+msgstr "Medical Prescription"
+
+msgid "ITEM_MEDICAL_PRESCRIPTION_DESCRIPTION"
+msgstr "A sheet of paper folded several times, with a torn corner and paper already softened from being opened and closed so often. At the top are Juliana Ferreira's name, the appointment date, and the stamp of the doctor from the downtown clinic. The prescription reads sertraline 50 mg, daily use, followed by instructions for supportive medication at night and a follow-up appointment in thirty days. A typed field contains the note persistent anxiety and insomnia. The doctor's handwriting at the bottom remains difficult to understand."
+
+msgid "ITEM_STATION_BADGE_NAME"
+msgstr "Station ID Badge"
+
+msgid "ITEM_STATION_BADGE_DESCRIPTION"
+msgstr "Hard plastic, a cracked edge, and the same bad photo as always. The name is legible—Juliana Ferreira—and below it is the job title, Operational Support Assistant, with the night shift printed on a blue strip that is already somewhat faded. In the lower corner is the local railway line's logo, its ink worn with time. The black lanyard is grimy near the clasp from so much use."
+
+msgid "ITEM_CELLPHONE_NAME"
+msgstr "Juliana's Cellphone"
+
+msgid "ITEM_CELLPHONE_DESCRIPTION"
+msgstr "A plain black case, one corner of the screen protector cracked, and fingernail marks near the side button. The phone is warm, the way it gets after spending too much time in her hand. Nothing about it stands out beyond the wear from use. It is an ordinary phone, neither pretty nor new, simply functional in the way it needs to be."
+
+msgid "ITEM_NEWSPAPER_NAME"
+msgstr "Newspaper Clipping"
+
+msgid "ITEM_NEWSPAPER_DESCRIPTION"
+msgstr "A clipping from the newspaper A Voz do Vale, already creased down the middle and stained with coffee in one corner. The headline reads, “Third young woman disappears in less than two months in the region.” The article lists names, neighborhoods, and times, all written in that hurried tone of a small-town newspaper trying to sound more certain than it really is. One passage has been underlined in blue pen, directly over the sentence about strange activity near the abandoned railway line."
+
+msgid "ITEM_STATION_PHOTO_NAME"
+msgstr "Old Photo at the Station"
+
+msgid "ITEM_STATION_PHOTO_DESCRIPTION"
+msgstr "An old photograph, its edges already slightly yellowed. Sophia and I are still children, sitting on a wooden bench at the old station. Behind us, half the station sign and a stretch of tracks are visible. She is looking straight at the camera, smiling effortlessly. I am sitting awkwardly in the picture, wearing the expression of someone who apparently did not like this kind of thing even back then. The frame is simple, dark plastic, with a long scratch running across the front."
+
+msgid "ITEM_FLASHLIGHT_NAME"
+msgstr "Railway Shift Flashlight"
+
+msgid "ITEM_FLASHLIGHT_DESCRIPTION"
+msgstr "A large flashlight with a metal body and black paint chipped near the base. The power button has sunk a little deeper than it should, and the handle is wrapped in electrical tape so it will not hurt the hand. There are three impact marks along one side, as if it has fallen onto the gravel more than once. Worn as it is, it still feels dependable."
+
+msgid "ITEM_CLONAZEPAM_NAME"
+msgstr "Clonazepam Bottle"
+
+msgid "ITEM_CLONAZEPAM_DESCRIPTION"
+msgstr "A small amber-glass bottle with a white cap, the threads already somewhat worn. The pharmacy label has been pasted over the original, with Juliana Ferreira's name printed in a computer font and the rest of the information cut off unevenly. There are still a few pills inside. When moved, it makes that dry rattle of something light striking glass. The instruction sticker is starting to peel from the shower steam."

@@ -5,6 +5,10 @@ class_name DreamIntroAudio
 @export var menu_idle_player_path: String = "MenuIdlePlayer"
 @export var intro_narration_player_path: String = "IntroNarrationPlayer"
 
+@export_category("Localized Voice")
+@export var intro_narration_english: AudioStream
+@export var intro_narration_brazilian_portuguese: AudioStream
+
 @export var menu_idle_volume_db: float = -8.0
 @export var intro_narration_volume_db: float = -10.0
 
@@ -24,10 +28,13 @@ var menu_idle_tween: Tween = null
 
 var narration_request_id: int = 0
 var master_volume_percent: float = 100.0
+var fallback_intro_narration: AudioStream = null
 
 
 func _ready() -> void:
 	_find_audio_players()
+	_connect_language_settings()
+	_apply_intro_narration_language()
 	_load_master_volume()
 
 
@@ -47,9 +54,58 @@ func _find_audio_players() -> void:
 
 	if intro_narration_player == null:
 		push_warning("DreamIntroAudio: IntroNarrationPlayer not found.")
+	else:
+		fallback_intro_narration = intro_narration_player.stream
 
 	if menu_idle_player != null and not menu_idle_player.finished.is_connected(_on_menu_idle_finished):
 		menu_idle_player.finished.connect(_on_menu_idle_finished)
+
+
+func _connect_language_settings() -> void:
+	if not GameSettings.voice_language_changed.is_connected(
+		_on_voice_language_changed
+	):
+		GameSettings.voice_language_changed.connect(
+			_on_voice_language_changed
+		)
+
+
+func _on_voice_language_changed(_locale: String) -> void:
+	_apply_intro_narration_language()
+
+
+func _apply_intro_narration_language() -> void:
+	if intro_narration_player == null:
+		return
+
+	var selected_stream: AudioStream = fallback_intro_narration
+	var voice_locale: String = GameSettings.get_voice_locale()
+
+	match voice_locale:
+		GameSettings.LOCALE_BRAZILIAN_PORTUGUESE:
+			if intro_narration_brazilian_portuguese != null:
+				selected_stream = intro_narration_brazilian_portuguese
+		_:
+			if intro_narration_english != null:
+				selected_stream = intro_narration_english
+
+	if selected_stream == null:
+		return
+
+	if intro_narration_player.stream == selected_stream:
+		return
+
+	var was_playing: bool = intro_narration_player.playing
+	var was_paused: bool = intro_narration_player.stream_paused
+	var playback_position: float = (
+		intro_narration_player.get_playback_position()
+	)
+
+	intro_narration_player.stream = selected_stream
+
+	if was_playing:
+		intro_narration_player.play(playback_position)
+		intro_narration_player.stream_paused = was_paused
 
 
 func play_menu_idle() -> void:

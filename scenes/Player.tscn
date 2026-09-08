@@ -156,6 +156,7 @@ stream = ExtResource("5_f1qol")
 pitch_scale = 0.64
 
 [node name="InteractionUI" type="CanvasLayer" parent="." unique_id=698068930]
+auto_translate_mode = 1
 
 [node name="InteractionCenter" type="CenterContainer" parent="InteractionUI" unique_id=255367534]
 anchors_preset = 15
@@ -166,7 +167,7 @@ grow_vertical = 2
 
 [node name="InteractionPrompt" type="Label" parent="InteractionUI/InteractionCenter" unique_id=630529815]
 layout_mode = 2
-text = "[E] Interact"
+text = "PROMPT_INTERACT"
 
 [node name="MovementController" type="Node" parent="." unique_id=1089501845]
 script = ExtResource("7_bruh7")

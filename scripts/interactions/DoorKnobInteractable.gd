@@ -3,7 +3,7 @@ class_name DoorKnobInteractable
 
 @export var door_controller: DoorController
 
-var cached_prompt_text: String = "[E] Interact"
+var cached_prompt_text: String = "PROMPT_INTERACT"
 
 
 func _ready() -> void:

@@ -1,0 +1,208 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Unrailed\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# Menu principal e cinemática
+msgid "GAME_TITLE"
+msgstr "Unrailed"
+
+msgid "MENU_START"
+msgstr "Iniciar"
+
+msgid "MENU_OPTIONS"
+msgstr "Opções"
+
+msgid "MENU_QUIT"
+msgstr "Sair"
+
+msgid "CINEMATIC_HOLD_SKIP"
+msgstr "Segure Espaço para Pular"
+
+msgid "COMMON_LOADING"
+msgstr "Carregando..."
+
+# Menu de pausa
+msgid "PAUSE_TITLE"
+msgstr "Pausado"
+
+msgid "PAUSE_RESUME"
+msgstr "Continuar"
+
+msgid "PAUSE_RETURN_MAIN_MENU"
+msgstr "Voltar ao Menu Principal"
+
+# Opções
+msgid "OPTIONS_TITLE"
+msgstr "Opções"
+
+msgid "OPTIONS_TAB_AUDIO"
+msgstr "Áudio"
+
+msgid "OPTIONS_TAB_GRAPHICS"
+msgstr "Gráficos"
+
+msgid "OPTIONS_TAB_CONTROLS"
+msgstr "Controles"
+
+msgid "OPTIONS_TAB_LANGUAGE"
+msgstr "Idioma"
+
+msgid "OPTIONS_MASTER_VOLUME"
+msgstr "Volume Geral"
+
+msgid "OPTIONS_QUALITY"
+msgstr "Qualidade"
+
+msgid "OPTIONS_DISPLAY_MODE"
+msgstr "Modo de Exibição"
+
+msgid "OPTIONS_RESOLUTION"
+msgstr "Resolução"
+
+msgid "OPTIONS_VSYNC"
+msgstr "VSync"
+
+msgid "OPTIONS_FPS_LIMIT"
+msgstr "Limite de FPS"
+
+msgid "OPTIONS_BRIGHTNESS"
+msgstr "Brilho"
+
+msgid "OPTIONS_BACK"
+msgstr "Voltar"
+
+msgid "OPTIONS_TEXT_LANGUAGE"
+msgstr "Idioma do Texto"
+
+msgid "OPTIONS_VOICE_LANGUAGE"
+msgstr "Idioma das Vozes"
+
+msgid "QUALITY_LOW"
+msgstr "Baixa"
+
+msgid "QUALITY_MEDIUM"
+msgstr "Média"
+
+msgid "QUALITY_HIGH"
+msgstr "Alta"
+
+msgid "DISPLAY_WINDOWED"
+msgstr "Janela"
+
+msgid "DISPLAY_BORDERLESS_FULLSCREEN"
+msgstr "Tela Cheia sem Bordas"
+
+msgid "DISPLAY_EXCLUSIVE_FULLSCREEN"
+msgstr "Tela Cheia Exclusiva"
+
+msgid "FPS_UNCAPPED"
+msgstr "Sem Limite"
+
+# Interações e tutoriais
+msgid "PROMPT_INTERACT"
+msgstr "[E] Interagir"
+
+msgid "PROMPT_PICK_UP"
+msgstr "[E] Pegar"
+
+msgid "PROMPT_OPEN"
+msgstr "[E] Abrir"
+
+msgid "PROMPT_CLOSE"
+msgstr "[E] Fechar"
+
+msgid "PROMPT_LOCKED"
+msgstr "[Trancado]"
+
+msgid "PROMPT_UNLOCK"
+msgstr "[E] Destrancar"
+
+#. TRANSLATORS: %s é a tecla configurada para a lanterna.
+msgid "TUTORIAL_FLASHLIGHT"
+msgstr "Pressione %s para ligar a lanterna"
+
+# Inventário e inspeção
+msgid "INVENTORY_TITLE"
+msgstr "Inventário"
+
+msgid "INVENTORY_INSPECT"
+msgstr "Inspecionar"
+
+#. TRANSLATORS: Mantenha {slot}; o valor é substituído pelo número do espaço.
+msgid "INVENTORY_SLOT_EMPTY"
+msgstr "Espaço {slot}\nVazio"
+
+#. TRANSLATORS: Mantenha {slot} e {item}; os valores são substituídos durante o jogo.
+msgid "INVENTORY_SLOT_ITEM"
+msgstr "Espaço {slot}\n{item}"
+
+msgid "INVENTORY_INSPECT_HINT"
+msgstr "Arraste com o botão esquerdo: girar    Roda: zoom    Botão direito: voltar"
+
+msgid "INVENTORY_USE"
+msgstr "Usar"
+
+msgid "COMMON_OK"
+msgstr "OK"
+
+# Diálogo
+msgid "DIALOGUE_CONTINUE_HINT"
+msgstr "Pressione Enter ou clique para continuar"
+
+msgid "DIALOGUE_PLACEHOLDER"
+msgstr "Olá."
+
+# Valores genéricos usados no editor
+msgid "ITEM_GENERIC_NEW"
+msgstr "Novo Item"
+
+msgid "ITEM_GENERIC_INSPECTABLE"
+msgstr "Item Inspecionável"
+
+# Itens do Capítulo 1
+msgid "ITEM_MEDICAL_PRESCRIPTION_NAME"
+msgstr "Receita médica"
+
+msgid "ITEM_MEDICAL_PRESCRIPTION_DESCRIPTION"
+msgstr "Uma folha dobrada várias vezes, com a ponta rasgada e o papel já mole de tanto abrir e fechar. No topo está o nome Juliana Ferreira, a data da consulta e o carimbo da médica do posto do centro. No corpo da receita dá para ler sertralina 50 mg, uso diário, e mais abaixo uma orientação para medicação de apoio à noite, com retorno em trinta dias. Num campo digitado aparece a observação quadro de ansiedade persistente e insônia. A letra da médica no rodapé continua difícil de entender."
+
+msgid "ITEM_STATION_BADGE_NAME"
+msgstr "Crachá da Estação"
+
+msgid "ITEM_STATION_BADGE_DESCRIPTION"
+msgstr "Plástico duro, borda trincada e a foto ruim de sempre. O nome está legível, Juliana Ferreira, e abaixo vem o cargo, Auxiliar de Apoio Operacional, com a marcação de turno noturno impressa numa faixa azul já meio desbotada. No canto inferior tem o logotipo da linha férrea local, com a tinta gasta pelo tempo. O cordão preto está encardido perto do fecho, de tanto uso."
+
+msgid "ITEM_CELLPHONE_NAME"
+msgstr "Celular de Juliana"
+
+msgid "ITEM_CELLPHONE_DESCRIPTION"
+msgstr "Capinha preta sem desenho, um canto da película rachado e marcas de unha perto do botão lateral. O aparelho está quente, como fica quando passa tempo demais na mão. Nada nele chama atenção além do desgaste de uso. É um celular comum, sem nada bonito ou novo, só funcional do jeito que precisa ser."
+
+msgid "ITEM_NEWSPAPER_NAME"
+msgstr "Recorte de jornal"
+
+msgid "ITEM_NEWSPAPER_DESCRIPTION"
+msgstr "Recorte do jornal A Voz do Vale, já com a dobra marcada no meio e uma mancha de café num canto. A manchete diz “Terceira jovem desaparece em menos de dois meses na região”. A matéria cita nomes, bairros e horários, tudo escrito naquele tom apressado de jornal pequeno que quer parecer mais certo do que realmente está. Um trecho foi sublinhado de caneta azul, bem em cima da frase sobre movimentação estranha perto da linha férrea desativada."
+
+msgid "ITEM_STATION_PHOTO_NAME"
+msgstr "Foto antiga na estação"
+
+msgid "ITEM_STATION_PHOTO_DESCRIPTION"
+msgstr "Uma foto velha, já um pouco amarelada nas bordas. Eu e Sophia ainda crianças, sentadas num banco de madeira da estação antiga. Atrás da gente aparece metade da placa do lugar e um pedaço dos trilhos. Ela está olhando direto para a câmera, sorrindo sem esforço. Eu estou meio torta na foto, com cara de quem já não gostava disso nem naquela época. A moldura é simples, de plástico escuro, com um risco comprido atravessando a frente."
+
+msgid "ITEM_FLASHLIGHT_NAME"
+msgstr "Lanterna de plantão"
+
+msgid "ITEM_FLASHLIGHT_DESCRIPTION"
+msgstr "Lanterna grande, de corpo metálico, com tinta preta descascada perto da base. O botão de ligar afundou um pouco mais do que devia e a alça está enrolada com fita isolante para não machucar a mão. Tem três marcas de impacto numa lateral, como se já tivesse caído no cascalho mais de uma vez. Mesmo gasta, ainda passa a impressão de ser confiável."
+
+msgid "ITEM_CLONAZEPAM_NAME"
+msgstr "Frasco de clonazepam"
+
+msgid "ITEM_CLONAZEPAM_DESCRIPTION"
+msgstr "Frasco pequeno de vidro âmbar com tampa branca, já meio gasta na rosca. A etiqueta da farmácia está colada por cima da original, com o nome Juliana Ferreira impresso em fonte de computador e o resto das informações cortado torto. Ainda tem alguns comprimidos lá dentro. Quando mexe, faz aquele barulho seco de coisa leve batendo no vidro. O adesivo de instrução está começando a descolar por causa do vapor do chuveiro."

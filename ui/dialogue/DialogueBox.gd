@@ -25,8 +25,15 @@ func show_timed_message(text: String, duration: float) -> void:
 func show_continue_message(text: String) -> void:
 	waiting_for_input = true
 	hide_timer.stop()
+
+
+func set_message_text(text: String) -> void:
 	message_label.text = text
-	hint_label.text = "Press Enter or click to continue"
+
+	if not hint_label.text.is_empty():
+		hint_label.text = tr("DIALOGUE_CONTINUE_HINT")
+	message_label.text = text
+	hint_label.text = tr("DIALOGUE_CONTINUE_HINT")
 	root.visible = true
 
 func hide_message() -> void:

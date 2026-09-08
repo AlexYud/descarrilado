@@ -100,7 +100,7 @@ const BLACKOUT_RECT_PATH := NodePath(
 @export var flashlight_button_text: String = "F"
 
 @export var flashlight_tutorial_text: String = (
-	"Press %s to turn on the flashlight"
+	"TUTORIAL_FLASHLIGHT"
 )
 
 @export var tutorial_prompt_font_size: int = 26
@@ -156,6 +156,7 @@ var continuity_light_sequence_finished: bool = true
 
 func _ready() -> void:
 	dream_root = get_parent()
+	_connect_language_settings()
 
 	_find_scene_nodes()
 	_collect_train_light_flickers()
@@ -176,6 +177,23 @@ func _ready() -> void:
 	_prepare_head_raise_start_pose()
 
 	call_deferred("_finish_scene_setup")
+
+
+func _connect_language_settings() -> void:
+	if not GameSettings.text_language_changed.is_connected(
+		_on_text_language_changed
+	):
+		GameSettings.text_language_changed.connect(
+			_on_text_language_changed
+		)
+
+
+func _on_text_language_changed(_locale: String) -> void:
+	if tutorial_prompt_label != null:
+		tutorial_prompt_label.text = (
+			tr(flashlight_tutorial_text)
+			% flashlight_button_text
+		)
 
 
 func _process(_delta: float) -> void:
@@ -813,7 +831,7 @@ func _create_tutorial_prompt() -> void:
 	tutorial_prompt_label.modulate.a = 0.0
 
 	tutorial_prompt_label.text = (
-		flashlight_tutorial_text
+		tr(flashlight_tutorial_text)
 		% flashlight_button_text
 	)
 
@@ -881,7 +899,7 @@ func _show_flashlight_tutorial_prompt() -> void:
 	tutorial_prompt_visible = true
 
 	tutorial_prompt_label.text = (
-		flashlight_tutorial_text
+		tr(flashlight_tutorial_text)
 		% flashlight_button_text
 	)
 

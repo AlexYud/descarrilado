@@ -9,6 +9,7 @@ var player: Node = null
 var inventory_open: bool = false
 var inventory_slot_buttons: Array[Button] = []
 var current_slots: Array[Dictionary] = []
+var current_inspect_data: Dictionary = {}
 var selected_slot_index: int = -1
 var inspect_return_to_inventory: bool = false
 
@@ -29,6 +30,7 @@ var inspect_hint_label: Label = null
 
 func setup(player_node: Node) -> void:
 	player = player_node
+	_connect_language_settings()
 	_remove_existing_runtime_ui()
 	_build_inventory_ui()
 	close()
@@ -62,7 +64,7 @@ func show_inventory(slots: Array[Dictionary]) -> void:
 		inventory_root.visible = true
 
 	if header_label != null:
-		header_label.text = "Inventory"
+		header_label.text = tr("INVENTORY_TITLE")
 
 	if inventory_content != null:
 		inventory_content.visible = true
@@ -80,6 +82,7 @@ func show_inventory(slots: Array[Dictionary]) -> void:
 func show_inspect(slot_data: Dictionary, from_inventory: bool) -> void:
 	inventory_open = from_inventory
 	inspect_return_to_inventory = from_inventory
+	current_inspect_data = slot_data
 
 	if inventory_ui_layer != null:
 		inventory_ui_layer.visible = true
@@ -88,7 +91,7 @@ func show_inspect(slot_data: Dictionary, from_inventory: bool) -> void:
 		inventory_root.visible = true
 
 	if header_label != null:
-		header_label.text = "Inspect"
+		header_label.text = tr("INVENTORY_INSPECT")
 
 	if inventory_content != null:
 		inventory_content.visible = false
@@ -100,10 +103,14 @@ func show_inspect(slot_data: Dictionary, from_inventory: bool) -> void:
 		action_popup.visible = false
 
 	if inspect_title_label != null:
-		inspect_title_label.text = str(slot_data.get("name", ""))
+		inspect_title_label.text = tr(
+			str(slot_data.get("name", ""))
+		)
 
 	if inspect_description_label != null:
-		inspect_description_label.text = str(slot_data.get("description", ""))
+		inspect_description_label.text = tr(
+			str(slot_data.get("description", ""))
+		)
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -112,6 +119,7 @@ func close() -> void:
 	inventory_open = false
 	selected_slot_index = -1
 	inspect_return_to_inventory = false
+	current_inspect_data = {}
 
 	if inventory_ui_layer != null:
 		inventory_ui_layer.visible = false
@@ -136,9 +144,16 @@ func refresh(slots: Array[Dictionary]) -> void:
 		var item_name: String = str(slot_data.get("name", ""))
 
 		if item_name == "":
-			inventory_slot_buttons[i].text = "Slot %d\nEmpty" % (i + 1)
+			inventory_slot_buttons[i].text = tr(
+				"INVENTORY_SLOT_EMPTY"
+			).format({"slot": i + 1})
 		else:
-			inventory_slot_buttons[i].text = "Slot %d\n%s" % [i + 1, item_name]
+			inventory_slot_buttons[i].text = tr(
+				"INVENTORY_SLOT_ITEM"
+			).format({
+				"slot": i + 1,
+				"item": tr(item_name),
+			})
 
 
 func _remove_existing_runtime_ui() -> void:
@@ -199,7 +214,7 @@ func _build_inventory_ui() -> void:
 
 	header_label = Label.new()
 	header_label.name = "HeaderLabel"
-	header_label.text = "Inventory"
+	header_label.text = tr("INVENTORY_TITLE")
 	header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header_label.custom_minimum_size = Vector2(0.0, 40.0)
 	main_vbox.add_child(header_label)
@@ -227,7 +242,9 @@ func _build_inventory_ui() -> void:
 		var slot_button: Button = Button.new()
 		slot_button.name = "Slot%d" % (i + 1)
 		slot_button.custom_minimum_size = Vector2(150.0, 124.0)
-		slot_button.text = "Slot %d\nEmpty" % (i + 1)
+		slot_button.text = tr(
+			"INVENTORY_SLOT_EMPTY"
+		).format({"slot": i + 1})
 		slot_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		slot_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		slot_button.pressed.connect(_on_slot_button_pressed.bind(i))
@@ -274,7 +291,7 @@ func _build_inventory_ui() -> void:
 
 	inspect_hint_label = Label.new()
 	inspect_hint_label.name = "InspectHintLabel"
-	inspect_hint_label.text = "Left drag: rotate    Wheel: zoom    Right click: back"
+	inspect_hint_label.text = tr("INVENTORY_INSPECT_HINT")
 	inspect_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	inspect_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inspect_vbox.add_child(inspect_hint_label)
@@ -297,16 +314,59 @@ func _build_inventory_ui() -> void:
 	popup_margin.add_child(popup_vbox)
 
 	use_button = Button.new()
-	use_button.text = "Use"
+	use_button.text = tr("INVENTORY_USE")
 	use_button.custom_minimum_size = Vector2(110.0, 38.0)
 	use_button.pressed.connect(_on_use_button_pressed)
 	popup_vbox.add_child(use_button)
 
 	inspect_button = Button.new()
-	inspect_button.text = "Inspect"
+	inspect_button.text = tr("INVENTORY_INSPECT")
 	inspect_button.custom_minimum_size = Vector2(110.0, 38.0)
 	inspect_button.pressed.connect(_on_inspect_button_pressed)
 	popup_vbox.add_child(inspect_button)
+
+
+func _connect_language_settings() -> void:
+	if not GameSettings.text_language_changed.is_connected(
+		_on_text_language_changed
+	):
+		GameSettings.text_language_changed.connect(
+			_on_text_language_changed
+		)
+
+
+func _on_text_language_changed(_locale: String) -> void:
+	if use_button != null:
+		use_button.text = tr("INVENTORY_USE")
+
+	if inspect_button != null:
+		inspect_button.text = tr("INVENTORY_INSPECT")
+
+	if inspect_hint_label != null:
+		inspect_hint_label.text = tr(
+			"INVENTORY_INSPECT_HINT"
+		)
+
+	if (
+		inspect_content != null
+		and inspect_content.visible
+		and not current_inspect_data.is_empty()
+	):
+		show_inspect(
+			current_inspect_data,
+			inspect_return_to_inventory
+		)
+		return
+
+	if header_label != null:
+		header_label.text = tr("INVENTORY_TITLE")
+
+	if (
+		not current_slots.is_empty()
+		and current_slots.size()
+		>= inventory_slot_buttons.size()
+	):
+		refresh(current_slots)
 
 
 func _on_slot_button_pressed(slot_index: int) -> void:

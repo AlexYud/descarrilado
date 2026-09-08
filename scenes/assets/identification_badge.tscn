@@ -15,8 +15,8 @@ size = Vector3(0.05, 0.1, 0.01)
 [node name="IdentificationBadge" type="Node3D" unique_id=756704975]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0, 0, 0)
 script = ExtResource("1_k6pga")
-inspect_name = "Station Locker Key"
-inspect_description = "A small brass key attached to a plastic tag with a number worn almost blank. It looks ordinary enough to be ignored, which is exactly what makes it feel important. Juliana doesn’t remember where she got it, only that the cold metal makes her stomach tighten the moment it touches her palm. Some doors in this story were never locked to keep people out."
+inspect_name = "ITEM_STATION_BADGE_NAME"
+inspect_description = "ITEM_STATION_BADGE_DESCRIPTION"
 
 [node name="Visual" type="MeshInstance3D" parent="." unique_id=2095970228]
 mesh = SubResource("BoxMesh_q8u5g")

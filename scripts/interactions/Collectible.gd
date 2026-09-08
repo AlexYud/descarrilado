@@ -2,9 +2,9 @@ extends Interactable
 class_name Collectible
 
 @export var item_id: String = "item"
-@export var item_name: String = "New Item"
+@export var item_name: String = "ITEM_GENERIC_NEW"
 @export_multiline var item_description: String = ""
-@export var pickup_prompt_text: String = "[E] Pick up"
+@export var pickup_prompt_text: String = "PROMPT_PICK_UP"
 
 
 func can_interact(player: Node) -> bool:

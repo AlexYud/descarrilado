@@ -1,6 +1,6 @@
 extends Area3D
 
-@export_multiline var message: String = "Hello."
+@export_multiline var message: String = "DIALOGUE_PLACEHOLDER"
 @export var use_timed_dialogue: bool = true
 @export var duration: float = 2.0
 @export var freeze_player: bool = false

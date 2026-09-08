@@ -1,0 +1,198 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Unrailed\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "GAME_TITLE"
+msgstr ""
+
+msgid "MENU_START"
+msgstr ""
+
+msgid "MENU_OPTIONS"
+msgstr ""
+
+msgid "MENU_QUIT"
+msgstr ""
+
+msgid "CINEMATIC_HOLD_SKIP"
+msgstr ""
+
+msgid "COMMON_LOADING"
+msgstr ""
+
+msgid "PAUSE_TITLE"
+msgstr ""
+
+msgid "PAUSE_RESUME"
+msgstr ""
+
+msgid "PAUSE_RETURN_MAIN_MENU"
+msgstr ""
+
+msgid "OPTIONS_TITLE"
+msgstr ""
+
+msgid "OPTIONS_TAB_AUDIO"
+msgstr ""
+
+msgid "OPTIONS_TAB_GRAPHICS"
+msgstr ""
+
+msgid "OPTIONS_TAB_CONTROLS"
+msgstr ""
+
+msgid "OPTIONS_TAB_LANGUAGE"
+msgstr ""
+
+msgid "OPTIONS_MASTER_VOLUME"
+msgstr ""
+
+msgid "OPTIONS_QUALITY"
+msgstr ""
+
+msgid "OPTIONS_DISPLAY_MODE"
+msgstr ""
+
+msgid "OPTIONS_RESOLUTION"
+msgstr ""
+
+msgid "OPTIONS_VSYNC"
+msgstr ""
+
+msgid "OPTIONS_FPS_LIMIT"
+msgstr ""
+
+msgid "OPTIONS_BRIGHTNESS"
+msgstr ""
+
+msgid "OPTIONS_BACK"
+msgstr ""
+
+msgid "OPTIONS_TEXT_LANGUAGE"
+msgstr ""
+
+msgid "OPTIONS_VOICE_LANGUAGE"
+msgstr ""
+
+msgid "QUALITY_LOW"
+msgstr ""
+
+msgid "QUALITY_MEDIUM"
+msgstr ""
+
+msgid "QUALITY_HIGH"
+msgstr ""
+
+msgid "DISPLAY_WINDOWED"
+msgstr ""
+
+msgid "DISPLAY_BORDERLESS_FULLSCREEN"
+msgstr ""
+
+msgid "DISPLAY_EXCLUSIVE_FULLSCREEN"
+msgstr ""
+
+msgid "FPS_UNCAPPED"
+msgstr ""
+
+msgid "PROMPT_INTERACT"
+msgstr ""
+
+msgid "PROMPT_PICK_UP"
+msgstr ""
+
+msgid "PROMPT_OPEN"
+msgstr ""
+
+msgid "PROMPT_CLOSE"
+msgstr ""
+
+msgid "PROMPT_LOCKED"
+msgstr ""
+
+msgid "PROMPT_UNLOCK"
+msgstr ""
+
+#. TRANSLATORS: %s is the configured flashlight key.
+msgid "TUTORIAL_FLASHLIGHT"
+msgstr ""
+
+msgid "INVENTORY_TITLE"
+msgstr ""
+
+msgid "INVENTORY_INSPECT"
+msgstr ""
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the slot number.
+msgid "INVENTORY_SLOT_EMPTY"
+msgstr ""
+
+#. TRANSLATORS: Keep {slot} and {item}; they are replaced at runtime.
+msgid "INVENTORY_SLOT_ITEM"
+msgstr ""
+
+msgid "INVENTORY_INSPECT_HINT"
+msgstr ""
+
+msgid "INVENTORY_USE"
+msgstr ""
+
+msgid "COMMON_OK"
+msgstr ""
+
+msgid "DIALOGUE_CONTINUE_HINT"
+msgstr ""
+
+msgid "DIALOGUE_PLACEHOLDER"
+msgstr ""
+
+msgid "ITEM_GENERIC_NEW"
+msgstr ""
+
+msgid "ITEM_GENERIC_INSPECTABLE"
+msgstr ""
+
+msgid "ITEM_MEDICAL_PRESCRIPTION_NAME"
+msgstr ""
+
+msgid "ITEM_MEDICAL_PRESCRIPTION_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_STATION_BADGE_NAME"
+msgstr ""
+
+msgid "ITEM_STATION_BADGE_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_CELLPHONE_NAME"
+msgstr ""
+
+msgid "ITEM_CELLPHONE_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_NEWSPAPER_NAME"
+msgstr ""
+
+msgid "ITEM_NEWSPAPER_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_STATION_PHOTO_NAME"
+msgstr ""
+
+msgid "ITEM_STATION_PHOTO_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_FLASHLIGHT_NAME"
+msgstr ""
+
+msgid "ITEM_FLASHLIGHT_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_CLONAZEPAM_NAME"
+msgstr ""
+
+msgid "ITEM_CLONAZEPAM_DESCRIPTION"
+msgstr ""

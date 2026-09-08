@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://226bthejacww" path="res://ui/OptionsPanel.tscn" id="1_c7v6e"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=1457676507]
+auto_translate_mode = 1
 layer = 100
 script = ExtResource("1_8tehv")
 
@@ -50,20 +51,19 @@ theme_override_constants/separation = 20
 
 [node name="PauseTitle" type="Label" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=1028547576]
 layout_mode = 2
-text = "Paused"
+text = "PAUSE_TITLE"
 
 [node name="ResumeButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=883567585]
 layout_mode = 2
-text = "Resume"
+text = "PAUSE_RESUME"
 
 [node name="OptionsButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=1429061518]
 layout_mode = 2
-text = "Options
-"
+text = "MENU_OPTIONS"
 
 [node name="MainMenuButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=1800400126]
 layout_mode = 2
-text = "Return to Main Menu"
+text = "PAUSE_RETURN_MAIN_MENU"
 
 [node name="OptionsPanel" parent="PauseRoot" unique_id=132118116 instance=ExtResource("1_c7v6e")]
 layout_mode = 1

@@ -1,7 +1,7 @@
 extends Interactable
 class_name Inspectable
 
-@export var inspect_name: String = "Inspectable Item"
+@export var inspect_name: String = "ITEM_GENERIC_INSPECTABLE"
 @export_multiline var inspect_description: String = ""
 
 

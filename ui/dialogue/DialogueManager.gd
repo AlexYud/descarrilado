@@ -9,8 +9,16 @@ var queue: Array[Dictionary] = []
 var showing: bool = false
 var ui_ready: bool = false
 var current_message_freezes_player: bool = false
+var current_message_key: String = ""
 
 func _ready() -> void:
+	if not GameSettings.text_language_changed.is_connected(
+		_on_text_language_changed
+	):
+		GameSettings.text_language_changed.connect(
+			_on_text_language_changed
+		)
+
 	dialogue_box = DIALOGUE_BOX_SCENE.instantiate()
 
 	# Add it after the current scene setup finishes
@@ -43,6 +51,7 @@ func show_continue(text: String, freeze_player: bool = false) -> void:
 func clear_all() -> void:
 	queue.clear()
 	showing = false
+	current_message_key = ""
 
 	if current_message_freezes_player:
 		current_message_freezes_player = false
@@ -68,7 +77,8 @@ func _try_show_next() -> void:
 	var item: Dictionary = queue.pop_front()
 
 	var dialog_type: String = item["type"]
-	var text: String = item["text"]
+	current_message_key = str(item["text"])
+	var text: String = tr(current_message_key)
 	current_message_freezes_player = bool(item.get("freeze_player", false))
 
 	if current_message_freezes_player:
@@ -82,6 +92,7 @@ func _try_show_next() -> void:
 
 func _on_dialogue_finished() -> void:
 	dialogue_box.hide_message()
+	current_message_key = ""
 
 	if current_message_freezes_player:
 		current_message_freezes_player = false
@@ -89,3 +100,13 @@ func _on_dialogue_finished() -> void:
 
 	showing = false
 	_try_show_next()
+
+
+func _on_text_language_changed(_locale: String) -> void:
+	if not showing or current_message_key.is_empty():
+		return
+
+	if is_instance_valid(dialogue_box) and ui_ready:
+		dialogue_box.set_message_text(
+			tr(current_message_key)
+		)
