@@ -24,7 +24,7 @@ two editable terrains would make changes leak from one scene into the other.
 
 Scripts are grouped by the feature that owns their behavior:
 
-- `audio/`, `cinematics/`, `core/`, `dialogue/`, `environment/`
+- `audio/`, `cinematics/`, `core/`, `dialogue/`, `environment/`, `save/`
 - `interactions/`, `items/`, `menu/`, `player/`, `train/`, `ui/`
 - `debug/`, `optimization/`, and `tools/` for development or infrastructure
 
@@ -72,3 +72,6 @@ Prefer this direction of dependencies:
 Core services must not reference a particular level. Player and interaction
 scripts must not depend on menu or cinematic scenes. This keeps future levels
 incremental and prevents a change in one scene from breaking unrelated ones.
+
+See `docs/save_system.md` before adding persistent puzzles, triggers, or
+checkpoints. Persistent IDs must remain stable even when scene nodes move.

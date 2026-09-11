@@ -260,6 +260,7 @@ size = Vector3(1.015, 0.1, 0.4)
 [node name="DrawerInteractable3" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand" unique_id=248808833 instance=ExtResource("3_sikab")]
 transform = Transform3D(-1, 0, -8.742277e-08, 0, 1, 0, 8.742277e-08, 0, -1, 0, 0.2, -0.02)
 open_offset = Vector3(0, 0, 0.3)
+persistent_id = &"chapter01_bedroom_nightstand_drawer"
 
 [node name="Medical" parent="SceneStructure/JulianasHouse/Furniture/Bedroom/Nightstand/DrawerInteractable3/DrawerRoot/ItemAnchor" parent_id_path=PackedInt32Array(248808833, 546873071) index="0" unique_id=1967662599 instance=ExtResource("4_0xtmg")]
 transform = Transform3D(0.55677414, -0.8306642, 9.9055635e-09, -8.1960464e-16, 1.1924886e-08, 0.9999999, -0.83066374, -0.5567744, 6.639462e-09, -0.23917294, 0, 0.0058088303)
@@ -337,6 +338,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8757625, 4.389763, 4.37061
 
 [node name="DoorInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=944800287 instance=ExtResource("8_e5ob3")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -6.4301357, 3.55, 4.146984)
+persistent_id = &"chapter01_bedroom_door"
 
 [node name="Newspaper" parent="SceneStructure/JulianasHouse/Furniture/Bedroom" unique_id=613955124 instance=ExtResource("9_tqmvx")]
 transform = Transform3D(-0.92646295, 0.376386, 1.6452354e-08, 0, -4.371139e-08, 1, 0.376386, 0.92646295, 4.049698e-08, -4.9775004, 4.3449497, 4.2396264)
@@ -413,6 +415,7 @@ item_description = "ITEM_FLASHLIGHT_DESCRIPTION"
 
 [node name="DoorInteractable" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=952032601 instance=ExtResource("8_e5ob3")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -11.252953, 3.55, 4.146984)
+persistent_id = &"chapter01_bathroom_door"
 
 [node name="LampLight" type="OmniLight3D" parent="SceneStructure/JulianasHouse/Furniture/Bathroom" unique_id=1633390844]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.153323, 6.0868278, 3.2377045)

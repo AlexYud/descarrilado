@@ -1,0 +1,135 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://c4jgi3mj824k2" path="res://scripts/ui/save_slots_panel_controller.gd" id="1_save_slots"]
+
+[node name="SaveSlotsPanel" type="Control"]
+visible = false
+z_index = 20
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_save_slots")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0, 0, 0, 0.76)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Window" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(760, 560)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Center/Window"]
+layout_mode = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 40
+
+[node name="Content" type="VBoxContainer" parent="Center/Window/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="Center/Window/Margin/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "SAVE_NEW_GAME_TITLE"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="Center/Window/Margin/Content"]
+layout_mode = 2
+text = "SAVE_SELECT_NEW_GAME"
+horizontal_alignment = 1
+
+[node name="Slots" type="VBoxContainer" parent="Center/Window/Margin/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="Slot1" type="HBoxContainer" parent="Center/Window/Margin/Content/Slots"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SlotButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot1"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 1"
+alignment = 0
+
+[node name="DeleteButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot1"]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+text = "SAVE_DELETE"
+
+[node name="Slot2" type="HBoxContainer" parent="Center/Window/Margin/Content/Slots"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SlotButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot2"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 2"
+alignment = 0
+
+[node name="DeleteButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot2"]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+text = "SAVE_DELETE"
+
+[node name="Slot3" type="HBoxContainer" parent="Center/Window/Margin/Content/Slots"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SlotButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot3"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slot 3"
+alignment = 0
+
+[node name="DeleteButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot3"]
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+text = "SAVE_DELETE"
+
+[node name="BackButton" type="Button" parent="Center/Window/Margin/Content"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "COMMON_BACK"
+
+[node name="OverwriteDialog" type="ConfirmationDialog" parent="."]
+initial_position = 2
+size = Vector2i(460, 180)
+unresizable = true
+exclusive = true
+
+[node name="DeleteDialog" type="ConfirmationDialog" parent="."]
+initial_position = 2
+size = Vector2i(460, 180)
+unresizable = true
+exclusive = true
+
+[node name="ErrorDialog" type="AcceptDialog" parent="."]
+initial_position = 2
+size = Vector2i(460, 160)
+unresizable = true
+exclusive = true

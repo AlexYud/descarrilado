@@ -255,6 +255,58 @@ func force_stop_immediately() -> void:
 		)
 
 
+func get_save_state() -> Dictionary:
+	return {
+		"look_yaw": look_yaw,
+		"look_pitch": look_pitch,
+		"is_crouching": is_crouching,
+	}
+
+
+func restore_save_state(save_data: Dictionary) -> void:
+	look_yaw = float(save_data.get("look_yaw", 0.0))
+	look_pitch = clampf(
+		float(save_data.get("look_pitch", 0.0)),
+		-35.0,
+		75.0
+	)
+	is_crouching = bool(save_data.get("is_crouching", false))
+	crouch_offset = CROUCH_HEIGHT if is_crouching else 0.0
+	bob_time = 0.0
+	gameplay_camera_rotation = Vector3(
+		-deg_to_rad(look_pitch),
+		0.0,
+		0.0
+	)
+
+	if player != null:
+		player.velocity = Vector3.ZERO
+
+	if head != null:
+		head.rotation = Vector3(
+			0.0,
+			-deg_to_rad(look_yaw),
+			0.0
+		)
+
+	var final_offset := Vector3(0.0, crouch_offset, 0.0)
+	if camera != null:
+		camera.position = original_camera_position + final_offset
+		camera.rotation = gameplay_camera_rotation
+		camera.fov = BASE_FOV
+
+	if hand != null:
+		hand.position = original_hand_position + final_offset
+
+	if collider != null and collider.shape is CapsuleShape3D:
+		var capsule: CapsuleShape3D = collider.shape as CapsuleShape3D
+		capsule.height = (
+			CROUCH_COLLIDER_HEIGHT
+			if is_crouching
+			else STAND_HEIGHT
+		)
+
+
 func _apply_floor_settings() -> void:
 	if player == null:
 		return

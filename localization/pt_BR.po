@@ -11,8 +11,11 @@ msgstr ""
 msgid "GAME_TITLE"
 msgstr "Unrailed"
 
-msgid "MENU_START"
-msgstr "Iniciar"
+msgid "MENU_NEW_GAME"
+msgstr "Novo Jogo"
+
+msgid "MENU_LOAD_GAME"
+msgstr "Carregar Jogo"
 
 msgid "MENU_OPTIONS"
 msgstr "Opções"
@@ -26,12 +29,96 @@ msgstr "Segure Espaço para Pular"
 msgid "COMMON_LOADING"
 msgstr "Carregando..."
 
+# Espaços de salvamento
+msgid "SAVE_NEW_GAME_TITLE"
+msgstr "Novo Jogo"
+
+msgid "SAVE_LOAD_GAME_TITLE"
+msgstr "Carregar Jogo"
+
+msgid "SAVE_SELECT_NEW_GAME"
+msgstr "Escolha um espaço para o novo jogo."
+
+msgid "SAVE_SELECT_LOAD_GAME"
+msgstr "Escolha um jogo para continuar."
+
+#. TRANSLATORS: Mantenha {slot}; o valor é substituído pelo número do espaço.
+msgid "SAVE_SLOT_EMPTY"
+msgstr "Espaço {slot}\nVazio"
+
+#. TRANSLATORS: Mantenha {slot}, {location}, {date} e {playtime}.
+msgid "SAVE_SLOT_OCCUPIED"
+msgstr "Espaço {slot}\n{location}    {date}\nTempo de jogo: {playtime}"
+
+#. TRANSLATORS: Mantenha {slot}; o valor é substituído pelo número do espaço.
+msgid "SAVE_SLOT_CORRUPT"
+msgstr "Espaço {slot}\nDados de salvamento ilegíveis"
+
+msgid "SAVE_DELETE"
+msgstr "Excluir"
+
+msgid "SAVE_OVERWRITE_TITLE"
+msgstr "Sobrescrever Salvamento?"
+
+#. TRANSLATORS: Mantenha {slot}; o valor é substituído pelo número do espaço.
+msgid "SAVE_OVERWRITE_MESSAGE"
+msgstr "O espaço {slot} já contém um jogo. O progresso será substituído permanentemente."
+
+msgid "SAVE_DELETE_TITLE"
+msgstr "Excluir Salvamento?"
+
+#. TRANSLATORS: Mantenha {slot}; o valor é substituído pelo número do espaço.
+msgid "SAVE_DELETE_MESSAGE"
+msgstr "Excluir o jogo salvo no espaço {slot}? Esta ação não pode ser desfeita."
+
+msgid "SAVE_ERROR_TITLE"
+msgstr "Erro de Salvamento"
+
+msgid "SAVE_ERROR_CREATE"
+msgstr "Não foi possível criar o novo jogo. Tente novamente."
+
+msgid "SAVE_ERROR_LOAD"
+msgstr "Não foi possível carregar este jogo salvo."
+
+msgid "SAVE_ERROR_DELETE"
+msgstr "Não foi possível excluir este jogo salvo."
+
+msgid "SAVE_LOCATION_DREAM_INTRO"
+msgstr "O Sonho"
+
+msgid "SAVE_LOCATION_UNKNOWN"
+msgstr "Local Desconhecido"
+
+msgid "SAVE_DATE_UNKNOWN"
+msgstr "Data desconhecida"
+
+msgid "COMMON_BACK"
+msgstr "Voltar"
+
+msgid "COMMON_CANCEL"
+msgstr "Cancelar"
+
+msgid "COMMON_CONFIRM"
+msgstr "Confirmar"
+
 # Menu de pausa
 msgid "PAUSE_TITLE"
 msgstr "Pausado"
 
 msgid "PAUSE_RESUME"
 msgstr "Continuar"
+
+msgid "PAUSE_SAVE_GAME"
+msgstr "Salvar Jogo"
+
+msgid "PAUSE_SAVE_SUCCESS"
+msgstr "Jogo salvo."
+
+msgid "PAUSE_SAVE_UNAVAILABLE"
+msgstr "Não é possível salvar agora."
+
+msgid "PAUSE_SAVE_ERROR"
+msgstr "Não foi possível salvar o jogo."
 
 msgid "PAUSE_RETURN_MAIN_MENU"
 msgstr "Voltar ao Menu Principal"

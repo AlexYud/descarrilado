@@ -124,6 +124,20 @@ func set_flashlight_input_enabled(enabled: bool) -> void:
 		visible = false
 
 
+func get_save_state() -> Dictionary:
+	return {"is_on": flashlight_on}
+
+
+func restore_save_state(save_data: Dictionary) -> void:
+	flashlight_on = bool(save_data.get("is_on", false))
+	_reset_light_effects()
+	visible = (
+		flashlight_input_enabled
+		and flashlight_on
+		and _player_has_flashlight()
+	)
+
+
 func _refresh_references() -> void:
 	if player != null:
 		camera = player.get_node_or_null("Head/Camera3D") as Camera3D

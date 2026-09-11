@@ -6,9 +6,11 @@ extends CharacterBody3D
 @onready var inventory_ui_controller: InventoryUIController = $InventoryUIController
 @onready var audio_controller: PlayerAudioController = $AudioController
 @onready var inspect_controller: PlayerInspectController = $InspectController
+@onready var flashlight_controller: Node = $Hand/SpotLight3D
 
 var dialogue_frozen: bool = false
 var cutscene_frozen: bool = false
+var manual_save_blocked: bool = false
 
 
 func _ready() -> void:
@@ -36,6 +38,8 @@ func _ready() -> void:
 
 	if inspect_controller != null:
 		inspect_controller.setup(self)
+
+	call_deferred("_restore_manual_save_state")
 
 	if inventory_ui_controller != null:
 		if not inventory_ui_controller.use_requested.is_connected(
@@ -249,6 +253,139 @@ func set_cutscene_frozen(is_frozen: bool) -> void:
 		inventory_ui_controller.close()
 
 
+func set_manual_save_blocked(blocked: bool) -> void:
+	manual_save_blocked = blocked
+
+
+func can_manual_save() -> bool:
+	if not SaveManager.has_active_game():
+		return false
+
+	if manual_save_blocked or cutscene_frozen or dialogue_frozen:
+		return false
+
+	if DialogueManager.has_method("is_dialogue_active"):
+		if DialogueManager.is_dialogue_active():
+			return false
+
+	if (
+		inventory_ui_controller != null
+		and inventory_ui_controller.is_inventory_open()
+	):
+		return false
+
+	if inspect_controller != null and inspect_controller.is_open():
+		return false
+
+	var scene_path: String = get_current_save_scene_path()
+	return (
+		not scene_path.is_empty()
+		and ResourceLoader.exists(scene_path, "PackedScene")
+	)
+
+
+func get_current_save_scene_path() -> String:
+	var current_scene: Node = get_tree().current_scene
+	if current_scene == null:
+		return ""
+
+	return current_scene.scene_file_path
+
+
+func get_manual_save_state() -> Dictionary:
+	var inventory_data: Array[Dictionary] = []
+	if inventory_controller != null:
+		inventory_data = inventory_controller.get_serializable_slots()
+
+	var movement_data: Dictionary = {}
+	if movement_controller != null:
+		movement_data = movement_controller.get_save_state()
+
+	var flashlight_data: Dictionary = {}
+	if (
+		flashlight_controller != null
+		and flashlight_controller.has_method("get_save_state")
+	):
+		flashlight_data = flashlight_controller.call("get_save_state")
+
+	return {
+		"position": _vector3_to_array(global_position),
+		"rotation": _vector3_to_array(global_rotation),
+		"movement": movement_data,
+		"inventory": inventory_data,
+		"flashlight": flashlight_data,
+	}
+
+
+func _restore_manual_save_state() -> void:
+	var scene_path: String = get_current_save_scene_path()
+	if scene_path.is_empty():
+		return
+
+	var save_data: Dictionary = SaveManager.get_manual_player_state(
+		scene_path
+	)
+	if save_data.is_empty():
+		return
+
+	global_position = _array_to_vector3(
+		save_data.get("position", []),
+		global_position
+	)
+	global_rotation = _array_to_vector3(
+		save_data.get("rotation", []),
+		global_rotation
+	)
+	velocity = Vector3.ZERO
+
+	var movement_value: Variant = save_data.get("movement", {})
+	if movement_controller != null and movement_value is Dictionary:
+		movement_controller.restore_save_state(
+			movement_value as Dictionary
+		)
+
+	var inventory_value: Variant = save_data.get("inventory", [])
+	if inventory_controller != null and inventory_value is Array:
+		inventory_controller.restore_serializable_slots(
+			inventory_value as Array
+		)
+
+	var flashlight_value: Variant = save_data.get("flashlight", {})
+	if (
+		flashlight_controller != null
+		and flashlight_controller.has_method("restore_save_state")
+		and flashlight_value is Dictionary
+	):
+		flashlight_controller.call(
+			"restore_save_state",
+			flashlight_value as Dictionary
+		)
+
+	if inventory_ui_controller != null and inventory_controller != null:
+		inventory_ui_controller.refresh(
+			inventory_controller.get_slots()
+		)
+
+
+func _vector3_to_array(value: Vector3) -> Array[float]:
+	return [value.x, value.y, value.z]
+
+
+func _array_to_vector3(
+	value: Variant,
+	fallback: Vector3
+) -> Vector3:
+	if not value is Array or (value as Array).size() != 3:
+		return fallback
+
+	var components: Array = value as Array
+	return Vector3(
+		float(components[0]),
+		float(components[1]),
+		float(components[2])
+	)
+
+
 func _on_dialogue_freeze_changed(is_frozen: bool) -> void:
 	dialogue_frozen = is_frozen
 
@@ -335,7 +472,8 @@ func add_item_to_inventory(
 	item_id: String,
 	item_name: String,
 	item_description: String = "",
-	inspect_visual_template: Node3D = null
+	inspect_visual_template: Node3D = null,
+	item_scene_path: String = ""
 ) -> bool:
 	if inventory_controller == null:
 		return false
@@ -344,7 +482,8 @@ func add_item_to_inventory(
 		item_id,
 		item_name,
 		item_description,
-		inspect_visual_template
+		inspect_visual_template,
+		item_scene_path
 	)
 
 	if added and inventory_ui_controller != null:

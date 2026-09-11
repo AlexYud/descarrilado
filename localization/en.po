@@ -11,8 +11,11 @@ msgstr ""
 msgid "GAME_TITLE"
 msgstr "Unrailed"
 
-msgid "MENU_START"
-msgstr "Start"
+msgid "MENU_NEW_GAME"
+msgstr "New Game"
+
+msgid "MENU_LOAD_GAME"
+msgstr "Load Game"
 
 msgid "MENU_OPTIONS"
 msgstr "Options"
@@ -26,12 +29,96 @@ msgstr "Hold Space to Skip"
 msgid "COMMON_LOADING"
 msgstr "Loading..."
 
+# Save slots
+msgid "SAVE_NEW_GAME_TITLE"
+msgstr "New Game"
+
+msgid "SAVE_LOAD_GAME_TITLE"
+msgstr "Load Game"
+
+msgid "SAVE_SELECT_NEW_GAME"
+msgstr "Choose a slot for the new game."
+
+msgid "SAVE_SELECT_LOAD_GAME"
+msgstr "Choose a game to continue."
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_SLOT_EMPTY"
+msgstr "Slot {slot}\nEmpty"
+
+#. TRANSLATORS: Keep {slot}, {location}, {date}, and {playtime}.
+msgid "SAVE_SLOT_OCCUPIED"
+msgstr "Slot {slot}\n{location}    {date}\nPlaytime: {playtime}"
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_SLOT_CORRUPT"
+msgstr "Slot {slot}\nUnreadable save data"
+
+msgid "SAVE_DELETE"
+msgstr "Delete"
+
+msgid "SAVE_OVERWRITE_TITLE"
+msgstr "Overwrite Save?"
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_OVERWRITE_MESSAGE"
+msgstr "Slot {slot} already contains a game. Its progress will be permanently replaced."
+
+msgid "SAVE_DELETE_TITLE"
+msgstr "Delete Save?"
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_DELETE_MESSAGE"
+msgstr "Delete the saved game in slot {slot}? This cannot be undone."
+
+msgid "SAVE_ERROR_TITLE"
+msgstr "Save Error"
+
+msgid "SAVE_ERROR_CREATE"
+msgstr "The new game could not be created. Please try again."
+
+msgid "SAVE_ERROR_LOAD"
+msgstr "This saved game could not be loaded."
+
+msgid "SAVE_ERROR_DELETE"
+msgstr "This saved game could not be deleted."
+
+msgid "SAVE_LOCATION_DREAM_INTRO"
+msgstr "The Dream"
+
+msgid "SAVE_LOCATION_UNKNOWN"
+msgstr "Unknown Location"
+
+msgid "SAVE_DATE_UNKNOWN"
+msgstr "Unknown date"
+
+msgid "COMMON_BACK"
+msgstr "Back"
+
+msgid "COMMON_CANCEL"
+msgstr "Cancel"
+
+msgid "COMMON_CONFIRM"
+msgstr "Confirm"
+
 # Pause menu
 msgid "PAUSE_TITLE"
 msgstr "Paused"
 
 msgid "PAUSE_RESUME"
 msgstr "Resume"
+
+msgid "PAUSE_SAVE_GAME"
+msgstr "Save Game"
+
+msgid "PAUSE_SAVE_SUCCESS"
+msgstr "Game saved."
+
+msgid "PAUSE_SAVE_UNAVAILABLE"
+msgstr "Saving is unavailable right now."
+
+msgid "PAUSE_SAVE_ERROR"
+msgstr "The game could not be saved."
 
 msgid "PAUSE_RETURN_MAIN_MENU"
 msgstr "Return to Main Menu"

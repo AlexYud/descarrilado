@@ -57,6 +57,17 @@ text = "PAUSE_TITLE"
 layout_mode = 2
 text = "PAUSE_RESUME"
 
+[node name="SaveButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox"]
+layout_mode = 2
+text = "PAUSE_SAVE_GAME"
+
+[node name="SaveStatusLabel" type="Label" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox"]
+visible = false
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+text = "PAUSE_SAVE_SUCCESS"
+horizontal_alignment = 1
+
 [node name="OptionsButton" type="Button" parent="PauseRoot/MenuCenter/PauseWindow/PauseMargin/PauseVBox" unique_id=1429061518]
 layout_mode = 2
 text = "MENU_OPTIONS"

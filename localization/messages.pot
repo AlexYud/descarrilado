@@ -8,7 +8,10 @@ msgstr ""
 msgid "GAME_TITLE"
 msgstr ""
 
-msgid "MENU_START"
+msgid "MENU_NEW_GAME"
+msgstr ""
+
+msgid "MENU_LOAD_GAME"
 msgstr ""
 
 msgid "MENU_OPTIONS"
@@ -23,10 +26,93 @@ msgstr ""
 msgid "COMMON_LOADING"
 msgstr ""
 
+msgid "SAVE_NEW_GAME_TITLE"
+msgstr ""
+
+msgid "SAVE_LOAD_GAME_TITLE"
+msgstr ""
+
+msgid "SAVE_SELECT_NEW_GAME"
+msgstr ""
+
+msgid "SAVE_SELECT_LOAD_GAME"
+msgstr ""
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_SLOT_EMPTY"
+msgstr ""
+
+#. TRANSLATORS: Keep {slot}, {location}, {date}, and {playtime}.
+msgid "SAVE_SLOT_OCCUPIED"
+msgstr ""
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_SLOT_CORRUPT"
+msgstr ""
+
+msgid "SAVE_DELETE"
+msgstr ""
+
+msgid "SAVE_OVERWRITE_TITLE"
+msgstr ""
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_OVERWRITE_MESSAGE"
+msgstr ""
+
+msgid "SAVE_DELETE_TITLE"
+msgstr ""
+
+#. TRANSLATORS: Keep {slot}; it is replaced with the save slot number.
+msgid "SAVE_DELETE_MESSAGE"
+msgstr ""
+
+msgid "SAVE_ERROR_TITLE"
+msgstr ""
+
+msgid "SAVE_ERROR_CREATE"
+msgstr ""
+
+msgid "SAVE_ERROR_LOAD"
+msgstr ""
+
+msgid "SAVE_ERROR_DELETE"
+msgstr ""
+
+msgid "SAVE_LOCATION_DREAM_INTRO"
+msgstr ""
+
+msgid "SAVE_LOCATION_UNKNOWN"
+msgstr ""
+
+msgid "SAVE_DATE_UNKNOWN"
+msgstr ""
+
+msgid "COMMON_BACK"
+msgstr ""
+
+msgid "COMMON_CANCEL"
+msgstr ""
+
+msgid "COMMON_CONFIRM"
+msgstr ""
+
 msgid "PAUSE_TITLE"
 msgstr ""
 
 msgid "PAUSE_RESUME"
+msgstr ""
+
+msgid "PAUSE_SAVE_GAME"
+msgstr ""
+
+msgid "PAUSE_SAVE_SUCCESS"
+msgstr ""
+
+msgid "PAUSE_SAVE_UNAVAILABLE"
+msgstr ""
+
+msgid "PAUSE_SAVE_ERROR"
 msgstr ""
 
 msgid "PAUSE_RETURN_MAIN_MENU"

@@ -17,7 +17,9 @@ The current entry flow is:
 `scenes/menu/main_menu.tscn` -> `scenes/cinematics/dream_intro.tscn` -> future levels
 
 See [Project structure](docs/project_structure.md) for naming rules and the
-recommended workflow for adding levels and features.
+recommended workflow for adding levels and features. See
+[Save system](docs/save_system.md) before adding persistent checkpoints,
+puzzles, or triggers.
 
 ## Validation
 

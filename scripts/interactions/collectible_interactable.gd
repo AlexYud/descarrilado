@@ -7,6 +7,15 @@ class_name Collectible
 @export var pickup_prompt_text: String = "PROMPT_PICK_UP"
 
 
+func _ready() -> void:
+	if SaveManager.get_state_value(
+		&"collectibles",
+		StringName(item_id),
+		false
+	):
+		queue_free()
+
+
 func can_interact(player: Node) -> bool:
 	if player == null:
 		return false
@@ -32,9 +41,21 @@ func interact(player: Node) -> void:
 		inspect_visual_template = visual.duplicate() as Node3D
 
 	if player.has_method("add_item_to_inventory"):
-		var added: bool = bool(player.call("add_item_to_inventory", item_id, item_name, item_description, inspect_visual_template))
+		var added: bool = bool(player.call(
+			"add_item_to_inventory",
+			item_id,
+			item_name,
+			item_description,
+			inspect_visual_template,
+			scene_file_path
+		))
 
 		if added:
+			SaveManager.set_state_value(
+				&"collectibles",
+				StringName(item_id),
+				true
+			)
 			queue_free()
 		elif inspect_visual_template != null:
 			inspect_visual_template.free()

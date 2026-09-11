@@ -168,6 +168,10 @@ func _ready() -> void:
 	if player_camera != null:
 		player_camera.current = true
 
+	if _is_resuming_manual_save():
+		_prepare_manual_save_resume()
+		return
+
 	_prepare_blackout()
 
 	_set_player_enabled(false)
@@ -178,6 +182,36 @@ func _ready() -> void:
 	_prepare_head_raise_start_pose()
 
 	call_deferred("_finish_scene_setup")
+
+
+func _is_resuming_manual_save() -> bool:
+	if dream_root == null:
+		return false
+
+	return SaveManager.has_manual_snapshot_for_scene(
+		dream_root.scene_file_path
+	)
+
+
+func _prepare_manual_save_resume() -> void:
+	head_raise_finished = true
+	continuity_light_sequence_finished = true
+
+	if blackout_rect != null:
+		blackout_rect.modulate.a = 0.0
+		blackout_rect.hide()
+		blackout_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	call_deferred("_finish_manual_save_resume")
+
+
+func _finish_manual_save_resume() -> void:
+	# Train-light scripts finish their own startup first. Manual loading then
+	# restores the stable post-intro state rather than replaying the cinematic.
+	await get_tree().process_frame
+	_force_train_dark()
+	_set_player_enabled(true)
+	_set_flashlight_input_enabled(true)
 
 
 func _connect_language_settings() -> void:
@@ -219,6 +253,11 @@ func _finish_scene_setup() -> void:
 
 	_snap_player_to_floor_before_intro()
 	_prepare_train_for_transition()
+
+	# A loaded start-of-scene save may use the persistent load cover. Do not
+	# let the opening animation advance invisibly behind that transition.
+	if SceneTransition.is_cover_visible():
+		await SceneTransition.transition_finished
 
 	await _begin_playable_scene()
 

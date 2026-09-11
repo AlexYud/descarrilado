@@ -60,6 +60,11 @@ func clear_all() -> void:
 	if is_instance_valid(dialogue_box) and ui_ready:
 		dialogue_box.hide_message()
 
+
+func is_dialogue_active() -> bool:
+	return showing or not queue.is_empty()
+
+
 func _try_show_next() -> void:
 	if not ui_ready:
 		return

@@ -5,6 +5,7 @@ class_name DrawerInteractable
 @export var open_offset: Vector3 = Vector3(0.0, 0.0, -0.4)
 @export var move_speed: float = 6.0
 @export var starts_open: bool = false
+@export var persistent_id: StringName = &""
 
 @export var closed_prompt_text: String = "PROMPT_OPEN"
 @export var opened_prompt_text: String = "PROMPT_CLOSE"
@@ -32,6 +33,8 @@ func _ready() -> void:
 		drawer_root.position = open_local_position
 	else:
 		drawer_root.position = closed_local_position
+
+	_restore_persistent_state()
 
 
 func _process(delta: float) -> void:
@@ -61,3 +64,39 @@ func get_prompt_text() -> String:
 
 func interact(_player: Node) -> void:
 	is_open = not is_open
+	_remember_persistent_state()
+
+
+func _restore_persistent_state() -> void:
+	if persistent_id.is_empty():
+		return
+
+	var saved_value: Variant = SaveManager.get_state_value(
+		&"drawers",
+		persistent_id,
+		{}
+	)
+	if not saved_value is Dictionary:
+		return
+
+	var saved_state: Dictionary = saved_value as Dictionary
+	if saved_state.is_empty():
+		return
+
+	is_open = bool(saved_state.get("is_open", is_open))
+	drawer_root.position = (
+		open_local_position
+		if is_open
+		else closed_local_position
+	)
+
+
+func _remember_persistent_state() -> void:
+	if persistent_id.is_empty() or not SaveManager.has_active_game():
+		return
+
+	SaveManager.set_state_value(
+		&"drawers",
+		persistent_id,
+		{"is_open": is_open}
+	)

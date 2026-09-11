@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameSettings="*res://scripts/core/game_settings.gd"
+SaveManager="*res://scripts/save/save_manager.gd"
+SceneTransition="*res://scripts/ui/scene_transition_manager.gd"
 DialogueManager="*res://scripts/dialogue/dialogue_manager.gd"
 PersistentAudio="*res://scenes/autoload/persistent_audio.tscn"
 

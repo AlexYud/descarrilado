@@ -42,9 +42,14 @@ const TITLE_LABEL_PATH := NodePath(
 	+ "VBoxContainer/TitleLabel"
 )
 
-const START_BUTTON_PATH := NodePath(
+const NEW_GAME_BUTTON_PATH := NodePath(
 	"UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/"
-	+ "VBoxContainer/StartButton"
+	+ "VBoxContainer/NewGameButton"
+)
+
+const LOAD_GAME_BUTTON_PATH := NodePath(
+	"UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/"
+	+ "VBoxContainer/LoadGameButton"
 )
 
 const OPTIONS_BUTTON_PATH := NodePath(
@@ -59,6 +64,10 @@ const QUIT_BUTTON_PATH := NodePath(
 
 const OPTIONS_PANEL_PATH := NodePath(
 	"UI/MainMenuUI/OptionsPanel"
+)
+
+const SAVE_SLOTS_PANEL_PATH := NodePath(
+	"UI/MainMenuUI/SaveSlotsPanel"
 )
 
 const OPTIONS_BACK_BUTTON_PATH := NodePath(
@@ -201,11 +210,13 @@ var main_menu_ui: Control = null
 var left_panel: CanvasItem = null
 
 var title_label: Label = null
-var start_button: Button = null
+var new_game_button: Button = null
+var load_game_button: Button = null
 var options_button: Button = null
 var quit_button: Button = null
 
 var options_panel: Control = null
+var save_slots_panel: SaveSlotsPanelController = null
 var options_back_button: Button = null
 var master_volume_slider: HSlider = null
 
@@ -233,6 +244,8 @@ var playable_scene_load_failed: bool = false
 var loaded_playable_scene: PackedScene = null
 var scene_change_requested: bool = false
 var scene_change_fade_finished: bool = false
+var new_game_scene_path: String = ""
+var reveal_loaded_scene_after_change: bool = false
 
 
 # ============================================================
@@ -241,6 +254,7 @@ var scene_change_fade_finished: bool = false
 
 func _ready() -> void:
 	menu_root = get_parent()
+	new_game_scene_path = playable_scene_path
 
 	_find_scene_nodes()
 	_collect_train_light_flickers()
@@ -302,8 +316,13 @@ func _find_scene_nodes() -> void:
 		as Label
 	)
 
-	start_button = (
-		menu_root.get_node_or_null(START_BUTTON_PATH)
+	new_game_button = (
+		menu_root.get_node_or_null(NEW_GAME_BUTTON_PATH)
+		as Button
+	)
+
+	load_game_button = (
+		menu_root.get_node_or_null(LOAD_GAME_BUTTON_PATH)
 		as Button
 	)
 
@@ -320,6 +339,11 @@ func _find_scene_nodes() -> void:
 	options_panel = (
 		menu_root.get_node_or_null(OPTIONS_PANEL_PATH)
 		as Control
+	)
+
+	save_slots_panel = (
+		menu_root.get_node_or_null(SAVE_SLOTS_PANEL_PATH)
+		as SaveSlotsPanelController
 	)
 
 	options_back_button = (
@@ -400,10 +424,20 @@ func _find_ui_fallbacks() -> void:
 			as Label
 		)
 
-	if start_button == null:
-		start_button = (
+	if new_game_button == null:
+		new_game_button = (
 			main_menu_ui.find_child(
-				"StartButton",
+				"NewGameButton",
+				true,
+				false
+			)
+			as Button
+		)
+
+	if load_game_button == null:
+		load_game_button = (
+			main_menu_ui.find_child(
+				"LoadGameButton",
 				true,
 				false
 			)
@@ -438,6 +472,16 @@ func _find_ui_fallbacks() -> void:
 				false
 			)
 			as Control
+		)
+
+	if save_slots_panel == null:
+		save_slots_panel = (
+			main_menu_ui.find_child(
+				"SaveSlotsPanel",
+				true,
+				false
+			)
+			as SaveSlotsPanelController
 		)
 
 	if options_back_button == null:
@@ -524,9 +568,19 @@ func _validate_scene_nodes() -> void:
 			"MenuController: MainMenuUI was not found."
 		)
 
-	if start_button == null:
+	if new_game_button == null:
 		push_error(
-			"MenuController: StartButton was not found."
+			"MenuController: NewGameButton was not found."
+		)
+
+	if load_game_button == null:
+		push_error(
+			"MenuController: LoadGameButton was not found."
+		)
+
+	if save_slots_panel == null:
+		push_error(
+			"MenuController: SaveSlotsPanel was not found."
 		)
 
 	if options_button == null:
@@ -656,13 +710,23 @@ func _find_train_light_flickers_recursive(
 
 func _connect_buttons() -> void:
 	if (
-		start_button != null
-		and not start_button.pressed.is_connected(
-			_on_start_button_pressed
+		new_game_button != null
+		and not new_game_button.pressed.is_connected(
+			_on_new_game_button_pressed
 		)
 	):
-		start_button.pressed.connect(
-			_on_start_button_pressed
+		new_game_button.pressed.connect(
+			_on_new_game_button_pressed
+		)
+
+	if (
+		load_game_button != null
+		and not load_game_button.pressed.is_connected(
+			_on_load_game_button_pressed
+		)
+	):
+		load_game_button.pressed.connect(
+			_on_load_game_button_pressed
 		)
 
 	if (
@@ -705,16 +769,136 @@ func _connect_buttons() -> void:
 			_on_quit_button_pressed
 		)
 
+	if save_slots_panel != null:
+		if not save_slots_panel.new_game_slot_selected.is_connected(
+			_on_new_game_slot_selected
+		):
+			save_slots_panel.new_game_slot_selected.connect(
+				_on_new_game_slot_selected
+			)
 
-func _on_start_button_pressed() -> void:
+		if not save_slots_panel.load_game_slot_selected.is_connected(
+			_on_load_game_slot_selected
+		):
+			save_slots_panel.load_game_slot_selected.connect(
+				_on_load_game_slot_selected
+			)
+
+		if not save_slots_panel.closed.is_connected(
+			_on_save_slots_panel_closed
+		):
+			save_slots_panel.closed.connect(
+				_on_save_slots_panel_closed
+			)
+
+	if not SaveManager.slots_changed.is_connected(
+		_refresh_main_menu_save_state
+	):
+		SaveManager.slots_changed.connect(
+			_refresh_main_menu_save_state
+		)
+
+
+func _on_new_game_button_pressed() -> void:
 	if transition_running:
 		return
 
+	_set_options_panel_open(false)
+	_set_main_menu_buttons_visible(false)
+	_set_main_menu_buttons_enabled(false)
+
+	if save_slots_panel != null:
+		save_slots_panel.open_new_game()
+
+
+func _on_load_game_button_pressed() -> void:
+	if transition_running or not SaveManager.has_any_save():
+		return
+
+	_set_options_panel_open(false)
+	_set_main_menu_buttons_visible(false)
+	_set_main_menu_buttons_enabled(false)
+
+	if save_slots_panel != null:
+		save_slots_panel.open_load_game()
+
+
+func _on_new_game_slot_selected(slot_id: int) -> void:
+	if transition_running:
+		return
+
+	playable_scene_path = new_game_scene_path
+	_reset_playable_scene_load()
+	reveal_loaded_scene_after_change = false
+	var save_result: Error = SaveManager.create_new_game(
+		slot_id,
+		playable_scene_path,
+		"dream_intro_start",
+		"SAVE_LOCATION_DREAM_INTRO"
+	)
+	if save_result != OK:
+		if save_slots_panel != null:
+			save_slots_panel.show_save_error("SAVE_ERROR_CREATE")
+		return
+
+	_start_new_game_transition()
+
+
+func _on_load_game_slot_selected(slot_id: int) -> void:
+	if transition_running:
+		return
+
+	var save_data: Dictionary = SaveManager.load_slot(slot_id)
+	var target_path: String = str(save_data.get("scene_path", ""))
+	if (
+		save_data.is_empty()
+		or target_path.is_empty()
+		or not ResourceLoader.exists(target_path, "PackedScene")
+	):
+		SaveManager.suspend_session(false)
+		if save_slots_panel != null:
+			save_slots_panel.show_save_error("SAVE_ERROR_LOAD")
+		return
+
+	playable_scene_path = target_path
+	_reset_playable_scene_load()
+	reveal_loaded_scene_after_change = true
+	_start_loaded_game_transition()
+
+
+func _on_save_slots_panel_closed() -> void:
+	if transition_running:
+		return
+
+	_set_main_menu_buttons_visible(true)
+	_set_main_menu_buttons_enabled(true)
+	if new_game_button != null:
+		new_game_button.grab_focus()
+
+
+func _refresh_main_menu_save_state() -> void:
+	if transition_running:
+		return
+
+	_set_main_menu_buttons_enabled(
+		not options_panel_open
+		and (
+			save_slots_panel == null
+			or not save_slots_panel.is_open()
+		)
+	)
+
+
+func _start_new_game_transition() -> void:
 	transition_running = true
 	_begin_cinematic_skip()
 	_start_playable_scene_preload()
 
+	if save_slots_panel != null:
+		save_slots_panel.close_panel()
+
 	_set_options_panel_open(false)
+	_set_main_menu_buttons_visible(true)
 	_set_main_menu_buttons_enabled(false)
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -738,6 +922,24 @@ func _on_start_button_pressed() -> void:
 	else:
 		transition_running = false
 		_reset_cinematic_skip()
+
+
+func _start_loaded_game_transition() -> void:
+	transition_running = true
+	_reset_cinematic_skip()
+	_start_playable_scene_preload()
+
+	if save_slots_panel != null:
+		save_slots_panel.close_panel()
+
+	_set_options_panel_open(false)
+	_set_main_menu_buttons_visible(true)
+	_set_main_menu_buttons_enabled(false)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	_fade_out_menu_idle_audio()
+
+	await _fade_out_menu()
+	_open_playable_scene()
 
 
 func _on_options_button_pressed() -> void:
@@ -865,8 +1067,10 @@ func _reset_cinematic_skip() -> void:
 func _prepare_menu_state() -> void:
 	transition_running = false
 	options_panel_open = false
+	playable_scene_path = new_game_scene_path
 	_reset_playable_scene_load()
 	_reset_cinematic_skip()
+	SaveManager.suspend_session()
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -890,6 +1094,8 @@ func _prepare_menu_state() -> void:
 		cinematic_loading_label.hide()
 
 	_set_options_panel_open(false)
+	if save_slots_panel != null:
+		save_slots_panel.hide()
 	_set_main_menu_buttons_enabled(true)
 
 	_prepare_camera_animation()
@@ -897,8 +1103,8 @@ func _prepare_menu_state() -> void:
 	_apply_responsive_ui()
 	_start_menu_idle_audio()
 
-	if start_button != null:
-		start_button.call_deferred("grab_focus")
+	if new_game_button != null:
+		new_game_button.call_deferred("grab_focus")
 
 
 func _prepare_camera_animation() -> void:
@@ -938,15 +1144,18 @@ func _set_options_panel_open(opened: bool) -> void:
 		if options_back_button != null:
 			options_back_button.grab_focus()
 	else:
-		if start_button != null and not transition_running:
-			start_button.grab_focus()
+		if new_game_button != null and not transition_running:
+			new_game_button.grab_focus()
 
 
 func _set_main_menu_buttons_visible(
 	buttons_visible: bool
 ) -> void:
-	if start_button != null:
-		start_button.visible = buttons_visible
+	if new_game_button != null:
+		new_game_button.visible = buttons_visible
+
+	if load_game_button != null:
+		load_game_button.visible = buttons_visible
 
 	if options_button != null:
 		options_button.visible = buttons_visible
@@ -956,8 +1165,13 @@ func _set_main_menu_buttons_visible(
 
 
 func _set_main_menu_buttons_enabled(enabled: bool) -> void:
-	if start_button != null:
-		start_button.disabled = not enabled
+	if new_game_button != null:
+		new_game_button.disabled = not enabled
+
+	if load_game_button != null:
+		load_game_button.disabled = (
+			not enabled or not SaveManager.has_any_save()
+		)
 
 	if options_button != null:
 		options_button.disabled = not enabled
@@ -1485,8 +1699,14 @@ func _apply_responsive_ui() -> void:
 			title_size
 		)
 
-	if start_button != null:
-		start_button.add_theme_font_size_override(
+	if new_game_button != null:
+		new_game_button.add_theme_font_size_override(
+			"font_size",
+			button_size
+		)
+
+	if load_game_button != null:
+		load_game_button.add_theme_font_size_override(
 			"font_size",
 			button_size
 		)
@@ -1663,6 +1883,8 @@ func _advance_playable_scene_change() -> void:
 		cinematic_loading_label.hide()
 
 	scene_change_requested = false
+	if reveal_loaded_scene_after_change:
+		SceneTransition.cover_next_scene()
 
 	var result: Error = get_tree().change_scene_to_packed(
 		loaded_playable_scene
@@ -1682,9 +1904,12 @@ func _advance_playable_scene_change() -> void:
 
 func _recover_from_playable_scene_load_failure() -> void:
 	transition_running = false
-	scene_change_requested = false
-	scene_change_fade_finished = false
+	reveal_loaded_scene_after_change = false
+	SceneTransition.cancel_transition()
+	_reset_playable_scene_load()
 	_reset_cinematic_skip()
+	SaveManager.suspend_session(false)
+	playable_scene_path = new_game_scene_path
 
 	if cinematic_loading_label != null:
 		cinematic_loading_label.hide()
