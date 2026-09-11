@@ -1,0 +1,207 @@
+[gd_scene format=3 uid="uid://226bthejacww"]
+
+[ext_resource type="Script" uid="uid://bv0602pwe87nt" path="res://scripts/ui/options_panel_controller.gd" id="1_8b3e1"]
+
+[node name="OptionsPanel" type="PanelContainer" unique_id=132118116]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(720, 480)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -96.0
+offset_top = -58.0
+offset_right = 96.0
+offset_bottom = 58.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_8b3e1")
+
+[node name="OptionsMargin" type="MarginContainer" parent="." unique_id=490332840]
+layout_mode = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 36
+
+[node name="OptionsVBox" type="VBoxContainer" parent="OptionsMargin" unique_id=247466834]
+layout_mode = 2
+
+[node name="OptionsTitle" type="Label" parent="OptionsMargin/OptionsVBox" unique_id=186427042]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "OPTIONS_TITLE"
+
+[node name="OptionsTabs" type="TabContainer" parent="OptionsMargin/OptionsVBox" unique_id=671055078]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 1
+
+[node name="Audio" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=368117221]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+metadata/_tab_index = 0
+
+[node name="AudioVBox" type="VBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio" unique_id=1749015814]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MasterVolumeRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox" unique_id=13100987]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="MasterVolumeLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=1708331874]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "OPTIONS_MASTER_VOLUME"
+
+[node name="MasterVolumeSlider" type="HSlider" parent="OptionsMargin/OptionsVBox/OptionsTabs/Audio/AudioVBox/MasterVolumeRow" unique_id=1787014724]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+value = 100.0
+
+[node name="Graphics" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=225933233]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+metadata/_tab_index = 1
+
+[node name="GraphicsVBox" type="VBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics" unique_id=1572830477]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="QualityRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox" unique_id=1513323713]
+layout_mode = 2
+
+[node name="QualityLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/QualityRow" unique_id=634870752]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_QUALITY"
+
+[node name="QualityOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/QualityRow" unique_id=2009526270]
+layout_mode = 2
+
+[node name="DisplayModeRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox" unique_id=1017785641]
+layout_mode = 2
+
+[node name="DisplayModeLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/DisplayModeRow" unique_id=1296966068]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_DISPLAY_MODE"
+
+[node name="DisplayModeOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/DisplayModeRow" unique_id=1179358845]
+layout_mode = 2
+
+[node name="ResolutionRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox" unique_id=947156075]
+layout_mode = 2
+
+[node name="ResolutionLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/ResolutionRow" unique_id=164693609]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_RESOLUTION"
+
+[node name="ResolutionOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/ResolutionRow" unique_id=285638728]
+layout_mode = 2
+
+[node name="VSyncRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox" unique_id=1121226739]
+layout_mode = 2
+
+[node name="VSyncLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/VSyncRow" unique_id=526580956]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_VSYNC"
+
+[node name="VSyncCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/VSyncRow" unique_id=183159974]
+layout_mode = 2
+
+[node name="FPSLimitRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox" unique_id=1193483574]
+layout_mode = 2
+
+[node name="FPSLimitLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/FPSLimitRow" unique_id=1793793437]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_FPS_LIMIT"
+
+[node name="FPSLimitOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/FPSLimitRow" unique_id=1293412280]
+layout_mode = 2
+
+[node name="BrightnessRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox" unique_id=1055777853]
+layout_mode = 2
+
+[node name="BrightnessLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/BrightnessRow" unique_id=747787984]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_BRIGHTNESS"
+
+[node name="BrightnessSlider" type="HSlider" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/BrightnessRow" unique_id=2084057018]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BrightnessValueLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/BrightnessRow" unique_id=720211032]
+layout_mode = 2
+
+[node name="Controls" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=155467256]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+metadata/_tab_index = 2
+
+[node name="ControlsVBox" type="VBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Controls" unique_id=1275488644]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="Language" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+metadata/_tab_index = 3
+
+[node name="LanguageVBox" type="VBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="TextLanguageRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox"]
+layout_mode = 2
+
+[node name="TextLanguageLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/TextLanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_TEXT_LANGUAGE"
+
+[node name="TextLanguageOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/TextLanguageRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
+[node name="VoiceLanguageRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox"]
+layout_mode = 2
+
+[node name="VoiceLanguageLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/VoiceLanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_VOICE_LANGUAGE"
+
+[node name="VoiceLanguageOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/VoiceLanguageRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
+[node name="OptionsBackButton" type="Button" parent="OptionsMargin/OptionsVBox" unique_id=326004359]
+layout_mode = 2
+text = "OPTIONS_BACK"

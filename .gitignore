@@ -1,3 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Godot/editor recovery files must not become project resources.
+*.tmp
+*.tmp.*

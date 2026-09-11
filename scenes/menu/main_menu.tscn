@@ -1,0 +1,451 @@
+[gd_scene format=3 uid="uid://06oh821c5qmw"]
+
+[ext_resource type="Script" uid="uid://ca5e4nnd25xr7" path="res://scripts/optimization/scene_performance_profile.gd" id="1_oxrth"]
+[ext_resource type="PackedScene" uid="uid://226bthejacww" path="res://scenes/ui/options_panel.tscn" id="4_yivn6"]
+[ext_resource type="PackedScene" uid="uid://bepla6bqlsog4" path="res://scenes/objects/train_wagon.tscn" id="8_ih62m"]
+[ext_resource type="Script" uid="uid://dfsn5nq0htc3d" path="res://scripts/train/train_wagon_shake.gd" id="9_dwddo"]
+[ext_resource type="PackedScene" uid="uid://cpx5ti5m6jk6h" path="res://scenes/menu/scenery/menu_scenery_chunk_a.tscn" id="9_s4mrm"]
+[ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/screen_border_filter.gdshader" id="10_c8kcl"]
+[ext_resource type="PackedScene" uid="uid://c4vxyj1caqybh" path="res://scenes/menu/scenery/menu_scenery_chunk_b.tscn" id="10_qlj8l"]
+[ext_resource type="Script" uid="uid://bb0aurg3v05uv" path="res://scripts/debug/performance_overlay.gd" id="11_5cgqh"]
+[ext_resource type="PackedScene" uid="uid://dvg28p7rcckd1" path="res://scenes/menu/scenery/menu_scenery_chunk_c.tscn" id="11_it55o"]
+[ext_resource type="PackedScene" uid="uid://bc04qjwlynfrb" path="res://scenes/menu/scenery/menu_scenery_chunk_d.tscn" id="12_otg26"]
+[ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/environment/horror_night_environment.gd" id="13_75e31"]
+[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://scenes/ui/filters/horror_filter.tscn" id="14_yivn6"]
+[ext_resource type="Script" uid="uid://53jqnhy61lp8" path="res://scripts/menu/menu_controller.gd" id="15_yivn6"]
+[ext_resource type="Script" uid="uid://gtdbxpouee6t" path="res://scripts/menu/menu_scenery_loop.gd" id="16_k02gq"]
+[ext_resource type="PackedScene" uid="uid://bn1h2vof881ma" path="res://scenes/ui/pause_menu.tscn" id="17_pause_menu"]
+[ext_resource type="Script" path="res://scripts/ui/menu_cinematic_pause.gd" id="18_pause_bridge"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
+
+[sub_resource type="Animation" id="Animation_yivn6"]
+resource_name = "BreakDip"
+length = 0.9
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.07, 0.18, 0.31, 0.46, 0.67, 0.9),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(1.2430003, 1.5, 2.7890015), Vector3(1.247, 1.515, 2.8), Vector3(1.225, 1.355, 2.665), Vector3(1.252, 1.43, 2.725), Vector3(1.236, 1.385, 2.69), Vector3(1.243, 1.33, 2.705), Vector3(1.243, 1.3, 2.715)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:rotation")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.07, 0.18, 0.31, 0.46, 0.67, 0.9),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0.034906585, -0.0052359877, 0.010471975), Vector3(-0.31415927, 0.017453292, -0.05235988), Vector3(-0.12217305, -0.008726646, 0.02617994), Vector3(-0.2268928, 0.0052359877, -0.017453292), Vector3(-0.7330383, 0, -0.008726646), Vector3(-1.0821041, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_h1mqy"]
+resource_name = "Intro"
+length = 28.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:position")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 12.033334, 22.239752, 27.466667, 28.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(-2.5982728, 1.5710266, 61.894657), Vector3(-2.988, 3.741468, 37.909), Vector3(1.5726802, 3.7295153, 3.9366798), Vector3(2.7, 1.5, 2.789), Vector3(1.243, 1.5, 2.789)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:rotation")
+tracks/1/interp = 2
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 12.033334, 22.239752, 27.467844, 28.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0), Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_k02gq"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(-2.9904487, 3.3668664, 50.923565)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("StationaryTrain/MenuCameraRig/CameraImpactPivot/MenuCamera:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_k02gq"]
+_data = {
+&"BreakDip": SubResource("Animation_yivn6"),
+&"Intro": SubResource("Animation_h1mqy"),
+&"RESET": SubResource("Animation_k02gq")
+}
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hnogt"]
+shader = ExtResource("10_c8kcl")
+shader_parameter/border_color = Color(0, 0, 0, 0.6)
+shader_parameter/inner_radius = 0.38
+shader_parameter/outer_radius = 0.85
+shader_parameter/intensity = 1.0
+
+[sub_resource type="Environment" id="Environment_yivn6"]
+resource_local_to_scene = true
+background_mode = 1
+background_color = Color(0.03529412, 0.07058824, 0.14509805, 1)
+background_energy_multiplier = 0.16
+ambient_light_source = 2
+ambient_light_color = Color(0.3372549, 0.42352942, 0.5294118, 1)
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 0.09
+reflected_light_source = 1
+tonemap_mode = 4
+tonemap_exposure = 0.98
+tonemap_white = 6.0
+tonemap_agx_contrast = 1.1
+ssao_enabled = true
+ssao_radius = 0.55
+ssao_intensity = 0.8
+ssao_power = 1.2
+ssao_detail = 0.3
+ssao_horizon = 0.04
+ssao_sharpness = 0.86
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.06666667, 0.101960786, 0.16862746, 1)
+fog_light_energy = 0.275
+fog_sun_scatter = 0.04
+fog_density = 1.0
+fog_height = 1.3
+fog_depth_curve = 1.35
+fog_depth_begin = 11.0
+fog_depth_end = 30.0
+volumetric_fog_density = 0.006
+volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
+volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
+volumetric_fog_emission_energy = 0.06
+volumetric_fog_gi_inject = 0.0
+volumetric_fog_length = 30.0
+volumetric_fog_sky_affect = 0.6
+volumetric_fog_temporal_reprojection_amount = 0.82
+adjustment_enabled = true
+adjustment_contrast = 1.02
+adjustment_saturation = 0.84
+
+[node name="Menu" type="Node3D" unique_id=405065868]
+
+[node name="StationaryTrain" type="Node3D" parent="." unique_id=600593851]
+
+[node name="FrontWagon1" parent="StationaryTrain" unique_id=1144106481 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, -42)
+script = ExtResource("9_dwddo")
+
+[node name="FrontWagon2" parent="StationaryTrain" unique_id=1681351422 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, -28)
+script = ExtResource("9_dwddo")
+
+[node name="FrontWagon3" parent="StationaryTrain" unique_id=440689681 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, -14)
+script = ExtResource("9_dwddo")
+
+[node name="PlayerWagon" parent="StationaryTrain" unique_id=412339701 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 0)
+script = ExtResource("9_dwddo")
+
+[node name="Box" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=922282902]
+transform = Transform3D(0.9971597, 0, -0.07531636, 0, 1, 0, 0.07531636, 0, 0.9971597, -1.4880449, 0.33455998, 4.8023667)
+use_collision = true
+size = Vector3(0.57942873, 0.50733644, 1.8264542)
+material = SubResource("StandardMaterial3D_yilg7")
+
+[node name="Box2" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=1945559192]
+transform = Transform3D(0.98740816, 0, 0.15819329, 0, 1, 0, -0.15819329, 0, 0.98740816, -1.5118499, 0.8953204, 4.4026804)
+use_collision = true
+size = Vector3(0.57942873, 0.6104492, 0.8493099)
+material = SubResource("StandardMaterial3D_yilg7")
+
+[node name="Box3" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=463316652]
+transform = Transform3D(0.9911154, 0, -0.13300459, 0, 1, 0, 0.13300459, 0, 0.9911154, -1.649408, 1.4218502, 4.352147)
+use_collision = true
+size = Vector3(0.57942873, 0.44240722, 0.47735882)
+material = SubResource("StandardMaterial3D_yilg7")
+
+[node name="Box4" type="CSGBox3D" parent="StationaryTrain/PlayerWagon" unique_id=1847213552]
+transform = Transform3D(0.97732484, 0, -0.21174562, 0, 1, 0, 0.21174562, 0, 0.97732484, -1.5230355, 0.7474967, 5.211193)
+use_collision = true
+size = Vector3(0.36246827, 0.2848541, 0.6270832)
+material = SubResource("StandardMaterial3D_yilg7")
+
+[node name="RearWagon1" parent="StationaryTrain" unique_id=1551748756 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 14)
+script = ExtResource("9_dwddo")
+
+[node name="RearWagon2" parent="StationaryTrain" unique_id=350488916 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 28)
+script = ExtResource("9_dwddo")
+
+[node name="RearWagon3" parent="StationaryTrain" unique_id=784199764 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 42)
+script = ExtResource("9_dwddo")
+
+[node name="RearWagon4" parent="StationaryTrain" unique_id=617725135 instance=ExtResource("8_ih62m")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, 0.3, 56)
+script = ExtResource("9_dwddo")
+
+[node name="MenuCameraRig" type="Node3D" parent="StationaryTrain" unique_id=777347420]
+
+[node name="CameraImpactPivot" type="Node3D" parent="StationaryTrain/MenuCameraRig" unique_id=94320063]
+
+[node name="MenuCamera" type="Camera3D" parent="StationaryTrain/MenuCameraRig/CameraImpactPivot" unique_id=1714279033]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.9904487, 3.3668664, 50.923565)
+
+[node name="CameraAnimationPlayer" type="AnimationPlayer" parent="StationaryTrain/MenuCameraRig" unique_id=659608686]
+root_node = NodePath("../../..")
+libraries/ = SubResource("AnimationLibrary_k02gq")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1367308194]
+auto_translate_mode = 1
+layer = 10
+
+[node name="ScreenBorderFilter" type="ColorRect" parent="UI" unique_id=2064593270]
+material = SubResource("ShaderMaterial_hnogt")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 0)
+
+[node name="MainMenuUI" type="Control" parent="UI" unique_id=2008314116]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LeftPanel" type="ColorRect" parent="UI/MainMenuUI" unique_id=1042862037]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.4
+anchor_bottom = 1.0
+grow_vertical = 2
+color = Color(1, 1, 1, 0)
+
+[node name="MenuColumn" type="Control" parent="UI/MainMenuUI/LeftPanel" unique_id=1014570733]
+layout_mode = 1
+anchor_left = 0.2
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MenuMargin" type="MarginContainer" parent="UI/MainMenuUI/LeftPanel/MenuColumn" unique_id=775246633]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin" unique_id=89382277]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="TopSpacer" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=358300293]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=645727401]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "GAME_TITLE"
+
+[node name="MenuSpacer01" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1050070901]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1809137748]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+text = "MENU_START"
+flat = true
+alignment = 0
+
+[node name="OptionsButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1635031449]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+text = "MENU_OPTIONS"
+flat = true
+alignment = 0
+
+[node name="QuitButton" type="Button" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=50317622]
+custom_minimum_size = Vector2(180, 36)
+layout_mode = 2
+text = "MENU_QUIT"
+flat = true
+alignment = 0
+
+[node name="BottomSpacer" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=323516311]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="OptionsPanel" parent="UI/MainMenuUI" unique_id=132118116 instance=ExtResource("4_yivn6")]
+layout_mode = 1
+
+[node name="PerformanceOverlay" type="Label" parent="UI" unique_id=1282789101]
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("11_5cgqh")
+
+[node name="CinematicHUD" type="CanvasLayer" parent="."]
+auto_translate_mode = 1
+layer = 900
+
+[node name="SkipPrompt" type="PanelContainer" parent="CinematicHUD"]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -310.0
+offset_top = -96.0
+offset_right = -32.0
+offset_bottom = -30.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="SkipMargin" type="MarginContainer" parent="CinematicHUD/SkipPrompt"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 12
+
+[node name="SkipVBox" type="VBoxContainer" parent="CinematicHUD/SkipPrompt/SkipMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SkipLabel" type="Label" parent="CinematicHUD/SkipPrompt/SkipMargin/SkipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "CINEMATIC_HOLD_SKIP"
+horizontal_alignment = 2
+
+[node name="SkipProgress" type="ProgressBar" parent="CinematicHUD/SkipPrompt/SkipMargin/SkipVBox"]
+custom_minimum_size = Vector2(0, 7)
+layout_mode = 2
+max_value = 1.0
+step = 0.001
+show_percentage = false
+
+[node name="LoadingHUD" type="CanvasLayer" parent="."]
+auto_translate_mode = 1
+layer = 1001
+
+[node name="LoadingLabel" type="Label" parent="LoadingHUD"]
+visible = false
+anchors_preset = 8
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -190.0
+offset_top = -70.0
+offset_right = -32.0
+offset_bottom = -32.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 18
+text = "COMMON_LOADING"
+horizontal_alignment = 2
+
+[node name="CinematicPauseMenu" parent="." instance=ExtResource("17_pause_menu")]
+layer = 100
+pause_input_enabled = false
+reload_current_scene_on_main_menu = true
+
+[node name="CinematicPauseController" type="Node" parent="."]
+script = ExtResource("18_pause_bridge")
+
+[node name="MenuController" type="Node" parent="." unique_id=443031550]
+script = ExtResource("15_yivn6")
+
+[node name="PerformanceProfile" type="Node3D" parent="." unique_id=1513184291]
+script = ExtResource("1_oxrth")
+
+[node name="SceneryLoop" type="Node3D" parent="." unique_id=658662519]
+script = ExtResource("16_k02gq")
+
+[node name="ChunkA" parent="SceneryLoop" unique_id=1293268144 instance=ExtResource("9_s4mrm")]
+
+[node name="ChunkB" parent="SceneryLoop" unique_id=1236837590 instance=ExtResource("10_qlj8l")]
+
+[node name="ChunkC" parent="SceneryLoop" unique_id=642282812 instance=ExtResource("11_it55o")]
+
+[node name="ChunkD" parent="SceneryLoop" unique_id=1289924299 instance=ExtResource("12_otg26")]
+
+[node name="TransitionBlackout" type="CanvasLayer" parent="." unique_id=1145815311]
+layer = 1000
+
+[node name="BlackoutRect" type="ColorRect" parent="TransitionBlackout" unique_id=1701669306]
+modulate = Color(1, 1, 1, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=197828328]
+environment = SubResource("Environment_yivn6")
+script = ExtResource("13_75e31")
+profile = 1
+moon_light_path = NodePath("../MoonLight")
+
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=294457578]
+transform = Transform3D(0.848048, 0.3262509, -0.4175821, 0, 0.7880109, 0.6156615, 0.5299192, -0.52211064, 0.668271, 0, 0, 0)
+shadow_enabled = true
+shadow_bias = 0.035
+shadow_normal_bias = 0.65
+shadow_opacity = 0.66
+shadow_blur = 1.55
+directional_shadow_mode = 1
+directional_shadow_split_1 = 0.25
+directional_shadow_fade_start = 0.82
+directional_shadow_max_distance = 42.0
+directional_shadow_pancake_size = 12.0
+
+[node name="HorrorFilter" parent="." unique_id=931420031 instance=ExtResource("14_yivn6")]
