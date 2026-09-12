@@ -112,6 +112,54 @@ uniform float exposure_drift
 	: hint_range(0.0, 0.08) = 0.008;
 
 
+/*
+Late-1990s/early-2000s consumer-video character.
+
+The reference is imperfect recorded footage rather than damaged tape: stable
+softness, gently washed color, restrained grain, chroma bleed, and a subtle
+barrel lens. There are no tracking bars, scratches, or moving image warps.
+*/
+uniform float camcorder_strength
+	: hint_range(0.0, 1.0) = 0.65;
+
+uniform float capture_frame_rate
+	: hint_range(1.0, 60.0) = 29.97;
+
+uniform float chroma_separation_pixels
+	: hint_range(0.0, 4.0) = 1.25;
+
+uniform float scanline_strength
+	: hint_range(0.0, 0.30) = 0.10;
+
+uniform float chroma_noise_strength
+	: hint_range(0.0, 0.10) = 0.022;
+
+uniform float lens_distortion
+	: hint_range(0.0, 0.08) = 0.014;
+
+uniform float lens_frame_softness
+	: hint_range(0.001, 0.04) = 0.012;
+
+uniform float video_desaturation
+	: hint_range(0.0, 0.50) = 0.12;
+
+uniform float video_contrast_wash
+	: hint_range(0.0, 0.30) = 0.08;
+
+uniform float video_black_lift
+	: hint_range(0.0, 0.08) = 0.012;
+
+uniform float brightness_compensation
+	: hint_range(0.0, 0.20) = 0.06;
+
+/*
+0.0 = one screen sample, 0.5 = chroma separation, 1.0 = full soft focus.
+The filter controller selects this from the graphics quality preset.
+*/
+uniform float screen_sample_quality
+	: hint_range(0.0, 1.0) = 1.0;
+
+
 float random_value(vec2 coordinates) {
 	return fract(
 		sin(
@@ -142,7 +190,38 @@ vec3 sample_screen(vec2 uv) {
 
 
 void fragment() {
-	vec2 uv = SCREEN_UV;
+	vec2 screen_uv = SCREEN_UV;
+	float video_strength = camcorder_strength;
+	float video_frame = floor(
+		TIME * max(capture_frame_rate, 1.0)
+	);
+	/*
+	A stable barrel curve gives the wide consumer-camera lens a little shape.
+	The soft frame mask only appears at the extreme distorted edges.
+	*/
+	vec2 lens_position = screen_uv * 2.0 - 1.0;
+	float lens_radius_squared = dot(
+		lens_position,
+		lens_position
+	);
+	vec2 distorted_position = lens_position * (
+		1.0 + lens_distortion * lens_radius_squared
+	);
+	vec2 uv = distorted_position * 0.5 + 0.5;
+	vec2 distance_to_frame = min(
+		uv,
+		vec2(1.0) - uv
+	);
+	float frame_distance = min(
+		distance_to_frame.x,
+		distance_to_frame.y
+	);
+	float lens_frame = smoothstep(
+		-lens_frame_softness,
+		lens_frame_softness * 0.35,
+		frame_distance
+	);
+	uv = safe_screen_uv(uv);
 
 	vec2 blur_offset = (
 		SCREEN_PIXEL_SIZE
@@ -152,33 +231,70 @@ void fragment() {
 	vec3 original_color = sample_screen(uv);
 
 	/*
+	Consumer video stored less color detail than luminance detail. A tiny
+	horizontal red/blue separation recreates that softness, especially near
+	the lens edges.
+	*/
+	if (
+		screen_sample_quality > 0.25
+		&& chroma_separation_pixels > 0.0
+	) {
+		float lens_edge = clamp(
+			length(screen_uv * 2.0 - 1.0),
+			0.0,
+			1.0
+		);
+		vec2 chroma_offset = vec2(
+			SCREEN_PIXEL_SIZE.x
+			* chroma_separation_pixels
+			* mix(0.35, 1.0, lens_edge),
+			0.0
+		);
+		vec3 separated_color = vec3(
+			sample_screen(uv + chroma_offset).r,
+			original_color.g,
+			sample_screen(uv - chroma_offset).b
+		);
+		original_color = mix(
+			original_color,
+			separated_color,
+			video_strength
+		);
+	}
+
+	/*
 	Five-sample soft blur.
 
 	This is intentionally smaller and cheaper than a large
 	blur kernel, making it suitable for lower-end computers.
 	*/
-	vec3 blur_color = original_color * 0.40;
+	vec3 blur_color = original_color;
 
-	blur_color += sample_screen(
-		uv + vec2(blur_offset.x, 0.0)
-	) * 0.15;
+	if (screen_sample_quality > 0.75) {
+		blur_color = original_color * 0.40;
 
-	blur_color += sample_screen(
-		uv - vec2(blur_offset.x, 0.0)
-	) * 0.15;
+		blur_color += sample_screen(
+			uv + vec2(blur_offset.x, 0.0)
+		) * 0.15;
 
-	blur_color += sample_screen(
-		uv + vec2(0.0, blur_offset.y)
-	) * 0.15;
+		blur_color += sample_screen(
+			uv - vec2(blur_offset.x, 0.0)
+		) * 0.15;
 
-	blur_color += sample_screen(
-		uv - vec2(0.0, blur_offset.y)
-	) * 0.15;
+		blur_color += sample_screen(
+			uv + vec2(0.0, blur_offset.y)
+		) * 0.15;
+
+		blur_color += sample_screen(
+			uv - vec2(0.0, blur_offset.y)
+		) * 0.15;
+	}
 
 	vec3 final_color = mix(
 		original_color,
 		blur_color,
-		soft_focus * intensity
+		soft_focus
+		* max(intensity, video_strength * 0.65)
 	);
 
 	float luminance = dot(
@@ -289,10 +405,10 @@ void fragment() {
 
 	final_color += (
 		glow_source
-		* vec3(0.72, 0.54, 1.0)
+		* vec3(1.0, 0.94, 0.88)
 		* highlight_glow
-		* intensity
-		* 2.0
+		* max(intensity, video_strength * 0.5)
+		* 1.5
 	);
 
 	/*
@@ -327,7 +443,31 @@ void fragment() {
 		(grain - 0.5)
 		* grain_strength
 		* shadow_grain_multiplier
-		* intensity
+		* video_strength
+	);
+
+	/*
+	Low-resolution color noise changes at the capture frame rate, while the
+	regular grain above remains fine enough to prevent visible banding.
+	*/
+	vec2 chroma_cell = floor(
+		screen_uv * vec2(320.0, 240.0)
+	);
+	float red_noise = random_value(
+		chroma_cell + vec2(video_frame, 17.0)
+	) - 0.5;
+	float blue_noise = random_value(
+		chroma_cell + vec2(43.0, video_frame)
+	) - 0.5;
+
+	final_color += (
+		vec3(
+			red_noise,
+			-(red_noise + blue_noise) * 0.16,
+			blue_noise
+		)
+		* chroma_noise_strength
+		* video_strength
 	);
 
 	/*
@@ -342,14 +482,53 @@ void fragment() {
 		1.0
 		+ exposure_wave
 		* exposure_drift
-		* intensity
+		* video_strength
+	);
+
+	/*
+	Stable, barely visible line structure at a virtual 480-line resolution.
+	*/
+	float scanline = 0.5 + 0.5 * sin(
+		screen_uv.y * 480.0 * 3.14159265
+	);
+	final_color *= (
+		1.0
+		+ (scanline - 0.5)
+		* scanline_strength
+		* video_strength
+	);
+
+	/*
+	Consumer-video tone response: slightly muted color, softer contrast, and
+	lifted blacks. This hides overly sharp asset differences without dimming
+	the scene.
+	*/
+	float video_luminance = dot(
+		final_color,
+		vec3(0.299, 0.587, 0.114)
+	);
+	final_color = mix(
+		final_color,
+		vec3(video_luminance),
+		video_desaturation * video_strength
+	);
+	final_color = (
+		(final_color - vec3(0.5))
+		* (1.0 - video_contrast_wash * video_strength)
+		+ vec3(0.5)
+	);
+	final_color += vec3(
+		video_black_lift * video_strength
+	);
+	final_color *= (
+		1.0 + brightness_compensation * video_strength
 	);
 
 	/*
 	Smooth cinematic vignette.
 	*/
 	vec2 centered_uv = (
-		uv * 2.0 - 1.0
+		screen_uv * 2.0 - 1.0
 	);
 
 	float edge_distance = length(
@@ -368,6 +547,7 @@ void fragment() {
 		* vignette_strength
 		* intensity
 	);
+	final_color *= lens_frame;
 
 	COLOR = vec4(
 		clamp(

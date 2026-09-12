@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://dechhjfthr7jj"]
 
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/environment/horror_night_environment.gd" id="1_a7tex"]
-[ext_resource type="PackedScene" uid="uid://r2tirordoxkr" path="res://scenes/ui/filters/horror_filter.tscn" id="2_u1huc"]
 
 [sub_resource type="Environment" id="Environment_u1huc"]
 resource_local_to_scene = true
@@ -69,6 +68,3 @@ directional_shadow_split_1 = 0.25
 directional_shadow_fade_start = 0.82
 directional_shadow_max_distance = 42.0
 directional_shadow_pancake_size = 12.0
-
-[node name="HorrorFilter" parent="." unique_id=931420031 instance=ExtResource("2_u1huc")]
-visible = false
