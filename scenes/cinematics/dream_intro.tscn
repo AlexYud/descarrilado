@@ -1347,12 +1347,12 @@ shape = SubResource("BoxShape3D_8gc8m")
 [node name="UltraWeatherLayer" type="Node3D" parent="." unique_id=900780098]
 script = ExtResource("28_ultra_weather")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1811232465]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2067316429]
 environment = SubResource("Environment_fqs3f")
 script = ExtResource("38_fqs3f")
 moon_light_path = NodePath("../MoonLight")
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=53830062]
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1131552378]
 transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)
 light_color = Color(0.56078434, 0.65882355, 0.76862746, 1)
 light_energy = 0.05

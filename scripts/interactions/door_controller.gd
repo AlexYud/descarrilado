@@ -4,8 +4,8 @@ class_name DoorController
 @export var hinge: Node3D
 @export var door_root: Node3D
 
-@export var open_angle_degrees: float = 80.0
-@export var rotate_speed: float = 0.70
+@export var open_angle_degrees: float = 85.0
+@export var rotate_speed: float = 0.6
 @export var starts_open: bool = false
 @export var starts_locked: bool = false
 @export var required_key_id: String = ""
