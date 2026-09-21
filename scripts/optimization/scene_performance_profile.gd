@@ -18,6 +18,11 @@ class_name ScenePerformanceProfile
 # MultiMeshInstance3D and other GeometryInstance3D nodes.
 @export var geometry_render_distance: float = 60.0
 
+# Keeps deliberately shorter limits from assets and scene instances.
+# This is especially important for Terrain3D, which assigns a range to
+# every generated vegetation MultiMesh.
+@export var preserve_shorter_geometry_ranges: bool = true
+
 # Small margin prevents objects rapidly appearing/disappearing
 # when standing exactly at the distance limit.
 @export var geometry_distance_margin: float = 2.0
@@ -26,6 +31,10 @@ class_name ScenePerformanceProfile
 @export_category("Omni and Spot Lights")
 
 @export var configure_local_lights: bool = true
+
+# Keeps a light's existing fade settings when they already stop sooner
+# than this scene-wide profile.
+@export var preserve_shorter_light_ranges: bool = true
 
 # The light begins fading at this camera distance.
 @export var light_fade_begin: float = 20.0
@@ -41,6 +50,10 @@ class_name ScenePerformanceProfile
 @export_category("Directional Light")
 
 @export var configure_directional_light: bool = true
+
+# Quality presets can assign a shorter shadow range before this profile
+# is applied. Keep that lower-cost value instead of expanding it again.
+@export var preserve_shorter_directional_shadow_range: bool = true
 
 # Maximum distance for moon/sun shadows.
 @export var directional_shadow_distance: float = 50.0
@@ -172,17 +185,29 @@ func _configure_geometry(geometry: GeometryInstance3D) -> void:
 	if geometry_render_distance <= 0.0:
 		return
 
-	geometry.visibility_range_end = geometry_render_distance
-	geometry.visibility_range_end_margin = maxf(
-		0.0,
-		geometry_distance_margin
+	var existing_range: float = geometry.visibility_range_end
+	var has_shorter_range: bool = (
+		preserve_shorter_geometry_ranges
+		and existing_range > 0.0
+		and existing_range < geometry_render_distance
 	)
 
-	# Hard cutoff is cheaper than transparency-based fading.
-	# Your fog should hide most of the transition.
-	geometry.visibility_range_fade_mode = (
-		GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
-	)
+	if has_shorter_range:
+		# Terrain3D uses this value for per-asset and per-LOD culling.
+		# Preserve both its range and its transition settings.
+		geometry.visibility_range_end = existing_range
+	else:
+		geometry.visibility_range_end = geometry_render_distance
+		geometry.visibility_range_end_margin = maxf(
+			0.0,
+			geometry_distance_margin
+		)
+
+		# Hard cutoff is cheaper than transparency-based fading.
+		# Fog should hide most of the transition.
+		geometry.visibility_range_fade_mode = (
+			GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+		)
 
 	geometry_count += 1
 
@@ -191,17 +216,33 @@ func _configure_local_light(light: Light3D) -> void:
 	if not configure_local_lights:
 		return
 
+	var profile_fade_begin: float = maxf(0.0, light_fade_begin)
+	var profile_fade_length: float = maxf(0.1, light_fade_length)
+	var existing_fade_end: float = (
+		light.distance_fade_begin
+		+ light.distance_fade_length
+	)
+	var profile_fade_end: float = (
+		profile_fade_begin
+		+ profile_fade_length
+	)
+	var has_shorter_range: bool = (
+		preserve_shorter_light_ranges
+		and light.distance_fade_enabled
+		and existing_fade_end > 0.0
+		and existing_fade_end < profile_fade_end
+	)
+
 	light.distance_fade_enabled = true
-	light.distance_fade_begin = maxf(
-		0.0,
-		light_fade_begin
-	)
-	light.distance_fade_length = maxf(
-		0.1,
-		light_fade_length
-	)
+
+	if not has_shorter_range:
+		light.distance_fade_begin = profile_fade_begin
+		light.distance_fade_length = profile_fade_length
+
 	light.distance_fade_shadow = clampf(
-		light_shadow_distance,
+		minf(light.distance_fade_shadow, light_shadow_distance)
+		if has_shorter_range
+		else light_shadow_distance,
 		0.0,
 		light.distance_fade_begin + light.distance_fade_length
 	)
@@ -218,15 +259,32 @@ func _configure_directional_light(
 	if not light.shadow_enabled:
 		return
 
-	light.directional_shadow_max_distance = maxf(
+	var profile_shadow_distance: float = maxf(
 		1.0,
 		directional_shadow_distance
 	)
-
-	light.directional_shadow_fade_start = clampf(
-		directional_shadow_fade_start,
-		0.0,
-		1.0
+	var existing_shadow_distance: float = (
+		light.directional_shadow_max_distance
 	)
+	var has_shorter_shadow_range: bool = (
+		preserve_shorter_directional_shadow_range
+		and existing_shadow_distance > 0.0
+		and existing_shadow_distance <= profile_shadow_distance
+	)
+
+	if has_shorter_shadow_range:
+		light.directional_shadow_max_distance = minf(
+			existing_shadow_distance,
+			profile_shadow_distance
+		)
+	else:
+		light.directional_shadow_max_distance = (
+			profile_shadow_distance
+		)
+		light.directional_shadow_fade_start = clampf(
+			directional_shadow_fade_start,
+			0.0,
+			1.0
+		)
 
 	directional_light_count += 1

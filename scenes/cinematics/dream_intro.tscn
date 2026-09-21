@@ -38,6 +38,7 @@
 [ext_resource type="PackedScene" uid="uid://cecg41a512ghj" path="res://assets/models/foliage/white_flower_02/white_flower_02.glb" id="28_fqs3f"]
 [ext_resource type="Script" uid="uid://c33mwk4p5fq3f" path="res://scripts/environment/ultra_weather_layer.gd" id="28_ultra_weather"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/environment/horror_night_environment.gd" id="38_fqs3f"]
+[ext_resource type="Script" uid="uid://jacixkrenj73" path="res://scripts/optimization/runtime_multimesh_batcher.gd" id="39_city_batcher"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -96,7 +97,7 @@ scene_file = ExtResource("8_rbmko")
 density = 0.5
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 96.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_yilg7"]
 name = "tree_test"
@@ -132,40 +133,44 @@ scene_file = ExtResource("12_yilg7")
 density = 0.2
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 96.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_j64lv"]
 name = "ground_leaves_01"
 id = 5
 scene_file = ExtResource("13_j607m")
 density = 0.5
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 40.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_pyuur"]
 name = "medium_foliage_01"
 id = 6
 scene_file = ExtResource("14_yilg7")
 density = 0.5
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 64.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_scb0d"]
 name = "tall_thin_foliage_02"
 id = 7
 scene_file = ExtResource("15_j607m")
 density = 0.3
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 48.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_rhjrb"]
 name = "white_flower_01"
 id = 8
 scene_file = ExtResource("16_ywnw5")
 density = 0.2
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 128.0
@@ -174,44 +179,49 @@ lod0_range = 128.0
 name = "medium_foliage_02"
 id = 9
 scene_file = ExtResource("17_e6tct")
-density = 0.4
+density = 2.0
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 64.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_r8hnu"]
 name = "kelp_like_foliage"
 id = 10
 scene_file = ExtResource("18_glvnv")
 density = 0.1
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 64.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vx2e6"]
 name = "small_foliage_01"
 id = 11
 scene_file = ExtResource("19_tky3d")
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 48.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_07f30"]
 name = "small_foliage_02"
 id = 12
 scene_file = ExtResource("20_hxwua")
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 48.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_8gc8m"]
 name = "tall_thin_foliage_01"
 id = 13
 scene_file = ExtResource("21_6m8mj")
 density = 0.1
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 48.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_hxwua"]
 name = "araucaria"
@@ -271,6 +281,7 @@ name = "white_flower_02"
 id = 20
 scene_file = ExtResource("28_fqs3f")
 density = 0.5
+cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 128.0
@@ -314,7 +325,7 @@ size = Vector3(1, 2.6171265, 1.9013672)
 [sub_resource type="BoxShape3D" id="BoxShape3D_8gc8m"]
 size = Vector3(1.7131729, 2.6171265, 0.19677734)
 
-[sub_resource type="Environment" id="Environment_fqs3f"]
+[sub_resource type="Environment" id="Environment_roe5p"]
 resource_local_to_scene = true
 background_mode = 1
 background_color = Color(0.019607844, 0.03529412, 0.08627451, 1)
@@ -336,20 +347,27 @@ ssao_detail = 0.3
 ssao_horizon = 0.04
 ssao_sharpness = 0.86
 fog_enabled = true
-fog_light_color = Color(0.17254902, 0.23529412, 0.30980393, 1)
-fog_light_energy = 0.135
-fog_sun_scatter = 0.06
-fog_density = 0.063
-fog_sky_affect = 0.88
+fog_mode = 1
+fog_light_color = Color(0.07450981, 0.11372549, 0.1254902, 1)
+fog_light_energy = 0.13
+fog_density = 1.0
+fog_sky_affect = 0.55
 fog_height = 1.3
-fog_height_density = 0.216
-volumetric_fog_density = 0.006
-volumetric_fog_albedo = Color(0.7254902, 0.69411767, 0.77254903, 1)
-volumetric_fog_emission = Color(0.08627451, 0.05882353, 0.11372549, 1)
-volumetric_fog_emission_energy = 0.06
+fog_height_density = 0.252
+fog_depth_curve = 1.35
+fog_depth_begin = 1.5
+fog_depth_end = 15.0
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.011
+volumetric_fog_albedo = Color(0.2901961, 0.3372549, 0.3529412, 1)
+volumetric_fog_emission = Color(0, 0, 0, 1)
+volumetric_fog_emission_energy = 0.0
+volumetric_fog_anisotropy = 0.08
 volumetric_fog_gi_inject = 0.0
-volumetric_fog_length = 30.0
-volumetric_fog_sky_affect = 0.6
+volumetric_fog_length = 18.0
+volumetric_fog_detail_spread = 1.6
+volumetric_fog_ambient_inject = 0.015
+volumetric_fog_sky_affect = 0.12
 volumetric_fog_temporal_reprojection_amount = 0.82
 adjustment_enabled = true
 adjustment_brightness = 0.98
@@ -360,10 +378,12 @@ adjustment_saturation = 0.82
 
 [node name="PerformanceProfile" type="Node3D" parent="." unique_id=1513184291]
 script = ExtResource("26_e6tct")
-camera_far_distance = 1500.0
+camera_far_distance = 20.0
 geometry_render_distance = 1500.0
-light_fade_begin = 1000.0
-light_fade_length = 500.0
+light_fade_begin = 120.0
+light_fade_length = 40.0
+light_shadow_distance = 36.0
+directional_shadow_distance = 42.0
 
 [node name="DreamIntroController" type="Node" parent="." unique_id=288397973]
 script = ExtResource("1_2xo7o")
@@ -473,6 +493,7 @@ color = Color(0, 0, 0, 1)
 
 [node name="CityBlockout" type="Node3D" parent="." unique_id=1480771236]
 transform = Transform3D(0.47131094, 0, 0.8819671, 0, 1, 0, -0.8819671, 0, 0.47131094, 487.71063, -194.49289, -411.48553)
+script = ExtResource("39_city_batcher")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="CityBlockout" unique_id=274956535]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.92728, -1.7443647, -82.77214)
@@ -1347,17 +1368,17 @@ shape = SubResource("BoxShape3D_8gc8m")
 [node name="UltraWeatherLayer" type="Node3D" parent="." unique_id=900780098]
 script = ExtResource("28_ultra_weather")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2067316429]
-environment = SubResource("Environment_fqs3f")
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1328535383]
+environment = SubResource("Environment_roe5p")
 script = ExtResource("38_fqs3f")
 moon_light_path = NodePath("../MoonLight")
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=1131552378]
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=72606802]
 transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)
 light_color = Color(0.56078434, 0.65882355, 0.76862746, 1)
 light_energy = 0.05
 light_indirect_energy = 0.0
-light_volumetric_fog_energy = 0.0
+light_volumetric_fog_energy = 0.02
 light_specular = 0.08
 shadow_enabled = true
 shadow_bias = 0.035

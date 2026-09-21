@@ -85,7 +85,7 @@ var fog_amount: float = 1.8
 ## The fog remains exactly as configured at and above this Y.
 @export var fog_reduction_start_altitude: float = 0.0
 
-## Fog is completely removed here and below.
+## Fog is reduced to the low-altitude multipliers here and below.
 @export var fog_reduction_end_altitude: float = -8.0
 
 @export_range(0.0, 1.0, 0.01)
@@ -96,6 +96,49 @@ var low_altitude_height_density_multiplier: float = 0.0
 
 ## Makes the fog layer follow the player while descending.
 @export var fog_height_follows_descent: bool = true
+
+
+# ============================================================
+# DREAM ALTITUDE VISIBILITY
+# ============================================================
+
+@export_category("Dream Altitude Visibility")
+
+## Uses the fog altitude transition to keep the forest inexpensive,
+## then restores the long city vista as the player descends.
+@export var adjust_camera_distance_with_altitude: bool = true
+
+## Camera range while the player is in the dense forest fog.
+@export_range(8.0, 2000.0, 1.0)
+var high_altitude_camera_far_distance: float = 20.0
+
+## Camera range at and below Fog Reduction End Altitude.
+@export_range(32.0, 4000.0, 1.0)
+var low_altitude_camera_far_distance: float = 1500.0
+
+## Dense forest fog is already visible close to the player.
+@export_range(0.0, 1000.0, 1.0)
+var high_altitude_fog_depth_begin: float = 1.5
+
+## Dense forest fog fully obscures the view before the camera cutoff.
+@export_range(1.0, 2000.0, 1.0)
+var high_altitude_fog_depth_end: float = 15.0
+
+## The distant city remains clear until this distance.
+@export_range(0.0, 4000.0, 1.0)
+var low_altitude_fog_depth_begin: float = 650.0
+
+## The low-altitude fog reaches its small maximum near the far plane.
+@export_range(1.0, 4000.0, 1.0)
+var low_altitude_fog_depth_end: float = 1450.0
+
+@export_range(0.1, 4.0, 0.05)
+var dream_fog_depth_curve: float = 1.35
+
+## Higher values keep the forest dense for longer, then reveal the
+## distant vista progressively near the bottom of the descent.
+@export_range(0.5, 4.0, 0.1)
+var altitude_visibility_curve: float = 2.0
 
 
 # ============================================================
@@ -168,6 +211,7 @@ var _runtime_moon: DirectionalLight3D = null
 var _base_fog_density: float = 0.0
 var _base_fog_height: float = 0.0
 var _base_fog_height_density: float = 0.0
+var _base_volumetric_fog_density: float = 0.0
 
 var _base_moon_energy: float = 0.0
 var _base_ambient_energy: float = 0.0
@@ -216,6 +260,7 @@ func _process(_delta: float) -> void:
 
 	if _fog_altitude_target == null:
 		_restore_base_dream_fog()
+		_restore_dream_camera_distance()
 		_restore_base_dream_lighting()
 		return
 
@@ -227,6 +272,11 @@ func _process(_delta: float) -> void:
 		_update_dream_fog_for_altitude(altitude)
 	else:
 		_restore_base_dream_fog()
+
+	if adjust_camera_distance_with_altitude:
+		_update_dream_camera_distance_for_altitude(altitude)
+	else:
+		_restore_dream_camera_distance()
 
 	if boost_low_altitude_lighting:
 		_update_dream_lighting_for_altitude(altitude)
@@ -311,6 +361,9 @@ func apply_environment() -> void:
 		environment,
 		quality_preset
 	)
+	_base_volumetric_fog_density = (
+		environment.volumetric_fog_density
+	)
 
 	_apply_moon_light(
 		settings,
@@ -327,9 +380,11 @@ func _cache_runtime_values(
 	exterior: float,
 	interior: float
 ) -> void:
-	_base_fog_density = (
+	_base_fog_density = clampf(
 		float(settings["fog_density"])
-		* fog_strength
+		* fog_strength,
+		0.0,
+		1.0
 	)
 
 	_base_fog_height = float(
@@ -429,11 +484,7 @@ func _reapply_saved_brightness(
 func _update_dream_fog_for_altitude(
 	altitude: float
 ) -> void:
-	var blend: float = _get_descending_altitude_blend(
-		altitude,
-		fog_reduction_start_altitude,
-		fog_reduction_end_altitude
-	)
+	var blend: float = _get_dream_visibility_blend(altitude)
 
 	var density_multiplier: float = lerpf(
 		1.0,
@@ -456,6 +507,25 @@ func _update_dream_fog_for_altitude(
 		_base_fog_height_density
 		* height_density_multiplier
 	)
+	environment.fog_depth_begin = lerpf(
+		high_altitude_fog_depth_begin,
+		low_altitude_fog_depth_begin,
+		blend
+	)
+	environment.fog_depth_end = maxf(
+		environment.fog_depth_begin + 1.0,
+		lerpf(
+			high_altitude_fog_depth_end,
+			low_altitude_fog_depth_end,
+			blend
+		)
+	)
+
+	if environment.volumetric_fog_enabled:
+		environment.volumetric_fog_density = (
+			_base_volumetric_fog_density
+			* density_multiplier
+		)
 
 	if fog_height_follows_descent:
 		var descent: float = minf(
@@ -475,6 +545,51 @@ func _restore_base_dream_fog() -> void:
 	environment.fog_height = _base_fog_height
 	environment.fog_height_density = (
 		_base_fog_height_density
+	)
+	environment.fog_depth_begin = high_altitude_fog_depth_begin
+	environment.fog_depth_end = maxf(
+		high_altitude_fog_depth_end,
+		high_altitude_fog_depth_begin + 1.0
+	)
+	environment.volumetric_fog_density = (
+		_base_volumetric_fog_density
+	)
+
+
+# ============================================================
+# RUNTIME ALTITUDE VISIBILITY
+# ============================================================
+
+func _update_dream_camera_distance_for_altitude(
+	altitude: float
+) -> void:
+	var active_camera: Camera3D = get_viewport().get_camera_3d()
+
+	if active_camera == null:
+		return
+
+	var blend: float = _get_dream_visibility_blend(altitude)
+	var target_far_distance: float = lerpf(
+		high_altitude_camera_far_distance,
+		low_altitude_camera_far_distance,
+		blend
+	)
+
+	active_camera.far = maxf(
+		active_camera.near + 1.0,
+		target_far_distance
+	)
+
+
+func _restore_dream_camera_distance() -> void:
+	var active_camera: Camera3D = get_viewport().get_camera_3d()
+
+	if active_camera == null:
+		return
+
+	active_camera.far = maxf(
+		active_camera.near + 1.0,
+		low_altitude_camera_far_distance
 	)
 
 
@@ -569,6 +684,19 @@ func _get_descending_altitude_blend(
 	return blend * blend * (3.0 - 2.0 * blend)
 
 
+func _get_dream_visibility_blend(altitude: float) -> float:
+	var smooth_blend: float = _get_descending_altitude_blend(
+		altitude,
+		fog_reduction_start_altitude,
+		fog_reduction_end_altitude
+	)
+
+	return pow(
+		smooth_blend,
+		maxf(0.1, altitude_visibility_curve)
+	)
+
+
 func _find_altitude_target() -> Node3D:
 	if not fog_altitude_target_path.is_empty():
 		var assigned_target: Node3D = (
@@ -620,13 +748,16 @@ func _get_dream_intro_profile() -> Dictionary:
 		"ambient_color": Color("#3f5068"),
 		"ambient_energy": 0.12,
 
-		"fog_color": Color("#2c3c4f"),
-		"fog_energy": 0.27,
-		"fog_density": 0.035,
+		# The distance fog is deliberately much darker than the mist volume.
+		# This makes geometry disappear into shadow instead of turning into
+		# bright, blue silhouettes as it approaches the 15 m cutoff.
+		"fog_color": Color("#131d20"),
+		"fog_energy": 0.26,
+		"fog_density": 0.62,
 		"fog_height": 1.30,
-		"fog_height_density": 0.12,
-		"fog_sky_affect": 0.88,
-		"fog_sun_scatter": 0.06,
+		"fog_height_density": 0.14,
+		"fog_sky_affect": 0.55,
+		"fog_sun_scatter": 0.0,
 
 		"exposure": 0.92,
 		"agx_contrast": 1.15,
@@ -640,7 +771,7 @@ func _get_dream_intro_profile() -> Dictionary:
 		"moon_energy": 0.1,
 		"moon_specular": 0.08,
 		"moon_shadow_opacity": 0.72,
-		"moon_volumetric_energy": 0.20
+		"moon_volumetric_energy": 0.02
 	}
 
 
@@ -766,7 +897,7 @@ func _apply_fog(
 			fog_strength
 		)
 	else:
-		_apply_dream_exponential_fog(
+		_apply_dream_depth_fog(
 			env,
 			settings,
 			fog_strength
@@ -775,17 +906,25 @@ func _apply_fog(
 	env.volumetric_fog_enabled = false
 
 
-func _apply_dream_exponential_fog(
+func _apply_dream_depth_fog(
 	env: Environment,
 	settings: Dictionary,
 	fog_strength: float
 ) -> void:
-	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+	env.fog_mode = Environment.FOG_MODE_DEPTH
 
-	env.fog_density = (
+	env.fog_density = clampf(
 		float(settings["fog_density"])
-		* fog_strength
+		* fog_strength,
+		0.0,
+		1.0
 	)
+	env.fog_depth_begin = high_altitude_fog_depth_begin
+	env.fog_depth_end = maxf(
+		high_altitude_fog_depth_end,
+		high_altitude_fog_depth_begin + 1.0
+	)
+	env.fog_depth_curve = dream_fog_depth_curve
 
 
 func _apply_menu_distance_fog(
@@ -895,34 +1034,40 @@ func _apply_expensive_effects(
 	env.ssil_enabled = false
 	env.sdfgi_enabled = false
 
-	var ultra_enabled: bool = (
+	var ultra_ssr_enabled: bool = (
 		quality_preset == QUALITY_ULTRA
 		and profile == EnvironmentProfile.DREAM_INTRO
 	)
+	var dream_mist_enabled: bool = (
+		profile == EnvironmentProfile.DREAM_INTRO
+	)
 
-	env.ssr_enabled = ultra_enabled
-	env.volumetric_fog_enabled = ultra_enabled
+	env.ssr_enabled = ultra_ssr_enabled
+	env.volumetric_fog_enabled = dream_mist_enabled
 
-	if not ultra_enabled:
-		return
+	if ultra_ssr_enabled:
+		env.ssr_max_steps = 72
+		env.ssr_fade_in = 0.12
+		env.ssr_fade_out = 2.4
+		env.ssr_depth_tolerance = 0.18
 
-	env.ssr_max_steps = 72
-	env.ssr_fade_in = 0.12
-	env.ssr_fade_out = 2.4
-	env.ssr_depth_tolerance = 0.18
-
-	env.volumetric_fog_density = 0.0025
-	env.volumetric_fog_albedo = Color("#a8b8c7")
-	env.volumetric_fog_emission = Color("#101823")
-	env.volumetric_fog_emission_energy = 0.035
-	env.volumetric_fog_anisotropy = 0.34
-	env.volumetric_fog_length = 46.0
-	env.volumetric_fog_detail_spread = 1.85
-	env.volumetric_fog_gi_inject = 0.0
-	env.volumetric_fog_ambient_inject = 0.18
-	env.volumetric_fog_sky_affect = 0.72
-	env.volumetric_fog_temporal_reprojection_enabled = true
-	env.volumetric_fog_temporal_reprojection_amount = 0.82
+	if dream_mist_enabled:
+		# These values intentionally do not vary with quality. Keeping the
+		# volume short limits its cost while adding body to the 15 m depth fog.
+		env.volumetric_fog_density = 0.011
+		# Keep the unlit volume dark while still allowing nearby lamps and the
+		# flashlight to reveal the mist locally.
+		env.volumetric_fog_albedo = Color("#4a565a")
+		env.volumetric_fog_emission = Color.BLACK
+		env.volumetric_fog_emission_energy = 0.0
+		env.volumetric_fog_anisotropy = 0.08
+		env.volumetric_fog_length = 18.0
+		env.volumetric_fog_detail_spread = 1.60
+		env.volumetric_fog_gi_inject = 0.0
+		env.volumetric_fog_ambient_inject = 0.015
+		env.volumetric_fog_sky_affect = 0.12
+		env.volumetric_fog_temporal_reprojection_enabled = true
+		env.volumetric_fog_temporal_reprojection_amount = 0.82
 
 
 # ============================================================
@@ -974,7 +1119,7 @@ func _apply_moon_light(
 
 	moon.light_volumetric_fog_energy = (
 		float(settings["moon_volumetric_energy"])
-		if quality_preset == QUALITY_ULTRA
+		if profile == EnvironmentProfile.DREAM_INTRO
 		else 0.0
 	)
 

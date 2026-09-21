@@ -5,9 +5,6 @@ class_name UltraWeatherLayer
 const QUALITY_ULTRA: int = 3
 const PUDDLE_RENDER_LAYER: int = 1 << 19
 
-const GROUND_MIST_SHADER: Shader = preload(
-	"res://assets/shaders/ultra_ground_mist.gdshader"
-)
 const PUDDLE_SHADER: Shader = preload(
 	"res://assets/shaders/ultra_puddle.gdshader"
 )
@@ -36,15 +33,10 @@ var wet_grass_roughness: float = 0.42
 @export_range(0.0, 1.0, 0.01)
 var wet_dirt_roughness: float = 0.27
 
-@export_category("Local Mist")
-@export_range(0.0, 0.2, 0.001)
-var center_mist_density: float = 0.040
-@export_range(0.0, 0.2, 0.001)
-var side_mist_density: float = 0.050
-
 var _effects_created: bool = false
-var _ultra_enabled: bool = false
+var _shared_fog_support_created: bool = false
 var _effect_nodes: Array[VisualInstance3D] = []
+var _shared_fog_nodes: Array[VisualInstance3D] = []
 var _terrain_original_roughness: Dictionary = {}
 var _flashlight_original_fog_energy: Dictionary = {}
 
@@ -73,6 +65,7 @@ func _exit_tree() -> void:
 
 
 func _apply_current_quality() -> void:
+	_ensure_shared_fog_support()
 	_set_ultra_enabled(
 		GameSettings.get_quality_preset() == QUALITY_ULTRA
 	)
@@ -83,8 +76,6 @@ func _on_quality_preset_changed(preset: int) -> void:
 
 
 func _set_ultra_enabled(enabled: bool) -> void:
-	_ultra_enabled = enabled
-
 	if enabled and not _effects_created:
 		_create_weather_effects()
 
@@ -93,42 +84,21 @@ func _set_ultra_enabled(enabled: bool) -> void:
 			effect_node.visible = enabled
 
 	_apply_terrain_wetness(enabled)
-	_apply_flashlight_fog_energy(enabled)
+
+
+func _ensure_shared_fog_support() -> void:
+	if _shared_fog_support_created:
+		return
+
+	_shared_fog_support_created = true
+	_create_train_fog_exclusions()
+	_apply_flashlight_fog_energy()
 
 
 func _create_weather_effects() -> void:
 	_effects_created = true
-	_create_ground_mist()
 	_create_puddles()
 	_create_reflection_probes()
-
-
-func _create_ground_mist() -> void:
-	_create_mist_volume(
-		"CenterGroundMist",
-		Vector3(0.0, 0.45, 0.0),
-		Vector3(11.5, 3.4, 72.0),
-		RenderingServer.FOG_VOLUME_SHAPE_BOX,
-		center_mist_density,
-		0.0
-	)
-	_create_mist_volume(
-		"LeftMistBank",
-		Vector3(-4.1, 0.35, -10.0),
-		Vector3(8.0, 3.8, 38.0),
-		RenderingServer.FOG_VOLUME_SHAPE_ELLIPSOID,
-		side_mist_density,
-		3.7
-	)
-	_create_mist_volume(
-		"RightMistBank",
-		Vector3(4.0, 0.30, 16.0),
-		Vector3(7.5, 3.6, 34.0),
-		RenderingServer.FOG_VOLUME_SHAPE_ELLIPSOID,
-		side_mist_density,
-		8.9
-	)
-	_create_train_fog_exclusions()
 
 
 func _create_train_fog_exclusions() -> void:
@@ -161,31 +131,7 @@ func _create_train_fog_exclusions() -> void:
 		clear_volume.material = clear_material
 
 		add_child(clear_volume)
-		_effect_nodes.append(clear_volume)
-
-
-func _create_mist_volume(
-	node_name: String,
-	volume_position: Vector3,
-	volume_size: Vector3,
-	volume_shape: RenderingServer.FogVolumeShape,
-	density: float,
-	phase: float
-) -> void:
-	var fog_volume: FogVolume = FogVolume.new()
-	fog_volume.name = node_name
-	fog_volume.position = volume_position
-	fog_volume.size = volume_size
-	fog_volume.shape = volume_shape
-
-	var fog_material: ShaderMaterial = ShaderMaterial.new()
-	fog_material.shader = GROUND_MIST_SHADER
-	fog_material.set_shader_parameter("density", density)
-	fog_material.set_shader_parameter("phase", phase)
-	fog_volume.material = fog_material
-
-	add_child(fog_volume)
-	_effect_nodes.append(fog_volume)
+		_shared_fog_nodes.append(clear_volume)
 
 
 func _create_puddles() -> void:
@@ -348,7 +294,7 @@ func _restore_terrain_roughness() -> void:
 	_terrain_original_roughness.clear()
 
 
-func _apply_flashlight_fog_energy(enabled: bool) -> void:
+func _apply_flashlight_fog_energy() -> void:
 	var player: Node = get_node_or_null(player_path)
 
 	if player == null:
@@ -372,18 +318,12 @@ func _apply_flashlight_fog_energy(enabled: bool) -> void:
 				spot_light.light_volumetric_fog_energy
 			)
 
-		var ultra_energy: float = (
-			0.24
+		var fog_energy: float = (
+			0.22
 			if spot_light.name == &"FlashlightFill"
-			else 0.85
+			else 0.75
 		)
-		spot_light.light_volumetric_fog_energy = (
-			ultra_energy
-			if enabled
-			else float(
-				_flashlight_original_fog_energy[spot_light]
-			)
-		)
+		spot_light.light_volumetric_fog_energy = fog_energy
 
 
 func _restore_flashlight_fog_energy() -> void:
