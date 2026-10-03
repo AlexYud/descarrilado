@@ -318,12 +318,9 @@ func _apply_flashlight_fog_energy() -> void:
 				spot_light.light_volumetric_fog_energy
 			)
 
-		var fog_energy: float = (
-			0.22
-			if spot_light.name == &"FlashlightFill"
-			else 0.75
-		)
-		spot_light.light_volumetric_fog_energy = fog_energy
+		# The flashlight still lights surfaces normally, but does not add a
+		# glowing cone or brighten silhouettes inside the night fog.
+		spot_light.light_volumetric_fog_energy = 0.0
 
 
 func _restore_flashlight_fog_energy() -> void:

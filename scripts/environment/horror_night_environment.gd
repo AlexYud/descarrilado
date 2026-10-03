@@ -23,6 +23,51 @@ const BASE_ADJUSTMENT_ENABLED_META: StringName = (
 )
 
 
+# Forest fog per quality preset, used while the player is at forest altitude.
+# The background is tinted to the fog colour, so objects fade into the haze
+# instead of showing as silhouettes. Fog must end before the camera far plane.
+# - depth_begin/depth_end: distance range of the depth fog.
+# - depth_curve: lower values give a longer, softer falloff (more layering).
+# - camera_far: render distance, kept shortest on weak hardware.
+# - volumetric_*: real 3D mist; costly, so only High and Ultra enable it.
+const DREAM_FOREST_FOG: Dictionary = {
+	QUALITY_LOW: {
+		"depth_begin": 1.5,
+		"depth_end": 13.0,
+		"depth_curve": 1.7,
+		"camera_far": 15.0,
+		"volumetric": false,
+	},
+	QUALITY_MEDIUM: {
+		"depth_begin": 1.25,
+		"depth_end": 17.0,
+		"depth_curve": 1.5,
+		"camera_far": 19.0,
+		"volumetric": false,
+	},
+	QUALITY_HIGH: {
+		"depth_begin": 1.0,
+		"depth_end": 22.0,
+		"depth_curve": 1.35,
+		"camera_far": 25.0,
+		"volumetric": true,
+		"volumetric_density": 0.024,
+		"volumetric_length": 16.0,
+		"volumetric_emission_energy": 0.18,
+	},
+	QUALITY_ULTRA: {
+		"depth_begin": 0.75,
+		"depth_end": 28.0,
+		"depth_curve": 1.25,
+		"camera_far": 31.0,
+		"volumetric": true,
+		"volumetric_density": 0.03,
+		"volumetric_length": 22.0,
+		"volumetric_emission_energy": 0.22,
+	},
+}
+
+
 # ============================================================
 # SCENE PROFILE
 # ============================================================
@@ -108,21 +153,10 @@ var low_altitude_height_density_multiplier: float = 0.0
 ## then restores the long city vista as the player descends.
 @export var adjust_camera_distance_with_altitude: bool = true
 
-## Camera range while the player is in the dense forest fog.
-@export_range(8.0, 2000.0, 1.0)
-var high_altitude_camera_far_distance: float = 20.0
-
-## Camera range at and below Fog Reduction End Altitude.
+## Camera range at and below Fog Reduction End Altitude. The forest range
+## comes from DREAM_FOREST_FOG for the active quality preset.
 @export_range(32.0, 4000.0, 1.0)
 var low_altitude_camera_far_distance: float = 1500.0
-
-## Dense forest fog is already visible close to the player.
-@export_range(0.0, 1000.0, 1.0)
-var high_altitude_fog_depth_begin: float = 1.5
-
-## Dense forest fog fully obscures the view before the camera cutoff.
-@export_range(1.0, 2000.0, 1.0)
-var high_altitude_fog_depth_end: float = 15.0
 
 ## The distant city remains clear until this distance.
 @export_range(0.0, 4000.0, 1.0)
@@ -131,9 +165,6 @@ var low_altitude_fog_depth_begin: float = 650.0
 ## The low-altitude fog reaches its small maximum near the far plane.
 @export_range(1.0, 4000.0, 1.0)
 var low_altitude_fog_depth_end: float = 1450.0
-
-@export_range(0.1, 4.0, 0.05)
-var dream_fog_depth_curve: float = 1.35
 
 ## Higher values keep the forest dense for longer, then reveal the
 ## distant vista progressively near the bottom of the descent.
@@ -212,6 +243,10 @@ var _base_fog_density: float = 0.0
 var _base_fog_height: float = 0.0
 var _base_fog_height_density: float = 0.0
 var _base_volumetric_fog_density: float = 0.0
+
+var _forest_fog: Dictionary = DREAM_FOREST_FOG[QUALITY_HIGH]
+var _base_fog_sky_affect: float = 1.0
+var _dream_sky: Sky = null
 
 var _base_moon_energy: float = 0.0
 var _base_ambient_energy: float = 0.0
@@ -296,6 +331,7 @@ func apply_environment() -> void:
 
 	var settings: Dictionary = _get_profile_settings()
 	var quality_preset: int = _get_quality_preset()
+	_forest_fog = DREAM_FOREST_FOG[quality_preset]
 
 	var exterior: float = clampf(
 		exterior_visibility,
@@ -411,6 +447,10 @@ func _cache_runtime_values(
 		* exterior
 	)
 
+	_base_fog_sky_affect = float(
+		settings["fog_sky_affect"]
+	)
+
 	_runtime_values_ready = true
 
 
@@ -508,17 +548,25 @@ func _update_dream_fog_for_altitude(
 		* height_density_multiplier
 	)
 	environment.fog_depth_begin = lerpf(
-		high_altitude_fog_depth_begin,
+		float(_forest_fog["depth_begin"]),
 		low_altitude_fog_depth_begin,
 		blend
 	)
 	environment.fog_depth_end = maxf(
 		environment.fog_depth_begin + 1.0,
 		lerpf(
-			high_altitude_fog_depth_end,
+			float(_forest_fog["depth_end"]),
 			low_altitude_fog_depth_end,
 			blend
 		)
+	)
+
+	# The sky is fully fogged in the forest, then the night sky is revealed
+	# as the fog clears for the city vista.
+	environment.fog_sky_affect = lerpf(
+		_base_fog_sky_affect,
+		0.0,
+		blend
 	)
 
 	if environment.volumetric_fog_enabled:
@@ -546,11 +594,12 @@ func _restore_base_dream_fog() -> void:
 	environment.fog_height_density = (
 		_base_fog_height_density
 	)
-	environment.fog_depth_begin = high_altitude_fog_depth_begin
+	environment.fog_depth_begin = float(_forest_fog["depth_begin"])
 	environment.fog_depth_end = maxf(
-		high_altitude_fog_depth_end,
-		high_altitude_fog_depth_begin + 1.0
+		float(_forest_fog["depth_end"]),
+		float(_forest_fog["depth_begin"]) + 1.0
 	)
+	environment.fog_sky_affect = _base_fog_sky_affect
 	environment.volumetric_fog_density = (
 		_base_volumetric_fog_density
 	)
@@ -570,7 +619,7 @@ func _update_dream_camera_distance_for_altitude(
 
 	var blend: float = _get_dream_visibility_blend(altitude)
 	var target_far_distance: float = lerpf(
-		high_altitude_camera_far_distance,
+		float(_forest_fog["camera_far"]),
 		low_altitude_camera_far_distance,
 		blend
 	)
@@ -748,15 +797,14 @@ func _get_dream_intro_profile() -> Dictionary:
 		"ambient_color": Color("#3f5068"),
 		"ambient_energy": 0.12,
 
-		# The distance fog is deliberately much darker than the mist volume.
-		# This makes geometry disappear into shadow instead of turning into
-		# bright, blue silhouettes as it approaches the 15 m cutoff.
-		"fog_color": Color("#131d20"),
-		"fog_energy": 0.26,
-		"fog_density": 0.62,
+		# The atmosphere has a controlled blue-grey floor, while the steeper
+		# depth curve keeps nearby and mid-distance geometry dark.
+		"fog_color": Color("#26363a"),
+		"fog_energy": 0.55,
+		"fog_density": 0.78,
 		"fog_height": 1.30,
-		"fog_height_density": 0.14,
-		"fog_sky_affect": 0.55,
+		"fog_height_density": 0.18,
+		"fog_sky_affect": 1.0,
 		"fog_sun_scatter": 0.0,
 
 		"exposure": 0.92,
@@ -771,7 +819,7 @@ func _get_dream_intro_profile() -> Dictionary:
 		"moon_energy": 0.1,
 		"moon_specular": 0.08,
 		"moon_shadow_opacity": 0.72,
-		"moon_volumetric_energy": 0.02
+		"moon_volumetric_energy": 0.0
 	}
 
 
@@ -817,13 +865,43 @@ func _apply_background(
 	settings: Dictionary,
 	exterior: float
 ) -> void:
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = settings["background_color"]
-
 	env.background_energy_multiplier = (
 		float(settings["background_energy"])
 		* exterior
 	)
+
+	if profile == EnvironmentProfile.DREAM_INTRO:
+		# A flat background colour is never fogged by the engine, so fully
+		# fogged foliage rendered visibly lighter than the sky behind it. A
+		# flat-colour sky goes through the same fog as every mesh, so distant
+		# geometry and sky end up the same colour.
+		env.background_mode = Environment.BG_SKY
+		env.sky = _get_dream_sky(settings["background_color"])
+		return
+
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = settings["background_color"]
+
+
+func _get_dream_sky(color: Color) -> Sky:
+	if _dream_sky == null:
+		var sky_material: ProceduralSkyMaterial = (
+			ProceduralSkyMaterial.new()
+		)
+		sky_material.sun_angle_max = 0.0
+		_dream_sky = Sky.new()
+		_dream_sky.sky_material = sky_material
+		# Ambient and reflections do not use the sky, so skip its cubemap.
+		_dream_sky.radiance_size = Sky.RADIANCE_SIZE_32
+
+	var material: ProceduralSkyMaterial = (
+		_dream_sky.sky_material as ProceduralSkyMaterial
+	)
+	material.sky_top_color = color
+	material.sky_horizon_color = color
+	material.ground_horizon_color = color
+	material.ground_bottom_color = color
+	return _dream_sky
 
 
 # ============================================================
@@ -919,12 +997,12 @@ func _apply_dream_depth_fog(
 		0.0,
 		1.0
 	)
-	env.fog_depth_begin = high_altitude_fog_depth_begin
+	env.fog_depth_begin = float(_forest_fog["depth_begin"])
 	env.fog_depth_end = maxf(
-		high_altitude_fog_depth_end,
-		high_altitude_fog_depth_begin + 1.0
+		float(_forest_fog["depth_end"]),
+		float(_forest_fog["depth_begin"]) + 1.0
 	)
-	env.fog_depth_curve = dream_fog_depth_curve
+	env.fog_depth_curve = float(_forest_fog["depth_curve"])
 
 
 func _apply_menu_distance_fog(
@@ -1040,6 +1118,7 @@ func _apply_expensive_effects(
 	)
 	var dream_mist_enabled: bool = (
 		profile == EnvironmentProfile.DREAM_INTRO
+		and bool(_forest_fog["volumetric"])
 	)
 
 	env.ssr_enabled = ultra_ssr_enabled
@@ -1052,20 +1131,27 @@ func _apply_expensive_effects(
 		env.ssr_depth_tolerance = 0.18
 
 	if dream_mist_enabled:
-		# These values intentionally do not vary with quality. Keeping the
-		# volume short limits its cost while adding body to the 15 m depth fog.
-		env.volumetric_fog_density = 0.011
-		# Keep the unlit volume dark while still allowing nearby lamps and the
-		# flashlight to reveal the mist locally.
-		env.volumetric_fog_albedo = Color("#4a565a")
-		env.volumetric_fog_emission = Color.BLACK
-		env.volumetric_fog_emission_energy = 0.0
-		env.volumetric_fog_anisotropy = 0.08
-		env.volumetric_fog_length = 18.0
-		env.volumetric_fog_detail_spread = 1.60
+		# Only High and Ultra render the volume; its length stays inside the
+		# depth fog so it never extends past the point where geometry fades.
+		env.volumetric_fog_density = float(
+			_forest_fog["volumetric_density"]
+		)
+		# Pure-black albedo prevents all lights from brightening the fog. A low,
+		# uniform emission supplies only the muted atmospheric haze visible in
+		# the reference, independent of mesh materials and flashlight direction.
+		env.volumetric_fog_albedo = Color.BLACK
+		env.volumetric_fog_emission = Color("#26363a")
+		env.volumetric_fog_emission_energy = float(
+			_forest_fog["volumetric_emission_energy"]
+		)
+		env.volumetric_fog_anisotropy = 0.0
+		env.volumetric_fog_length = float(
+			_forest_fog["volumetric_length"]
+		)
+		env.volumetric_fog_detail_spread = 1.80
 		env.volumetric_fog_gi_inject = 0.0
-		env.volumetric_fog_ambient_inject = 0.015
-		env.volumetric_fog_sky_affect = 0.12
+		env.volumetric_fog_ambient_inject = 0.0
+		env.volumetric_fog_sky_affect = 1.0
 		env.volumetric_fog_temporal_reprojection_enabled = true
 		env.volumetric_fog_temporal_reprojection_amount = 0.82
 
