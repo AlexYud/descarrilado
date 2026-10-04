@@ -23,6 +23,7 @@ SaveManager="*res://scripts/save/save_manager.gd"
 HorrorFilter="*res://scenes/ui/filters/horror_filter.tscn"
 SceneTransition="*res://scripts/ui/scene_transition_manager.gd"
 DialogueManager="*res://scripts/dialogue/dialogue_manager.gd"
+CaptionManager="*res://scenes/ui/captions/caption_display.tscn"
 PersistentAudio="*res://scenes/autoload/persistent_audio.tscn"
 
 [display]

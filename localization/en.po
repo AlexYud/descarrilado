@@ -296,3 +296,40 @@ msgstr "Clonazepam Bottle"
 
 msgid "ITEM_CLONAZEPAM_DESCRIPTION"
 msgstr "A small amber-glass bottle with a white cap, the threads already somewhat worn. The pharmacy label has been pasted over the original, with Juliana Ferreira's name printed in a computer font and the rest of the information cut off unevenly. There are still a few pills inside. When moved, it makes that dry rattle of something light striking glass. The instruction sticker is starting to peel from the shower steam."
+
+# Captions
+msgid "OPTIONS_CAPTIONS"
+msgstr "Captions"
+
+msgid "OPTIONS_CAPTION_LANGUAGE"
+msgstr "Caption Language"
+
+msgid "OPTIONS_CAPTION_SIZE"
+msgstr "Caption Size"
+
+msgid "OPTIONS_CAPTION_SIZE_SMALL"
+msgstr "Small"
+
+msgid "OPTIONS_CAPTION_SIZE_MEDIUM"
+msgstr "Medium"
+
+msgid "OPTIONS_CAPTION_SIZE_LARGE"
+msgstr "Large"
+
+msgid "OPTIONS_CAPTION_SIZE_EXTRA_LARGE"
+msgstr "Extra Large"
+
+msgid "CAPTION_INTRO_01"
+msgstr "I'm sure my mom was just trying to protect me."
+
+msgid "CAPTION_INTRO_02"
+msgstr "Now that there's only one of us left."
+
+msgid "CAPTION_INTRO_03"
+msgstr "I thought it was time I heard the stories."
+
+msgid "CAPTION_INTRO_04"
+msgstr "But now I'm worried the stories themselves might be the problem."
+
+msgid "CAPTION_INTRO_05"
+msgstr "Maybe we believed so much in a family curse, we made it real."

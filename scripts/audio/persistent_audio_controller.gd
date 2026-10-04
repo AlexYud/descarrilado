@@ -232,6 +232,10 @@ func play_intro_narration_after_delay(start_delay: float) -> void:
 	intro_narration_player.volume_db = intro_narration_volume_db
 	intro_narration_player.stop()
 	intro_narration_player.play()
+	CaptionManager.follow_player(
+		CaptionTracks.INTRO_NARRATION,
+		intro_narration_player
+	)
 
 
 func stop_intro_narration() -> void:
@@ -241,6 +245,7 @@ func stop_intro_narration() -> void:
 		return
 
 	intro_narration_player.stop()
+	CaptionManager.clear()
 
 
 func set_master_volume_percent(value: float, save_after_change: bool = true) -> void:

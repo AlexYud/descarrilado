@@ -53,7 +53,7 @@ const DREAM_FOREST_FOG: Dictionary = {
 		"volumetric": true,
 		"volumetric_density": 0.024,
 		"volumetric_length": 16.0,
-		"volumetric_emission_energy": 0.18,
+		"volumetric_emission_energy": 0.10,
 	},
 	QUALITY_ULTRA: {
 		"depth_begin": 0.75,
@@ -63,7 +63,7 @@ const DREAM_FOREST_FOG: Dictionary = {
 		"volumetric": true,
 		"volumetric_density": 0.03,
 		"volumetric_length": 22.0,
-		"volumetric_emission_energy": 0.22,
+		"volumetric_emission_energy": 0.12,
 	},
 }
 
@@ -831,7 +831,15 @@ func _find_altitude_target() -> Node3D:
 func _get_profile_settings() -> Dictionary:
 	match profile:
 		EnvironmentProfile.MAIN_MENU:
-			return _get_main_menu_profile()
+			# The menu shares the forest look of the dream intro (fog colour, sky,
+			# moon, volumetric mist), so both scenes feel like the same night.
+			var menu_settings: Dictionary = _get_dream_intro_profile()
+			# Same fog colour and sky, but the player has no flashlight in
+			# the menu, so the moon and ambient light are brighter to keep
+			# the scenery readable.
+			menu_settings["moon_energy"] = 0.45
+			menu_settings["ambient_energy"] = 0.28
+			return menu_settings
 
 		_:
 			return _get_dream_intro_profile()
@@ -843,12 +851,12 @@ func _get_dream_intro_profile() -> Dictionary:
 		"background_energy": 0.22,
 
 		"ambient_color": Color("#3f5068"),
-		"ambient_energy": 0.12,
+		"ambient_energy": 0.07,
 
 		# The atmosphere has a controlled blue-grey floor, while the steeper
 		# depth curve keeps nearby and mid-distance geometry dark.
 		"fog_color": Color("#26363a"),
-		"fog_energy": 0.55,
+		"fog_energy": 0.30,
 		"fog_density": 0.78,
 		"fog_height": 1.30,
 		"fog_height_density": 0.18,
@@ -864,7 +872,7 @@ func _get_dream_intro_profile() -> Dictionary:
 		"ssao_intensity": 0.95,
 
 		"moon_color": Color("#8fa8c4"),
-		"moon_energy": 0.1,
+		"moon_energy": 0.06,
 		"moon_specular": 0.08,
 		"moon_shadow_opacity": 0.72,
 		"moon_volumetric_energy": 0.0
@@ -918,7 +926,7 @@ func _apply_background(
 		* exterior
 	)
 
-	if profile == EnvironmentProfile.DREAM_INTRO:
+	if _is_forest_profile():
 		# A flat background colour is never fogged by the engine, so fully
 		# fogged foliage rendered visibly lighter than the sky behind it. A
 		# flat-colour sky goes through the same fog as every mesh, so distant
@@ -1016,18 +1024,11 @@ func _apply_fog(
 
 	env.fog_aerial_perspective = 0.0
 
-	if profile == EnvironmentProfile.MAIN_MENU:
-		_apply_menu_distance_fog(
-			env,
-			settings,
-			fog_strength
-		)
-	else:
-		_apply_dream_depth_fog(
-			env,
-			settings,
-			fog_strength
-		)
+	_apply_dream_depth_fog(
+		env,
+		settings,
+		fog_strength
+	)
 
 	env.volumetric_fog_enabled = false
 
@@ -1162,10 +1163,10 @@ func _apply_expensive_effects(
 
 	var ultra_ssr_enabled: bool = (
 		quality_preset == QUALITY_ULTRA
-		and profile == EnvironmentProfile.DREAM_INTRO
+		and _is_forest_profile()
 	)
 	var dream_mist_enabled: bool = (
-		profile == EnvironmentProfile.DREAM_INTRO
+		_is_forest_profile()
 		and bool(_forest_fog["volumetric"])
 	)
 
@@ -1253,7 +1254,7 @@ func _apply_moon_light(
 
 	moon.light_volumetric_fog_energy = (
 		float(settings["moon_volumetric_energy"])
-		if profile == EnvironmentProfile.DREAM_INTRO
+		if _is_forest_profile()
 		else 0.0
 	)
 
@@ -1328,4 +1329,12 @@ func _find_moon_light() -> DirectionalLight3D:
 			false
 		)
 		as DirectionalLight3D
+	)
+
+
+## Both the dream intro and the main menu use the forest atmosphere.
+func _is_forest_profile() -> bool:
+	return (
+		profile == EnvironmentProfile.DREAM_INTRO
+		or profile == EnvironmentProfile.MAIN_MENU
 	)

@@ -202,6 +202,41 @@ text = "OPTIONS_VOICE_LANGUAGE"
 custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
 
+[node name="CaptionsRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox"]
+layout_mode = 2
+
+[node name="CaptionsLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/CaptionsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_CAPTIONS"
+
+[node name="CaptionsCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/CaptionsRow"]
+layout_mode = 2
+
+[node name="CaptionLanguageRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox"]
+layout_mode = 2
+
+[node name="CaptionLanguageLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/CaptionLanguageRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_CAPTION_LANGUAGE"
+
+[node name="CaptionLanguageOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/CaptionLanguageRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
+[node name="CaptionSizeRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox"]
+layout_mode = 2
+
+[node name="CaptionSizeLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/CaptionSizeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_CAPTION_SIZE"
+
+[node name="CaptionSizeOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Language/LanguageVBox/CaptionSizeRow"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+
 [node name="OptionsBackButton" type="Button" parent="OptionsMargin/OptionsVBox" unique_id=326004359]
 layout_mode = 2
 text = "OPTIONS_BACK"

@@ -1,0 +1,45 @@
+[gd_resource type="ArrayMesh" format=4]
+
+[ext_resource type="Texture2D" path="res://assets/models/foliage/white_flower_02/white_flower_02_foliage_88.png" id="1_hkrl4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_odi02"]
+resource_name = "Material.003"
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("1_hkrl4")
+roughness = 0.5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_y47xh"]
+_surfaces = [{
+"aabb": AABB(-0.22802697, -0.043777138, -0.21804844, 0.60613424, 1.0846574, 0.46707004),
+"format": 34896613377,
+"index_count": 24,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAADAAAABAAFAAMABgAHAAgABgAJAAcACgAJAAYACgALAAkA"),
+"name": "Material.003",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 12,
+"vertex_data": PackedByteArray("QVsAAIt5AACQpdrLxbwAAJClAADFvAAAQVvay4t5AAAAAAAA//8AAAAA2sv+/wAAR2UuAYd7AAD0J///AAAAAPQnLgEAAAAAR2X+/4d7AAD+/y4BThgAAP///v9OGAAA")
+}]
+blend_shape_mode = 0
+
+[resource]
+resource_name = "white_flower_02_Plane_121"
+_surfaces = [{
+"aabb": AABB(-0.22802697, -0.043777138, -0.21804844, 0.60613424, 1.0846574, 0.46707004),
+"attribute_data": PackedByteArray("28j//////3//////28j/fzGI//+EyP9/hMj//zGI/3/byP//////f//////byP9/MYj//4TI/3+EyP//MYj/fw=="),
+"format": 34896613399,
+"index_count": 24,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAHAAUACAAJAAoACAALAAkADAANAA4ADAAPAA0A"),
+"material": SubResource("StandardMaterial3D_odi02"),
+"name": "Material.003",
+"primitive": 3,
+"uv_scale": Vector4(2, 2, 0, 0),
+"vertex_count": 16,
+"vertex_data": PackedByteArray("QVsAAIt5zZiQpdrLxbzNmJClAADFvM2YQVvay4t5zZgAAAAA//+TokFb2suLeZOiQVsAAIt5k6IAANrL/v+TokdlLgGHe1DX9Cf//wAAUNf0Jy4BAABQ10dl/v+He1DX/v8uAU4YS+1HZf7/h3tL7UdlLgGHe0vt///+/04YS+3/f////3////9//v//f////38AAP9/AAD/fwAA/38AAP9/AAD/fwAA/38AAP9/AAD/f/7//3/+//9/////f/7/")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_y47xh")

@@ -296,3 +296,40 @@ msgstr "Frasco de clonazepam"
 
 msgid "ITEM_CLONAZEPAM_DESCRIPTION"
 msgstr "Frasco pequeno de vidro âmbar com tampa branca, já meio gasta na rosca. A etiqueta da farmácia está colada por cima da original, com o nome Juliana Ferreira impresso em fonte de computador e o resto das informações cortado torto. Ainda tem alguns comprimidos lá dentro. Quando mexe, faz aquele barulho seco de coisa leve batendo no vidro. O adesivo de instrução está começando a descolar por causa do vapor do chuveiro."
+
+# Captions
+msgid "OPTIONS_CAPTIONS"
+msgstr "Legendas"
+
+msgid "OPTIONS_CAPTION_LANGUAGE"
+msgstr "Idioma das Legendas"
+
+msgid "OPTIONS_CAPTION_SIZE"
+msgstr "Tamanho das Legendas"
+
+msgid "OPTIONS_CAPTION_SIZE_SMALL"
+msgstr "Pequeno"
+
+msgid "OPTIONS_CAPTION_SIZE_MEDIUM"
+msgstr "Médio"
+
+msgid "OPTIONS_CAPTION_SIZE_LARGE"
+msgstr "Grande"
+
+msgid "OPTIONS_CAPTION_SIZE_EXTRA_LARGE"
+msgstr "Extra Grande"
+
+msgid "CAPTION_INTRO_01"
+msgstr "Tenho certeza de que minha mãe só estava tentando me proteger."
+
+msgid "CAPTION_INTRO_02"
+msgstr "Agora que só resta um de nós."
+
+msgid "CAPTION_INTRO_03"
+msgstr "Achei que era hora de ouvir as histórias."
+
+msgid "CAPTION_INTRO_04"
+msgstr "Mas agora temo que as próprias histórias possam ser o problema."
+
+msgid "CAPTION_INTRO_05"
+msgstr "Talvez a gente tenha acreditado tanto numa maldição de família que a tornou real."

@@ -1,0 +1,45 @@
+[gd_resource type="ArrayMesh" format=4]
+
+[ext_resource type="Texture2D" path="res://assets/models/foliage/kelp_like_foliage/kelp_like_foliage_foliage_89.png" id="1_lqtca"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4h4a4"]
+resource_name = "Material.004"
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("1_lqtca")
+roughness = 0.5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_xefgs"]
+_surfaces = [{
+"aabb": AABB(-0.51546633, -0.030477762, -0.7912219, 0.9949577, 2.1247756, 1.5541219),
+"format": 34896613377,
+"index_count": 12,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAHAAUA"),
+"name": "Material.004",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("iwV2AgAAAABz+v////8AAHP6dgL+/wAAiwX//wAAAAAAAAAACu4AAP7/v+f0EQAA//8AAPQRAAAAAL/nCu4AAA==")
+}]
+blend_shape_mode = 0
+
+[resource]
+resource_name = "kelp_like_foliage_Plane_124"
+_surfaces = [{
+"aabb": AABB(-0.51546633, -0.030477762, -0.7912219, 0.9949577, 2.1247756, 1.5541219),
+"attribute_data": PackedByteArray("AAAsyP//AAD//yzIAAAAAAAALMj//wAA//8syAAAAAA="),
+"format": 34896613399,
+"index_count": 12,
+"index_data": PackedByteArray("AAABAAIAAAADAAEABAAFAAYABAAHAAUA"),
+"material": SubResource("StandardMaterial3D_4h4a4"),
+"name": "Material.004",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 8,
+"vertex_data": PackedByteArray("iwV2AgAAm6lz+v////+bqXP6dgL+/5upiwX//wAAm6kAAAAACu7rpf7/v+f0Eeul//8AAPQR66UAAL/nCu7rpf9/////f////3////9/////fwAA/38AAP9/AAD/fwAA")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_xefgs")

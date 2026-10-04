@@ -9,6 +9,9 @@ signal fps_limit_changed(limit: int)
 signal brightness_changed(percent: float)
 signal text_language_changed(locale: String)
 signal voice_language_changed(locale: String)
+signal captions_enabled_changed(enabled: bool)
+signal caption_language_changed(locale: String)
+signal caption_size_changed(size_index: int)
 signal mouse_sensitivity_changed(percent: float)
 signal invert_y_changed(enabled: bool)
 
@@ -41,11 +44,20 @@ const BRIGHTNESS_KEY: String = "brightness_percent"
 const LANGUAGE_SECTION: String = "language"
 const TEXT_LOCALE_KEY: String = "text_locale"
 const VOICE_LOCALE_KEY: String = "voice_locale"
+const CAPTIONS_ENABLED_KEY: String = "captions_enabled"
+const CAPTION_LOCALE_KEY: String = "caption_locale"
+const CAPTION_SIZE_KEY: String = "caption_size"
 
 const LOCALE_ENGLISH: String = "en"
 const LOCALE_BRAZILIAN_PORTUGUESE: String = "pt_BR"
 const DEFAULT_TEXT_LOCALE: String = LOCALE_ENGLISH
 const DEFAULT_VOICE_LOCALE: String = LOCALE_ENGLISH
+const DEFAULT_CAPTIONS_ENABLED: bool = true
+const DEFAULT_CAPTION_LOCALE: String = LOCALE_ENGLISH
+
+## Caption text sizes (Small, Medium, Large, Extra Large), in pixels.
+const CAPTION_FONT_SIZES: Array[int] = [20, 26, 34, 44]
+const DEFAULT_CAPTION_SIZE: int = 1
 
 const SUPPORTED_VOICE_LOCALES: Array[String] = [
 	LOCALE_ENGLISH,
@@ -113,6 +125,9 @@ var brightness_percent: float = (
 
 var text_locale: String = DEFAULT_TEXT_LOCALE
 var voice_locale: String = DEFAULT_VOICE_LOCALE
+var captions_enabled: bool = DEFAULT_CAPTIONS_ENABLED
+var caption_locale: String = DEFAULT_CAPTION_LOCALE
+var caption_size: int = DEFAULT_CAPTION_SIZE
 
 var mouse_sensitivity_percent: float = (
 	DEFAULT_MOUSE_SENSITIVITY_PERCENT
@@ -217,6 +232,21 @@ func save_settings() -> void:
 		LANGUAGE_SECTION,
 		VOICE_LOCALE_KEY,
 		voice_locale
+	)
+	config.set_value(
+		LANGUAGE_SECTION,
+		CAPTIONS_ENABLED_KEY,
+		captions_enabled
+	)
+	config.set_value(
+		LANGUAGE_SECTION,
+		CAPTION_LOCALE_KEY,
+		caption_locale
+	)
+	config.set_value(
+		LANGUAGE_SECTION,
+		CAPTION_SIZE_KEY,
+		caption_size
 	)
 
 	config.set_value(
@@ -472,6 +502,74 @@ func get_supported_voice_locales() -> PackedStringArray:
 	return PackedStringArray(SUPPORTED_VOICE_LOCALES)
 
 
+func set_captions_enabled(
+	value: bool,
+	save_after_change: bool = true
+) -> void:
+	if captions_enabled == value:
+		return
+
+	captions_enabled = value
+	captions_enabled_changed.emit(captions_enabled)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_captions_enabled() -> bool:
+	return captions_enabled
+
+
+## Captions have their own language, independent of the interface text and the
+## voice, so a player can hear one language and read another.
+func set_caption_locale(
+	value: String,
+	save_after_change: bool = true
+) -> void:
+	var new_locale: String = _sanitize_caption_locale(value)
+
+	if caption_locale == new_locale:
+		return
+
+	caption_locale = new_locale
+	caption_language_changed.emit(caption_locale)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_caption_locale() -> String:
+	return caption_locale
+
+
+func set_caption_size(
+	value: int,
+	save_after_change: bool = true
+) -> void:
+	var new_size: int = clampi(value, 0, CAPTION_FONT_SIZES.size() - 1)
+
+	if caption_size == new_size:
+		return
+
+	caption_size = new_size
+	caption_size_changed.emit(caption_size)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_caption_size() -> int:
+	return caption_size
+
+
+func get_caption_font_size() -> int:
+	return CAPTION_FONT_SIZES[caption_size]
+
+
+func get_supported_caption_locales() -> PackedStringArray:
+	return get_supported_text_locales()
+
+
 func set_mouse_sensitivity_percent(
 	value: float,
 	save_after_change: bool = true
@@ -578,6 +676,9 @@ func _set_default_values() -> void:
 	brightness_percent = DEFAULT_BRIGHTNESS_PERCENT
 	text_locale = DEFAULT_TEXT_LOCALE
 	voice_locale = DEFAULT_VOICE_LOCALE
+	captions_enabled = DEFAULT_CAPTIONS_ENABLED
+	caption_locale = DEFAULT_CAPTION_LOCALE
+	caption_size = DEFAULT_CAPTION_SIZE
 
 	mouse_sensitivity_percent = (
 		DEFAULT_MOUSE_SENSITIVITY_PERCENT
@@ -656,6 +757,27 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			DEFAULT_VOICE_LOCALE
 		)
 	)
+	captions_enabled = bool(
+		config.get_value(
+			LANGUAGE_SECTION,
+			CAPTIONS_ENABLED_KEY,
+			DEFAULT_CAPTIONS_ENABLED
+		)
+	)
+	caption_locale = str(
+		config.get_value(
+			LANGUAGE_SECTION,
+			CAPTION_LOCALE_KEY,
+			DEFAULT_CAPTION_LOCALE
+		)
+	)
+	caption_size = int(
+		config.get_value(
+			LANGUAGE_SECTION,
+			CAPTION_SIZE_KEY,
+			DEFAULT_CAPTION_SIZE
+		)
+	)
 
 	mouse_sensitivity_percent = float(
 		config.get_value(
@@ -701,6 +823,8 @@ func _sanitize_values() -> void:
 	)
 	text_locale = _sanitize_text_locale(text_locale)
 	voice_locale = _sanitize_voice_locale(voice_locale)
+	caption_locale = _sanitize_caption_locale(caption_locale)
+	caption_size = clampi(caption_size, 0, CAPTION_FONT_SIZES.size() - 1)
 
 	mouse_sensitivity_percent = clampf(
 		mouse_sensitivity_percent,
@@ -725,6 +849,13 @@ func _sanitize_text_locale(value: String) -> String:
 		return value
 
 	return DEFAULT_TEXT_LOCALE
+
+
+func _sanitize_caption_locale(value: String) -> String:
+	if get_supported_caption_locales().has(value):
+		return value
+
+	return DEFAULT_CAPTION_LOCALE
 
 
 func _sanitize_voice_locale(value: String) -> String:

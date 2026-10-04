@@ -285,3 +285,40 @@ msgstr ""
 
 msgid "ITEM_CLONAZEPAM_DESCRIPTION"
 msgstr ""
+
+# Captions
+msgid "OPTIONS_CAPTIONS"
+msgstr ""
+
+msgid "OPTIONS_CAPTION_LANGUAGE"
+msgstr ""
+
+msgid "OPTIONS_CAPTION_SIZE"
+msgstr ""
+
+msgid "OPTIONS_CAPTION_SIZE_SMALL"
+msgstr ""
+
+msgid "OPTIONS_CAPTION_SIZE_MEDIUM"
+msgstr ""
+
+msgid "OPTIONS_CAPTION_SIZE_LARGE"
+msgstr ""
+
+msgid "OPTIONS_CAPTION_SIZE_EXTRA_LARGE"
+msgstr ""
+
+msgid "CAPTION_INTRO_01"
+msgstr ""
+
+msgid "CAPTION_INTRO_02"
+msgstr ""
+
+msgid "CAPTION_INTRO_03"
+msgstr ""
+
+msgid "CAPTION_INTRO_04"
+msgstr ""
+
+msgid "CAPTION_INTRO_05"
+msgstr ""
