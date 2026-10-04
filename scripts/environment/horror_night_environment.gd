@@ -119,6 +119,16 @@ var fog_amount: float = 1.8
 
 @export_category("Dream Fog Altitude Control")
 
+## Keeps the fog, view distance and lighting exactly as they are when the
+## player leaves the wagon, at every altitude. While this is on, the settings
+## below that reduce fog for the city vista are ignored. Turn it off once the
+## descent to the overlook is ready to be tuned.
+@export var lock_forest_atmosphere: bool = true
+
+## Player height at the wagon. The ground fog layer is kept at the same
+## offset above the player as it has there, wherever the player walks.
+@export var forest_fog_reference_altitude: float = 0.9
+
 ## Keeps the current fog above the start altitude, then makes
 ## it progressively weaker as the player descends.
 @export var reduce_fog_below_altitude: bool = true
@@ -285,6 +295,13 @@ func _process(_delta: float) -> void:
 		return
 
 	if environment == null:
+		return
+
+	if lock_forest_atmosphere:
+		_restore_base_dream_fog()
+		_restore_base_dream_lighting()
+		_apply_forest_camera_distance()
+		_follow_player_fog_height()
 		return
 
 	if (
@@ -627,6 +644,37 @@ func _update_dream_camera_distance_for_altitude(
 	active_camera.far = maxf(
 		active_camera.near + 1.0,
 		target_far_distance
+	)
+
+
+## The ground fog layer sits at a fixed world height, so it grew denser as the
+## terrain dropped away below it. Following the player keeps the fog around
+## them identical to the wagon at any height.
+func _follow_player_fog_height() -> void:
+	if (
+		_fog_altitude_target == null
+		or not is_instance_valid(_fog_altitude_target)
+	):
+		_fog_altitude_target = _find_altitude_target()
+
+	if _fog_altitude_target == null:
+		return
+
+	environment.fog_height = (
+		_fog_altitude_target.global_position.y
+		+ (_base_fog_height - forest_fog_reference_altitude)
+	)
+
+
+func _apply_forest_camera_distance() -> void:
+	var active_camera: Camera3D = get_viewport().get_camera_3d()
+
+	if active_camera == null:
+		return
+
+	active_camera.far = maxf(
+		active_camera.near + 1.0,
+		float(_forest_fog["camera_far"])
 	)
 
 
@@ -1214,27 +1262,26 @@ func _apply_moon_shadow_quality(
 	moon: DirectionalLight3D,
 	quality_preset: int
 ) -> void:
-	if (
-		quality_preset == QUALITY_LOW
-		and profile == EnvironmentProfile.MAIN_MENU
-	):
+	# Moon shadows are the most expensive single effect in the forest, and
+	# the moon is dim, so Low skips them and each higher preset adds more.
+	if quality_preset == QUALITY_LOW:
 		moon.shadow_enabled = false
 		return
 
 	moon.shadow_enabled = true
 
-	if quality_preset == QUALITY_LOW:
+	if quality_preset == QUALITY_MEDIUM:
 		moon.directional_shadow_mode = (
 			DirectionalLight3D.SHADOW_ORTHOGONAL
 		)
 
-		moon.directional_shadow_max_distance = 20.0
+		moon.directional_shadow_max_distance = 18.0
 		moon.directional_shadow_fade_start = 0.75
 		moon.directional_shadow_blend_splits = false
 		moon.directional_shadow_pancake_size = 10.0
 		return
 
-	if quality_preset == QUALITY_MEDIUM:
+	if quality_preset == QUALITY_HIGH:
 		moon.directional_shadow_mode = (
 			DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 		)

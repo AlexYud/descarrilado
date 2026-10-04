@@ -1,0 +1,56 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/models/wooden_structures/barbed_fence_big_no_angle/barbed_fence_big_no_angle_collision.tscn" id="1_pmilm"]
+[ext_resource type="PackedScene" path="res://assets/models/wooden_structures/bench/bench.glb" id="2_vmbno"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pmilm"]
+size = Vector3(1.1, 1, 2.5)
+
+[node name="Overlook" type="Node3D" unique_id=1920664583]
+
+[node name="Fence" type="Node3D" parent="." unique_id=411009564]
+
+[node name="FencePiece00" type="Node3D" parent="Fence" unique_id=1290455906 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.33759484, 0, 0.9412915, 0, 1, 0, -0.9412915, 0, 0.33759484, 165.19252, -18.101887, 15.965378)
+
+[node name="FencePiece01" type="Node3D" parent="Fence" unique_id=56717459 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.40214232, 0, 0.9155772, 0, 1, 0, -0.9155772, 0, 0.40214232, 166.9619, -18.101887, 16.669285)
+
+[node name="FencePiece02" type="Node3D" parent="Fence" unique_id=753391578 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.46794385, 0, 0.8837582, 0, 1, 0, -0.8837582, 0, 0.46794385, 168.63356, -18.101887, 17.476765)
+
+[node name="FencePiece03" type="Node3D" parent="Fence" unique_id=877136260 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.5338486, 0, 0.8455801, 0, 1, 0, -0.8455801, 0, 0.5338486, 170.20749, -18.101885, 18.387817)
+
+[node name="FencePiece04" type="Node3D" parent="Fence" unique_id=1909784994 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.59853405, 0, 0.80109733, 0, 1, 0, -0.80109733, 0, 0.59853405, 171.68369, -18.101887, 19.402445)
+
+[node name="FencePiece05" type="Node3D" parent="Fence" unique_id=691586776 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.6606073, 0, 0.75073165, 0, 1, 0, -0.75073165, 0, 0.6606073, 173.06213, -18.101885, 20.520643)
+
+[node name="FencePiece06" type="Node3D" parent="Fence" unique_id=1354432245 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.7187754, 0, 0.69524235, 0, 1, 0, -0.69524235, 0, 0.7187754, 174.34286, -18.101887, 21.742416)
+
+[node name="FencePiece07" type="Node3D" parent="Fence" unique_id=754323955 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.7719188, 0, 0.6357212, 0, 1, 0, -0.6357212, 0, 0.7719188, 175.52586, -18.101887, 23.067764)
+
+[node name="FencePiece08" type="Node3D" parent="Fence" unique_id=1092578078 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.81925464, 0, 0.5734298, 0, 1, 0, -0.5734298, 0, 0.81925464, 176.61113, -18.101887, 24.496685)
+
+[node name="FencePiece09" type="Node3D" parent="Fence" unique_id=1226140864 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.8603249, 0, 0.5097461, 0, 1, 0, -0.5097461, 0, 0.8603249, 177.59865, -18.101887, 26.029179)
+
+[node name="FencePiece10" type="Node3D" parent="Fence" unique_id=730250437 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.89505756, 0, 0.44595066, 0, 1, 0, -0.44595066, 0, 0.89505756, 178.48845, -18.101887, 27.665247)
+
+[node name="FencePiece11" type="Node3D" parent="Fence" unique_id=947721173 instance=ExtResource("1_pmilm")]
+transform = Transform3D(0.9236604, 0, 0.38321197, 0, 1, 0, -0.38321197, 0, 0.9236604, 179.28052, -18.101887, 29.404888)
+
+[node name="Bench" type="StaticBody3D" parent="." unique_id=1341486038]
+transform = Transform3D(-0.68630034, 0, -0.7273183, 0, 1, 0, 0.7273183, 0, -0.68630034, 171.4315, -18.741886, 23.363409)
+
+[node name="Visual" type="Node3D" parent="Bench" unique_id=1755718748 instance=ExtResource("2_vmbno")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Bench" unique_id=2014009325]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.5, 0)
+shape = SubResource("BoxShape3D_pmilm")

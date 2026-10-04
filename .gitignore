@@ -5,3 +5,6 @@
 # Godot/editor recovery files must not become project resources.
 *.tmp
 *.tmp.*
+
+# Local project knowledge base, not for the repo.
+PROJECT_CONTEXT.md
