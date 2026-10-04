@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://bifymhwwqnf8p"]
+
+[ext_resource type="PackedScene" uid="uid://dechhjfthr7jj" path="res://scenes/environment/world_environment_store.tscn" id="1_environment"]
+[ext_resource type="PackedScene" path="res://scenes/levels/fig_clearing.tscn" id="2_clearing"]
+[ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="4_dirt_color"]
+[ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="5_dirt_normal"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(90, 90)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.45, 0.42, 0.38, 1)
+albedo_texture = ExtResource("4_dirt_color")
+normal_enabled = true
+normal_texture = ExtResource("5_dirt_normal")
+uv1_scale = Vector3(24, 24, 24)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(90, 1, 90)
+
+[node name="FigClearingTest" type="Node3D" unique_id=1432399668]
+
+[node name="WorldEnvironmentStore" parent="." unique_id=828359576 instance=ExtResource("1_environment")]
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=339951429]
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=1038141570]
+mesh = SubResource("PlaneMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=387513592]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="FigClearing" parent="." unique_id=502660674 instance=ExtResource("2_clearing")]
+
+[node name="Player" parent="." unique_id=1783646634 instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 1.1, 2.1)

@@ -333,3 +333,128 @@ msgstr "Mas agora temo que as próprias histórias possam ser o problema."
 
 msgid "CAPTION_INTRO_05"
 msgstr "Talvez a gente tenha acreditado tanto numa maldição de família que a tornou real."
+
+# Fig tree clearing, album puzzle and train ticket (placeholder content)
+msgid "PROMPT_INSPECT"
+msgstr "Examinar"
+
+msgid "ITEM_PHOTO_CHILDHOOD_NAME"
+msgstr "Foto Antiga: Duas Meninas"
+
+msgid "ITEM_PHOTO_CHILDHOOD_DESCRIPTION"
+msgstr "Duas meninas sentadas debaixo da mesma figueira. Uma está com o joelho ralado; a outra o enfaixa com uma tira rasgada da própria camisa da escola. As bordas estão irregulares, como se a foto tivesse sido arrancada de um álbum."
+
+msgid "ITEM_PHOTO_ADOLESCENCE_NAME"
+msgstr "Foto Antiga: Chuva"
+
+msgid "ITEM_PHOTO_ADOLESCENCE_DESCRIPTION"
+msgstr "Duas meninas sob um guarda-chuva pequeno em meio a uma chuva forte. Quase todo ele está inclinado sobre uma delas; o ombro de fora da outra está encharcado. Um anel fraco, de um copo molhado, mancha o verso."
+
+msgid "ITEM_PHOTO_RECENT_NAME"
+msgstr "Foto Antiga: Ponto de Ônibus"
+
+msgid "ITEM_PHOTO_RECENT_DESCRIPTION"
+msgstr "Uma jovem está sozinha num ponto de ônibus rural, acima da estrada que sai da cidade, segurando algo dobrado. Há uma frase escrita no verso."
+
+msgid "PHOTO_FRONT_CHILDHOOD"
+msgstr "[Foto provisória: duas meninas, cerca de 8 anos, sob a figueira]"
+
+msgid "PHOTO_FRONT_ADOLESCENCE"
+msgstr "[Foto provisória: duas meninas, cerca de 15 anos, sob um guarda-chuva na chuva]"
+
+msgid "PHOTO_FRONT_RECENT"
+msgstr "[Foto provisória: uma mulher, cerca de 28 anos, num ponto de ônibus]"
+
+msgid "PHOTO_BACK_CHILDHOOD"
+msgstr "ELA SEMPRE ME ACHA. — S."
+
+msgid "PHOTO_BACK_RECENT"
+msgstr "QUANDO EU FOR, VOCÊ VEM?"
+
+msgid "ITEM_TRAIN_TICKET_NAME"
+msgstr "Bilhete de Trem"
+
+msgid "ITEM_TRAIN_TICKET_DESCRIPTION"
+msgstr "Um único bilhete deixado no banco à sua frente. Tem o seu nome. A data diz: hoje à noite."
+
+msgid "TICKET_FRONT_TEXT"
+msgstr "PASSAGEIRA: JULIANA [SOBRENOME]\nDESTINO: [NOME DA CIDADE]\nPARTIDA:\nCHEGADA: 03:17\nDATA: HOJE À NOITE"
+
+msgid "TICKET_BACK_TEXT"
+msgstr "GUARDEI UM LUGAR PRA VOCÊ."
+
+msgid "CAPTION_JULIANA_TICKET_FRONT"
+msgstr "Essa linha fechou antes de a gente nascer."
+
+msgid "CAPTION_JULIANA_TICKET_BACK"
+msgstr "Essa não é a letra dela."
+
+msgid "CAPTION_JULIANA_WHY_THIS_PLACE"
+msgstr "Por que aqui?"
+
+msgid "CAPTION_JULIANA_PHOTO_ADOLESCENCE"
+msgstr "Você dizia que a chuva deixava tudo com cheiro de novo."
+
+msgid "CAPTION_JULIANA_PHOTO_RECENT"
+msgstr "Eu disse que iria."
+
+msgid "CAPTION_SPEAKER_SOPHIA_RECORDING"
+msgstr "Sophia (gravação)"
+
+msgid "CAPTION_SPEAKER_JULIANA_RECORDING"
+msgstr "Juliana (gravação)"
+
+msgid "CAPTION_REC_01"
+msgstr "Você não precisa me esperar."
+
+msgid "CAPTION_REC_02"
+msgstr "Claro que preciso."
+
+msgid "CAPTION_REC_03"
+msgstr "Juli, eu disse que você não precisa."
+
+msgid "CAPTION_REC_04"
+msgstr "Eu sei. É por isso que eu quero."
+
+msgid "CAPTION_REC_05"
+msgstr "Você sempre torna impossível ficar brava com você."
+
+msgid "CAPTION_REC_06"
+msgstr "Ótimo."
+
+msgid "CAPTION_REC_07"
+msgstr "Isso nem sempre é uma coisa boa."
+
+msgid "PROMPT_OPEN_ALBUM"
+msgstr "Abrir álbum"
+
+msgid "ALBUM_VIEW_TITLE"
+msgstr "Álbum de fotos"
+
+msgid "ALBUM_VIEW_TRAY_TITLE"
+msgstr "Fotografias em mãos"
+
+msgid "ALBUM_VIEW_TRAY_EMPTY"
+msgstr "Nenhuma fotografia em mãos."
+
+msgid "ALBUM_VIEW_HINT"
+msgstr "Arraste uma fotografia para um espaço. Arraste de novo para mover ou pegar de volta. Botão direito ou Esc para fechar."
+
+msgid "ALBUM_NO_ROOM"
+msgstr "Não há espaço para pegar de volta."
+
+msgid "ALBUM_CAPTION_1"
+msgstr "Quando éramos pequenas."
+
+msgid "ALBUM_CAPTION_2"
+msgstr "O ano da chuva."
+
+msgid "ALBUM_CAPTION_3"
+msgstr "Há pouco tempo."
+
+msgid "PROMPT_TAKE_PHOTO"
+msgstr "Pegar a fotografia"
+
+msgid "CAPTION_JULIANA_TAKE_PHOTO"
+msgstr "Vou levar comigo."
+

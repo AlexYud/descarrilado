@@ -56,6 +56,20 @@ func interact(player: Node) -> void:
 				StringName(item_id),
 				true
 			)
+
+			# Show what was taken, flying in from where it lay.
+			if player.has_method("show_pickup_inspect"):
+				var start_transform: Transform3D = (
+					visual.global_transform
+					if visual != null
+					else global_transform
+				)
+				player.call(
+					"show_pickup_inspect",
+					item_id,
+					start_transform
+				)
+
 			queue_free()
 		elif inspect_visual_template != null:
 			inspect_visual_template.free()

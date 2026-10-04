@@ -53,6 +53,19 @@ func _ready() -> void:
 		"collecting an item should update the inventory"
 	)
 
+	# Picking an item up shows it in the inspect view; leave it before saving.
+	_expect(
+		player.inspect_controller.is_open(),
+		"collecting an item should open its inspect view"
+	)
+	player.inspect_controller.close(false)
+	player.inventory_ui_controller.close()
+	await get_tree().create_timer(0.8).timeout
+
+	# There is no ground in this test scene; undo the fall during the wait.
+	player.global_position = TEST_POSITION
+	player.velocity = Vector3.ZERO
+
 	var drawer_scene: PackedScene = load(
 		"res://scenes/objects/drawer_interactable.tscn"
 	)

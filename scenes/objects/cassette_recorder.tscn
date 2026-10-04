@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzles/cassette_recorder.gd" id="1_recorder"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+albedo_color = Color(0.13, 0.13, 0.14, 1)
+metallic = 0.25
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="Mat_reel"]
+albedo_color = Color(0.62, 0.62, 0.6, 1)
+metallic = 0.5
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_dark"]
+albedo_color = Color(0.03, 0.03, 0.035, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_tape"]
+albedo_color = Color(0.2, 0.12, 0.08, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+size = Vector3(0.24, 0.055, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_window"]
+size = Vector3(0.12, 0.004, 0.06)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_reel"]
+top_radius = 0.024
+bottom_radius = 0.024
+height = 0.008
+
+[sub_resource type="BoxMesh" id="BoxMesh_spoke"]
+size = Vector3(0.04, 0.003, 0.006)
+
+[sub_resource type="BoxMesh" id="BoxMesh_grill"]
+size = Vector3(0.05, 0.003, 0.05)
+
+[node name="CassetteRecorder" type="Node3D"]
+script = ExtResource("1_recorder")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0275, 0)
+mesh = SubResource("BoxMesh_body")
+surface_material_override/0 = SubResource("Mat_body")
+
+[node name="TapeWindow" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.04, 0.0275, 0)
+mesh = SubResource("BoxMesh_window")
+surface_material_override/0 = SubResource("Mat_dark")
+
+[node name="Grill" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.0275, 0)
+mesh = SubResource("BoxMesh_grill")
+surface_material_override/0 = SubResource("Mat_dark")
+
+[node name="LeftReel" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.065, 0.032, 0)
+mesh = SubResource("CylinderMesh_reel")
+surface_material_override/0 = SubResource("Mat_reel")
+
+[node name="Spoke" type="MeshInstance3D" parent="Body/LeftReel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_spoke")
+surface_material_override/0 = SubResource("Mat_tape")
+
+[node name="RightReel" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.015, 0.032, 0)
+mesh = SubResource("CylinderMesh_reel")
+surface_material_override/0 = SubResource("Mat_reel")
+
+[node name="Spoke" type="MeshInstance3D" parent="Body/RightReel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_spoke")
+surface_material_override/0 = SubResource("Mat_tape")
+
+[node name="VoicePlayer" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+unit_size = 6.0
+max_distance = 40.0
+
+[node name="EffectPlayer" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+unit_size = 4.0
+max_distance = 25.0

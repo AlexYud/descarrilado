@@ -25,7 +25,8 @@ two editable terrains would make changes leak from one scene into the other.
 Scripts are grouped by the feature that owns their behavior:
 
 - `audio/`, `cinematics/`, `core/`, `dialogue/`, `environment/`, `save/`
-- `interactions/`, `items/`, `menu/`, `player/`, `train/`, `ui/`
+- `interactions/`, `items/`, `levels/`, `menu/`, `player/`, `puzzles/`, `train/`,
+  `triggers/`, `ui/`
 - `debug/`, `optimization/`, and `tools/` for development or infrastructure
 
 Do not create new scripts directly under `scripts/`. Put each script beside
@@ -56,8 +57,11 @@ a particular level with long absolute node paths.
 4. Give every Terrain3D node its own matching folder under `terrain_data/`.
 5. Instance reusable content from `scenes/objects/`, `scenes/environment/`,
    and `scenes/player/` instead of duplicating it.
-6. Put level-specific orchestration in `scripts/levels/`. Create that folder
-   when the first level-specific script is needed; do not add an empty folder.
+6. Put level-specific orchestration in `scripts/levels/` (for example
+   `fig_clearing_sequence.gd`). Reusable puzzle objects (album, recorder) live in
+   `scripts/puzzles/`; volumes that only raise signals live in `scripts/triggers/`.
+   Create a folder
+   when its first script is needed; do not add an empty folder.
 7. Use signals between triggers and level orchestration so object scripts stay
    reusable.
 8. Store player-facing text as localization keys and update all catalogs in

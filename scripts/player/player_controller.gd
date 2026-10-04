@@ -9,11 +9,16 @@ extends CharacterBody3D
 @onready var flashlight_controller: Node = $Hand/SpotLight3D
 
 var dialogue_frozen: bool = false
+
+## True while a full-screen puzzle view (the photo album) has the player's attention.
+var modal_ui_open: bool = false
 var cutscene_frozen: bool = false
 var manual_save_blocked: bool = false
 
 
 func _ready() -> void:
+	add_to_group(&"player")
+
 	if not DialogueManager.player_freeze_changed.is_connected(
 		_on_dialogue_freeze_changed
 	):
@@ -139,6 +144,7 @@ func _input(event: InputEvent) -> void:
 
 	if (
 		not dialogue_frozen
+		and not modal_ui_open
 		and inventory_ui_controller != null
 		and inventory_controller != null
 		and event.is_action_pressed("inventory")
@@ -152,7 +158,7 @@ func _input(event: InputEvent) -> void:
 
 		return
 
-	if dialogue_frozen:
+	if dialogue_frozen or modal_ui_open:
 		return
 
 	var block_look: bool = false
@@ -184,6 +190,7 @@ func _physics_process(delta: float) -> void:
 
 	var gameplay_frozen: bool = (
 		dialogue_frozen
+		or modal_ui_open
 		or cutscene_frozen
 	)
 
@@ -261,7 +268,7 @@ func can_manual_save() -> bool:
 	if not SaveManager.has_active_game():
 		return false
 
-	if manual_save_blocked or cutscene_frozen or dialogue_frozen:
+	if manual_save_blocked or cutscene_frozen or dialogue_frozen or modal_ui_open:
 		return false
 
 	if DialogueManager.has_method("is_dialogue_active"):
@@ -453,7 +460,7 @@ func is_flashlight_blocked() -> bool:
 	if cutscene_frozen:
 		return true
 
-	if dialogue_frozen:
+	if dialogue_frozen or modal_ui_open:
 		return true
 
 	if (
@@ -527,6 +534,67 @@ func start_world_inspect(inspectable: Inspectable) -> bool:
 		)
 
 	return opened
+
+
+## Called by a full-screen puzzle view when it opens and closes: the player
+## stops moving, looking, interacting and using the flashlight meanwhile.
+func set_modal_ui_open(is_open: bool) -> void:
+	if modal_ui_open == is_open:
+		return
+
+	modal_ui_open = is_open
+
+	if not modal_ui_open:
+		return
+
+	if movement_controller != null:
+		movement_controller.force_stop_immediately()
+
+	if audio_controller != null:
+		audio_controller.stop_footsteps()
+
+	if interaction_controller != null:
+		interaction_controller.clear_prompt()
+
+
+## Shows an item that has just entered the inventory, flying in from where it
+## lay, so the player sees what was taken. Closing the view returns to the game
+## (not to the inventory panel).
+func show_pickup_inspect(
+	item_id: String,
+	start_transform: Transform3D
+) -> void:
+	if cutscene_frozen or inspect_controller == null:
+		return
+
+	var slot_data: Dictionary = _find_inventory_slot(item_id)
+	if slot_data.is_empty():
+		return
+
+	if movement_controller != null:
+		movement_controller.force_stop_immediately()
+
+	if interaction_controller != null:
+		interaction_controller.clear_prompt()
+
+	var opened: bool = inspect_controller.open_inventory(
+		slot_data,
+		start_transform
+	)
+
+	if opened and inventory_ui_controller != null:
+		inventory_ui_controller.show_inspect(slot_data, false)
+
+
+func _find_inventory_slot(item_id: String) -> Dictionary:
+	if inventory_controller == null:
+		return {}
+
+	for slot_data: Dictionary in inventory_controller.get_slots():
+		if str(slot_data.get("id", "")) == item_id:
+			return slot_data
+
+	return {}
 
 
 func _on_inventory_use_requested(

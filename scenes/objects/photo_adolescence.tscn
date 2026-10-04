@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/collectible_interactable.gd" id="1_collectible"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_card"]
+albedo_color = Color(0.86, 0.82, 0.7, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_picture"]
+albedo_color = Color(0.28, 0.35, 0.47, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_stain"]
+albedo_color = Color(0.55, 0.47, 0.34, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_card"]
+size = Vector3(0.15, 0.1, 0.004)
+
+[sub_resource type="QuadMesh" id="QuadMesh_picture"]
+size = Vector2(0.134, 0.084)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_stain"]
+top_radius = 0.024
+bottom_radius = 0.024
+height = 0.0004
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.17, 0.12, 0.05)
+
+[node name="PhotoAdolescence" type="Node3D"]
+script = ExtResource("1_collectible")
+item_id = "photo_adolescence"
+item_name = "ITEM_PHOTO_ADOLESCENCE_NAME"
+item_description = "ITEM_PHOTO_ADOLESCENCE_DESCRIPTION"
+
+[node name="Visual" type="Node3D" parent="."]
+metadata/inspect_id = "photo_adolescence"
+metadata/card_color = Color(0.28, 0.35, 0.47, 1)
+metadata/card_label = "PHOTO_FRONT_ADOLESCENCE"
+metadata/card_size = Vector2(0.15, 0.1)
+
+[node name="Card" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("BoxMesh_card")
+surface_material_override/0 = SubResource("Mat_card")
+
+[node name="Picture" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0021)
+mesh = SubResource("QuadMesh_picture")
+surface_material_override/0 = SubResource("Mat_picture")
+
+[node name="FrontLabel" type="Label3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0026)
+pixel_size = 0.0005
+modulate = Color(0.95, 0.95, 0.9, 1)
+outline_modulate = Color(0, 0, 0, 1)
+text = "PHOTO_FRONT_ADOLESCENCE"
+font_size = 24
+outline_size = 6
+autowrap_mode = 3
+width = 250.0
+
+[node name="WetCupStain" type="MeshInstance3D" parent="Visual"]
+position = Vector3(0.03, -0.012, -0.0022)
+rotation = Vector3(1.5707964, 0, 0)
+mesh = SubResource("CylinderMesh_stain")
+surface_material_override/0 = SubResource("Mat_stain")
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

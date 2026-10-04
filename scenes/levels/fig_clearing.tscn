@@ -1,0 +1,306 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/fig_clearing_sequence.gd" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/triggers/spatial_trigger.gd" id="2_trigger"]
+[ext_resource type="Script" path="res://scripts/interactions/inspect_reaction.gd" id="3_reaction"]
+[ext_resource type="Script" path="res://scripts/environment/clearing_forest_ring.gd" id="4_ring"]
+[ext_resource type="PackedScene" path="res://scenes/objects/cassette_recorder.tscn" id="5_recorder"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_album.tscn" id="6_album"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_childhood.tscn" id="7_childhood"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_adolescence.tscn" id="8_adolescence"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_recent.tscn" id="9_recent"]
+[ext_resource type="PackedScene" path="res://assets/models/trees/custom_tree/tree_test.glb" id="10_tree"]
+[ext_resource type="PackedScene" path="res://assets/models/camping/tent/tent.glb" id="11_tent"]
+[ext_resource type="PackedScene" path="res://assets/models/camping/campfire/campfire.glb" id="12_campfire"]
+[ext_resource type="ArrayMesh" path="res://assets/models/trees/pitangueira/pitangueira_mesh.tres" id="14_pitangueira"]
+[ext_resource type="ArrayMesh" path="res://assets/models/trees/medium_generic_tree/medium_generic_tree_mesh.tres" id="15_medium_tree"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/big_foliage_01/big_foliage_01_mesh.tres" id="16_big_01"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/big_foliage_02/big_foliage_02_mesh.tres" id="17_big_02"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02_mesh.tres" id="18_med_02"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/small_foliage_01/small_foliage_01_mesh.tres" id="19_small_01"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/small_foliage_02/small_foliage_02_mesh.tres" id="20_small_02"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="21_med_01"]
+[ext_resource type="Texture2D" path="res://assets/models/trees/custom_tree/tree_test_Bark014_1K-JPG_Color.jpg" id="22_bark"]
+[ext_resource type="PackedScene" path="res://scenes/objects/campfire_fire.tscn" id="23_fire"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_bark"]
+albedo_color = Color(0.55, 0.5, 0.45, 1)
+albedo_texture = ExtResource("22_bark")
+roughness = 1.0
+uv1_scale = Vector3(3, 2, 1)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wood"]
+albedo_color = Color(0.28, 0.2, 0.13, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_enamel"]
+albedo_color = Color(0.7, 0.75, 0.78, 1)
+metallic = 0.2
+roughness = 0.35
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_fig_base"]
+top_radius = 0.4
+bottom_radius = 1.5
+height = 3.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_root"]
+top_radius = 0.1
+bottom_radius = 0.3
+height = 3.2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_hanging"]
+top_radius = 0.03
+bottom_radius = 0.05
+height = 4.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_cup"]
+top_radius = 0.045
+bottom_radius = 0.04
+height = 0.09
+
+[sub_resource type="BoxMesh" id="BoxMesh_table_top"]
+size = Vector3(1.5, 0.06, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_table_leg"]
+size = Vector3(0.07, 0.72, 0.07)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_trunk"]
+radius = 1.4
+height = 4.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tent"]
+size = Vector3(2.4, 1.6, 2.4)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_fire"]
+radius = 0.45
+height = 0.4
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_table"]
+size = Vector3(1.5, 0.78, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_blocker"]
+size = Vector3(0.6, 3.0, 3.4)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_approach"]
+radius = 9.5
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_close"]
+radius = 3.2
+
+[sub_resource type="FogMaterial" id="FogMaterial_passage"]
+density = 0.0
+albedo = Color(0.68, 0.73, 0.76, 1)
+
+[node name="FigClearing" type="Node3D" node_paths=PackedStringArray("album", "recorder", "approach_zone", "close_zone", "passage_fog", "passage_blocker", "fire", "rain_player")]
+script = ExtResource("1_sequence")
+album = NodePath("Props/PhotoAlbum")
+recorder = NodePath("Props/CassetteRecorder")
+approach_zone = NodePath("Triggers/ApproachZone")
+close_zone = NodePath("Triggers/CloseZone")
+passage_fog = NodePath("Passage/PassageFog")
+passage_blocker = NodePath("Passage/PassageBlocker")
+fire = NodePath("Scenery/Campfire/CampfireFire")
+rain_player = NodePath("Recording/RainPlayer")
+
+[node name="Scenery" type="Node3D" parent="."]
+
+[node name="FigTree" parent="Scenery" instance=ExtResource("10_tree")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 3.5, 0, -2.5)
+
+[node name="TrunkBody" type="StaticBody3D" parent="Scenery/FigTree"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Scenery/FigTree/TrunkBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("CylinderShape3D_trunk")
+
+[node name="FigBase" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(3.5, 1.8, -2.5)
+mesh = SubResource("CylinderMesh_fig_base")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="Root1" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(4.9, 0.3, -2.1)
+rotation = Vector3(0, 0.4363323, -1.2217305)
+mesh = SubResource("CylinderMesh_root")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="Root2" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(4.2, 0.3, -4.0)
+rotation = Vector3(0, 1.1344640, -1.2217305)
+mesh = SubResource("CylinderMesh_root")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="Root3" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(2.0, 0.3, -2.6)
+rotation = Vector3(0, 3.1415927, -1.2217305)
+mesh = SubResource("CylinderMesh_root")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="Root4" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(2.8, 0.3, -0.9)
+rotation = Vector3(0, 4.3633232, -1.2217305)
+mesh = SubResource("CylinderMesh_root")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="HangingRoot1" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(5.3, 3.0, -4.6)
+mesh = SubResource("CylinderMesh_hanging")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="HangingRoot2" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(5.7, 3.2, -4.3)
+mesh = SubResource("CylinderMesh_hanging")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="HangingRoot3" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(6.1, 3.0, -4.7)
+mesh = SubResource("CylinderMesh_hanging")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="HangingRoot4" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(6.5, 3.1, -4.4)
+mesh = SubResource("CylinderMesh_hanging")
+surface_material_override/0 = SubResource("Mat_bark")
+
+[node name="Tent" parent="Scenery" instance=ExtResource("11_tent")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2, 0, -5.2)
+
+[node name="TentBody" type="StaticBody3D" parent="Scenery/Tent"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Scenery/Tent/TentBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_tent")
+
+[node name="Tent2" parent="Scenery" instance=ExtResource("11_tent")]
+transform = Transform3D(0.5403023, 0, -0.84147096, 0, 1, 0, 0.84147096, 0, 0.5403023, -6.2, 0, -0.6)
+
+[node name="TentBody" type="StaticBody3D" parent="Scenery/Tent2"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Scenery/Tent2/TentBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_tent")
+
+[node name="Campfire" parent="Scenery" instance=ExtResource("12_campfire")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0, -1.5)
+
+[node name="CampfireBody" type="StaticBody3D" parent="Scenery/Campfire"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Scenery/Campfire/CampfireBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+shape = SubResource("CylinderShape3D_fire")
+
+[node name="CampfireFire" parent="Scenery/Campfire" instance=ExtResource("23_fire")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+
+[node name="CampTable" type="StaticBody3D" parent="Scenery"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0, 1.5)
+
+[node name="TableTop" type="MeshInstance3D" parent="Scenery/CampTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("BoxMesh_table_top")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="LegA" type="MeshInstance3D" parent="Scenery/CampTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0.36, -0.34)
+mesh = SubResource("BoxMesh_table_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="LegB" type="MeshInstance3D" parent="Scenery/CampTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68, 0.36, -0.34)
+mesh = SubResource("BoxMesh_table_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="LegC" type="MeshInstance3D" parent="Scenery/CampTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0.36, 0.34)
+mesh = SubResource("BoxMesh_table_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="LegD" type="MeshInstance3D" parent="Scenery/CampTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68, 0.36, 0.34)
+mesh = SubResource("BoxMesh_table_leg")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Scenery/CampTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39, 0)
+shape = SubResource("BoxShape3D_table")
+
+[node name="EnamelCup" type="MeshInstance3D" parent="Scenery"]
+position = Vector3(-3.63, 0.045, -3.2)
+mesh = SubResource("CylinderMesh_cup")
+surface_material_override/0 = SubResource("Mat_enamel")
+
+[node name="ForestRing" type="Node3D" parent="."]
+script = ExtResource("4_ring")
+tree_meshes = Array[Mesh]([ExtResource("14_pitangueira"), ExtResource("15_medium_tree")])
+bush_meshes = Array[Mesh]([ExtResource("16_big_01"), ExtResource("17_big_02"), ExtResource("18_med_02")])
+small_meshes = Array[Mesh]([ExtResource("19_small_01"), ExtResource("20_small_02"), ExtResource("21_med_01")])
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="CassetteRecorder" parent="Props" instance=ExtResource("5_recorder")]
+transform = Transform3D(0.94, 0, 0.34, 0, 1, 0, -0.34, 0, 0.94, 0.55, 0.78, 1.5)
+
+[node name="PhotoAlbum" parent="Props" instance=ExtResource("6_album")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.25, 0.78, 1.5)
+
+[node name="PhotoChildhood" parent="Props" instance=ExtResource("7_childhood")]
+position = Vector3(4.77, 0.035, -3.77)
+rotation = Vector3(-1.5707964, 0.6, 0)
+
+[node name="PhotoAdolescence" parent="Props" instance=ExtResource("8_adolescence")]
+position = Vector3(-3.7, 0.035, -3.2)
+rotation = Vector3(-1.5707964, 0.3, 0)
+
+[node name="PhotoRecent" parent="Props" instance=ExtResource("9_recent")]
+position = Vector3(-5.13, 0.035, -1.88)
+rotation = Vector3(-1.5707964, 0.6, 0)
+
+[node name="Triggers" type="Node3D" parent="."]
+
+[node name="ApproachZone" type="Area3D" parent="Triggers"]
+script = ExtResource("2_trigger")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Triggers/ApproachZone"]
+shape = SubResource("SphereShape3D_approach")
+
+[node name="CloseZone" type="Area3D" parent="Triggers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 1.0, 1.5)
+script = ExtResource("2_trigger")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Triggers/CloseZone"]
+shape = SubResource("SphereShape3D_close")
+
+[node name="Passage" type="Node3D" parent="."]
+
+[node name="PassageFog" type="FogVolume" parent="Passage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.6, 1.4, 2.1)
+visible = false
+size = Vector3(3.6, 3.0, 3.6)
+material = SubResource("FogMaterial_passage")
+
+[node name="PassageBlocker" type="StaticBody3D" parent="Passage"]
+transform = Transform3D(-0.98, 0, -0.2, 0, 1, 0, 0.2, 0, -0.98, -10.09, 1.5, 2.06)
+collision_layer = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Passage/PassageBlocker"]
+shape = SubResource("BoxShape3D_blocker")
+
+[node name="Recording" type="Node3D" parent="."]
+
+[node name="RainPlayer" type="AudioStreamPlayer" parent="Recording"]
+
+[node name="InspectReactions" type="Node" parent="."]
+
+[node name="AdolescencePhoto" type="Node" parent="InspectReactions"]
+script = ExtResource("3_reaction")
+inspect_id = &"photo_adolescence"
+open_line = "CAPTION_JULIANA_PHOTO_ADOLESCENCE"
+open_line_delay = 4.0
+persistent_id = &"fig_photo_adolescence"
+
+[node name="RecentPhoto" type="Node" parent="InspectReactions"]
+script = ExtResource("3_reaction")
+inspect_id = &"photo_recent"
+back_line = "CAPTION_JULIANA_PHOTO_RECENT"
+back_line_delay = 0.6
+persistent_id = &"fig_photo_recent"

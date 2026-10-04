@@ -124,6 +124,13 @@ func set_flashlight_input_enabled(enabled: bool) -> void:
 		visible = false
 
 
+## Switches the light off from script. The player can switch it on again.
+func turn_off() -> void:
+	flashlight_on = false
+	_reset_light_effects()
+	visible = false
+
+
 func get_save_state() -> Dictionary:
 	return {"is_on": flashlight_on}
 

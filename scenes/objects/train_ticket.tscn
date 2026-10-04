@@ -1,0 +1,75 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/inspectable_interactable.gd" id="1_inspectable"]
+[ext_resource type="Script" path="res://scripts/interactions/inspect_reaction.gd" id="2_reaction"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_paper"]
+albedo_color = Color(0.8, 0.74, 0.58, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_stripe"]
+albedo_color = Color(0.45, 0.16, 0.14, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_paper"]
+size = Vector3(0.16, 0.1, 0.002)
+
+[sub_resource type="QuadMesh" id="QuadMesh_stripe"]
+size = Vector2(0.16, 0.012)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.18, 0.12, 0.05)
+
+[node name="TrainTicket" type="Node3D"]
+script = ExtResource("1_inspectable")
+inspect_name = "ITEM_TRAIN_TICKET_NAME"
+inspect_description = "ITEM_TRAIN_TICKET_DESCRIPTION"
+prompt_text = "PROMPT_INSPECT"
+
+[node name="Visual" type="Node3D" parent="."]
+metadata/inspect_id = "train_ticket"
+metadata/inspect_back_normal = Vector3(0, 0, -1)
+
+[node name="Paper" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("BoxMesh_paper")
+surface_material_override/0 = SubResource("Mat_paper")
+
+[node name="Stripe" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.038, 0.00105)
+mesh = SubResource("QuadMesh_stripe")
+surface_material_override/0 = SubResource("Mat_stripe")
+
+[node name="FrontLabel" type="Label3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, -0.006, 0.0013)
+pixel_size = 0.0004
+modulate = Color(0.12, 0.1, 0.08, 1)
+text = "TICKET_FRONT_TEXT"
+font_size = 24
+outline_size = 0
+horizontal_alignment = 0
+autowrap_mode = 3
+width = 350.0
+
+[node name="BackLabel" type="Label3D" parent="Visual"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.0013)
+pixel_size = 0.0004
+modulate = Color(0.32, 0.32, 0.36, 1)
+text = "TICKET_BACK_TEXT"
+font_size = 36
+outline_size = 0
+autowrap_mode = 3
+width = 350.0
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")
+
+[node name="Reaction" type="Node" parent="."]
+script = ExtResource("2_reaction")
+inspect_id = &"train_ticket"
+open_line = "CAPTION_JULIANA_TICKET_FRONT"
+open_line_delay = 1.2
+back_line = "CAPTION_JULIANA_TICKET_BACK"
+back_line_delay = 0.6
+persistent_id = &"train_ticket"

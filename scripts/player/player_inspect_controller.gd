@@ -10,6 +10,22 @@ enum InspectState {
 }
 
 
+## Emitted when the object has settled in front of the camera. `inspect_id`
+## comes from the metadata of the inspected Visual node ("" when not set).
+signal inspect_opened(inspect_id: String)
+signal inspect_closed(inspect_id: String)
+## Emitted once per inspection when the object has been turned to show its back.
+signal back_revealed(inspect_id: String)
+
+## Metadata a Visual can carry: `inspect_id` (String) names it for reactions,
+## `inspect_back_normal` (Vector3, local space) is the direction its back faces.
+const META_INSPECT_ID: StringName = &"inspect_id"
+const META_BACK_NORMAL: StringName = &"inspect_back_normal"
+
+## How directly the back must face the viewer, and for how long, to count.
+const BACK_FACING_DOT: float = 0.6
+const BACK_FACING_SECONDS: float = 0.5
+
 const INSPECT_RENDER_LAYER_NUMBER: int = 20
 const INSPECT_RENDER_LAYER_MASK: int = 1 << 19
 
@@ -75,6 +91,10 @@ var state: int = InspectState.CLOSED
 var is_dragging: bool = false
 var transition_t: float = 0.0
 var keep_mouse_visible_on_finish: bool = false
+var current_inspect_id: String = ""
+var open_reported: bool = false
+var back_reported: bool = false
+var back_facing_time: float = 0.0
 var current_inspect_distance: float = 0.28
 
 var from_transform: Transform3D
@@ -136,6 +156,7 @@ func open_world(inspectable: Inspectable) -> bool:
 	current_visual_copy = visual_copy
 	_get_runtime_parent().add_child(current_visual_copy)
 	_prepare_visual_for_inspection(current_visual_copy)
+	_begin_tracking()
 
 	current_visual_copy.global_transform = (
 		source_visual.global_transform
@@ -161,7 +182,12 @@ func open_world(inspectable: Inspectable) -> bool:
 	return true
 
 
-func open_inventory(slot_data: Dictionary) -> bool:
+## `start_transform` (a Transform3D, optional) makes the item fly in from where it
+## lay in the world; without it the item comes from the inventory corner.
+func open_inventory(
+	slot_data: Dictionary,
+	start_transform: Variant = null
+) -> bool:
 	var template_variant: Variant = slot_data.get(
 		"inspect_visual_template",
 		null
@@ -196,10 +222,14 @@ func open_inventory(slot_data: Dictionary) -> bool:
 	_prepare_visual_for_inspection(
 		current_visual_copy
 	)
+	_begin_tracking()
 
-	from_transform = _get_inventory_spawn_transform(
-		current_visual_copy
-	)
+	if start_transform is Transform3D:
+		from_transform = start_transform as Transform3D
+	else:
+		from_transform = _get_inventory_spawn_transform(
+			current_visual_copy
+		)
 
 	to_transform = _get_inspect_target_transform(
 		current_visual_copy
@@ -236,6 +266,8 @@ func close(
 			)
 
 		return
+
+	_report_closed()
 
 	from_transform = (
 		current_visual_copy.global_transform
@@ -338,6 +370,10 @@ func _process(delta: float) -> void:
 
 		if transition_t >= 1.0:
 			state = InspectState.VIEWING
+			_report_opened()
+
+	elif state == InspectState.VIEWING:
+		_update_back_tracking(delta)
 
 	elif state == InspectState.CLOSING:
 		transition_t = minf(
@@ -488,6 +524,57 @@ func _set_inspect_distance(
 	_aim_inspect_light()
 
 
+func _begin_tracking() -> void:
+	current_inspect_id = str(
+		current_visual_copy.get_meta(META_INSPECT_ID, "")
+	)
+	open_reported = false
+	back_reported = false
+	back_facing_time = 0.0
+
+
+func _report_opened() -> void:
+	if open_reported or current_inspect_id.is_empty():
+		return
+
+	open_reported = true
+	inspect_opened.emit(current_inspect_id)
+
+
+func _report_closed() -> void:
+	if not open_reported:
+		return
+
+	open_reported = false
+	inspect_closed.emit(current_inspect_id)
+
+
+## Fires `back_revealed` once the object's back faces the viewer for a moment.
+func _update_back_tracking(delta: float) -> void:
+	if (
+		back_reported
+		or current_inspect_id.is_empty()
+		or current_visual_copy == null
+		or not current_visual_copy.has_meta(META_BACK_NORMAL)
+	):
+		return
+
+	var back_normal: Vector3 = (
+		current_visual_copy.global_basis
+		* (current_visual_copy.get_meta(META_BACK_NORMAL) as Vector3)
+	).normalized()
+
+	# The camera looks down -Z, so +Z of its basis points at the viewer.
+	if back_normal.dot(camera.global_basis.z) >= BACK_FACING_DOT:
+		back_facing_time += delta
+	else:
+		back_facing_time = 0.0
+
+	if back_facing_time >= BACK_FACING_SECONDS:
+		back_reported = true
+		back_revealed.emit(current_inspect_id)
+
+
 func _finish_close() -> void:
 	if is_instance_valid(source_visual):
 		source_visual.visible = true
@@ -516,6 +603,8 @@ func _finish_close() -> void:
 
 
 func _force_close_immediate() -> void:
+	_report_closed()
+
 	if is_instance_valid(source_visual):
 		source_visual.visible = true
 

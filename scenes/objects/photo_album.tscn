@@ -1,0 +1,141 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzles/photo_album.gd" id="1_album"]
+[ext_resource type="Script" path="res://scripts/puzzles/album_slot.gd" id="2_slot"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_childhood.tscn" id="3_childhood"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_adolescence.tscn" id="4_adolescence"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_recent.tscn" id="5_recent"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_cover"]
+albedo_color = Color(0.16, 0.1, 0.08, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Mat_page"]
+albedo_color = Color(0.3, 0.28, 0.22, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_outline"]
+albedo_color = Color(0.03, 0.028, 0.025, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_cover"]
+size = Vector3(0.76, 0.012, 0.29)
+
+[sub_resource type="BoxMesh" id="BoxMesh_page"]
+size = Vector3(0.36, 0.008, 0.26)
+
+[sub_resource type="QuadMesh" id="QuadMesh_slot"]
+size = Vector2(0.16, 0.11)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_album"]
+size = Vector3(0.76, 0.08, 0.29)
+
+[node name="PhotoAlbum" type="Node3D"]
+script = ExtResource("1_album")
+prompt_text = "PROMPT_OPEN_ALBUM"
+photo_scenes = Array[PackedScene]([ExtResource("3_childhood"), ExtResource("4_adolescence"), ExtResource("5_recent")])
+
+[node name="Cover" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_cover")
+surface_material_override/0 = SubResource("Mat_cover")
+
+[node name="LeftPage" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.185, 0.016, 0)
+mesh = SubResource("BoxMesh_page")
+surface_material_override/0 = SubResource("Mat_page")
+
+[node name="RightPage" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.185, 0.016, 0)
+mesh = SubResource("BoxMesh_page")
+surface_material_override/0 = SubResource("Mat_page")
+
+[node name="SlotChildhood" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.185, 0.021, -0.02)
+script = ExtResource("2_slot")
+slot_id = &"childhood"
+correct_item_id = "photo_childhood"
+caption_key = "ALBUM_CAPTION_1"
+
+[node name="EmptyMarker" type="Node3D" parent="SlotChildhood"]
+
+[node name="Outline" type="MeshInstance3D" parent="SlotChildhood/EmptyMarker"]
+rotation = Vector3(-1.5707964, 0, 0)
+mesh = SubResource("QuadMesh_slot")
+surface_material_override/0 = SubResource("Mat_outline")
+
+[node name="PhotoAnchor" type="Node3D" parent="SlotChildhood"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
+
+[node name="Caption" type="Label3D" parent="SlotChildhood"]
+position = Vector3(0, 0.001, 0.09)
+rotation = Vector3(-1.5707964, 0, 0)
+pixel_size = 0.0004
+modulate = Color(0.85, 0.8, 0.65, 0.45)
+text = "ALBUM_CAPTION_1"
+font_size = 22
+outline_size = 0
+autowrap_mode = 3
+width = 330.0
+
+[node name="SlotAdolescence" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.021, -0.02)
+script = ExtResource("2_slot")
+slot_id = &"adolescence"
+correct_item_id = "photo_adolescence"
+caption_key = "ALBUM_CAPTION_2"
+
+[node name="EmptyMarker" type="Node3D" parent="SlotAdolescence"]
+
+[node name="Outline" type="MeshInstance3D" parent="SlotAdolescence/EmptyMarker"]
+rotation = Vector3(-1.5707964, 0, 0)
+mesh = SubResource("QuadMesh_slot")
+surface_material_override/0 = SubResource("Mat_outline")
+
+[node name="PhotoAnchor" type="Node3D" parent="SlotAdolescence"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
+
+[node name="Caption" type="Label3D" parent="SlotAdolescence"]
+position = Vector3(0, 0.001, 0.09)
+rotation = Vector3(-1.5707964, 0, 0)
+pixel_size = 0.0004
+modulate = Color(0.85, 0.8, 0.65, 0.45)
+text = "ALBUM_CAPTION_2"
+font_size = 22
+outline_size = 0
+autowrap_mode = 3
+width = 330.0
+
+[node name="SlotRecent" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.27, 0.021, -0.02)
+script = ExtResource("2_slot")
+slot_id = &"recent"
+correct_item_id = "photo_recent"
+caption_key = "ALBUM_CAPTION_3"
+
+[node name="EmptyMarker" type="Node3D" parent="SlotRecent"]
+
+[node name="Outline" type="MeshInstance3D" parent="SlotRecent/EmptyMarker"]
+rotation = Vector3(-1.5707964, 0, 0)
+mesh = SubResource("QuadMesh_slot")
+surface_material_override/0 = SubResource("Mat_outline")
+
+[node name="PhotoAnchor" type="Node3D" parent="SlotRecent"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
+
+[node name="Caption" type="Label3D" parent="SlotRecent"]
+position = Vector3(0, 0.001, 0.09)
+rotation = Vector3(-1.5707964, 0, 0)
+pixel_size = 0.0004
+modulate = Color(0.85, 0.8, 0.65, 0.45)
+text = "ALBUM_CAPTION_3"
+font_size = 22
+outline_size = 0
+autowrap_mode = 3
+width = 330.0
+
+[node name="InteractArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_album")

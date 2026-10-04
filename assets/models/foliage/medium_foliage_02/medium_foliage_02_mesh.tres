@@ -1,6 +1,6 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://7mip0rosn786"]
 
-[ext_resource type="Texture2D" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02_martaso-fern-4346565_1280.png" id="1_gjtk1"]
+[ext_resource type="Texture2D" uid="uid://bol38xg1rq1qh" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02_martaso-fern-4346565_1280.png" id="1_gjtk1"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gx73b"]
 resource_name = "Material.007"

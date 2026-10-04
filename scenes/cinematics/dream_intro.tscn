@@ -51,6 +51,7 @@
 [ext_resource type="Texture2D" uid="uid://bajkl0lt1p6q7" path="res://assets/textures/moss_ground/moss_ground_NormalGL.jpg" id="gt_moss_ground_n"]
 [ext_resource type="Texture2D" uid="uid://hi36hnyybhlc" path="res://assets/textures/pine_needle_mulch/pine_needle_mulch_Color.jpg" id="gt_pine_needle_mulch_c"]
 [ext_resource type="Texture2D" uid="uid://bxod1j03kwo7b" path="res://assets/textures/pine_needle_mulch/pine_needle_mulch_NormalGL.jpg" id="gt_pine_needle_mulch_n"]
+[ext_resource type="PackedScene" path="res://scenes/objects/train_ticket.tscn" id="tt_ticket"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -1442,3 +1443,7 @@ directional_shadow_split_1 = 0.25
 directional_shadow_split_2 = 0.25
 directional_shadow_max_distance = 32.0
 directional_shadow_pancake_size = 12.0
+
+[node name="TrainTicket" parent="Train/Wagons/TrainWagon" instance=ExtResource("tt_ticket")]
+position = Vector3(-0.956, 0.472, 3.223)
+rotation = Vector3(-1.5707964, 0.2, 0)

@@ -322,3 +322,127 @@ msgstr ""
 
 msgid "CAPTION_INTRO_05"
 msgstr ""
+
+msgid "PROMPT_INSPECT"
+msgstr ""
+
+msgid "ITEM_PHOTO_CHILDHOOD_NAME"
+msgstr ""
+
+msgid "ITEM_PHOTO_CHILDHOOD_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_PHOTO_ADOLESCENCE_NAME"
+msgstr ""
+
+msgid "ITEM_PHOTO_ADOLESCENCE_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_PHOTO_RECENT_NAME"
+msgstr ""
+
+msgid "ITEM_PHOTO_RECENT_DESCRIPTION"
+msgstr ""
+
+msgid "PHOTO_FRONT_CHILDHOOD"
+msgstr ""
+
+msgid "PHOTO_FRONT_ADOLESCENCE"
+msgstr ""
+
+msgid "PHOTO_FRONT_RECENT"
+msgstr ""
+
+msgid "PHOTO_BACK_CHILDHOOD"
+msgstr ""
+
+msgid "PHOTO_BACK_RECENT"
+msgstr ""
+
+msgid "ITEM_TRAIN_TICKET_NAME"
+msgstr ""
+
+msgid "ITEM_TRAIN_TICKET_DESCRIPTION"
+msgstr ""
+
+msgid "TICKET_FRONT_TEXT"
+msgstr ""
+
+msgid "TICKET_BACK_TEXT"
+msgstr ""
+
+msgid "CAPTION_JULIANA_TICKET_FRONT"
+msgstr ""
+
+msgid "CAPTION_JULIANA_TICKET_BACK"
+msgstr ""
+
+msgid "CAPTION_JULIANA_WHY_THIS_PLACE"
+msgstr ""
+
+msgid "CAPTION_JULIANA_PHOTO_ADOLESCENCE"
+msgstr ""
+
+msgid "CAPTION_JULIANA_PHOTO_RECENT"
+msgstr ""
+
+msgid "CAPTION_SPEAKER_SOPHIA_RECORDING"
+msgstr ""
+
+msgid "CAPTION_SPEAKER_JULIANA_RECORDING"
+msgstr ""
+
+msgid "CAPTION_REC_01"
+msgstr ""
+
+msgid "CAPTION_REC_02"
+msgstr ""
+
+msgid "CAPTION_REC_03"
+msgstr ""
+
+msgid "CAPTION_REC_04"
+msgstr ""
+
+msgid "CAPTION_REC_05"
+msgstr ""
+
+msgid "CAPTION_REC_06"
+msgstr ""
+
+msgid "CAPTION_REC_07"
+msgstr ""
+
+msgid "PROMPT_OPEN_ALBUM"
+msgstr ""
+
+msgid "ALBUM_VIEW_TITLE"
+msgstr ""
+
+msgid "ALBUM_VIEW_TRAY_TITLE"
+msgstr ""
+
+msgid "ALBUM_VIEW_TRAY_EMPTY"
+msgstr ""
+
+msgid "ALBUM_VIEW_HINT"
+msgstr ""
+
+msgid "ALBUM_NO_ROOM"
+msgstr ""
+
+msgid "ALBUM_CAPTION_1"
+msgstr ""
+
+msgid "ALBUM_CAPTION_2"
+msgstr ""
+
+msgid "ALBUM_CAPTION_3"
+msgstr ""
+
+msgid "PROMPT_TAKE_PHOTO"
+msgstr ""
+
+msgid "CAPTION_JULIANA_TAKE_PHOTO"
+msgstr ""
+
