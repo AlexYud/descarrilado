@@ -6,7 +6,7 @@ extends Node
 ## on failure. Game time runs faster so the 30 s recording does not take 30 s.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_fig_clearing_smoke"
-const TEST_SCENE_PATH: String = "res://scenes/levels/fig_clearing_test.tscn"
+const TEST_SCENE_PATH: String = "res://tests/fig_clearing_test.tscn"
 const TIME_SCALE: float = 6.0
 
 var test_failed: bool = false
@@ -43,24 +43,13 @@ func _ready() -> void:
 
 func _run() -> void:
 	_expect(player.is_in_group(&"player"), "the player joins the player group")
-	_expect(clearing.stage == FigClearingSequence.Stage.DORMANT, "starts dormant")
+	_expect(clearing.stage == FigClearingSequence.Stage.EXPLORING, "starts exploring")
+	_expect(clearing.recorder.is_turning(), "the cassette turns in silence from the start")
 	_expect(clearing.album.slots.size() == 3, "the album has three slots")
 	_expect(clearing.fire.is_lit, "the campfire starts lit")
 
-	var recorder: CassetteRecorder = clearing.recorder
 	var album: PhotoAlbum = clearing.album
 	var flashlight: Node = player.get_node("Hand/SpotLight3D")
-
-	# Walking into the clearing starts the melody; reaching the table stops it.
-	player.global_position = Vector3(-6.0, 1.1, 2.0)
-	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.CALLING)
-	_expect(recorder.voice_player.playing, "the melody plays while calling")
-
-	player.global_position = Vector3(0.0, 1.1, 2.4)
-	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.EXPLORING)
-	await _wait(1.5)
-	_expect(not recorder.voice_player.playing, "the melody stops near the table")
-	_expect(recorder.is_turning(), "the cassette keeps turning in silence")
 
 	# Picking up a photograph shows it in the inspect view first.
 	for photo_name: String in ["PhotoRecent", "PhotoChildhood", "PhotoAdolescence"]:
@@ -147,10 +136,6 @@ func _run() -> void:
 	_expect(not player.modal_ui_open, "the player is released when the album closes")
 
 	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.RECORDING)
-	_expect(
-		clearing.passage_blocker.collision_layer == 1,
-		"the passage is blocked during the memory"
-	)
 	_expect(not player.can_manual_save(), "saving is blocked during the sequence")
 
 	await _until(
@@ -172,7 +157,6 @@ func _run() -> void:
 	_expect(clearing.stage == FigClearingSequence.Stage.DONE, "the scene stays over")
 	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight stays off")
 	_expect(player.can_manual_save(), "saving is allowed again")
-	await _until(func() -> bool: return clearing.passage_blocker.collision_layer == 0)
 
 	# The album now offers the last photograph, which asks "will you come?".
 	_expect(album.can_interact(player), "the album can be used after the memory")

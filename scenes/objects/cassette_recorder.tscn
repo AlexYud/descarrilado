@@ -75,11 +75,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
 mesh = SubResource("BoxMesh_spoke")
 surface_material_override/0 = SubResource("Mat_tape")
 
-[node name="VoicePlayer" type="AudioStreamPlayer3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
-unit_size = 6.0
-max_distance = 40.0
-
 [node name="EffectPlayer" type="AudioStreamPlayer3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 unit_size = 4.0

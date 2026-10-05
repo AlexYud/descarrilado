@@ -234,9 +234,6 @@ msgstr "Espaço {slot}\n{item}"
 msgid "INVENTORY_INSPECT_HINT"
 msgstr "Arraste com o botão esquerdo: girar    Roda: zoom    Botão direito: voltar"
 
-msgid "INVENTORY_USE"
-msgstr "Usar"
-
 msgid "COMMON_OK"
 msgstr "OK"
 

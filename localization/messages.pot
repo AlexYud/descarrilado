@@ -226,9 +226,6 @@ msgstr ""
 msgid "INVENTORY_INSPECT_HINT"
 msgstr ""
 
-msgid "INVENTORY_USE"
-msgstr ""
-
 msgid "COMMON_OK"
 msgstr ""
 

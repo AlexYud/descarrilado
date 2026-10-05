@@ -837,8 +837,8 @@ func _get_profile_settings() -> Dictionary:
 			# Same fog colour and sky, but the player has no flashlight in
 			# the menu, so the moon and ambient light are brighter to keep
 			# the scenery readable.
-			menu_settings["moon_energy"] = 0.45
-			menu_settings["ambient_energy"] = 0.28
+			menu_settings["moon_energy"] = 0.36
+			menu_settings["ambient_energy"] = 0.22
 			return menu_settings
 
 		_:
@@ -851,12 +851,12 @@ func _get_dream_intro_profile() -> Dictionary:
 		"background_energy": 0.22,
 
 		"ambient_color": Color("#3f5068"),
-		"ambient_energy": 0.07,
+		"ambient_energy": 0.055,
 
 		# The atmosphere has a controlled blue-grey floor, while the steeper
 		# depth curve keeps nearby and mid-distance geometry dark.
 		"fog_color": Color("#26363a"),
-		"fog_energy": 0.30,
+		"fog_energy": 0.24,
 		"fog_density": 0.78,
 		"fog_height": 1.30,
 		"fog_height_density": 0.18,
@@ -865,14 +865,14 @@ func _get_dream_intro_profile() -> Dictionary:
 
 		"exposure": 0.92,
 		"agx_contrast": 1.15,
-		"brightness": 0.98,
+		"brightness": 0.95,
 		"contrast": 1.03,
 		"saturation": 0.82,
 
 		"ssao_intensity": 0.95,
 
 		"moon_color": Color("#8fa8c4"),
-		"moon_energy": 0.06,
+		"moon_energy": 0.048,
 		"moon_specular": 0.08,
 		"moon_shadow_opacity": 0.72,
 		"moon_volumetric_energy": 0.0

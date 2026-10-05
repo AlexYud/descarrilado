@@ -5,6 +5,15 @@
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="4_dirt_color"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="5_dirt_normal"]
+[ext_resource type="Script" path="res://scripts/environment/clearing_forest_ring.gd" id="20_ring"]
+[ext_resource type="ArrayMesh" path="res://assets/models/trees/pitangueira/pitangueira_mesh.tres" id="21_pitangueira"]
+[ext_resource type="ArrayMesh" path="res://assets/models/trees/medium_generic_tree/medium_generic_tree_mesh.tres" id="22_medium_tree"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/big_foliage_01/big_foliage_01_mesh.tres" id="23_big_01"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/big_foliage_02/big_foliage_02_mesh.tres" id="24_big_02"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02_mesh.tres" id="25_med_02"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/small_foliage_01/small_foliage_01_mesh.tres" id="26_small_01"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/small_foliage_02/small_foliage_02_mesh.tres" id="27_small_02"]
+[ext_resource type="ArrayMesh" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="28_med_01"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(90, 90)
@@ -36,4 +45,12 @@ shape = SubResource("BoxShape3D_ground")
 [node name="FigClearing" parent="." unique_id=502660674 instance=ExtResource("2_clearing")]
 
 [node name="Player" parent="." unique_id=1783646634 instance=ExtResource("3_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.5, 1.1, 2.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.0, 1.1, 2.1)
+
+[node name="ForestRing" type="Node3D" parent="FigClearing"]
+script = ExtResource("20_ring")
+clearing_radius = 7.0
+small_plants_keep_out_radius = 3.0
+tree_meshes = Array[Mesh]([ExtResource("21_pitangueira"), ExtResource("22_medium_tree")])
+bush_meshes = Array[Mesh]([ExtResource("23_big_01"), ExtResource("24_big_02"), ExtResource("25_med_02")])
+small_meshes = Array[Mesh]([ExtResource("26_small_01"), ExtResource("27_small_02"), ExtResource("28_med_01")])

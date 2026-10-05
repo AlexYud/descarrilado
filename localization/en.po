@@ -234,9 +234,6 @@ msgstr "Slot {slot}\n{item}"
 msgid "INVENTORY_INSPECT_HINT"
 msgstr "Left drag: rotate    Wheel: zoom    Right click: back"
 
-msgid "INVENTORY_USE"
-msgstr "Use"
-
 msgid "COMMON_OK"
 msgstr "OK"
 

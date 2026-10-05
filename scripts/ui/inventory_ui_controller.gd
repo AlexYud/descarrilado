@@ -1,7 +1,6 @@
 extends Node
 class_name InventoryUIController
 
-signal use_requested(slot_data: Dictionary)
 signal inspect_requested(slot_data: Dictionary)
 
 var player: Node = null
@@ -10,7 +9,6 @@ var inventory_open: bool = false
 var inventory_slot_buttons: Array[Button] = []
 var current_slots: Array[Dictionary] = []
 var current_inspect_data: Dictionary = {}
-var selected_slot_index: int = -1
 var inspect_return_to_inventory: bool = false
 
 var inventory_ui_layer: CanvasLayer = null
@@ -20,9 +18,6 @@ var inventory_panel: PanelContainer = null
 var header_label: Label = null
 var inventory_content: VBoxContainer = null
 var inspect_content: VBoxContainer = null
-var action_popup: PanelContainer = null
-var use_button: Button = null
-var inspect_button: Button = null
 var inspect_title_label: Label = null
 var inspect_description_label: RichTextLabel = null
 var inspect_hint_label: Label = null
@@ -55,7 +50,6 @@ func show_inventory(slots: Array[Dictionary]) -> void:
 	inventory_open = true
 	inspect_return_to_inventory = false
 	current_slots = slots
-	selected_slot_index = -1
 
 	if inventory_ui_layer != null:
 		inventory_ui_layer.visible = true
@@ -71,9 +65,6 @@ func show_inventory(slots: Array[Dictionary]) -> void:
 
 	if inspect_content != null:
 		inspect_content.visible = false
-
-	if action_popup != null:
-		action_popup.visible = false
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	refresh(slots)
@@ -99,9 +90,6 @@ func show_inspect(slot_data: Dictionary, from_inventory: bool) -> void:
 	if inspect_content != null:
 		inspect_content.visible = true
 
-	if action_popup != null:
-		action_popup.visible = false
-
 	if inspect_title_label != null:
 		inspect_title_label.text = tr(
 			str(slot_data.get("name", ""))
@@ -117,7 +105,6 @@ func show_inspect(slot_data: Dictionary, from_inventory: bool) -> void:
 
 func close() -> void:
 	inventory_open = false
-	selected_slot_index = -1
 	inspect_return_to_inventory = false
 	current_inspect_data = {}
 
@@ -126,9 +113,6 @@ func close() -> void:
 
 	if inventory_root != null:
 		inventory_root.visible = false
-
-	if action_popup != null:
-		action_popup.visible = false
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
@@ -296,35 +280,6 @@ func _build_inventory_ui() -> void:
 	inspect_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inspect_vbox.add_child(inspect_hint_label)
 
-	action_popup = PanelContainer.new()
-	action_popup.name = "ActionPopup"
-	action_popup.visible = false
-	action_popup.mouse_filter = Control.MOUSE_FILTER_STOP
-	inventory_root.add_child(action_popup)
-
-	var popup_margin: MarginContainer = MarginContainer.new()
-	popup_margin.offset_left = 8.0
-	popup_margin.offset_top = 8.0
-	popup_margin.offset_right = 8.0
-	popup_margin.offset_bottom = 8.0
-	action_popup.add_child(popup_margin)
-
-	var popup_vbox: VBoxContainer = VBoxContainer.new()
-	popup_vbox.add_theme_constant_override("separation", 8)
-	popup_margin.add_child(popup_vbox)
-
-	use_button = Button.new()
-	use_button.text = tr("INVENTORY_USE")
-	use_button.custom_minimum_size = Vector2(110.0, 38.0)
-	use_button.pressed.connect(_on_use_button_pressed)
-	popup_vbox.add_child(use_button)
-
-	inspect_button = Button.new()
-	inspect_button.text = tr("INVENTORY_INSPECT")
-	inspect_button.custom_minimum_size = Vector2(110.0, 38.0)
-	inspect_button.pressed.connect(_on_inspect_button_pressed)
-	popup_vbox.add_child(inspect_button)
-
 
 func _connect_language_settings() -> void:
 	if not GameSettings.text_language_changed.is_connected(
@@ -336,12 +291,6 @@ func _connect_language_settings() -> void:
 
 
 func _on_text_language_changed(_locale: String) -> void:
-	if use_button != null:
-		use_button.text = tr("INVENTORY_USE")
-
-	if inspect_button != null:
-		inspect_button.text = tr("INVENTORY_INSPECT")
-
 	if inspect_hint_label != null:
 		inspect_hint_label.text = tr(
 			"INVENTORY_INSPECT_HINT"
@@ -369,47 +318,14 @@ func _on_text_language_changed(_locale: String) -> void:
 		refresh(current_slots)
 
 
+## Clicking an item opens it in the inspect view; there is nothing else to do
+## with an item from the inventory.
 func _on_slot_button_pressed(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= current_slots.size():
 		return
 
 	var slot_data: Dictionary = current_slots[slot_index]
-	var item_id: String = str(slot_data.get("id", ""))
-
-	if item_id == "":
-		selected_slot_index = -1
-		if action_popup != null:
-			action_popup.visible = false
+	if str(slot_data.get("id", "")).is_empty():
 		return
 
-	selected_slot_index = slot_index
-	_show_action_popup()
-
-
-func _show_action_popup() -> void:
-	if action_popup == null:
-		return
-
-	var mouse_pos: Vector2 = player.get_viewport().get_mouse_position()
-	action_popup.position = mouse_pos + Vector2(12.0, 12.0)
-	action_popup.visible = true
-
-
-func _on_use_button_pressed() -> void:
-	if selected_slot_index < 0 or selected_slot_index >= current_slots.size():
-		return
-
-	if action_popup != null:
-		action_popup.visible = false
-
-	use_requested.emit(current_slots[selected_slot_index])
-
-
-func _on_inspect_button_pressed() -> void:
-	if selected_slot_index < 0 or selected_slot_index >= current_slots.size():
-		return
-
-	if action_popup != null:
-		action_popup.visible = false
-
-	inspect_requested.emit(current_slots[selected_slot_index])
+	inspect_requested.emit(slot_data)

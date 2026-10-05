@@ -8,38 +8,6 @@ extends RefCounted
 
 const MIX_RATE: int = 22050
 
-## The three-note melody Sophia hums.
-const MELODY_NOTES: PackedFloat32Array = [293.66, 349.23, 261.63]
-
-
-## A soft hummed phrase: one note after another, then `tail_seconds` of silence.
-## With `loop` the phrase repeats forever (the tail is the pause between turns).
-static func make_melody(
-	notes_hz: PackedFloat32Array,
-	note_seconds: float = 0.75,
-	tail_seconds: float = 0.0,
-	loop: bool = false
-) -> AudioStreamWAV:
-	var note_samples: int = int(note_seconds * MIX_RATE)
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(note_samples * notes_hz.size() + int(tail_seconds * MIX_RATE))
-
-	for note_index: int in notes_hz.size():
-		var frequency: float = notes_hz[note_index]
-		for i: int in note_samples:
-			var t: float = float(i) / MIX_RATE
-			var envelope: float = minf(t / 0.08, 1.0) * exp(-t * 2.4)
-			var vibrato: float = 1.0 + 0.004 * sin(TAU * 5.0 * t)
-			var phase: float = TAU * frequency * vibrato * t
-			var tone: float = (
-				sin(phase)
-				+ 0.35 * sin(2.0 * phase)
-				+ 0.12 * sin(3.0 * phase)
-			)
-			samples[note_index * note_samples + i] = tone * envelope * 0.4
-
-	return _to_wav(samples, loop)
-
 
 ## A short mechanical click, like a cassette key or a photo corner snapping.
 static func make_click() -> AudioStreamWAV:

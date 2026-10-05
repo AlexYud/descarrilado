@@ -47,13 +47,6 @@ func _ready() -> void:
 	call_deferred("_restore_manual_save_state")
 
 	if inventory_ui_controller != null:
-		if not inventory_ui_controller.use_requested.is_connected(
-			_on_inventory_use_requested
-		):
-			inventory_ui_controller.use_requested.connect(
-				_on_inventory_use_requested
-			)
-
 		if not inventory_ui_controller.inspect_requested.is_connected(
 			_on_inventory_inspect_requested
 		):
@@ -595,12 +588,6 @@ func _find_inventory_slot(item_id: String) -> Dictionary:
 			return slot_data
 
 	return {}
-
-
-func _on_inventory_use_requested(
-	_slot_data: Dictionary
-) -> void:
-	pass
 
 
 func _on_inventory_inspect_requested(
