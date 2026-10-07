@@ -455,3 +455,112 @@ msgstr "Take the photograph"
 msgid "CAPTION_JULIANA_TAKE_PHOTO"
 msgstr "I'll take it with me."
 
+
+msgid "PROMPT_ENTER_CODE"
+msgstr "Enter the code"
+
+msgid "LOCK_VIEW_TITLE"
+msgstr "Time capsule"
+
+msgid "LOCK_VIEW_HINT"
+msgstr "Click the arrows or scroll over a wheel to turn it. Right click or Esc to step back."
+
+msgid "CAPTION_JULIANA_RECIPE"
+msgstr "I remember her telling me about that soup months ago... she couldn't stop laughing."
+
+msgid "ITEM_NOTE_CAPSULE_NAME"
+msgstr "Note on the Time Capsule"
+
+msgid "ITEM_NOTE_CAPSULE_DESCRIPTION"
+msgstr "A hasty letter pinned under the brass padlock."
+
+msgid "NOTE_CAPSULE_TEXT"
+msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— L."
+
+msgid "ITEM_KITCHEN_RECIPE_NAME"
+msgstr "Market Wrapper and Recipe"
+
+msgid "ITEM_KITCHEN_RECIPE_DESCRIPTION"
+msgstr "A grease-stained market paper wrapper with handwritten notes on the back. The quantity '3 kilos of coarse salt' is circled twice in blue ink."
+
+msgid "RECIPE_TEXT"
+msgstr "The very first time we tried to cook a real meal together.\n\nYou insisted on making your mother’s potato soup to impress me, but when you went down to the market, you bought 3 whole kilos of coarse rock salt instead of three small spoons. The kitchen smelled like the sea, and the broth was completely ruined.\n\nInstead of admitting you made a mistake, you sat at the table and swallowed two overflowing bowls in total silence just to prove you were 'fine.' I laughed until my ribs hurt, and you finally cracked a smile.\n\n— S."
+
+msgid "ITEM_PANTRY_NOTE_NAME"
+msgstr "Folded Note"
+
+msgid "ITEM_PANTRY_NOTE_DESCRIPTION"
+msgstr "A note left on the pantry shelf. The number '6' is underlined."
+
+msgid "JAR_NOTE_TEXT"
+msgstr "6 minutes trapped inside this tiny, dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\n— S."
+
+msgid "ITEM_MASTER_KEY_NAME"
+msgstr "Rusty Key"
+
+msgid "ITEM_MASTER_KEY_DESCRIPTION"
+msgstr "A rusty, well-used key."
+
+msgid "ITEM_LUCAS_DIARY_NAME"
+msgstr "Lucas's Notebook"
+
+msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
+msgstr "An entry in a leather-bound diary. The timestamp '6:00 AM' is underlined heavily in black ink."
+
+msgid "DIARY_TEXT"
+msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute, just lying on the floorboards listening to the quiet.\n\nSophia lay beside me, staring up at the unfinished ceiling without saying a word. She didn't mention leaving for the city. She didn't say a word about the train or her bus stubs.\n\nWhen 6:00 AM hit and the sun finally broke through the trees, she was still here next to me. That was the exact moment I knew she would never leave. She is mine forever."
+
+
+msgid "ITEM_HOUSE_AD_NAME"
+msgstr "House Advertisement"
+
+msgid "ITEM_HOUSE_AD_DESCRIPTION"
+msgstr "The advertisement expired two years ago. Lucas circled every room. Sophia wrote only beneath the photograph."
+
+msgid "AD_HEADLINE"
+msgstr "HOUSE FOR SALE\nTown centre"
+
+msgid "AD_SOPHIA_NOTE"
+msgstr "The blue windows are beautiful."
+
+msgid "AD_ROOM_LIVING"
+msgstr "Living room"
+
+msgid "AD_ROOM_KITCHEN"
+msgstr "Kitchen"
+
+msgid "AD_ROOM_BEDROOM"
+msgstr "Bedroom"
+
+msgid "AD_ROOM_PANTRY"
+msgstr "Pantry"
+
+msgid "AD_OURS"
+msgstr "OURS?"
+
+msgid "ITEM_BUS_TICKET_SOPHIA_NAME"
+msgstr "Sophia's Bus Ticket"
+
+msgid "ITEM_BUS_TICKET_SOPHIA_DESCRIPTION"
+msgstr "A one-way ticket to São Paulo. Sophia wrote her name on it."
+
+msgid "ITEM_BUS_TICKET_UNCLAIMED_NAME"
+msgstr "Unclaimed Bus Ticket"
+
+msgid "ITEM_BUS_TICKET_UNCLAIMED_DESCRIPTION"
+msgstr "Two tickets for the same departure. Sophia claimed one and left the other for someone to choose."
+
+msgid "BUS_TICKET_PRINT"
+msgstr "BUS TICKET\nRailway village / São Paulo\nOne way"
+
+msgid "BUS_TICKET_PASSENGER"
+msgstr "Passenger:"
+
+msgid "BUS_TICKET_NAME_SOPHIA"
+msgstr "Sophia"
+
+msgid "BUS_TICKET_IF_YOU_WANT"
+msgstr "If you want."
+
+msgid "DIARY_HEADING"
+msgstr "May 14th — 6:00 AM."

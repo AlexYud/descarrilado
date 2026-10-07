@@ -455,3 +455,112 @@ msgstr "Pegar a fotografia"
 msgid "CAPTION_JULIANA_TAKE_PHOTO"
 msgstr "Vou levar comigo."
 
+
+msgid "PROMPT_ENTER_CODE"
+msgstr "Digitar o código"
+
+msgid "LOCK_VIEW_TITLE"
+msgstr "Cápsula do tempo"
+
+msgid "LOCK_VIEW_HINT"
+msgstr "Clique nas setas ou role sobre uma roda para girá-la. Botão direito ou Esc para voltar."
+
+msgid "CAPTION_JULIANA_RECIPE"
+msgstr "Lembro dela me contando sobre aquela sopa meses atrás... ela não parava de rir."
+
+msgid "ITEM_NOTE_CAPSULE_NAME"
+msgstr "Bilhete na Cápsula do Tempo"
+
+msgid "ITEM_NOTE_CAPSULE_DESCRIPTION"
+msgstr "Uma carta escrita às pressas, presa sob o cadeado de latão."
+
+msgid "NOTE_CAPSULE_TEXT"
+msgstr "Para abrir daqui a 5 anos.\n\nSophia, meu amor. Dentro desta caixa está tudo o que estamos construindo. Ela guarda o nosso objetivo, a nossa casa e o futuro que prometemos um ao outro em segredo.\n\nSe um dia você esquecer o código para abri-la, não precisa de chave. Só precisa refazer os passos de como tudo começou, na ordem exata em que a nossa história aconteceu.\n\n— L."
+
+msgid "ITEM_KITCHEN_RECIPE_NAME"
+msgstr "Embrulho da Feira e Receita"
+
+msgid "ITEM_KITCHEN_RECIPE_DESCRIPTION"
+msgstr "Um embrulho de papel da feira, manchado de gordura, com anotações à mão no verso. A quantidade '3 quilos de sal grosso' está circulada duas vezes em tinta azul."
+
+msgid "RECIPE_TEXT"
+msgstr "A primeira vez que tentamos cozinhar uma refeição de verdade juntos.\n\nVocê insistiu em fazer a sopa de batata da sua mãe para me impressionar, mas quando desceu até a feira, comprou 3 quilos inteiros de sal grosso em vez de três colherzinhas. A cozinha ficou com cheiro de mar, e o caldo estragou por completo.\n\nEm vez de admitir o erro, você sentou à mesa e engoliu dois pratos cheios em silêncio total só para provar que estava 'bem'. Eu ri até doer as costelas, e você finalmente abriu um sorriso.\n\n— S."
+
+msgid "ITEM_PANTRY_NOTE_NAME"
+msgstr "Bilhete Dobrado"
+
+msgid "ITEM_PANTRY_NOTE_DESCRIPTION"
+msgstr "Um bilhete deixado na prateleira da despensa. O número '6' está sublinhado."
+
+msgid "JAR_NOTE_TEXT"
+msgstr "6 minutos presos dentro desta despensa minúscula e escura enquanto sua família gritava na sala de jantar.\n\nO ar estava empoeirado e cheirava a madeira velha. Suas mãos tremiam nas minhas enquanto prendíamos a respiração, com medo de que alguém abrisse a porta e nos flagrasse.\n\nQuando você finalmente se inclinou e me beijou no escuro total, os gritos lá fora sumiram em nada. Lembro de pensar, bem ali, que eu nunca quis voltar para aquele corredor.\n\n— S."
+
+msgid "ITEM_MASTER_KEY_NAME"
+msgstr "Chave Enferrujada"
+
+msgid "ITEM_MASTER_KEY_DESCRIPTION"
+msgstr "Uma chave enferrujada, muito usada."
+
+msgid "ITEM_LUCAS_DIARY_NAME"
+msgstr "Caderno do Lucas"
+
+msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
+msgstr "Uma anotação em um diário encadernado em couro. A hora '6h00' está sublinhada com força em tinta preta."
+
+msgid "DIARY_TEXT"
+msgstr "Os pássaros começavam a cantar nas árvores lá fora, e o quarto estava frio, úmido e cinzento. Não tínhamos dormido um minuto sequer, só deitados no assoalho ouvindo o silêncio.\n\nSophia estava deitada ao meu lado, olhando para o teto inacabado sem dizer nada. Ela não falou em partir para a cidade. Não disse uma palavra sobre o trem ou sobre as passagens de ônibus.\n\nQuando deu 6h00 e o sol finalmente atravessou as árvores, ela ainda estava aqui ao meu lado. Foi naquele exato momento que eu soube que ela nunca iria embora. Ela é minha para sempre."
+
+
+msgid "ITEM_HOUSE_AD_NAME"
+msgstr "Anúncio de Casa"
+
+msgid "ITEM_HOUSE_AD_DESCRIPTION"
+msgstr "O anúncio venceu há dois anos. Lucas circulou todos os cômodos. Sophia escreveu apenas embaixo da fotografia."
+
+msgid "AD_HEADLINE"
+msgstr "CASA À VENDA\nCentro da vila"
+
+msgid "AD_SOPHIA_NOTE"
+msgstr "As janelas azuis são bonitas."
+
+msgid "AD_ROOM_LIVING"
+msgstr "Sala"
+
+msgid "AD_ROOM_KITCHEN"
+msgstr "Cozinha"
+
+msgid "AD_ROOM_BEDROOM"
+msgstr "Quarto"
+
+msgid "AD_ROOM_PANTRY"
+msgstr "Despensa"
+
+msgid "AD_OURS"
+msgstr "NOSSA?"
+
+msgid "ITEM_BUS_TICKET_SOPHIA_NAME"
+msgstr "Passagem de Ônibus da Sophia"
+
+msgid "ITEM_BUS_TICKET_SOPHIA_DESCRIPTION"
+msgstr "Uma passagem só de ida para São Paulo. Sophia escreveu o nome nela."
+
+msgid "ITEM_BUS_TICKET_UNCLAIMED_NAME"
+msgstr "Passagem de Ônibus Sem Dono"
+
+msgid "ITEM_BUS_TICKET_UNCLAIMED_DESCRIPTION"
+msgstr "Duas passagens para a mesma partida. Sophia pegou uma e deixou a outra para alguém escolher."
+
+msgid "BUS_TICKET_PRINT"
+msgstr "PASSAGEM DE ÔNIBUS\nVila ferroviária / São Paulo\nSó ida"
+
+msgid "BUS_TICKET_PASSENGER"
+msgstr "Passageiro:"
+
+msgid "BUS_TICKET_NAME_SOPHIA"
+msgstr "Sophia"
+
+msgid "BUS_TICKET_IF_YOU_WANT"
+msgstr "Se quiser."
+
+msgid "DIARY_HEADING"
+msgstr "14 de maio — 6h00."

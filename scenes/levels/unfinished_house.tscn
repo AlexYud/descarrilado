@@ -1,0 +1,213 @@
+[gd_scene format=3 uid="uid://htjuwv6bri4o"]
+
+[ext_resource type="Script" uid="uid://cl7j3gckmljj4" path="res://scripts/levels/unfinished_house_sequence.gd" id="1_sequence"]
+[ext_resource type="Script" uid="uid://ju7cxj3t7nya" path="res://scripts/environment/unfinished_house_builder.gd" id="2_builder"]
+[ext_resource type="Script" uid="uid://cgn0ftce8wn3l" path="res://scripts/environment/procedural_prop.gd" id="3_prop"]
+[ext_resource type="Script" uid="uid://v4ncxexc1eqp" path="res://scripts/interactions/inspect_reaction.gd" id="4_reaction"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/house_door.tscn" id="5_door"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/time_capsule.tscn" id="6_capsule"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/note_capsule.tscn" id="7_note"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/kitchen_recipe.tscn" id="8_recipe"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/pantry_note.tscn" id="9_note"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/master_key.tscn" id="10_key"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/nightstand_drawer.tscn" id="15_drawer"]
+[ext_resource type="PackedScene" uid="uid://dechhjfthr7jj" path="res://scenes/environment/world_environment_store.tscn" id="16_environment"]
+[ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="17_player"]
+[ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="18_grass_color"]
+[ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="19_grass_normal"]
+[ext_resource type="Script" uid="uid://c24i4cn4kf5hb" path="res://scripts/environment/clearing_forest_ring.gd" id="20_ring"]
+[ext_resource type="ArrayMesh" uid="uid://da1x3t2o2xsuj" path="res://assets/models/trees/pitangueira/pitangueira_mesh.tres" id="21_pitangueira"]
+[ext_resource type="ArrayMesh" uid="uid://c4rn5wlqy3lj2" path="res://assets/models/trees/medium_generic_tree/medium_generic_tree_mesh.tres" id="22_medium_tree"]
+[ext_resource type="ArrayMesh" uid="uid://cxfnirl5mec3p" path="res://assets/models/foliage/big_foliage_01/big_foliage_01_mesh.tres" id="23_big_01"]
+[ext_resource type="ArrayMesh" uid="uid://c6ahun5wc5wsa" path="res://assets/models/foliage/big_foliage_02/big_foliage_02_mesh.tres" id="24_big_02"]
+[ext_resource type="ArrayMesh" uid="uid://7mip0rosn786" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02_mesh.tres" id="25_med_02"]
+[ext_resource type="ArrayMesh" uid="uid://26ja2p0gr35o" path="res://assets/models/foliage/small_foliage_01/small_foliage_01_mesh.tres" id="26_small_01"]
+[ext_resource type="ArrayMesh" uid="uid://duf6mg1qdlg7i" path="res://assets/models/foliage/small_foliage_02/small_foliage_02_mesh.tres" id="27_small_02"]
+[ext_resource type="ArrayMesh" uid="uid://bfoll4ywqfmm4" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="28_med_01"]
+[ext_resource type="Script" uid="uid://1oscv5i3peyg" path="res://scripts/levels/play_test_setup.gd" id="29_setup"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(90, 90)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.5, 0.5, 0.46, 1)
+albedo_texture = ExtResource("18_grass_color")
+normal_enabled = true
+normal_texture = ExtResource("19_grass_normal")
+uv1_scale = Vector3(24, 24, 24)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(90, 1, 90)
+
+[node name="UnfinishedHouse" type="Node3D" unique_id=1390595388 node_paths=PackedStringArray("doors_root", "hall_steps", "window_tap", "window_head", "window_mist", "flee_sound")]
+script = ExtResource("1_sequence")
+doors_root = NodePath("Doors")
+hall_steps = NodePath("Scares/HallSteps")
+window_tap = NodePath("Scares/WindowTap")
+window_head = NodePath("Scares/WindowHead")
+window_mist = NodePath("Scares/WindowMist")
+flee_sound = NodePath("Scares/FleeSound")
+
+[node name="Shell" type="Node3D" parent="." unique_id=1898375199]
+script = ExtResource("2_builder")
+
+[node name="Doors" type="Node3D" parent="." unique_id=2047209378]
+
+[node name="BackDoor" parent="Doors" unique_id=1712536259 instance=ExtResource("5_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.865, 0, 0)
+persistent_id = &"house_back_door"
+
+[node name="FrontDoor" parent="Doors" unique_id=731664303 instance=ExtResource("5_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.19, 0, 15.5)
+persistent_id = &"house_front_door"
+
+[node name="PantryDoor" parent="Doors" unique_id=981741055 instance=ExtResource("5_door")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 9.3, 0, 6.9025)
+starts_open = true
+persistent_id = &"house_pantry_door"
+
+[node name="BedroomDoor" parent="Doors" unique_id=9984893 instance=ExtResource("5_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.98, 0, 6.2)
+starts_locked = true
+required_key_id = "master_key"
+persistent_id = &"house_bedroom_door"
+
+[node name="Furniture" type="Node3D" parent="." unique_id=1722869383]
+
+[node name="Crate" type="Node3D" parent="Furniture" unique_id=236702388]
+transform = Transform3D(-0.005678487, 0, -0.9999839, 0, 1, 0, 0.9999839, 0, -0.005678487, 8.913031, 0, 12.187357)
+script = ExtResource("3_prop")
+kind = &"crate"
+
+[node name="TimeCapsule" parent="Furniture" unique_id=447805600 instance=ExtResource("6_capsule")]
+transform = Transform3D(-0.005678487, 0, -0.9999839, 0, 1, 0, 0.9999839, 0, -0.005678487, 8.913031, 0.43, 12.187357)
+
+[node name="NoteCapsule" parent="Furniture" unique_id=1504722024 instance=ExtResource("7_note")]
+transform = Transform3D(-0.005678487, 0.9999839, 4.3710678e-08, 0, -4.371139e-08, 1, 0.9999839, 0.005678487, 2.4821464e-10, 8.69275, 0.4312, 12.236108)
+
+[node name="KitchenSink" type="Node3D" parent="Furniture" unique_id=1814997285]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.4, 0, 3.41)
+script = ExtResource("3_prop")
+kind = &"kitchen_sink"
+
+[node name="KitchenRecipe" parent="Furniture" unique_id=504894709 instance=ExtResource("8_recipe")]
+transform = Transform3D(0.9396926, -0.34202012, -1.4950174e-08, 0, -4.371139e-08, 1, -0.34202012, -0.9396926, -4.1075268e-08, 0.4, 0.7525, 3.41)
+
+[node name="PantryShelves" type="Node3D" parent="Furniture" unique_id=2135406905]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.535, 0, 7.75)
+script = ExtResource("3_prop")
+kind = &"pantry_shelves"
+
+[node name="PantryJarLeft" type="Node3D" parent="Furniture" unique_id=1475010981]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.405, 1.535, 7.3)
+script = ExtResource("3_prop")
+kind = &"pantry_jar"
+
+[node name="PantryJarRight" type="Node3D" parent="Furniture" unique_id=2000532269]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.405, 1.535, 8.25)
+script = ExtResource("3_prop")
+kind = &"pantry_jar"
+
+[node name="PantryNote" parent="Furniture" unique_id=486876 instance=ExtResource("9_note")]
+transform = Transform3D(0.95105654, -0.309017, -1.3507562e-08, 0, -4.371139e-08, 1, -0.309017, -0.95105654, -4.1572e-08, 11.385, 1.0163, 7.65)
+
+[node name="TinCan1" type="Node3D" parent="Furniture" unique_id=1310453696]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.395, 1.07, 7.25)
+script = ExtResource("3_prop")
+kind = &"tin_can"
+
+[node name="TinCan2" type="Node3D" parent="Furniture" unique_id=1820280663]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.395, 1.07, 7.37)
+script = ExtResource("3_prop")
+kind = &"tin_can"
+
+[node name="TinCan3" type="Node3D" parent="Furniture" unique_id=1801229471]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.395, 1.07, 8.3)
+script = ExtResource("3_prop")
+kind = &"tin_can"
+
+[node name="MasterKey" parent="Furniture" unique_id=298406930 instance=ExtResource("10_key")]
+transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, 11.375, 1.0165, 7.9)
+
+[node name="Sack" type="Node3D" parent="Furniture" unique_id=64400243]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.85, 0, 8.92)
+script = ExtResource("3_prop")
+kind = &"sack"
+
+[node name="Nightstand" type="Node3D" parent="Furniture" unique_id=1311972603]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 0, 0.30789375)
+script = ExtResource("3_prop")
+kind = &"nightstand"
+
+[node name="NightstandDrawer" parent="Furniture" unique_id=569816700 instance=ExtResource("15_drawer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 0.43, 0.30789375)
+persistent_id = &"house_nightstand_drawer"
+
+[node name="AlarmClock" type="Node3D" parent="Furniture" unique_id=1294429724]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1875, 0.575, 0.25789356)
+script = ExtResource("3_prop")
+kind = &"alarm_clock"
+
+[node name="Scares" type="Node3D" parent="." unique_id=1510714190]
+
+[node name="HallSteps" type="AudioStreamPlayer3D" parent="Scares" unique_id=867937286]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, 7.3625)
+unit_size = 4.0
+max_distance = 25.0
+
+[node name="WindowTap" type="AudioStreamPlayer3D" parent="Scares" unique_id=2023194424]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 1.4, -0.15)
+unit_size = 4.0
+max_distance = 25.0
+
+[node name="WindowHead" type="Node3D" parent="Scares" unique_id=497944546]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.8875, 1.0339805, -0.21138981)
+script = ExtResource("3_prop")
+kind = &"window_head"
+
+[node name="WindowMist" type="Node3D" parent="Scares" unique_id=960060251]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 1.45, -0.55)
+script = ExtResource("3_prop")
+kind = &"window_mist"
+
+[node name="FleeSound" type="AudioStreamPlayer3D" parent="Scares" unique_id=1851389563]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 1, -1)
+unit_size = 6.0
+max_distance = 40.0
+
+[node name="RecipeReaction" type="Node" parent="." unique_id=1136011188]
+script = ExtResource("4_reaction")
+inspect_id = &"kitchen_recipe"
+open_line = "CAPTION_JULIANA_RECIPE"
+open_line_delay = 1.2
+persistent_id = &"house_recipe"
+
+[node name="PlayTest" type="Node3D" parent="." unique_id=1824508278 node_paths=PackedStringArray("player")]
+script = ExtResource("29_setup")
+player = NodePath("Player")
+
+[node name="Ground" type="StaticBody3D" parent="PlayTest" unique_id=954998951]
+
+[node name="Mesh" type="MeshInstance3D" parent="PlayTest/Ground" unique_id=110347250]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0)
+mesh = SubResource("PlaneMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayTest/Ground" unique_id=2125308440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="Player" parent="PlayTest" unique_id=731037861 instance=ExtResource("17_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.65, 1.1, 19)
+
+[node name="ForestRing" type="Node3D" parent="PlayTest" unique_id=2122687620]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8125, 0, 7.75)
+script = ExtResource("20_ring")
+clearing_radius = 16.5
+gap_angle = 1.5708
+tree_meshes = Array[Mesh]([ExtResource("21_pitangueira"), ExtResource("22_medium_tree")])
+bush_meshes = Array[Mesh]([ExtResource("23_big_01"), ExtResource("24_big_02"), ExtResource("25_med_02")])
+small_meshes = Array[Mesh]([ExtResource("26_small_01"), ExtResource("27_small_02"), ExtResource("28_med_01")])
+small_plants_keep_out_radius = 12.0
+
+[node name="WorldEnvironmentStore" parent="." unique_id=1748959053 instance=ExtResource("16_environment")]

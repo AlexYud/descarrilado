@@ -73,6 +73,94 @@ static func make_rain_loop(seconds: float = 4.0) -> AudioStreamWAV:
 	return _to_wav(samples, true)
 
 
+## A heavy boot landing on wooden boards: a low thump with a dry knock.
+static func make_footstep() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.34 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 61
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var thump: float = sin(TAU * 62.0 * t) * exp(-t * 16.0)
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.25)
+		var knock: float = smoothed * exp(-t * 34.0) * 0.7
+		var board: float = sin(TAU * 140.0 * t) * exp(-t * 26.0) * 0.35
+		samples[i] = (thump + knock + board) * 0.85
+
+	return _to_wav(samples, false)
+
+
+## A heavy door slammed shut: one deep boom with a splintering crack on top.
+static func make_slam() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.9 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 37
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var boom: float = sin(TAU * 48.0 * t) * exp(-t * 7.0)
+		var thud: float = sin(TAU * 95.0 * t) * exp(-t * 13.0) * 0.7
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.6)
+		var crack: float = smoothed * exp(-t * 40.0) * 1.1
+		samples[i] = clampf((boom + thud + crack) * 0.95, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A door hinge complaining: a falling, wavering scrape.
+static func make_creak(seconds: float = 1.6) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var phase: float = 0.0
+
+	for i: int in samples.size():
+		var progress: float = float(i) / samples.size()
+		var wobble: float = 1.0 + 0.08 * sin(TAU * 7.0 * progress * seconds)
+		var frequency: float = lerpf(310.0, 170.0, progress) * wobble
+		phase += TAU * frequency / MIX_RATE
+		var saw: float = fmod(phase / TAU, 1.0) * 2.0 - 1.0
+		var envelope: float = minf(progress * 6.0, 1.0) * minf((1.0 - progress) * 4.0, 1.0)
+		samples[i] = saw * envelope * 0.16
+
+	return _to_wav(samples, false)
+
+
+## A knuckle or fingernail tapping glass: short, bright and metallic.
+static func make_tap() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.22 * MIX_RATE))
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var ring: float = sin(TAU * 1850.0 * t) + 0.6 * sin(TAU * 2760.0 * t)
+		var body: float = sin(TAU * 420.0 * t) * 0.8
+		samples[i] = (ring * exp(-t * 55.0) + body * exp(-t * 90.0)) * 0.55
+
+	return _to_wav(samples, false)
+
+
+## Something large moving through dry leaves and undergrowth, then gone.
+static func make_rustle(seconds: float = 2.4) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 83
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var progress: float = float(i) / samples.size()
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.5)
+		var crackle: float = 1.0 if rng.randf() < 0.02 else 0.25
+		var envelope: float = minf(progress * 10.0, 1.0) * (1.0 - progress)
+		samples[i] = smoothed * crackle * envelope * 0.4
+
+	return _to_wav(samples, false)
+
+
 static func _to_wav(samples: PackedFloat32Array, loop: bool) -> AudioStreamWAV:
 	var bytes: PackedByteArray = PackedByteArray()
 	bytes.resize(samples.size() * 2)

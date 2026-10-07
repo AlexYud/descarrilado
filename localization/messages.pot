@@ -443,3 +443,112 @@ msgstr ""
 msgid "CAPTION_JULIANA_TAKE_PHOTO"
 msgstr ""
 
+
+msgid "PROMPT_ENTER_CODE"
+msgstr ""
+
+msgid "LOCK_VIEW_TITLE"
+msgstr ""
+
+msgid "LOCK_VIEW_HINT"
+msgstr ""
+
+msgid "CAPTION_JULIANA_RECIPE"
+msgstr ""
+
+msgid "ITEM_NOTE_CAPSULE_NAME"
+msgstr ""
+
+msgid "ITEM_NOTE_CAPSULE_DESCRIPTION"
+msgstr ""
+
+msgid "NOTE_CAPSULE_TEXT"
+msgstr ""
+
+msgid "ITEM_KITCHEN_RECIPE_NAME"
+msgstr ""
+
+msgid "ITEM_KITCHEN_RECIPE_DESCRIPTION"
+msgstr ""
+
+msgid "RECIPE_TEXT"
+msgstr ""
+
+msgid "ITEM_PANTRY_NOTE_NAME"
+msgstr ""
+
+msgid "ITEM_PANTRY_NOTE_DESCRIPTION"
+msgstr ""
+
+msgid "JAR_NOTE_TEXT"
+msgstr ""
+
+msgid "ITEM_MASTER_KEY_NAME"
+msgstr ""
+
+msgid "ITEM_MASTER_KEY_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_LUCAS_DIARY_NAME"
+msgstr ""
+
+msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
+msgstr ""
+
+msgid "DIARY_TEXT"
+msgstr ""
+
+
+msgid "ITEM_HOUSE_AD_NAME"
+msgstr ""
+
+msgid "ITEM_HOUSE_AD_DESCRIPTION"
+msgstr ""
+
+msgid "AD_HEADLINE"
+msgstr ""
+
+msgid "AD_SOPHIA_NOTE"
+msgstr ""
+
+msgid "AD_ROOM_LIVING"
+msgstr ""
+
+msgid "AD_ROOM_KITCHEN"
+msgstr ""
+
+msgid "AD_ROOM_BEDROOM"
+msgstr ""
+
+msgid "AD_ROOM_PANTRY"
+msgstr ""
+
+msgid "AD_OURS"
+msgstr ""
+
+msgid "ITEM_BUS_TICKET_SOPHIA_NAME"
+msgstr ""
+
+msgid "ITEM_BUS_TICKET_SOPHIA_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_BUS_TICKET_UNCLAIMED_NAME"
+msgstr ""
+
+msgid "ITEM_BUS_TICKET_UNCLAIMED_DESCRIPTION"
+msgstr ""
+
+msgid "BUS_TICKET_PRINT"
+msgstr ""
+
+msgid "BUS_TICKET_PASSENGER"
+msgstr ""
+
+msgid "BUS_TICKET_NAME_SOPHIA"
+msgstr ""
+
+msgid "BUS_TICKET_IF_YOU_WANT"
+msgstr ""
+
+msgid "DIARY_HEADING"
+msgstr ""

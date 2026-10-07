@@ -15,6 +15,8 @@
 [ext_resource type="ArrayMesh" path="res://assets/models/foliage/small_foliage_02/small_foliage_02_mesh.tres" id="27_small_02"]
 [ext_resource type="ArrayMesh" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="28_med_01"]
 
+[ext_resource type="Script" path="res://scripts/levels/play_test_setup.gd" id="29_setup"]
+
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 size = Vector2(90, 90)
 
@@ -54,3 +56,7 @@ small_plants_keep_out_radius = 3.0
 tree_meshes = Array[Mesh]([ExtResource("21_pitangueira"), ExtResource("22_medium_tree")])
 bush_meshes = Array[Mesh]([ExtResource("23_big_01"), ExtResource("24_big_02"), ExtResource("25_med_02")])
 small_meshes = Array[Mesh]([ExtResource("26_small_01"), ExtResource("27_small_02"), ExtResource("28_med_01")])
+
+[node name="PlayTestSetup" type="Node3D" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("29_setup")
+player = NodePath("../Player")

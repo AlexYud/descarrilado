@@ -1,8 +1,8 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://iyh5ov6nggor"]
 
-[ext_resource type="Texture2D" path="res://assets/models/rocks/floor_path/rock_001/rock_001_Rock045_1K-JPG_Color.jpg" id="1_wet0n"]
-[ext_resource type="Texture2D" path="res://assets/models/rocks/floor_path/rock_001/rock_001_Rock045_1K-JPG_Roughness.png" id="2_gobva"]
-[ext_resource type="Texture2D" path="res://assets/models/rocks/floor_path/rock_001/rock_001_Rock045_1K-JPG_NormalGL.jpg" id="3_tr28c"]
+[ext_resource type="Texture2D" uid="uid://cxfc3u57jf0qg" path="res://assets/models/rocks/floor_path/rock_001/rock_001_Rock045_1K-JPG_Color.jpg" id="1_wet0n"]
+[ext_resource type="Texture2D" uid="uid://d4fvl0vls0qq7" path="res://assets/models/rocks/floor_path/rock_001/rock_001_Rock045_1K-JPG_Roughness.png" id="2_gobva"]
+[ext_resource type="Texture2D" uid="uid://bfxjx0l8136lx" path="res://assets/models/rocks/floor_path/rock_001/rock_001_Rock045_1K-JPG_NormalGL.jpg" id="3_tr28c"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_at4ju"]
 resource_name = "Material.018"

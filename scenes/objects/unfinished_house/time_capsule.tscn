@@ -1,0 +1,38 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzles/combination_lock.gd" id="1_lock"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/house_advertisement.tscn" id="3_ad"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/bus_ticket_sophia.tscn" id="4_ticket_sophia"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/bus_ticket_unclaimed.tscn" id="5_ticket_unclaimed"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_padlock"]
+size = Vector3(0.14, 0.11, 0.1)
+
+[node name="TimeCapsule" type="Node3D"]
+script = ExtResource("1_lock")
+prompt_text = "PROMPT_ENTER_CODE"
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_prop")
+kind = &"time_capsule"
+
+[node name="Contents" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0308, 0)
+
+[node name="HouseAdvertisement" parent="Contents" instance=ExtResource("3_ad")]
+rotation_degrees = Vector3(-90, 90, 0)
+
+[node name="BusTicketSophia" parent="Contents" instance=ExtResource("4_ticket_sophia")]
+position = Vector3(-0.08, 0.003, 0.03)
+rotation_degrees = Vector3(-90, 10, 0)
+
+[node name="BusTicketUnclaimed" parent="Contents" instance=ExtResource("5_ticket_unclaimed")]
+position = Vector3(0.08, 0.0062, 0)
+rotation_degrees = Vector3(-90, -12, 0)
+
+[node name="InteractArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0.16)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_padlock")

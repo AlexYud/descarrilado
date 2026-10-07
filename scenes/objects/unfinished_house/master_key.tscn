@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/collectible_interactable.gd" id="1_collectible"]
+[ext_resource type="PackedScene" uid="uid://bfvap2natuvdh" path="res://assets/models/interactables/miscellaneous/key.glb" id="2_key"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_rust"]
+transparency = 1
+albedo_color = Color(0.42, 0.2, 0.07, 0.62)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.08, 0.1, 0.04)
+
+[node name="MasterKey" type="Node3D"]
+script = ExtResource("1_collectible")
+item_id = "master_key"
+item_name = "ITEM_MASTER_KEY_NAME"
+item_description = "ITEM_MASTER_KEY_DESCRIPTION"
+
+[node name="Visual" type="Node3D" parent="."]
+metadata/inspect_id = "master_key"
+
+[node name="Key" parent="Visual" instance=ExtResource("2_key")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.011, 0)
+
+[node name="Plane" parent="Visual/Key" index="0"]
+material_overlay = SubResource("Mat_rust")
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

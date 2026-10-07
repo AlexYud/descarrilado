@@ -1,9 +1,9 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://y6lj6p03ius"]
 
-[ext_resource type="Texture2D" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_Bark014_1K-JPG_Color.jpg" id="1_uath8"]
-[ext_resource type="Texture2D" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_Bark014_1K-JPG_Roughness.png" id="2_s7p6k"]
-[ext_resource type="Texture2D" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_Bark014_1K-JPG_NormalGL.jpg" id="3_v4n75"]
-[ext_resource type="Texture2D" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_foliage_79.png" id="4_cb22d"]
+[ext_resource type="Texture2D" uid="uid://b0bxenmm7w6pr" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_Bark014_1K-JPG_Color.jpg" id="1_uath8"]
+[ext_resource type="Texture2D" uid="uid://d0quuurga0a3s" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_Bark014_1K-JPG_Roughness.png" id="2_s7p6k"]
+[ext_resource type="Texture2D" uid="uid://dieby2kg1cylg" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_Bark014_1K-JPG_NormalGL.jpg" id="3_v4n75"]
+[ext_resource type="Texture2D" uid="uid://utoevemwm63l" path="res://assets/models/trees/medium_generic_tree/mediun_generic_tree_foliage_79.png" id="4_cb22d"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eir3h"]
 resource_name = "trunk"

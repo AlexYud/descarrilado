@@ -1,6 +1,6 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://g6jktgn5ccgk"]
 
-[ext_resource type="Texture2D" path="res://assets/models/foliage/kelp_like_foliage/kelp_like_foliage_foliage_89.png" id="1_lqtca"]
+[ext_resource type="Texture2D" uid="uid://cpj7drqlp8d7i" path="res://assets/models/foliage/kelp_like_foliage/kelp_like_foliage_foliage_89.png" id="1_lqtca"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4h4a4"]
 resource_name = "Material.004"

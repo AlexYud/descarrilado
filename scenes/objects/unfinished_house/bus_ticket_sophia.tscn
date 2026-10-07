@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/inspectable_interactable.gd" id="1_inspectable"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.18, 0.09, 0.05)
+
+[node name="BusTicketSophia" type="Node3D"]
+script = ExtResource("1_inspectable")
+inspect_name = "ITEM_BUS_TICKET_SOPHIA_NAME"
+inspect_description = "ITEM_BUS_TICKET_SOPHIA_DESCRIPTION"
+prompt_text = "PROMPT_INSPECT"
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("2_prop")
+kind = &"bus_ticket_sophia"
+metadata/inspect_id = "bus_ticket_sophia"
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

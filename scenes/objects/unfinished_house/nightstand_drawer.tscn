@@ -1,0 +1,77 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/drawer_interactable.gd" id="1_drawer"]
+
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/lucas_diary.tscn" id="2_diary"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_wood"]
+albedo_color = Color(0.58, 0.46, 0.29, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_front"]
+size = Vector3(0.44, 0.12, 0.015)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bottom"]
+size = Vector3(0.42, 0.012, 0.285)
+
+[sub_resource type="BoxMesh" id="BoxMesh_side"]
+size = Vector3(0.012, 0.1, 0.285)
+
+[sub_resource type="BoxMesh" id="BoxMesh_back"]
+size = Vector3(0.42, 0.1, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_handle"]
+size = Vector3(0.05, 0.012, 0.014)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_front"]
+size = Vector3(0.46, 0.14, 0.08)
+
+[node name="NightstandDrawer" type="Node3D" node_paths=PackedStringArray("drawer_root")]
+script = ExtResource("1_drawer")
+drawer_root = NodePath("DrawerRoot")
+open_offset = Vector3(0, 0, 0.27)
+
+[node name="DrawerRoot" type="Node3D" parent="."]
+
+[node name="Front" type="MeshInstance3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1425)
+mesh = SubResource("BoxMesh_front")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Handle" type="MeshInstance3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.157)
+mesh = SubResource("BoxMesh_handle")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Bottom" type="MeshInstance3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.054, 0)
+mesh = SubResource("BoxMesh_bottom")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="LeftWall" type="MeshInstance3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.213, -0.006, 0)
+mesh = SubResource("BoxMesh_side")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="RightWall" type="MeshInstance3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.213, -0.006, 0)
+mesh = SubResource("BoxMesh_side")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Back" type="MeshInstance3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.006, -0.1425)
+mesh = SubResource("BoxMesh_back")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="ItemAnchor" type="Node3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.048, 0)
+
+[node name="LucasDiary" parent="DrawerRoot/ItemAnchor" instance=ExtResource("2_diary")]
+position = Vector3(0, 0.008, 0)
+rotation_degrees = Vector3(-90, 0, 0)
+
+[node name="InteractArea" type="Area3D" parent="DrawerRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.15)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DrawerRoot/InteractArea"]
+shape = SubResource("BoxShape3D_front")

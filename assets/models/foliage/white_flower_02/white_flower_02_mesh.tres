@@ -1,6 +1,6 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://ceg24o0c16j0h"]
 
-[ext_resource type="Texture2D" path="res://assets/models/foliage/white_flower_02/white_flower_02_foliage_88.png" id="1_hkrl4"]
+[ext_resource type="Texture2D" uid="uid://c3j0cusotuqvn" path="res://assets/models/foliage/white_flower_02/white_flower_02_foliage_88.png" id="1_hkrl4"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_odi02"]
 resource_name = "Material.003"

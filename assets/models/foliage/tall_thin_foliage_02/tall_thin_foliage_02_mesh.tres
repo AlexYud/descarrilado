@@ -1,6 +1,6 @@
-[gd_resource type="ArrayMesh" format=4]
+[gd_resource type="ArrayMesh" format=4 uid="uid://4gbtm0r41guo"]
 
-[ext_resource type="Texture2D" path="res://assets/models/foliage/tall_thin_foliage_02/tall_thin_foliage_02_foliage_102.png" id="1_rs7la"]
+[ext_resource type="Texture2D" uid="uid://c3wcb7tgyvlb" path="res://assets/models/foliage/tall_thin_foliage_02/tall_thin_foliage_02_foliage_102.png" id="1_rs7la"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rbjag"]
 resource_name = "Material.008"

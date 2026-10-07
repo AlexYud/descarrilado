@@ -16,8 +16,14 @@ class_name DoorController
 @export var locked_prompt_text: String = "PROMPT_LOCKED"
 @export var unlock_prompt_text: String = "PROMPT_UNLOCK"
 
+## Caption said when the player tries a locked door they cannot open yet.
+@export var locked_line: String = ""
+
 var is_open: bool = false
 var is_locked: bool = false
+
+## Set by `slam_shut()`: the speed of the next swing, 0 for the normal one.
+var _swing_speed_override: float = 0.0
 
 var closed_rotation_degrees: Vector3 = Vector3.ZERO
 var current_open_rotation_degrees: Vector3 = Vector3.ZERO
@@ -57,11 +63,15 @@ func _process(delta: float) -> void:
 	if is_open:
 		target_rotation = current_open_rotation_degrees
 
-	var weight: float = clamp(delta * rotate_speed, 0.0, 1.0)
+	var swing_speed: float = (
+		_swing_speed_override if _swing_speed_override > 0.0 else rotate_speed
+	)
+	var weight: float = clamp(delta * swing_speed, 0.0, 1.0)
 	hinge.rotation_degrees = hinge.rotation_degrees.lerp(target_rotation, weight)
 
 	if hinge.rotation_degrees.distance_squared_to(target_rotation) < 0.000001:
 		hinge.rotation_degrees = target_rotation
+		_swing_speed_override = 0.0
 
 
 func is_usable() -> bool:
@@ -94,12 +104,40 @@ func interact(player: Node) -> void:
 	if is_locked:
 		var unlocked: bool = _try_unlock_with_player(player)
 		if not unlocked:
+			if not locked_line.is_empty():
+				CaptionManager.say(locked_line)
 			return
 
 	if not is_open:
 		_choose_open_side(player)
 
 	is_open = not is_open
+	_remember_persistent_state()
+
+
+## Opens the door by itself, with no player involved. `swing_sign` picks the
+## side it swings towards (+1 or -1 around the hinge). A locked door stays shut.
+func force_open(swing_sign: float = 1.0) -> void:
+	if hinge == null or is_locked or is_open:
+		return
+
+	current_open_rotation_degrees = closed_rotation_degrees + Vector3(
+		0.0,
+		absf(open_angle_degrees) * signf(swing_sign),
+		0.0
+	)
+	is_open = true
+	_remember_persistent_state()
+
+
+## Swings the door shut hard and fast, with no player involved. Does nothing to
+## a door that is already closed. `speed` replaces `rotate_speed` for this swing.
+func slam_shut(speed: float = 16.0) -> void:
+	if hinge == null or not is_open:
+		return
+
+	_swing_speed_override = speed
+	is_open = false
 	_remember_persistent_state()
 
 

@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://dp3nms81seyxg" path="res://scenes/objects/door_interactable.tscn" id="1_door"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_door"]
+albedo_color = Color(0.3, 0.2, 0.12, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_knob"]
+albedo_color = Color(0.58, 0.44, 0.15, 1)
+roughness = 0.4
+metallic = 0.85
+
+[node name="HouseDoor" instance=ExtResource("1_door")]
+
+[node name="DoorMesh" parent="Hinge/DoorRoot" index="0"]
+surface_material_override/0 = SubResource("Mat_door")
+
+[node name="KnobMesh" parent="Hinge/DoorRoot/FrontKnobInteractable" index="0"]
+surface_material_override/0 = SubResource("Mat_knob")
+
+[node name="KnobMesh" parent="Hinge/DoorRoot/BackKnobInteractable" index="0"]
+surface_material_override/0 = SubResource("Mat_knob")
