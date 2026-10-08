@@ -111,6 +111,25 @@ static func make_slam() -> AudioStreamWAV:
 	return _to_wav(samples, false)
 
 
+## A hard, quick running footfall on boards: lighter and sharper than a walking step.
+static func make_run_step() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.2 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 71
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var thump: float = sin(TAU * 88.0 * t) * exp(-t * 24.0)
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.4)
+		var slap: float = smoothed * exp(-t * 55.0) * 0.8
+		var board: float = sin(TAU * 190.0 * t) * exp(-t * 38.0) * 0.4
+		samples[i] = (thump + slap + board) * 0.9
+
+	return _to_wav(samples, false)
+
+
 ## A door hinge complaining: a falling, wavering scrape.
 static func make_creak(seconds: float = 1.6) -> AudioStreamWAV:
 	var samples: PackedFloat32Array = PackedFloat32Array()

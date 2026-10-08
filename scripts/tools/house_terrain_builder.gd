@@ -38,7 +38,7 @@ const GRASS_B: int = 12
 const ARAUCARIA: int = 14
 
 ## How far from the walls the overgrowth reaches.
-const OVERGROWTH_REACH: float = 9.0
+const OVERGROWTH_REACH: float = 16.0
 
 ## Layers of extra growth around the house. `density` is plants per square metre
 ## of the whole ring; `d_min` / `d_max` are distances from the walls in metres
@@ -69,13 +69,19 @@ const OVERGROWTH: Array[Dictionary] = [
 		"scale": Vector2(0.8, 1.2), "align": 0.3,
 	},
 	{
-		"name": "shrub trees", "ids": [PITANGUEIRA], "density": 0.05, "d_min": 1.6, "d_max": 9.0,
+		"name": "shrub trees", "ids": [PITANGUEIRA], "density": 0.06, "d_min": 1.6, "d_max": 12.0,
 		"scale": Vector2(0.7, 1.0), "align": 0.0, "spacing": 3.2, "max_slope": 40.0,
 	},
 	{
-		"name": "canopy trees", "ids": [TREE_A, TREE_B], "density": 0.05, "d_min": 2.2, "d_max": 9.0,
-		"scale": Vector2(0.85, 1.25), "align": 0.0, "tilt": 3.0, "spacing": 3.6,
+		"name": "canopy trees", "ids": [TREE_A, TREE_B], "density": 0.085, "d_min": 2.2, "d_max": 14.0,
+		"scale": Vector2(0.85, 1.25), "align": 0.0, "tilt": 3.0, "spacing": 3.2,
 		"max_slope": 40.0, "sink": -0.15,
+	},
+	{
+		# The native araucaria, as one common tree among the others, not a feature.
+		"name": "araucaria", "ids": [ARAUCARIA], "density": 0.03, "d_min": 6.0, "d_max": 16.0,
+		"scale": Vector2(0.7, 0.95), "align": 0.0, "tilt": 2.0, "spacing": 7.0,
+		"max_slope": 40.0, "sink": -0.2,
 	},
 ]
 
@@ -95,7 +101,7 @@ const SAFE_GAP: float = 0.3
 ## this distance of the house are checked.
 const MAX_PLANT_REACH: float = 9.0
 ## Colliders are baked for the plants within this distance of the walls.
-const COLLIDER_REACH: float = 11.0
+const COLLIDER_REACH: float = 13.0
 
 const TREE_IDS: Array[int] = [TREE_A, TREE_B, PITANGUEIRA, ARAUCARIA]
 

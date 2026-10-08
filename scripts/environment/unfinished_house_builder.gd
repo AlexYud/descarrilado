@@ -21,6 +21,10 @@ const DOOR_HEIGHT: float = 2.05
 const DOOR_WIDTH: float = 0.94
 const CEILING_THICKNESS: float = 0.12
 const ROOF_PITCH_DEGREES: float = 21.0
+
+## The casing sticks this far into the opening, so its faces never coincide with the
+## wall's own edge faces (coplanar faces flicker between the two colours).
+const CASING_LIP: float = 0.012
 const ROOF_OVERHANG: float = 0.45
 
 ## The plan below is drawn at 1:1 and every room is stretched by this much, so the
@@ -75,9 +79,20 @@ func _walls() -> Array[Dictionary]:
 		# South (front) wall: the front door into the living room.
 		{
 			"from": Vector2(0.0, 10.0), "to": Vector2(6.0, 10.0),
-			"openings": [_door(3.0)],
+			"openings": [
+				# Two empty, glassless windows flank the front door.
+				{"center": 1.0, "width": 0.9, "height": 1.2, "sill": 0.9, "frame": true, "glass": false},
+				_door(3.0),
+				{"center": 5.0, "width": 0.9, "height": 1.2, "sill": 0.9, "frame": true, "glass": false},
+			],
 		},
-		{"from": Vector2(0.0, 0.0), "to": Vector2(0.0, 10.0), "openings": []},
+		# West wall: a window at the end of the hallway, facing the pantry door.
+		{
+			"from": Vector2(0.0, 0.0), "to": Vector2(0.0, 10.0),
+			"openings": [
+				{"center": 4.75, "width": 1.1, "height": 1.3, "sill": 0.75, "frame": true},
+			],
+		},
 		# Kitchen and bedroom against the hallway: an arch and the bedroom door.
 		{
 			"from": Vector2(0.0, 4.0), "to": Vector2(7.5, 4.0),
@@ -224,6 +239,7 @@ func _add_wall_piece(
 	_add_shape(_wall_body, size, pos)
 
 
+
 ## Casing around a door, or around the window together with its glass and sill.
 func _add_frame(
 	index: int,
@@ -253,19 +269,19 @@ func _add_frame(
 	var middle: float = sill + height * 0.5
 	HouseProps.add_box(
 		holder, "Left", Vector3(strip, height, depth),
-		Vector3(-width * 0.5 - strip * 0.5, middle, 0.0), _frame_material
+		Vector3(-width * 0.5 - strip * 0.5 + CASING_LIP, middle, 0.0), _frame_material
 	)
 	HouseProps.add_box(
 		holder, "Right", Vector3(strip, height, depth),
-		Vector3(width * 0.5 + strip * 0.5, middle, 0.0), _frame_material
+		Vector3(width * 0.5 + strip * 0.5 - CASING_LIP, middle, 0.0), _frame_material
 	)
 	HouseProps.add_box(
 		holder, "Header", Vector3(width + strip * 2.0, strip, depth),
-		Vector3(0.0, sill + height + strip * 0.5, 0.0), _frame_material
+		Vector3(0.0, sill + height + strip * 0.5 - CASING_LIP, 0.0), _frame_material
 	)
 
 	if sill > 0.0:
-		_add_window_parts(holder, width, height, sill, depth, strip)
+		_add_window_parts(holder, width, height, sill, depth, strip, bool(opening.get("glass", true)))
 
 
 func _add_window_parts(
@@ -274,16 +290,20 @@ func _add_window_parts(
 	height: float,
 	sill: float,
 	depth: float,
-	strip: float
+	strip: float,
+	glass: bool = true
 ) -> void:
 	HouseProps.add_box(
 		holder, "Sill", Vector3(width + strip * 2.0, 0.04, depth + 0.08),
-		Vector3(0.0, sill + 0.02, 0.04), _frame_material
+		Vector3(0.0, sill + 0.019, 0.04), _frame_material
 	)
 	HouseProps.add_box(
-		holder, "BarVertical", Vector3(0.03, height, 0.03),
+		holder, "BarVertical", Vector3(0.03, height + 0.04, 0.03),
 		Vector3(0.0, sill + height * 0.5, 0.0), _frame_material
 	)
+
+	if not glass:
+		return
 
 	# The glass lets light through (the pane casts no shadow) and cannot be touched.
 	var pane: MeshInstance3D = HouseProps.add_box(
@@ -338,7 +358,7 @@ func _add_shape(body: StaticBody3D, size: Vector3, pos: Vector3) -> void:
 func _make_materials() -> void:
 	_wall_material = HouseProps.material(Color.WHITE, 1.0)
 	_wall_material.albedo_texture = _make_plaster_texture()
-	_triplanar(_wall_material, 0.6)
+	_triplanar(_wall_material, 0.32)
 
 	_floor_material = HouseProps.material(Color.WHITE, 0.85)
 	_floor_material.albedo_texture = _make_plank_texture()
@@ -353,19 +373,38 @@ func _triplanar(mat: StandardMaterial3D, scale: float) -> void:
 	mat.uv1_scale = Vector3.ONE * scale
 
 
-## Rough cement plaster, patchy where the paint has not dried.
+## Pale lime wash gone grey: damp stains running down from the roof, dark mould
+## and patches where the wash has flaked off. Light enough to be seen from far
+## away on a dark night, which is the point of the exterior.
 func _make_plaster_texture() -> ImageTexture:
-	var size: int = 128
+	var size: int = 256
 	var image: Image = Image.create(size, size, false, Image.FORMAT_RGB8)
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 5
 
+	var blotch: FastNoiseLite = FastNoiseLite.new()
+	blotch.seed = 31
+	blotch.frequency = 0.018
+	blotch.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	var streak: FastNoiseLite = FastNoiseLite.new()
+	streak.seed = 77
+	streak.frequency = 0.05
+	streak.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+
+	var wash: Color = Color(0.72, 0.72, 0.67)
 	for y: int in size:
 		for x: int in size:
-			var shade: float = 0.5 + rng.randf_range(-0.035, 0.035)
-			var patch: float = sin(x * 0.11) * sin(y * 0.09) * 0.03
-			var base: Color = Color(0.5, 0.485, 0.44)
-			image.set_pixel(x, y, base * (shade + patch) * 2.0)
+			var tone: float = 1.0 + rng.randf_range(-0.05, 0.05)
+			var spots: float = blotch.get_noise_2d(x, y)
+			if spots > 0.38:
+				tone *= 0.8 - (spots - 0.38) * 0.5
+			elif spots < -0.42:
+				tone *= 1.12
+			# Long vertical stains, dark and faint, like rain running off the roof.
+			var run: float = streak.get_noise_2d(x * 3.5, y * 0.35)
+			if run > 0.3:
+				tone *= 1.0 - (run - 0.3) * 0.9
+			image.set_pixel(x, y, wash * tone)
 
 	image.generate_mipmaps()
 	return ImageTexture.create_from_image(image)

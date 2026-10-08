@@ -52,7 +52,7 @@ func _run() -> void:
 	await _check_padlock()
 	await _check_capsule_contents()
 	await _check_key_and_pantry_scare()
-	await _check_diary_and_window_scare()
+	await _check_diary_and_footsteps()
 
 
 # ============================================================
@@ -101,14 +101,12 @@ func _check_notes_and_recipe_scare() -> void:
 	await _read(note, 0.5)
 	_expect(is_instance_valid(note), "the note stays where it lies")
 
-	# Reading the recipe gives Juliana's comment; closing it slams every door and
-	# puts the flashlight out.
+	# Reading the recipe gives Juliana's comment and nothing else: no scare.
 	var recipe: Inspectable = house.get_node("Furniture/KitchenRecipe")
 	_expect(not _is_collectable(recipe), "the recipe is not collectable")
 	var front_door: DoorController = house.get_node("Doors/FrontDoor")
 	var back_door: DoorController = house.get_node("Doors/BackDoor")
 	var pantry_door: DoorController = house.get_node("Doors/PantryDoor")
-	var bedroom_door: DoorController = house.get_node("Doors/BedroomDoor")
 	front_door.interact(player)
 	back_door.interact(player)
 	flashlight.call("restore_save_state", {"is_on": true})
@@ -121,32 +119,13 @@ func _check_notes_and_recipe_scare() -> void:
 		bool(SaveManager.get_state_value(&"triggers", &"house_recipe_open", false)),
 		"Juliana comments on the recipe"
 	)
-	_expect(front_door.is_open and pantry_door.is_open, "nothing slams before the recipe is closed")
 	_close_view()
-
-	await _until(
-		func() -> bool:
-			return not front_door.is_open and not back_door.is_open and not pantry_door.is_open,
-		"every open door slamming shut",
-		10.0
-	)
-	await _until(
-		func() -> bool: return not bool(flashlight.get("flashlight_on")),
-		"the flashlight dying",
-		5.0
-	)
-	await _wait(2.0)
-	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight stays off until the player lights it")
-	_expect(not front_door.is_locked and not pantry_door.is_locked, "the doors are shut, not locked")
-	_expect(bedroom_door.is_locked, "the bedroom door is still locked")
+	await _wait(5.0)
 	_expect(
-		bool(SaveManager.get_state_value(&"puzzles", &"house_recipe_scare_done", false)),
-		"the door scare is remembered"
+		front_door.is_open and back_door.is_open and pantry_door.is_open,
+		"closing the recipe slams nothing"
 	)
-
-	# The player can still get around: doors open again.
-	pantry_door.interact(player)
-	_expect(pantry_door.is_open, "a slammed door can be opened again")
+	_expect(bool(flashlight.get("flashlight_on")), "closing the recipe leaves the flashlight on")
 
 
 func _check_padlock() -> void:
@@ -220,42 +199,78 @@ func _check_capsule_contents() -> void:
 
 
 func _check_key_and_pantry_scare() -> void:
+	var front_door: DoorController = house.get_node("Doors/FrontDoor")
+	var back_door: DoorController = house.get_node("Doors/BackDoor")
+	var pantry_door: DoorController = house.get_node("Doors/PantryDoor")
 	var bedroom_door: DoorController = house.get_node("Doors/BedroomDoor")
 
-	# The note is only a clue; the key is what starts the footsteps.
+	# The note is only a clue; the key is what starts the scare.
 	var note: Inspectable = house.get_node("Furniture/PantryNote")
 	await _read(note, 0.5)
 	await _wait(2.0)
-	_expect(not house.hall_steps.playing, "reading the note starts nothing")
+	_expect(front_door.is_open and pantry_door.is_open, "reading the note slams nothing")
 
 	var key: Collectible = house.get_node("Furniture/MasterKey")
 	key.interact(player)
 	_expect(player.has_inventory_item("master_key"), "the key goes in the inventory")
 	_expect(player.inspect_controller.is_open(), "taking the key shows it")
 	await _wait(0.6)
-	_expect(not house.hall_steps.playing, "the steps wait for the key's view to close")
+	_expect(front_door.is_open and pantry_door.is_open, "the doors wait for the key's view to close")
 	_close_view()
 
-	# Exactly three steps, coming down the hallway towards the pantry.
-	var seen: Array[Vector3] = []
-	var waited: float = 0.0
-	while waited < 15.0 and seen.size() < house.hall_path.size():
-		await get_tree().process_frame
-		waited += get_process_delta_time()
-		var here: Vector3 = house.hall_steps.position
-		if house.hall_steps.playing and (seen.is_empty() or seen[seen.size() - 1] != here):
-			seen.append(here)
+	# Every open door slams shut at once and the flashlight dies.
+	await _until(
+		func() -> bool:
+			return not front_door.is_open and not back_door.is_open and not pantry_door.is_open,
+		"every open door slamming shut",
+		10.0
+	)
+	await _until(
+		func() -> bool: return not bool(flashlight.get("flashlight_on")),
+		"the flashlight dying",
+		5.0
+	)
+	_expect(not front_door.is_locked and not pantry_door.is_locked, "the doors are shut, not locked")
+	_expect(bedroom_door.is_locked, "the bedroom door is still locked")
+	_expect(not house.figure.visible, "nobody is in the corridor yet")
+	await _wait(3.0)
+	_expect(not house.figure.visible, "the silhouette waits for the pantry door to be opened")
 
-	_expect(seen.size() == 3, "three steps are heard (%d)" % seen.size())
+	# Opening the pantry door: a head is at the corridor window, OUTSIDE, for 1.5 s
+	# second, then it ducks away. Silently.
+	pantry_door.interact(player)
+	_expect(pantry_door.is_open, "the player opens the pantry door")
+	_expect(house.figure.visible, "a silhouette is at the corridor window")
+	_expect(house.hall_glow.visible, "the window glows behind it so it can be seen")
+	_expect(house.hall_light.visible, "a weak light comes in through the window")
+	_expect(house.figure_position.x < -0.3, "it is outside the west wall, not in the corridor")
+	_expect(house.hall_glow.position.x < house.figure_position.x, "the glow is behind it")
 	_expect(
-		seen.size() == 3 and seen[0].x < seen[1].x and seen[1].x < seen[2].x,
-		"each step lands nearer the pantry than the last"
+		house.figure.position.is_equal_approx(house.figure_position),
+		"the head is already in view the moment the door opens"
 	)
-	await _wait(4.0)
+	var sounds: int = 0
+	for child: Node in house.find_children("*", "AudioStreamPlayer3D", true, false):
+		if (child as AudioStreamPlayer3D).playing:
+			sounds += 1
+	_expect(sounds == 0, "the silhouette beat is silent (%d sounds playing)" % sounds)
+
+	# A second and a half after the door opens it flees.
+	_expect(is_equal_approx(house.figure_wait_seconds, 1.5), "it flees 1.5 s after the door opens")
+	await _wait(0.2)
+	_expect(house.figure.visible, "it is still there 0.2 s after the door opens")
+	await _until(func() -> bool: return not house.figure.visible, "it ducking out of sight", 3.0)
+	_expect(not house.hall_glow.visible and not house.hall_light.visible, "the glow and light go with it")
 	_expect(
-		house.hall_steps.position.is_equal_approx(house.hall_path[house.hall_path.size() - 1]),
-		"the steps stop at the last mark: no fourth step"
+		bool(SaveManager.get_state_value(&"puzzles", &"house_silhouette_done", false)),
+		"the silhouette is remembered"
 	)
+
+	# It happens once: after closing and opening the door again nothing returns.
+	pantry_door.interact(player)
+	pantry_door.interact(player)
+	await _wait(1.0)
+	_expect(not house.figure.visible, "the silhouette does not come back")
 
 	# The key opens the master bedroom for good.
 	_expect(
@@ -267,13 +282,13 @@ func _check_key_and_pantry_scare() -> void:
 	_expect(not player.has_inventory_item("master_key"), "the key is used up")
 
 
-func _check_diary_and_window_scare() -> void:
+func _check_diary_and_footsteps() -> void:
 	var drawer: DrawerInteractable = house.get_node("Furniture/NightstandDrawer")
 	var diary: Inspectable = house.get_node(
 		"Furniture/NightstandDrawer/DrawerRoot/ItemAnchor/LucasDiary"
 	)
 	_expect(not _is_collectable(diary), "the diary is read in place")
-	_expect(not house.window_head.visible, "nothing is at the window yet")
+	_expect(not house.run_steps.playing, "nobody runs yet")
 
 	var closed_z: float = drawer.drawer_root.position.z
 	drawer.interact(player)
@@ -281,41 +296,44 @@ func _check_diary_and_window_scare() -> void:
 	_expect(drawer.is_open, "the drawer opens")
 	_expect(drawer.drawer_root.position.z > closed_z + 0.2, "the drawer slides out of the front")
 	await _ray_finds(diary, _front_of(drawer, 1.04), diary.global_position, "the diary in the open drawer")
+	_expect(not house.run_steps.playing, "opening the drawer starts nothing")
 
+	# Opening the diary starts someone running towards the master bedroom, the
+	# footsteps coming closer and louder while the player reads.
 	diary.interact(player)
-	await _wait(0.6)
-	_expect(not house.window_head.visible, "the window waits for the diary's view to close")
-	_close_view()
+	var door_mark: Vector3 = house.run_path[house.run_path.size() - 1]
+	var marks: Array[Vector3] = []
+	var volumes: Array[float] = []
+	var waited: float = 0.0
+	while waited < 20.0 and (marks.is_empty() or marks[marks.size() - 1] != door_mark):
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+		var here: Vector3 = house.run_steps.position
+		if house.run_steps.playing and (marks.is_empty() or marks[marks.size() - 1] != here):
+			marks.append(here)
+			volumes.append(house.run_steps.volume_db)
 
-	await _until(func() -> bool: return house.window_tap.playing, "the tap on the glass", 15.0)
-	await _until(func() -> bool: return house.window_head.visible, "a head at the window", 15.0)
-	_expect(house.window_mist.visible, "it is backlit so it can be seen")
-
-	# Standing at the bed, looking at the window with the flashlight off: it stays.
-	var camera: Camera3D = player.get_node("Head/Camera3D")
-	player.global_position = house.window_head.global_position + Vector3(0.0, -0.35, 3.5)
-	player.global_rotation = Vector3.ZERO
-	player.movement_controller.look_yaw = 0.0
-	player.movement_controller.look_pitch = 0.0
-	flashlight.call("restore_save_state", {"is_on": false})
+	_expect(player.inspect_controller.is_open(), "the player is still reading the diary")
+	_expect(marks.size() >= 8, "many quick running steps, not three spaced ones (%d)" % marks.size())
+	_expect(
+		marks[0].distance_to(door_mark) > marks[marks.size() / 2].distance_to(door_mark)
+		and marks[marks.size() / 2].distance_to(door_mark) > marks[marks.size() - 1].distance_to(door_mark) - 0.01,
+		"the steps get closer to the master bedroom door"
+	)
+	_expect(volumes[volumes.size() - 1] > volumes[0] + 10.0, "and much louder")
+	_expect(
+		marks[marks.size() - 1].is_equal_approx(door_mark),
+		"the runner ends at the master bedroom door"
+	)
 	await _wait(2.0)
 	_expect(
-		house.window_head.visible,
-		"without light it stays pressed against the glass (aim %s)" % str(-camera.global_basis.z)
+		house.run_steps.position.is_equal_approx(door_mark),
+		"nothing runs any further"
 	)
-
-	# The flashlight finds it: it ducks and runs.
-	flashlight.call("restore_save_state", {"is_on": true})
-	await _until(
-		func() -> bool: return not house.window_head.visible,
-		"the head ducking when the light hits it",
-		10.0
-	)
-	_expect(not house.window_mist.visible, "the glow goes with it")
-	_expect(house.flee_sound.playing or house.flee_sound.position.z < -1.0, "it runs into the woods")
+	_close_view()
 	_expect(
 		bool(SaveManager.get_state_value(&"puzzles", &"house_diary_scare_done", false)),
-		"the window scare is remembered"
+		"the footsteps are remembered"
 	)
 
 

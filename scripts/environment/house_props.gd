@@ -56,8 +56,8 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_alarm_clock(root)
 		&"pantry_shelves":
 			_build_pantry_shelves(root)
-		&"window_head":
-			_build_window_head(root)
+		&"lurking_head":
+			_build_lurking_head(root)
 		&"window_mist":
 			_build_window_mist(root)
 		_:
@@ -734,27 +734,60 @@ static func _build_pantry_shelves(root: Node3D) -> void:
 # SCARES
 # ============================================================
 
-## The head and shoulders of something pressed against the window glass, flat
-## black so only its outline shows. Origin at the base of the neck.
-static func _build_window_head(root: Node3D) -> void:
+## Just a head and one shoulder, in flat black, leaning to the side and peering
+## forward like someone lurking just below a window. Only its outline shows
+## against the glow behind it. Origin at the base of the neck, facing -Z.
+static func _build_lurking_head(root: Node3D) -> void:
 	var black: StandardMaterial3D = black_material()
 
+	var lean: Node3D = Node3D.new()
+	lean.name = "Lean"
+	lean.rotation_degrees = Vector3(14.0, 0.0, 24.0)
+	lean.scale = Vector3.ONE * 1.15
+	root.add_child(lean)
+
+	add_cylinder(lean, "Neck", 0.055, 0.15, Vector3(0.0, 0.075, 0.0), black)
 	var skull: SphereMesh = SphereMesh.new()
-	skull.radius = 0.11
-	skull.height = 0.25
-	_add_mesh(root, "Head", skull, Vector3(0.0, 0.2, 0.0), black, Vector3.ZERO)
-	add_cylinder(root, "Neck", 0.05, 0.14, Vector3(0.0, 0.08, 0.0), black)
-	add_box(root, "Shoulders", Vector3(0.52, 0.16, 0.18), Vector3(0.0, -0.02, 0.0), black)
+	skull.radius = 0.115
+	skull.height = 0.29
+	_add_mesh(lean, "Head", skull, Vector3(0.0, 0.26, -0.03), black, Vector3(8.0, 0.0, 0.0))
+	# Sloping shoulders (a flattened ellipsoid), one side dropping away.
+	var shoulders: SphereMesh = SphereMesh.new()
+	shoulders.radius = 0.2
+	shoulders.height = 0.4
+	var body: MeshInstance3D = _add_mesh(
+		lean, "Shoulders", shoulders, Vector3(0.1, -0.02, 0.02), black, Vector3(0.0, 0.0, 12.0)
+	)
+	body.scale = Vector3(1.7, 0.6, 0.8)
 
 
-## A faint glow behind the head, so it can be seen against the dark woods.
+static func _add_capsule(
+	parent: Node,
+	node_name: String,
+	radius: float,
+	height: float,
+	pos: Vector3,
+	mat: Material,
+	rot: Vector3 = Vector3.ZERO
+) -> MeshInstance3D:
+	var mesh: CapsuleMesh = CapsuleMesh.new()
+	mesh.radius = radius
+	mesh.height = height
+	return _add_mesh(parent, node_name, mesh, pos, mat, rot)
+
+
+
+
+## A glow standing in for moonlit fog outside a window, so a figure in front of
+## it reads as a silhouette. Faces +Z.
 static func _build_window_mist(root: Node3D) -> void:
 	var glow: StandardMaterial3D = StandardMaterial3D.new()
-	glow.albedo_color = Color(0.14, 0.17, 0.22)
+	glow.albedo_color = Color(0.5, 0.64, 0.7)
 	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	var quad: QuadMesh = QuadMesh.new()
-	quad.size = Vector2(1.5, 1.7)
+	quad.size = Vector2(1.9, 1.8)
 	_add_mesh(root, "Mist", quad, Vector3.ZERO, glow, Vector3.ZERO)
+
 
 
 

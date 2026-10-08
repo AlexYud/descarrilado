@@ -1,17 +1,23 @@
 extends Node3D
 class_name UnfinishedHouseSequence
 
-## Orchestrates the unfinished house (the second dream puzzle): three scares
-## that fire when the player closes the view of a clue, and the time capsule at
-## the end. The pieces (doors, items, the lock) only raise signals; every
-## decision lives here. Sounds are generated placeholders.
+## Orchestrates the unfinished house (the second dream puzzle): two scares and
+## the time capsule at the end. The pieces (doors, items, the lock) only raise
+## signals; every decision lives here. Sounds are generated placeholders.
+##
+## Reading the kitchen recipe only gives Juliana's comment: nothing happens.
 ##
 ## Scares (each plays once and is remembered across saves):
-## - the kitchen recipe: every door in the house slams shut at once (a bang, a
-##   jolt of the camera) and the flashlight dies; the player can switch it back on;
-## - the master key: three heavy steps come down the hallway towards the pantry;
-## - Lucas's diary: a tap on the bedroom window and a black head against the
-##   glass that ducks away the moment the flashlight finds it.
+## - the master key (closing its view): every open door in the house slams shut at
+##   once (a bang at each, a jolt of the camera) and the flashlight dies; the
+##   player can switch it back on. The next time the player opens the pantry door
+##   a black head and one shoulder are at the window at the end of the corridor,
+##   outside, tilted and peering in, backlit by the glow behind it, with a weak
+##   light from the window casting its shadow into the corridor. Total silence.
+##   A second and a half later it ducks out of sight;
+## - Lucas's diary (the moment its view opens): someone runs through the house
+##   and down the corridor towards the master bedroom, the footsteps getting
+##   louder and closer while the player reads.
 ##
 ## Taking the unclaimed bus ticket from the capsule raises `sequence_completed`.
 ## The house stays as it is; nothing else happens.
@@ -19,76 +25,74 @@ class_name UnfinishedHouseSequence
 signal sequence_completed
 
 const STATE_SECTION: StringName = &"puzzles"
-const KEY_RECIPE_DONE: StringName = &"house_recipe_scare_done"
 const KEY_KEY_DONE: StringName = &"house_key_scare_done"
+const KEY_SILHOUETTE_DONE: StringName = &"house_silhouette_done"
 const KEY_DIARY_DONE: StringName = &"house_diary_scare_done"
 const KEY_TICKET_TAKEN: StringName = &"house_ticket_taken"
 
 @export_category("Clues")
 ## `inspect_id` metadata of the Visual of each clue.
-@export var recipe_id: StringName = &"kitchen_recipe"
 @export var key_id: StringName = &"master_key"
 @export var diary_id: StringName = &"lucas_diary"
 @export var ticket_id: StringName = &"bus_ticket_unclaimed"
 
-@export_category("Kitchen: doors")
+@export_category("Key: every door slams shut")
 ## Parent of the house's doors (every DoorController child slams shut).
 @export var doors_root: Node3D
-
-@export_category("Pantry: footsteps")
-@export var hall_steps: AudioStreamPlayer3D
-## Where the boots land in the hallway, coming towards the pantry.
-@export var hall_path: Array[Vector3] = [
-	Vector3(6.0, 0.1, 7.3625), Vector3(7.5, 0.1, 7.3625), Vector3(8.9, 0.1, 7.3625),
-]
-@export var hall_step_seconds: float = 1.0
-
-@export_category("Bedroom window")
-@export var window_tap: AudioStreamPlayer3D
-@export var window_head: Node3D
-@export var window_mist: Node3D
-@export var flee_sound: AudioStreamPlayer3D
-## How far from the flashlight's aim (degrees) still counts as shining on it.
-@export var light_hit_angle_degrees: float = 11.0
-@export var light_hit_distance: float = 9.0
-
-@export_category("Timing")
 @export var scare_delay_seconds: float = 1.2
+
+@export_category("Pantry door: the silhouette")
+@export var pantry_door: DoorController
+## The glow outside the corridor window that backlights the silhouette.
+@export var hall_glow: Node3D
+## The weak light from the window into the corridor (casts the head's shadow).
+@export var hall_light: Light3D
+@export var figure: Node3D
+## Where the head is (outside the west wall, just above the sill of the
+## corridor window) and how far below that it ducks, hidden by the wall.
+@export var figure_position: Vector3 = Vector3(-0.45, 0.85, 7.6)
+@export var figure_hidden_offset: Vector3 = Vector3(0.0, -0.65, 0.0)
+## How long the head stays at the window after the pantry door opens.
+@export var figure_wait_seconds: float = 1.5
+
+@export_category("Diary: running footsteps")
+@export var run_steps: AudioStreamPlayer3D
+## Where the runner comes from (the living room) and where it ends (the master
+## bedroom door), through the hallway.
+@export var run_path: Array[Vector3] = [
+	Vector3(4.65, 0.1, 13.5), Vector3(2.325, 0.1, 9.6), Vector3(2.325, 0.1, 7.3625),
+	Vector3(7.44, 0.1, 7.3625), Vector3(7.44, 0.1, 6.4),
+]
+@export var run_stride: float = 1.3
+@export var run_step_seconds: float = 0.27
 
 ## Set when the player is not the node found by group "player".
 @export var player: Node3D
 
-var _recipe_done: bool = false
 var _key_done: bool = false
+var _silhouette_done: bool = false
 var _diary_done: bool = false
 var _ticket_taken: bool = false
+var _silhouette_armed: bool = false
 
-var _footstep: AudioStreamWAV = null
-var _watching_window: bool = false
-var _head_rest_position: Vector3 = Vector3.ZERO
+var _run_step: AudioStreamWAV = null
 
 
 func _ready() -> void:
-	_recipe_done = _read_flag(KEY_RECIPE_DONE)
 	_key_done = _read_flag(KEY_KEY_DONE)
+	_silhouette_done = _read_flag(KEY_SILHOUETTE_DONE)
 	_diary_done = _read_flag(KEY_DIARY_DONE)
 	_ticket_taken = _read_flag(KEY_TICKET_TAKEN)
 
-	_footstep = PlaceholderAudio.make_footstep()
-	_hide_scares()
+	# Loaded after the doors slammed but before the silhouette was seen.
+	_silhouette_armed = _key_done and not _silhouette_done
+
+	_run_step = PlaceholderAudio.make_run_step()
+	figure.visible = false
+	hall_glow.visible = false
+	hall_light.visible = false
+	pantry_door.opened_by_player.connect(_on_pantry_door_opened)
 	_connect_to_player.call_deferred()
-
-
-func _process(_delta: float) -> void:
-	if _watching_window and _flashlight_on_head():
-		_watching_window = false
-		_head_flees()
-
-
-func _hide_scares() -> void:
-	window_head.visible = false
-	window_mist.visible = false
-	_head_rest_position = window_head.position
 
 
 func _connect_to_player() -> void:
@@ -103,25 +107,25 @@ func _connect_to_player() -> void:
 
 	var inspect: PlayerInspectController = target.get("inspect_controller") as PlayerInspectController
 	if inspect != null:
+		inspect.inspect_opened.connect(_on_inspect_opened)
 		inspect.inspect_closed.connect(_on_inspect_closed)
 
 
-## Every scare starts when the view of its clue closes.
+## The diary's scare starts the moment the player starts reading.
+func _on_inspect_opened(opened_id: String) -> void:
+	if StringName(opened_id) == diary_id and not _diary_done:
+		_diary_done = true
+		_write_flag(KEY_DIARY_DONE)
+		_run_diary_footsteps()
+
+
 func _on_inspect_closed(closed_id: String) -> void:
 	var id: StringName = StringName(closed_id)
 
-	if id == recipe_id and not _recipe_done:
-		_recipe_done = true
-		_write_flag(KEY_RECIPE_DONE)
-		_run_kitchen_scare()
-	elif id == key_id and not _key_done:
+	if id == key_id and not _key_done:
 		_key_done = true
 		_write_flag(KEY_KEY_DONE)
-		_run_pantry_footsteps()
-	elif id == diary_id and not _diary_done:
-		_diary_done = true
-		_write_flag(KEY_DIARY_DONE)
-		_run_window_scare()
+		_run_door_scare()
 	elif id == ticket_id and not _ticket_taken:
 		_ticket_taken = true
 		_write_flag(KEY_TICKET_TAKEN)
@@ -129,10 +133,10 @@ func _on_inspect_closed(closed_id: String) -> void:
 
 
 # ============================================================
-# THE KITCHEN: EVERY DOOR SLAMS SHUT, THE LIGHT DIES
+# THE KEY: EVERY DOOR SLAMS SHUT, THE LIGHT DIES
 # ============================================================
 
-func _run_kitchen_scare() -> void:
+func _run_door_scare() -> void:
 	await _wait(scare_delay_seconds)
 
 	var slammed: bool = false
@@ -159,6 +163,7 @@ func _run_kitchen_scare() -> void:
 
 	_jolt_camera(1.3)
 	_cut_flashlight()
+	_silhouette_armed = not _silhouette_done
 
 
 ## One loud bang at a point; the sound player removes itself when done.
@@ -203,95 +208,83 @@ func _cut_flashlight() -> void:
 
 
 # ============================================================
-# THE PANTRY: THREE STEPS COMING DOWN THE HALLWAY
+# THE PANTRY DOOR: THE SILHOUETTE AT THE WINDOW
 # ============================================================
 
-func _run_pantry_footsteps() -> void:
-	await _wait(scare_delay_seconds)
+func _on_pantry_door_opened() -> void:
+	if not _silhouette_armed or _silhouette_done:
+		return
 
-	for i: int in hall_path.size():
-		hall_steps.position = hall_path[i]
-		_step(hall_steps, -2.0 + i * 2.0)
-		await _wait(hall_step_seconds)
+	_silhouette_armed = false
+	_silhouette_done = true
+	_write_flag(KEY_SILHOUETTE_DONE)
+	_run_silhouette()
 
+
+func _run_silhouette() -> void:
+	# Someone is crouched outside the window. A head and one shoulder are there,
+	# tilted, black against the glow, the moment the door opens. No sound at all.
+	var rest: Vector3 = figure_position
+	figure.position = rest
+	figure.rotation_degrees = Vector3(0.0, -90.0, 0.0)
+	hall_glow.visible = true
+	hall_light.visible = true
+	figure.visible = true
+
+	await _wait(figure_wait_seconds)
+
+	# Then it ducks out of sight.
+	var sink: Tween = create_tween()
+	sink.tween_property(figure, "position", rest + figure_hidden_offset, 0.2)
+	await sink.finished
+
+	figure.visible = false
+	hall_glow.visible = false
+	hall_light.visible = false
 
 # ============================================================
-# THE BEDROOM: SOMETHING AT THE WINDOW
+# THE DIARY: SOMEONE RUNS TOWARDS THE MASTER BEDROOM
 # ============================================================
 
-func _run_window_scare() -> void:
-	await _wait(scare_delay_seconds + 0.4)
+func _run_diary_footsteps() -> void:
+	await _wait(1.0)
 
-	window_tap.stream = PlaceholderAudio.make_tap()
-	window_tap.play()
-
-	await _wait(0.9)
-	window_head.position = _head_rest_position
-	window_head.visible = true
-	window_mist.visible = true
-	_watching_window = true
-
-
-## True while the flashlight is on and aimed at the head, with nothing between.
-func _flashlight_on_head() -> bool:
-	var target: Node = _get_player()
-	if target == null:
-		return false
-
-	var flashlight: Node = target.get("flashlight_controller") as Node
-	if flashlight == null or not bool(flashlight.get("flashlight_on")):
-		return false
-
-	var camera: Camera3D = get_viewport().get_camera_3d()
-	if camera == null:
-		return false
-
-	var head_position: Vector3 = window_head.global_position + Vector3(0.0, 0.2, 0.0)
-	var to_head: Vector3 = head_position - camera.global_position
-	if to_head.length() > light_hit_distance:
-		return false
-
-	var forward: Vector3 = -camera.global_transform.basis.z
-	if rad_to_deg(forward.angle_to(to_head)) > light_hit_angle_degrees:
-		return false
-
-	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
-		camera.global_position, head_position
-	)
-	if target is CollisionObject3D:
-		query.exclude = [(target as CollisionObject3D).get_rid()]
-
-	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
-
-
-## The head ducks below the sill and whatever it was runs off into the woods.
-func _head_flees() -> void:
-	await _wait(0.12)
-
-	var duck: Tween = create_tween()
-	duck.tween_property(window_head, "position:y", _head_rest_position.y - 0.9, 0.22)
-
-	flee_sound.stream = PlaceholderAudio.make_rustle()
-	flee_sound.position = window_head.position + Vector3(0.0, 0.0, -1.0)
-	flee_sound.play()
-	var run: Tween = create_tween()
-	run.tween_property(flee_sound, "position:z", -14.0, 2.4)
-
-	await duck.finished
-	window_head.visible = false
-	window_mist.visible = false
+	var total: float = _path_length(run_path)
+	var steps: int = int(ceilf(total / run_stride))
+	for i: int in steps + 1:
+		var distance: float = minf(float(i) * run_stride, total)
+		run_steps.position = _point_at(run_path, distance)
+		run_steps.stream = _run_step
+		# Quiet and far at first, loud and close at the end.
+		run_steps.volume_db = lerpf(-18.0, 2.0, distance / total)
+		run_steps.pitch_scale = randf_range(1.05, 1.25)
+		run_steps.play()
+		await _wait(run_step_seconds)
 
 
 # ============================================================
 # HELPERS
 # ============================================================
 
-## One footstep from `source`, a little different each time.
-func _step(source: AudioStreamPlayer3D, volume_db: float) -> void:
-	source.stream = _footstep
-	source.volume_db = volume_db
-	source.pitch_scale = randf_range(0.85, 1.1)
-	source.play()
+func _path_length(path: Array[Vector3]) -> float:
+	var length: float = 0.0
+	for i: int in range(1, path.size()):
+		length += path[i - 1].distance_to(path[i])
+
+	return length
+
+
+## The point `distance` metres along a polyline (clamped to its ends).
+func _point_at(path: Array[Vector3], distance: float) -> Vector3:
+	var remaining: float = maxf(distance, 0.0)
+	for i: int in range(1, path.size()):
+		var segment: float = path[i - 1].distance_to(path[i])
+		if remaining <= segment:
+			return path[i - 1].lerp(path[i], remaining / maxf(segment, 0.0001))
+
+		remaining -= segment
+
+	return path[path.size() - 1]
 
 
 func _get_player() -> Node3D:

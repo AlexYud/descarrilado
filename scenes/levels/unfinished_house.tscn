@@ -12,14 +12,14 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/master_key.tscn" id="10_key"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/nightstand_drawer.tscn" id="15_drawer"]
 
-[node name="UnfinishedHouse" type="Node3D" unique_id=1390595388 node_paths=PackedStringArray("doors_root", "hall_steps", "window_tap", "window_head", "window_mist", "flee_sound")]
+[node name="UnfinishedHouse" type="Node3D" node_paths=PackedStringArray("doors_root", "pantry_door", "hall_glow", "hall_light", "figure", "run_steps")]
 script = ExtResource("1_sequence")
 doors_root = NodePath("Doors")
-hall_steps = NodePath("Scares/HallSteps")
-window_tap = NodePath("Scares/WindowTap")
-window_head = NodePath("Scares/WindowHead")
-window_mist = NodePath("Scares/WindowMist")
-flee_sound = NodePath("Scares/FleeSound")
+pantry_door = NodePath("Doors/PantryDoor")
+hall_glow = NodePath("Scares/HallGlow")
+hall_light = NodePath("Scares/HallLight")
+figure = NodePath("Scares/Figure")
+run_steps = NodePath("Scares/RunSteps")
 
 [node name="Shell" type="Node3D" parent="." unique_id=1898375199]
 script = ExtResource("2_builder")
@@ -123,30 +123,31 @@ kind = &"alarm_clock"
 
 [node name="Scares" type="Node3D" parent="." unique_id=1510714190]
 
-[node name="HallSteps" type="AudioStreamPlayer3D" parent="Scares" unique_id=867937286]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, 7.3625)
-unit_size = 4.0
-max_distance = 25.0
+[node name="RunSteps" type="AudioStreamPlayer3D" parent="Scares"]
+position = Vector3(4.65, 0.1, 13.5)
+unit_size = 5.0
+max_distance = 30.0
 
-[node name="WindowTap" type="AudioStreamPlayer3D" parent="Scares" unique_id=2023194424]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 1.4, -0.15)
-unit_size = 4.0
-max_distance = 25.0
-
-[node name="WindowHead" type="Node3D" parent="Scares" unique_id=497944546]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.8875, 1.0339805, -0.21138981)
+[node name="Figure" type="Node3D" parent="Scares"]
+position = Vector3(-0.45, 0.2, 7.6)
 script = ExtResource("3_prop")
-kind = &"window_head"
+kind = &"lurking_head"
 
-[node name="WindowMist" type="Node3D" parent="Scares" unique_id=960060251]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 1.45, -0.55)
+[node name="HallLight" type="SpotLight3D" parent="Scares"]
+position = Vector3(-0.35, 1.4, 7.3625)
+rotation_degrees = Vector3(0, -90, 0)
+visible = false
+light_color = Color(0.6, 0.8, 0.9, 1)
+light_energy = 0.9
+shadow_enabled = true
+spot_range = 8.0
+spot_angle = 38.0
+
+[node name="HallGlow" type="Node3D" parent="Scares"]
+position = Vector3(-1.9, 1.4, 7.3625)
+rotation_degrees = Vector3(0, 90, 0)
 script = ExtResource("3_prop")
 kind = &"window_mist"
-
-[node name="FleeSound" type="AudioStreamPlayer3D" parent="Scares" unique_id=1851389563]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 1, -1)
-unit_size = 6.0
-max_distance = 40.0
 
 [node name="RecipeReaction" type="Node" parent="." unique_id=1136011188]
 script = ExtResource("4_reaction")

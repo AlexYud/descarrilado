@@ -1,6 +1,9 @@
 extends Node3D
 class_name DoorController
 
+## Raised when the player opens this door (not when a script does).
+signal opened_by_player
+
 @export var hinge: Node3D
 @export var door_root: Node3D
 
@@ -113,6 +116,9 @@ func interact(player: Node) -> void:
 
 	is_open = not is_open
 	_remember_persistent_state()
+
+	if is_open:
+		opened_by_player.emit()
 
 
 ## Opens the door by itself, with no player involved. `swing_sign` picks the
