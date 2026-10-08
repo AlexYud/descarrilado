@@ -11,33 +11,6 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/pantry_note.tscn" id="9_note"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/master_key.tscn" id="10_key"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/nightstand_drawer.tscn" id="15_drawer"]
-[ext_resource type="PackedScene" uid="uid://dechhjfthr7jj" path="res://scenes/environment/world_environment_store.tscn" id="16_environment"]
-[ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="17_player"]
-[ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="18_grass_color"]
-[ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="19_grass_normal"]
-[ext_resource type="Script" uid="uid://c24i4cn4kf5hb" path="res://scripts/environment/clearing_forest_ring.gd" id="20_ring"]
-[ext_resource type="ArrayMesh" uid="uid://da1x3t2o2xsuj" path="res://assets/models/trees/pitangueira/pitangueira_mesh.tres" id="21_pitangueira"]
-[ext_resource type="ArrayMesh" uid="uid://c4rn5wlqy3lj2" path="res://assets/models/trees/medium_generic_tree/medium_generic_tree_mesh.tres" id="22_medium_tree"]
-[ext_resource type="ArrayMesh" uid="uid://cxfnirl5mec3p" path="res://assets/models/foliage/big_foliage_01/big_foliage_01_mesh.tres" id="23_big_01"]
-[ext_resource type="ArrayMesh" uid="uid://c6ahun5wc5wsa" path="res://assets/models/foliage/big_foliage_02/big_foliage_02_mesh.tres" id="24_big_02"]
-[ext_resource type="ArrayMesh" uid="uid://7mip0rosn786" path="res://assets/models/foliage/medium_foliage_02/medium_foliage_02_mesh.tres" id="25_med_02"]
-[ext_resource type="ArrayMesh" uid="uid://26ja2p0gr35o" path="res://assets/models/foliage/small_foliage_01/small_foliage_01_mesh.tres" id="26_small_01"]
-[ext_resource type="ArrayMesh" uid="uid://duf6mg1qdlg7i" path="res://assets/models/foliage/small_foliage_02/small_foliage_02_mesh.tres" id="27_small_02"]
-[ext_resource type="ArrayMesh" uid="uid://bfoll4ywqfmm4" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="28_med_01"]
-[ext_resource type="Script" uid="uid://1oscv5i3peyg" path="res://scripts/levels/play_test_setup.gd" id="29_setup"]
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
-size = Vector2(90, 90)
-
-[sub_resource type="StandardMaterial3D" id="Mat_ground"]
-albedo_color = Color(0.5, 0.5, 0.46, 1)
-albedo_texture = ExtResource("18_grass_color")
-normal_enabled = true
-normal_texture = ExtResource("19_grass_normal")
-uv1_scale = Vector3(24, 24, 24)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
-size = Vector3(90, 1, 90)
 
 [node name="UnfinishedHouse" type="Node3D" unique_id=1390595388 node_paths=PackedStringArray("doors_root", "hall_steps", "window_tap", "window_head", "window_mist", "flee_sound")]
 script = ExtResource("1_sequence")
@@ -182,32 +155,4 @@ open_line = "CAPTION_JULIANA_RECIPE"
 open_line_delay = 1.2
 persistent_id = &"house_recipe"
 
-[node name="PlayTest" type="Node3D" parent="." unique_id=1824508278 node_paths=PackedStringArray("player")]
-script = ExtResource("29_setup")
-player = NodePath("Player")
 
-[node name="Ground" type="StaticBody3D" parent="PlayTest" unique_id=954998951]
-
-[node name="Mesh" type="MeshInstance3D" parent="PlayTest/Ground" unique_id=110347250]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0)
-mesh = SubResource("PlaneMesh_ground")
-surface_material_override/0 = SubResource("Mat_ground")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayTest/Ground" unique_id=2125308440]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-shape = SubResource("BoxShape3D_ground")
-
-[node name="Player" parent="PlayTest" unique_id=731037861 instance=ExtResource("17_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.65, 1.1, 19)
-
-[node name="ForestRing" type="Node3D" parent="PlayTest" unique_id=2122687620]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8125, 0, 7.75)
-script = ExtResource("20_ring")
-clearing_radius = 16.5
-gap_angle = 1.5708
-tree_meshes = Array[Mesh]([ExtResource("21_pitangueira"), ExtResource("22_medium_tree")])
-bush_meshes = Array[Mesh]([ExtResource("23_big_01"), ExtResource("24_big_02"), ExtResource("25_med_02")])
-small_meshes = Array[Mesh]([ExtResource("26_small_01"), ExtResource("27_small_02"), ExtResource("28_med_01")])
-small_plants_keep_out_radius = 12.0
-
-[node name="WorldEnvironmentStore" parent="." unique_id=1748959053 instance=ExtResource("16_environment")]

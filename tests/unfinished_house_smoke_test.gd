@@ -6,7 +6,7 @@ extends Node
 ## runs faster so the scares do not take their full length.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_unfinished_house_smoke"
-const TEST_SCENE_PATH: String = "res://scenes/levels/unfinished_house.tscn"
+const TEST_SCENE_PATH: String = "res://scenes/levels/unfinished_house_playtest.tscn"
 const TIME_SCALE: float = 4.0
 
 var test_failed: bool = false
@@ -31,8 +31,8 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 
-	house = level as UnfinishedHouseSequence
-	player = level.get_node("PlayTest/Player")
+	house = level.get_node("UnfinishedHouse")
+	player = level.get_node("Player")
 	capsule = house.get_node("Furniture/TimeCapsule")
 	flashlight = player.get_node("Hand/SpotLight3D")
 	house.sequence_completed.connect(func() -> void: completed_count += 1)

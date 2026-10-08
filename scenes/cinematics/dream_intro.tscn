@@ -42,6 +42,8 @@
 [ext_resource type="PackedScene" path="res://scenes/environment/forest_boundaries.tscn" id="99_boundaries"]
 [ext_resource type="PackedScene" path="res://scenes/environment/overlook.tscn" id="99_overlook"]
 [ext_resource type="PackedScene" uid="uid://wulvhnk43k1y" path="res://scenes/levels/fig_clearing.tscn" id="fc_clearing"]
+[ext_resource type="PackedScene" uid="uid://htjuwv6bri4o" path="res://scenes/levels/unfinished_house.tscn" id="uh_house"]
+[ext_resource type="PackedScene" path="res://scenes/environment/house_forest_colliders.tscn" id="uh_colliders"]
 [ext_resource type="Texture2D" uid="uid://cjn7aj8lros6a" path="res://assets/textures/dark_humus/dark_humus_Color.jpg" id="gt_dark_humus_c"]
 [ext_resource type="Texture2D" uid="uid://ubkr6sbkuy02" path="res://assets/textures/dark_humus/dark_humus_NormalGL.jpg" id="gt_dark_humus_n"]
 [ext_resource type="Texture2D" uid="uid://bq10jxox2l0ld" path="res://assets/textures/forest_floor_leaves/forest_floor_leaves_Color.jpg" id="gt_forest_floor_leaves_c"]
@@ -406,7 +408,7 @@ sky = SubResource("Sky_85j4g")
 ambient_light_source = 2
 ambient_light_color = Color(0.24705882, 0.3137255, 0.40784314, 1)
 ambient_light_sky_contribution = 0.0
-ambient_light_energy = 0.035
+ambient_light_energy = 0.0275
 reflected_light_source = 1
 tonemap_mode = 4
 tonemap_exposure = 0.92
@@ -422,7 +424,7 @@ ssao_sharpness = 0.86
 fog_enabled = true
 fog_mode = 1
 fog_light_color = Color(0.14901961, 0.21176471, 0.22745098, 1)
-fog_light_energy = 0.15
+fog_light_energy = 0.12
 fog_density = 1.0
 fog_height = 1.3
 fog_height_density = 0.324
@@ -440,7 +442,7 @@ volumetric_fog_length = 16.0
 volumetric_fog_detail_spread = 1.8
 volumetric_fog_temporal_reprojection_amount = 0.82
 adjustment_enabled = true
-adjustment_brightness = 0.98
+adjustment_brightness = 0.95
 adjustment_contrast = 1.03
 adjustment_saturation = 0.82
 
@@ -1426,18 +1428,23 @@ visible = false
 [node name="FigClearing" parent="Scenery" unique_id=1908177356 instance=ExtResource("fc_clearing")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, -3.835, -68)
 
+[node name="UnfinishedHouse" parent="Scenery" instance=ExtResource("uh_house")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 141, -19.77, 78.5)
+
+[node name="HouseForestColliders" parent="Scenery" instance=ExtResource("uh_colliders")]
+
 [node name="UltraWeatherLayer" type="Node3D" parent="." unique_id=900780098]
 script = ExtResource("28_ultra_weather")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1435811607]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181820833]
 environment = SubResource("Environment_5xrpx")
 script = ExtResource("50_m4dyg")
 moon_light_path = NodePath("../MoonLight")
 
-[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=355019337]
+[node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=2022234852]
 transform = Transform3D(0.84804785, 0.32625088, -0.4175821, 0, 0.7880108, 0.6156615, 0.5299191, -0.5221106, 0.668271, 0, 0, 0)
 light_color = Color(0.56078434, 0.65882355, 0.76862746, 1)
-light_energy = 0.03
+light_energy = 0.024
 light_indirect_energy = 0.0
 light_volumetric_fog_energy = 0.0
 light_specular = 0.08
