@@ -20,85 +20,85 @@
 [ext_resource type="MultiMesh" path="res://scenes/menu/scenery/generated/chunkb_tree_mid.res" id="18_2mkjr"]
 [ext_resource type="MultiMesh" path="res://scenes/menu/scenery/generated/chunkb_tree_big.res" id="19_e38mw"]
 
-[node name="ChunkB" type="Node3D" unique_id=390412392]
+[node name="ChunkB" type="Node3D" unique_id=989881779]
 
-[node name="Ground" type="MeshInstance3D" parent="." unique_id=841414897]
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=979855461]
 cast_shadow = 0
 mesh = ExtResource("1_nw0ov")
 
-[node name="TrainTracks" type="Node3D" parent="." unique_id=610951647]
+[node name="TrainTracks" type="Node3D" parent="." unique_id=2001593346]
 
 [node name="train_tracks" type="Node3D" parent="TrainTracks" unique_id=751656909 instance=ExtResource("2_tufph")]
 transform = Transform3D(-4.152582e-08, 0, 0.95, 0, 0.95, 0, -0.95, 0, -4.152582e-08, 0, 0, -7.976)
 
-[node name="train_tracks2" type="Node3D" parent="TrainTracks" unique_id=634125656 instance=ExtResource("2_tufph")]
+[node name="train_tracks2" type="Node3D" parent="TrainTracks" unique_id=1555127852 instance=ExtResource("2_tufph")]
 transform = Transform3D(-4.152582e-08, 0, 0.95, 0, 0.95, 0, -0.95, 0, -4.152582e-08, 0, 0, 7.962)
 
-[node name="Fences" type="Node3D" parent="." unique_id=883265201]
+[node name="Fences" type="Node3D" parent="." unique_id=1822740430]
 
-[node name="FenceMultiMesh" type="MultiMeshInstance3D" parent="Fences" unique_id=314856146]
+[node name="FenceMultiMesh" type="MultiMeshInstance3D" parent="Fences" unique_id=520996978]
 cast_shadow = 0
 multimesh = ExtResource("3_b8lui")
 
-[node name="Vegetation" type="Node3D" parent="." unique_id=703439299]
+[node name="Vegetation" type="Node3D" parent="." unique_id=596191157]
 
-[node name="GrassA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=351446079]
+[node name="GrassA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1660960347]
 cast_shadow = 0
 multimesh = ExtResource("4_ijupw")
 
-[node name="GrassB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=998606735]
+[node name="GrassB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1248456869]
 cast_shadow = 0
 multimesh = ExtResource("5_mysyy")
 
-[node name="Fern" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1714484539]
+[node name="Fern" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1212954801]
 cast_shadow = 0
 multimesh = ExtResource("6_0hwb2")
 
-[node name="Leafy" type="MultiMeshInstance3D" parent="Vegetation" unique_id=665946478]
+[node name="Leafy" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1017212737]
 cast_shadow = 0
 multimesh = ExtResource("7_751jh")
 
-[node name="Litter" type="MultiMeshInstance3D" parent="Vegetation" unique_id=718767203]
+[node name="Litter" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1166856536]
 cast_shadow = 0
 multimesh = ExtResource("8_qxptq")
 
-[node name="Pebble" type="MultiMeshInstance3D" parent="Vegetation" unique_id=69267588]
+[node name="Pebble" type="MultiMeshInstance3D" parent="Vegetation" unique_id=2007685068]
 cast_shadow = 0
 multimesh = ExtResource("9_waqr1")
 
-[node name="FlowerA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1895582400]
+[node name="FlowerA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=320060078]
 cast_shadow = 0
 multimesh = ExtResource("10_l3id3")
 
-[node name="FlowerB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1351771727]
+[node name="FlowerB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=285882201]
 cast_shadow = 0
 multimesh = ExtResource("11_kytxf")
 
-[node name="BushA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=885697872]
+[node name="BushA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=681878219]
 cast_shadow = 0
 multimesh = ExtResource("12_lw86x")
 
-[node name="BushB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1251104480]
+[node name="BushB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1961345307]
 cast_shadow = 0
 multimesh = ExtResource("13_oq4pw")
 
-[node name="TallA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=734324177]
+[node name="TallA" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1052686369]
 cast_shadow = 0
 multimesh = ExtResource("14_mikag")
 
-[node name="TallB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1588642903]
+[node name="TallB" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1699064347]
 cast_shadow = 0
 multimesh = ExtResource("15_we0wt")
 
-[node name="Red" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1819065462]
+[node name="Red" type="MultiMeshInstance3D" parent="Vegetation" unique_id=682333459]
 cast_shadow = 0
 multimesh = ExtResource("16_qjv3p")
 
-[node name="TreeSmall" type="MultiMeshInstance3D" parent="Vegetation" unique_id=138161259]
+[node name="TreeSmall" type="MultiMeshInstance3D" parent="Vegetation" unique_id=751393495]
 multimesh = ExtResource("17_0em1d")
 
-[node name="TreeMid" type="MultiMeshInstance3D" parent="Vegetation" unique_id=848824899]
+[node name="TreeMid" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1547589416]
 multimesh = ExtResource("18_2mkjr")
 
-[node name="TreeBig" type="MultiMeshInstance3D" parent="Vegetation" unique_id=1549767454]
+[node name="TreeBig" type="MultiMeshInstance3D" parent="Vegetation" unique_id=507416684]
 multimesh = ExtResource("19_e38mw")

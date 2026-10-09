@@ -148,11 +148,11 @@ func _on_node_added(node: Node) -> void:
 	call_deferred("_apply_new_node", node)
 
 
-func _apply_new_node(node: Node) -> void:
+func _apply_new_node(node: Variant) -> void:
 	if not is_instance_valid(node):
 		return
 
-	_apply_to_node(node)
+	_apply_to_node(node as Node)
 
 
 func _apply_to_node(node: Node) -> void:

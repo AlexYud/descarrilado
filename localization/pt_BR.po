@@ -381,7 +381,7 @@ msgid "TICKET_BACK_TEXT"
 msgstr "GUARDEI UM LUGAR PRA VOCÊ."
 
 msgid "CAPTION_JULIANA_TICKET_FRONT"
-msgstr "Essa linha fechou antes de a gente nascer."
+msgstr "Não lembro de ter comprado isso..."
 
 msgid "CAPTION_JULIANA_TICKET_BACK"
 msgstr "Essa não é a letra dela."

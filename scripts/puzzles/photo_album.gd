@@ -13,7 +13,9 @@ signal arrangement_changed
 ## Every slot holds its own photograph. Fires once; the album is then locked.
 signal completed
 ## The close-up opened or closed.
+@warning_ignore("unused_signal")
 signal opened
+@warning_ignore("unused_signal")
 signal closed
 ## The player took the keepsake photograph out of the finished album.
 signal keepsake_taken

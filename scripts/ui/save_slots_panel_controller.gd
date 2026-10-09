@@ -225,7 +225,9 @@ func _format_local_date(unix_time: int) -> String:
 
 func _format_play_time(total_seconds: float) -> String:
 	var rounded_seconds: int = maxi(int(total_seconds), 0)
+	@warning_ignore("integer_division")
 	var hours: int = rounded_seconds / 3600
+	@warning_ignore("integer_division")
 	var minutes: int = (rounded_seconds % 3600) / 60
 	var seconds: int = rounded_seconds % 60
 	return "%02d:%02d:%02d" % [hours, minutes, seconds]

@@ -12,7 +12,9 @@ class_name CombinationLock
 
 signal unlocked
 ## The close-up opened or closed.
+@warning_ignore("unused_signal")
 signal opened
+@warning_ignore("unused_signal")
 signal closed
 
 const STATE_SECTION: StringName = &"puzzles"

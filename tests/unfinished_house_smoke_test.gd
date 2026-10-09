@@ -238,6 +238,7 @@ func _check_key_and_pantry_scare() -> void:
 
 	# Opening the pantry door: a head is at the corridor window, OUTSIDE, for 1.5 s
 	# second, then it ducks away. Silently.
+	var sounds_before: int = house.find_children("*", "AudioStreamPlayer3D", true, false).size()
 	pantry_door.interact(player)
 	_expect(pantry_door.is_open, "the player opens the pantry door")
 	_expect(house.figure.visible, "a silhouette is at the corridor window")
@@ -249,11 +250,8 @@ func _check_key_and_pantry_scare() -> void:
 		house.figure.position.is_equal_approx(house.figure_position),
 		"the head is already in view the moment the door opens"
 	)
-	var sounds: int = 0
-	for child: Node in house.find_children("*", "AudioStreamPlayer3D", true, false):
-		if (child as AudioStreamPlayer3D).playing:
-			sounds += 1
-	_expect(sounds == 0, "the silhouette beat is silent (%d sounds playing)" % sounds)
+	var sounds_after: int = house.find_children("*", "AudioStreamPlayer3D", true, false).size()
+	_expect(sounds_after == sounds_before, "the silhouette beat adds no sound")
 
 	# A second and a half after the door opens it flees.
 	_expect(is_equal_approx(house.figure_wait_seconds, 1.5), "it flees 1.5 s after the door opens")

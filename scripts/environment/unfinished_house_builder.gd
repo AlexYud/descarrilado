@@ -367,10 +367,10 @@ func _make_materials() -> void:
 	_frame_material = HouseProps.material(Color(0.34, 0.24, 0.14), 0.9)
 
 
-func _triplanar(mat: StandardMaterial3D, scale: float) -> void:
+func _triplanar(mat: StandardMaterial3D, uv_scale: float) -> void:
 	mat.uv1_triplanar = true
 	mat.uv1_world_triplanar = true
-	mat.uv1_scale = Vector3.ONE * scale
+	mat.uv1_scale = Vector3.ONE * uv_scale
 
 
 ## Pale lime wash gone grey: damp stains running down from the roof, dark mould
@@ -418,7 +418,7 @@ func _make_plank_texture() -> ImageTexture:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 12
 
-	for row: int in size / board_height:
+	for row: int in int(size / float(board_height)):
 		var joint: int = rng.randi_range(40, size - 40)
 		for segment: int in 2:
 			var tint: float = rng.randf_range(0.82, 1.1)

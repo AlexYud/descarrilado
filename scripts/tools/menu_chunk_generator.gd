@@ -25,6 +25,11 @@ const HALF_WIDTH: float = 35.0
 const BASE_HEIGHT: float = -0.1
 const FENCE_LIFT: float = 0.65
 const FENCE_PIECE: float = 1.78
+## The fence line: average distance from the track, and its limits (the wagons are
+## about 2.4 m from the centre).
+const FENCE_BASE_X: float = 3.75
+const FENCE_MIN_X: float = 3.1
+const FENCE_MAX_X: float = 5.3
 
 const OUT_DIR: String = "res://scenes/menu/scenery/generated/"
 const CHUNK_PATHS: Array[String] = [
@@ -84,6 +89,7 @@ var _meshes: Dictionary = {}
 var _tree_points: Array[Vector2] = []
 var _transforms: Dictionary = {}
 var _tree_centres: Array[Vector2] = []
+var _reaches: Dictionary = {}
 
 
 ## Generates and saves everything. Returns a summary dictionary.
@@ -148,14 +154,16 @@ func _ring_distance(a: float, b: float) -> float:
 # TERRAIN SHAPE
 # ============================================================
 
-## Distance from the track to the fence on one side (side is -1 or +1).
+## Distance from the track to the fence on one side (side is -1 or +1). The line
+## wanders at three scales (long swings, mid bends, fine wobble) and never comes
+## nearer than FENCE_MIN_X to the wagons.
 func _fence_x(side: int, s: float) -> float:
 	var wobble: float = (
-		_ring("fence%d" % side, 0.045, 0.0, s) * 0.6
-		+ _ring("fence_fine%d" % side, 0.2, 0.0, s) * 0.15
+		_ring("fence%d" % side, 0.045, 0.0, s) * 1.4
+		+ _ring("fence_mid%d" % side, 0.13, 0.0, s) * 0.7
+		+ _ring("fence_fine%d" % side, 0.35, 0.0, s) * 0.2
 	)
-	return float(side) * (4.1 + wobble)
-
+	return float(side) * clampf(FENCE_BASE_X + wobble, FENCE_MIN_X, FENCE_MAX_X)
 
 func _height(x: float, s: float) -> float:
 	var distance: float = absf(x)
@@ -337,6 +345,12 @@ func _place(layer: Dictionary, x: float, s: float, side: int, fence: float) -> v
 		size *= lerpf(0.5, 1.0, smoothstep(0.4, 3.2, distance - fence))
 
 	var width: float = size * _rng.randf_range(0.9, 1.1)
+
+	# Outside the fence a plant must not reach back over it: the foliage meshes are
+	# metres wide, so a bush planted right behind the fence would poke through into
+	# the view from the train. Keep each plant as far out as its own reach.
+	if spacing <= 0.0 and distance > fence and distance - fence < _plant_reach(key, width):
+		return
 	var height: float = _height(x, s) + float(layer.get("sink", 0.0))
 
 	var up: Vector3 = Vector3.UP.lerp(
@@ -372,26 +386,37 @@ func _place(layer: Dictionary, x: float, s: float, side: int, fence: float) -> v
 
 func _build_fences() -> Array[Transform3D]:
 	var pieces: Array[Transform3D] = []
+	var fence_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	fence_rng.seed = 9917
 	var count: int = int(round(RING_LENGTH / FENCE_PIECE))
 	var step: float = RING_LENGTH / float(count)
 	for side: int in [-1, 1]:
 		for k: int in range(count):
-			var s: float = (float(k) + 0.5) * step
-			var x: float = _fence_x(side, s)
+			# Every piece is a little off its slot, like a fence put up by hand and
+			# left alone for decades: shifted along and across the line, turned,
+			# and now and then leaning badly.
+			var s: float = (float(k) + 0.5) * step + fence_rng.randf_range(-0.14, 0.14)
+			var across: float = fence_rng.randf_range(-0.22, 0.22)
+			var x: float = _fence_x(side, s) + across * float(side)
+			x = float(side) * clampf(absf(x), FENCE_MIN_X, FENCE_MAX_X + 0.3)
 			var ahead: float = _fence_x(side, s + step * 0.5)
 			var behind: float = _fence_x(side, s - step * 0.5)
-			var yaw: float = atan2(ahead - behind, step)
+			var yaw: float = atan2(ahead - behind, step) + deg_to_rad(fence_rng.randf_range(-9.0, 9.0))
 			var basis: Basis = Basis(Vector3.UP, yaw)
-			# Slightly crooked posts, like a fence nobody maintains.
+
+			var lean: float = 3.0
+			if fence_rng.randf() < 0.14:
+				lean = fence_rng.randf_range(7.0, 13.0)
 			basis = basis * Basis.from_euler(Vector3(
-				deg_to_rad(_rng.randf_range(-2.0, 2.0)),
+				deg_to_rad(fence_rng.randf_range(-lean * 0.6, lean * 0.6)),
 				0.0,
-				deg_to_rad(_rng.randf_range(-3.0, 3.0))
+				deg_to_rad(fence_rng.randf_range(-lean, lean))
 			))
-			var y: float = _height(x, s) + FENCE_LIFT
+			var y: float = _height(x, s) + FENCE_LIFT - fence_rng.randf_range(0.0, 0.1)
 			pieces.append(Transform3D(basis, Vector3(x, y, s)))
 
 	return pieces
+
 
 
 # ============================================================
@@ -589,3 +614,18 @@ func _add_multimesh(
 	)
 	parent.add_child(instance)
 	instance.owner = root
+
+
+## How far a plant's foliage spreads sideways from its stem, in metres: about 40 %
+## of the mesh's widest extent times its width scale.
+func _plant_reach(key: String, width_scale: float) -> float:
+	if not _reaches.has(key):
+		var mesh: Mesh = _meshes.get(key) as Mesh
+		var extent: float = 0.5
+		if mesh != null:
+			var box: Vector3 = mesh.get_aabb().size
+			extent = maxf(box.x, box.z)
+
+		_reaches[key] = extent * 0.4
+
+	return float(_reaches[key]) * width_scale
