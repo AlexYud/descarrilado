@@ -7,6 +7,9 @@ class_name PlayTestSetup
 ## brings the view upright the same way a finished cutscene does.
 
 @export var player: Node
+## Which way the player faces at the start, in degrees (0 looks down -Z, positive
+## turns to the left, so 90 looks down -X).
+@export var start_yaw_degrees: float = 0.0
 
 
 func _ready() -> void:
@@ -19,3 +22,7 @@ func _stand_up() -> void:
 
 	player.call("set_cutscene_frozen", true)
 	player.call("set_cutscene_frozen", false)
+
+	var movement: Object = player.get("movement_controller") as Object
+	if movement != null:
+		movement.set("look_yaw", -start_yaw_degrees)

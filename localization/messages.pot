@@ -552,3 +552,80 @@ msgstr ""
 
 msgid "DIARY_HEADING"
 msgstr ""
+
+# Waiting shed and signal box
+msgid "LEVER_UP"
+msgstr ""
+
+msgid "LEVER_DOWN"
+msgstr ""
+
+msgid "ITEM_SOPHIA_JOURNAL_NAME"
+msgstr ""
+
+msgid "ITEM_SOPHIA_JOURNAL_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_RAILWAY_LANTERN_NAME"
+msgstr ""
+
+msgid "ITEM_WOODEN_WHISTLE_NAME"
+msgstr ""
+
+msgid "ITEM_SOPHIA_FICHA_NAME"
+msgstr ""
+
+msgid "ITEM_SOPHIA_FICHA_DESCRIPTION"
+msgstr ""
+
+msgid "FICHA_NUMBER"
+msgstr ""
+
+msgid "FICHA_MARK"
+msgstr ""
+
+msgid "ITEM_FICHA_NOTE_NAME"
+msgstr ""
+
+msgid "ITEM_FICHA_NOTE_DESCRIPTION"
+msgstr ""
+
+msgid "FICHA_NOTE_TEXT"
+msgstr ""
+
+msgid "MILE_MARKER_TEXT"
+msgstr ""
+
+msgid "PROMPT_LEVER_PULL_DOWN"
+msgstr ""
+
+msgid "PROMPT_LEVER_PUSH_UP"
+msgstr ""
+
+
+msgid "JOURNAL_LEFT"
+msgstr ""
+
+msgid "JOURNAL_RIGHT"
+msgstr ""
+
+msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
+msgstr ""
+
+msgid "LANTERN_CLUE"
+msgstr ""
+
+msgid "ITEM_TICKET_PUNCHER_NAME"
+msgstr ""
+
+msgid "ITEM_TICKET_PUNCHER_DESCRIPTION"
+msgstr ""
+
+msgid "PUNCHER_CLUE"
+msgstr ""
+
+msgid "ITEM_WOODEN_WHISTLE_DESCRIPTION"
+msgstr ""
+
+msgid "WHISTLE_CLUE"
+msgstr ""

@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/openable_container.gd" id="1_container"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/ticket_puncher.tscn" id="3_puncher"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.36, 0.22, 0.26)
+
+[node name="SwitchBox" type="Node3D"]
+script = ExtResource("1_container")
+prompt_text = "PROMPT_OPEN"
+persistent_id = &"junction_switch_box"
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_prop")
+kind = &"switch_box"
+
+[node name="Contents" type="Node3D" parent="."]
+
+[node name="TicketPuncher" parent="Contents" instance=ExtResource("3_puncher")]
+position = Vector3(0.02, -0.042, 0.01)
+rotation_degrees = Vector3(-90, 8, 0)
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

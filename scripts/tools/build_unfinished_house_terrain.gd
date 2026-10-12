@@ -58,5 +58,5 @@ func _run() -> void:
 		house.position = Vector3(
 			builder.origin.x, float(result["height"]) + FLOOR_LIFT, builder.origin.y
 		)
-		house.rotation_degrees = Vector3(0.0, -90.0, 0.0)
+		house.rotation_degrees = Vector3(0.0, builder.yaw_degrees, 0.0)
 		print("House placed at %s." % str(house.position))

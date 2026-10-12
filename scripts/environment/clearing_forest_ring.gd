@@ -16,6 +16,9 @@ class_name ClearingForestRing
 
 ## Direction of the passage, as atan2(z, x) of its centre.
 @export var gap_angle: float = 2.936
+## A second passage on the other side (a pass-through clearing); off by default.
+@export var has_second_gap: bool = false
+@export var second_gap_angle: float = 0.0
 @export var gap_half_width: float = 1.4
 @export var corridor_length: float = 6.0
 
@@ -49,8 +52,20 @@ func _ready() -> void:
 
 ## True when a point at `radius` and `angle` falls inside the passage corridor.
 func _in_gap(radius: float, angle: float, margin: float) -> bool:
-	var offset: float = absf(angle_difference(angle, gap_angle)) * radius
-	return offset < gap_half_width + margin
+	for gap: float in _gap_angles():
+		var offset: float = absf(angle_difference(angle, gap)) * radius
+		if offset < gap_half_width + margin:
+			return true
+
+	return false
+
+
+func _gap_angles() -> Array[float]:
+	var angles: Array[float] = [gap_angle]
+	if has_second_gap:
+		angles.append(second_gap_angle)
+
+	return angles
 
 
 func _add_vegetation(
@@ -141,8 +156,13 @@ func _build_walls() -> void:
 			-angle
 		)
 
-	# Corridor: two side walls and a dead end.
-	var direction: Vector3 = Vector3(cos(gap_angle), 0.0, sin(gap_angle))
+	# Corridors: two side walls and a dead end for each passage.
+	for gap: float in _gap_angles():
+		_build_corridor(body, wall_radius, gap)
+
+
+func _build_corridor(body: StaticBody3D, wall_radius: float, gap: float) -> void:
+	var direction: Vector3 = Vector3(cos(gap), 0.0, sin(gap))
 	var side: Vector3 = Vector3(-direction.z, 0.0, direction.x)
 	var corridor_start: float = wall_radius - 0.5
 	var corridor_centre: float = corridor_start + corridor_length * 0.5
@@ -152,14 +172,14 @@ func _build_walls() -> void:
 			Vector3(corridor_length, wall_height, wall_thickness),
 			direction * corridor_centre + side * (gap_half_width * sign_value)
 			+ Vector3.UP * wall_height * 0.5,
-			-gap_angle
+			-gap
 		)
 
 	_add_wall_box(
 		body,
 		Vector3(wall_thickness, wall_height, gap_half_width * 2.0 + wall_thickness),
 		direction * (corridor_start + corridor_length) + Vector3.UP * wall_height * 0.5,
-		-gap_angle
+		-gap
 	)
 
 

@@ -564,3 +564,80 @@ msgstr "Se quiser."
 
 msgid "DIARY_HEADING"
 msgstr "14 de maio — 6h00."
+
+# Waiting shed and signal box
+msgid "LEVER_UP"
+msgstr "CIMA"
+
+msgid "LEVER_DOWN"
+msgstr "BAIXO"
+
+msgid "ITEM_SOPHIA_JOURNAL_NAME"
+msgstr "Caderno da Sophia"
+
+msgid "ITEM_SOPHIA_JOURNAL_DESCRIPTION"
+msgstr "Deixado aberto no banco, como se ela tivesse acabado de sair."
+
+msgid "ITEM_RAILWAY_LANTERN_NAME"
+msgstr "Lanterna Ferroviária Enferrujada"
+
+msgid "ITEM_WOODEN_WHISTLE_NAME"
+msgstr "Apito de Madeira Entalhado"
+
+msgid "ITEM_SOPHIA_FICHA_NAME"
+msgstr "Ficha da Sophia"
+
+msgid "ITEM_SOPHIA_FICHA_DESCRIPTION"
+msgstr "Uma ficha de telefone de latão. Número três."
+
+msgid "FICHA_NUMBER"
+msgstr "3"
+
+msgid "FICHA_MARK"
+msgstr "TELEFONE"
+
+msgid "ITEM_FICHA_NOTE_NAME"
+msgstr "Bilhete da Ficha"
+
+msgid "ITEM_FICHA_NOTE_DESCRIPTION"
+msgstr "Preso à ficha por um fio."
+
+msgid "FICHA_NOTE_TEXT"
+msgstr "Eu sabia que você ia achar, Juli. Você é a única que realmente presta atenção.\n\nLeve a ficha até o topo do morro — vamos fazer essa ligação."
+
+msgid "MILE_MARKER_TEXT"
+msgstr "KM 214"
+
+msgid "PROMPT_LEVER_PULL_DOWN"
+msgstr "Puxar a alavanca %d para baixo"
+
+msgid "PROMPT_LEVER_PUSH_UP"
+msgstr "Empurrar a alavanca %d para cima"
+
+
+msgid "JOURNAL_LEFT"
+msgstr "O Lucas acha que consegue passar por tudo à força com uma chave inglesa.\n\nEle não entende que essa velha caixa de junção segue uma sequência. Lembra do nosso código secreto para pegar o trem da noite, Juli?"
+
+msgid "JOURNAL_RIGHT"
+msgstr "Primeiro, você ilumina os trilhos.\nDepois, você fura o bilhete.\nPor fim, você apita o sinal."
+
+msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
+msgstr "Uma velha lanterna ferroviária de latão, usada por vigias noturnos."
+
+msgid "LANTERN_CLUE"
+msgstr "Mantenha sua luz acima da neblina."
+
+msgid "ITEM_TICKET_PUNCHER_NAME"
+msgstr "Furador de Bilhetes de Latão"
+
+msgid "ITEM_TICKET_PUNCHER_DESCRIPTION"
+msgstr "Um pesado furador de bilhetes de ferro fundido, de condutor."
+
+msgid "PUNCHER_CLUE"
+msgstr "Aperte fundo no papel."
+
+msgid "ITEM_WOODEN_WHISTLE_DESCRIPTION"
+msgstr "Um apito de condutor entalhado à mão, preso a um cordão desbotado."
+
+msgid "WHISTLE_CLUE"
+msgstr "Fique de pé e faça barulho!"

@@ -1,0 +1,57 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzles/lever_box.gd" id="1_box"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+[ext_resource type="Script" path="res://scripts/interactions/signal_lever.gd" id="3_lever"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/sophia_ficha.tscn" id="4_ficha"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/ficha_note.tscn" id="5_note"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lever"]
+size = Vector3(0.14, 0.3, 0.16)
+
+[node name="SignalBox" type="Node3D"]
+script = ExtResource("1_box")
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_prop")
+kind = &"signal_box"
+
+[node name="Contents" type="Node3D" parent="."]
+
+[node name="SophiaFicha" parent="Contents" instance=ExtResource("4_ficha")]
+position = Vector3(-0.09, -0.003, 0)
+rotation_degrees = Vector3(-90, 0, 0)
+
+[node name="FichaNote" parent="Contents" instance=ExtResource("5_note")]
+position = Vector3(0.07, -0.0045, 0)
+rotation_degrees = Vector3(-90, 8, 0)
+
+[node name="Lever1" type="Node3D" parent="."]
+position = Vector3(-0.18, 0.9, 0.24)
+script = ExtResource("3_lever")
+index = 0
+
+[node name="InteractArea" type="Area3D" parent="Lever1"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Lever1/InteractArea"]
+shape = SubResource("BoxShape3D_lever")
+
+[node name="Lever2" type="Node3D" parent="."]
+position = Vector3(0, 0.9, 0.24)
+script = ExtResource("3_lever")
+index = 1
+
+[node name="InteractArea" type="Area3D" parent="Lever2"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Lever2/InteractArea"]
+shape = SubResource("BoxShape3D_lever")
+
+[node name="Lever3" type="Node3D" parent="."]
+position = Vector3(0.18, 0.9, 0.24)
+script = ExtResource("3_lever")
+index = 2
+
+[node name="InteractArea" type="Area3D" parent="Lever3"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Lever3/InteractArea"]
+shape = SubResource("BoxShape3D_lever")

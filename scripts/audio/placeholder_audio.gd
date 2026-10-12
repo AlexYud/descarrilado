@@ -180,6 +180,74 @@ static func make_rustle(seconds: float = 2.4) -> AudioStreamWAV:
 	return _to_wav(samples, false)
 
 
+## A stiff iron lever thrown over: a dull thud and a short scrape of metal.
+static func make_lever() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.32 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 47
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.18)
+		var scrape: float = smoothed * minf(t * 14.0, 1.0) * exp(-t * 9.0) * 0.5
+		var thud: float = sin(TAU * 120.0 * t) * exp(-t * 40.0) * 0.7 if t > 0.16 else 0.0
+		var ring: float = sin(TAU * 640.0 * t) * exp(-t * 35.0) * 0.12 if t > 0.16 else 0.0
+		samples[i] = scrape + thud + ring
+
+	return _to_wav(samples, false)
+
+
+## A heavy mechanical CLANK-THUD that echoes away down the rails.
+static func make_iron_clank() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(1.8 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 61
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var clank: float = (
+			sin(TAU * 310.0 * t) + 0.7 * sin(TAU * 477.0 * t) + 0.5 * sin(TAU * 913.0 * t)
+		) * exp(-t * 9.0) * 0.38
+		var thud: float = sin(TAU * 62.0 * t) * exp(-t * 14.0) * 0.9 if t > 0.12 else 0.0
+		var grit: float = rng.randf_range(-1.0, 1.0) * exp(-t * 60.0) * 0.35
+		# An echo of the clank, fainter and later.
+		var echo_t: float = t - 0.55
+		var echo: float = 0.0
+		if echo_t > 0.0:
+			echo = (sin(TAU * 308.0 * echo_t) + 0.6 * sin(TAU * 475.0 * echo_t)) * exp(-echo_t * 7.0) * 0.12
+		samples[i] = clampf(clank + thud + grit + echo, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A brass token dropping into a metal tray and rattling to rest.
+static func make_coin_clatter() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.7 * MIX_RATE))
+	var hits: Array[float] = [0.0, 0.11, 0.2, 0.27, 0.32]
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var value: float = 0.0
+		for h: int in hits.size():
+			var local: float = t - hits[h]
+			if local < 0.0:
+				continue
+
+			var strength: float = 0.5 / (1.0 + h * 1.4)
+			value += (
+				sin(TAU * (2400.0 - h * 160.0) * local)
+				+ 0.5 * sin(TAU * (3650.0 - h * 200.0) * local)
+			) * exp(-local * 70.0) * strength
+
+		samples[i] = clampf(value, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
 static func _to_wav(samples: PackedFloat32Array, loop: bool) -> AudioStreamWAV:
 	var bytes: PackedByteArray = PackedByteArray()
 	bytes.resize(samples.size() * 2)

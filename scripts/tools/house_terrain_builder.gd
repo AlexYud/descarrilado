@@ -6,11 +6,11 @@ extends RefCounted
 ## treat it as walkable and keep plants off it), regrows the forest around it,
 ## mixes the floor textures and rebuilds the invisible path walls.
 ##
-## The house sits across the southern path (C): its front door faces west (the
-## train and the forest paths) and its back door faces east (the path to the city
-## overlook). The house is rotated -90 degrees about Y, so its local X runs
-## south and its local +Z runs west:
-##   world = origin + (-local.z, local.y, local.x)
+## The house sits across the southern path (C): its front door faces back along the
+## path (the train and the forest paths) and its back door faces on along it (the
+## path to the city overlook). Its local +Z is the front door side; see yaw_degrees
+## and place_on_path() for how it is turned to follow the path. At yaw -90 degrees
+## it faces west and world = origin + (-local.z, local.y, local.x).
 ## Editor entry point: build_unfinished_house_terrain.gd.
 
 const VegetationGenerator := preload("res://scripts/tools/forest_path_vegetation_generator.gd")
@@ -112,23 +112,35 @@ const COLLIDER_RADIUS: Dictionary = {
 	TREE_A: 0.55, TREE_B: 0.4, PITANGUEIRA: 0.32, ARAUCARIA: 0.6,
 	BUSH_A: 0.7, BUSH_B: 0.62, TALL_PLANT_A: 0.28, TALL_PLANT_B: 0.26,
 }
-## World XZ of the house's local origin (its north-east corner after the turn).
+## The house can be turned to follow the path. `yaw_degrees` is its rotation about
+## Y (-90 faces the front door west) and `origin` the world XZ of its local origin:
+##   world = origin + (local.x * cos(yaw) + local.z * sin(yaw),
+##                     -local.x * sin(yaw) + local.z * cos(yaw))
+## Use `place_on_path()` to set the origin so a point of the path runs between the
+## two doors.
+var yaw_degrees: float = -90.0
 var origin: Vector2 = Vector2(141.0, 78.5)
 
 ## Ground painted beyond the walls, and the distance the level ground blends back
 ## into the hillside.
 var margin: float = 0.6
 var flatten_blend: float = 10.0
-## East of the house the hillside climbs on, so it blends back over a longer run.
+## Behind the house (its local -Z side, the back door) the hillside climbs on, so it
+## blends back over a longer run.
 var flatten_blend_east: float = 18.0
 
-## The trail strips painted from each door out to the existing path.
 ## How far below the trail, six metres before the front door, the house floor sits.
 ## The ground slopes down into the clearing, so the house is first seen from above.
 var approach_drop: float = 1.8
 
 var trail_half_width: float = 1.4
 var trail_length: float = 8.0
+
+## The trails painted from each door out to the existing path, as polylines of world
+## XZ points starting at the door. Left empty they are straight strips of
+## `trail_length` metres along the house's door axis.
+var front_trail: PackedVector2Array = PackedVector2Array()
+var back_trail: PackedVector2Array = PackedVector2Array()
 
 var dirt_texture_id: int = 1
 
@@ -144,18 +156,61 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _extents: Dictionary = {}
 
 
-## World-space rectangle covered by the house's walls.
+## Turns the house and sets its origin so the point `path_point` of the path runs
+## through the middle between the two doors, along the door axis.
+func place_on_path(path_point: Vector2, path_direction: Vector2) -> void:
+	# Local +Z (the front door's direction) points back along the path.
+	var back: Vector2 = -path_direction.normalized()
+	yaw_degrees = rad_to_deg(atan2(back.x, back.y))
+	var door_middle: float = (FRONT_DOOR_LOCAL_X + BACK_DOOR_LOCAL_X) * 0.5
+	origin = path_point - _rotate(Vector2(door_middle, HOUSE_SIZE.y * 0.5))
+
+
+## House-local offset (x, z) to a world XZ offset.
+func _rotate(local: Vector2) -> Vector2:
+	var yaw: float = deg_to_rad(yaw_degrees)
+	return Vector2(
+		local.x * cos(yaw) + local.y * sin(yaw),
+		-local.x * sin(yaw) + local.y * cos(yaw)
+	)
+
+
+func to_world(local: Vector2) -> Vector2:
+	return origin + _rotate(local)
+
+
+func to_local(world: Vector2) -> Vector2:
+	var yaw: float = deg_to_rad(yaw_degrees)
+	var delta: Vector2 = world - origin
+	return Vector2(
+		delta.x * cos(yaw) - delta.y * sin(yaw),
+		delta.x * sin(yaw) + delta.y * cos(yaw)
+	)
+
+
+## The rectangle covered by the house's walls, in the house's own metres.
 func footprint() -> Rect2:
-	return Rect2(origin.x - HOUSE_SIZE.y, origin.y, HOUSE_SIZE.y, HOUSE_SIZE.x)
+	return Rect2(0.0, 0.0, HOUSE_SIZE.x, HOUSE_SIZE.y)
 
 
-## World Z of the front and back doors (they open west and east).
-func front_door_z() -> float:
-	return origin.y + FRONT_DOOR_LOCAL_X
+func front_door() -> Vector2:
+	return to_world(Vector2(FRONT_DOOR_LOCAL_X, HOUSE_SIZE.y))
 
 
-func back_door_z() -> float:
-	return origin.y + BACK_DOOR_LOCAL_X
+func back_door() -> Vector2:
+	return to_world(Vector2(BACK_DOOR_LOCAL_X, 0.0))
+
+
+## World rectangle that contains the footprint grown by `by` metres.
+func _world_bounds(by: float) -> Rect2:
+	var rect: Rect2 = footprint().grow(by)
+	var bounds: Rect2 = Rect2(to_world(rect.position), Vector2.ZERO)
+	for corner: Vector2 in [
+		Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)
+	]:
+		bounds = bounds.expand(to_world(corner))
+
+	return bounds
 
 
 ## Runs every step and returns {"height", "painted", "removed", "added",
@@ -165,8 +220,21 @@ func build(terrain: Terrain3D) -> Dictionary:
 	_data = terrain.data
 	_rng.seed = seed_value
 
-	var approach: Vector3 = Vector3(footprint().position.x - 6.0, 0.0, front_door_z())
-	var height: float = flatten_ground(_data.get_height(approach) - approach_drop)
+	if front_trail.is_empty():
+		front_trail = PackedVector2Array([
+			to_world(Vector2(FRONT_DOOR_LOCAL_X, HOUSE_SIZE.y)),
+			to_world(Vector2(FRONT_DOOR_LOCAL_X, HOUSE_SIZE.y + trail_length)),
+		])
+
+	if back_trail.is_empty():
+		back_trail = PackedVector2Array([
+			to_world(Vector2(BACK_DOOR_LOCAL_X, 0.0)),
+			to_world(Vector2(BACK_DOOR_LOCAL_X, -trail_length)),
+		])
+
+	var approach: Vector2 = to_world(Vector2(FRONT_DOOR_LOCAL_X, HOUSE_SIZE.y + 6.0))
+	var approach_height: float = _data.get_height(Vector3(approach.x, 0.0, approach.y))
+	var height: float = flatten_ground(approach_height - approach_drop)
 	var painted: int = paint_floor()
 
 	var generator = VegetationGenerator.new()
@@ -200,19 +268,17 @@ func build(terrain: Terrain3D) -> Dictionary:
 ## blends outward. Returns the level height (NAN if the area has no terrain).
 func flatten_ground(target: float) -> float:
 	var pad: Rect2 = footprint().grow(margin)
-	var reach: int = int(ceilf(maxf(flatten_blend, flatten_blend_east))) + 1
+	var reach: float = maxf(flatten_blend, flatten_blend_east)
 	if is_nan(target):
 		return NAN
 
-
-	for cell: Vector2 in _cells_in(pad.grow(float(reach))):
-		var outside: float = _distance_to_rect(cell, pad)
-		# The blend grows smoothly from the middle of the pad eastwards (no seam).
-		var blend: float = lerpf(
-			flatten_blend,
-			flatten_blend_east,
-			smoothstep(pad.get_center().x, pad.end.x + 6.0, cell.x)
-		)
+	for cell: Vector2 in _cells_in(_world_bounds(margin + reach + 1.0)):
+		var local: Vector2 = to_local(cell)
+		var outside: float = _distance_to_rect(local, pad)
+		# The blend grows smoothly from the middle of the pad towards the back
+		# (no seam).
+		var back_t: float = 1.0 - smoothstep(pad.position.y - 6.0, pad.get_center().y, local.y)
+		var blend: float = lerpf(flatten_blend, flatten_blend_east, back_t)
 		if outside >= blend:
 			continue
 
@@ -229,8 +295,8 @@ func flatten_ground(target: float) -> float:
 	return target
 
 
-## Paints the pad and the two trail strips with the path's own control value
-## (dirt base), so the tools see them as walkable ground.
+## Paints the pad and the two trails with the path's own control value (dirt
+## base), so the tools see them as walkable ground.
 func paint_floor() -> int:
 	if not _find_reference_control():
 		push_error("HouseTerrainBuilder: no path dirt found near the house to copy.")
@@ -272,7 +338,7 @@ func mix_floor_textures() -> void:
 		var patch: float = patch_noise.get_noise_2d(cell.x, cell.y)
 		var fine: float = fine_noise.get_noise_2d(cell.x, cell.y) * 0.5 + 0.5
 		# Greener the further a cell is from the house.
-		var edge: float = smoothstep(0.0, 3.0, _distance_to_rect(cell, pad))
+		var edge: float = smoothstep(0.0, 3.0, _distance_to_rect(to_local(cell), pad))
 
 		var overlay: int = TEX_HUMUS
 		var blend: float = 0.18 + fine * 0.26
@@ -310,27 +376,19 @@ func mix_floor_textures() -> void:
 # HELPERS
 # ============================================================
 
-## Whole terrain cells to paint: the pad plus a trail strip from each door,
-## west of the front door and east of the back door.
+## Whole terrain cells to paint: the pad plus a trail from each door.
 func _floor_cells() -> Array[Vector2]:
 	var pad: Rect2 = footprint().grow(margin)
-	var front: Rect2 = Rect2(
-		pad.position.x - trail_length,
-		front_door_z() - trail_half_width,
-		trail_length + margin,
-		trail_half_width * 2.0
-	)
-	var back: Rect2 = Rect2(
-		pad.end.x - margin,
-		back_door_z() - trail_half_width,
-		trail_length + margin,
-		trail_half_width * 2.0
-	)
-
 	var seen: Dictionary = {}
 	var cells: Array[Vector2] = []
-	for area: Rect2 in [pad, front, back]:
-		for cell: Vector2 in _cells_in(area):
+
+	for cell: Vector2 in _cells_in(_world_bounds(margin + 1.0)):
+		if pad.has_point(to_local(cell)):
+			seen[cell] = true
+			cells.append(cell)
+
+	for trail: PackedVector2Array in [front_trail, back_trail]:
+		for cell: Vector2 in _trail_cells(trail):
 			if not seen.has(cell):
 				seen[cell] = true
 				cells.append(cell)
@@ -338,7 +396,36 @@ func _floor_cells() -> Array[Vector2]:
 	return cells
 
 
-## Whole terrain cells whose corner lies inside a rectangle.
+## Whole terrain cells within the trail's half width of a polyline.
+func _trail_cells(trail: PackedVector2Array) -> Array[Vector2]:
+	var cells: Array[Vector2] = []
+	if trail.size() < 2:
+		return cells
+
+	var seen: Dictionary = {}
+	for i: int in range(trail.size() - 1):
+		var area: Rect2 = Rect2(trail[i], Vector2.ZERO).expand(trail[i + 1]).grow(trail_half_width + 1.0)
+		for cell: Vector2 in _cells_in(area):
+			if seen.has(cell):
+				continue
+
+			if _distance_to_polyline(cell, trail) <= trail_half_width:
+				seen[cell] = true
+				cells.append(cell)
+
+	return cells
+
+
+func _distance_to_polyline(point: Vector2, polyline: PackedVector2Array) -> float:
+	var nearest: float = INF
+	for i: int in range(polyline.size() - 1):
+		var closest: Vector2 = Geometry2D.get_closest_point_to_segment(point, polyline[i], polyline[i + 1])
+		nearest = minf(nearest, point.distance_to(closest))
+
+	return nearest
+
+
+## Whole terrain cells whose corner lies inside a (world) rectangle.
 func _cells_in(area: Rect2) -> Array[Vector2]:
 	var cells: Array[Vector2] = []
 	for z: int in range(int(floorf(area.position.y)), int(ceilf(area.end.y)) + 1):
@@ -348,6 +435,7 @@ func _cells_in(area: Rect2) -> Array[Vector2]:
 	return cells
 
 
+## Distance from a point to a rectangle, both in the same space (0 inside).
 func _distance_to_rect(point: Vector2, rect: Rect2) -> float:
 	var dx: float = maxf(maxf(rect.position.x - point.x, 0.0), point.x - rect.end.x)
 	var dz: float = maxf(maxf(rect.position.y - point.y, 0.0), point.y - rect.end.y)
@@ -356,7 +444,7 @@ func _distance_to_rect(point: Vector2, rect: Rect2) -> float:
 
 ## Copies the control value of existing path dirt near the house.
 func _find_reference_control() -> bool:
-	var center: Vector2 = footprint().get_center()
+	var center: Vector2 = to_world(footprint().get_center())
 	for radius: int in range(0, 40):
 		for dz: int in range(-radius, radius + 1):
 			for dx: int in range(-radius, radius + 1):
@@ -408,7 +496,7 @@ func _mark_regions_modified(map_type: int) -> void:
 ## small gap. Everything inside the footprint goes. Returns the count.
 func clear_unsafe_plants() -> int:
 	var house: Rect2 = footprint().grow(ROOF_OVERHANG)
-	var area: Rect2 = house.grow(MAX_PLANT_REACH)
+	var area: Rect2 = _world_bounds(ROOF_OVERHANG + MAX_PLANT_REACH)
 	var instancer: Terrain3DInstancer = _terrain.get_instancer()
 	var region_size: float = float(_terrain.region_size) * _terrain.vertex_spacing
 	var removed: int = 0
@@ -434,7 +522,7 @@ func clear_unsafe_plants() -> int:
 						transform.origin.x + offset.x, transform.origin.z + offset.y
 					)
 					var safe: float = plant_reach(mesh_id, transform.basis.get_scale()) + SAFE_GAP
-					if _distance_to_rect(world, house) < safe:
+					if _distance_to_rect(to_local(world), house) < safe:
 						removed_here += 1
 						continue
 
@@ -456,12 +544,11 @@ func clear_unsafe_plants() -> int:
 ## Dense growth around the house (ferns, leafy plants, grass, bushes, tall
 ## plants, shrub trees and canopy trees), so it looks like the forest has been
 ## reclaiming a house that was never meant to be there. Every plant keeps its own
-## safe distance from the walls (see plant_reach); the two trail strips in front
-## of the doors stay open. Returns the number of plants placed.
+## safe distance from the walls (see plant_reach); the trails in front of the
+## doors stay open. Returns the number of plants placed.
 func scatter_overgrowth() -> int:
 	var house: Rect2 = footprint().grow(ROOF_OVERHANG)
 	var outer: Rect2 = footprint().grow(OVERGROWTH_REACH)
-	var corridors: Array[Rect2] = _corridors()
 	var clump_noise: FastNoiseLite = FastNoiseLite.new()
 	clump_noise.seed = seed_value + 41
 	clump_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
@@ -479,12 +566,13 @@ func scatter_overgrowth() -> int:
 
 		var candidates: int = int(float(layer["density"]) * outer.get_area() * 1.6)
 		for i: int in candidates:
-			var point: Vector2 = Vector2(
+			var local_point: Vector2 = Vector2(
 				_rng.randf_range(outer.position.x, outer.end.x),
 				_rng.randf_range(outer.position.y, outer.end.y)
 			)
-			var distance: float = _distance_to_rect(point, house)
-			if distance > float(layer["d_max"]) or _in_any(point, corridors):
+			var point: Vector2 = to_world(local_point)
+			var distance: float = _distance_to_rect(local_point, house)
+			if distance > float(layer["d_max"]) or _in_corridor(point):
 				continue
 
 			var mesh_id: int = int(ids[_rng.randi_range(0, ids.size() - 1)])
@@ -562,7 +650,7 @@ func plant_reach(mesh_id: int, scale: Vector3) -> float:
 ## the origin of the level.
 func build_colliders() -> Dictionary:
 	var house: Rect2 = footprint()
-	var area: Rect2 = house.grow(COLLIDER_REACH)
+	var area: Rect2 = _world_bounds(COLLIDER_REACH)
 	var region_size: float = float(_terrain.region_size) * _terrain.vertex_spacing
 
 	var body: StaticBody3D = StaticBody3D.new()
@@ -587,7 +675,7 @@ func build_colliders() -> Dictionary:
 					var world: Vector2 = Vector2(
 						transform.origin.x + offset.x, transform.origin.z + offset.y
 					)
-					if not area.has_point(world):
+					if _distance_to_rect(to_local(world), house) > COLLIDER_REACH:
 						continue
 
 					var scale: Vector3 = transform.basis.get_scale()
@@ -632,19 +720,10 @@ func _mesh_extent(mesh_id: int) -> Vector3:
 	return extent
 
 
-## The two open strips in front of the doors (a bit wider than the trail).
-func _corridors() -> Array[Rect2]:
-	var house: Rect2 = footprint()
-	var half: float = trail_half_width + 0.5
-	return [
-		Rect2(house.position.x - trail_length - 2.0, front_door_z() - half, trail_length + 2.0, half * 2.0),
-		Rect2(house.end.x, back_door_z() - half, trail_length + 2.0, half * 2.0),
-	]
-
-
-func _in_any(point: Vector2, areas: Array[Rect2]) -> bool:
-	for area: Rect2 in areas:
-		if area.has_point(point):
+## True near either door's trail (kept open of overgrowth).
+func _in_corridor(point: Vector2) -> bool:
+	for trail: PackedVector2Array in [front_trail, back_trail]:
+		if trail.size() >= 2 and _distance_to_polyline(point, trail) < trail_half_width + 0.5:
 			return true
 
 	return false

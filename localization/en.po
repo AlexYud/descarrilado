@@ -564,3 +564,80 @@ msgstr "If you want."
 
 msgid "DIARY_HEADING"
 msgstr "May 14th — 6:00 AM."
+
+# Waiting shed and signal box
+msgid "LEVER_UP"
+msgstr "UP"
+
+msgid "LEVER_DOWN"
+msgstr "DOWN"
+
+msgid "ITEM_SOPHIA_JOURNAL_NAME"
+msgstr "Sophia's Notebook"
+
+msgid "ITEM_SOPHIA_JOURNAL_DESCRIPTION"
+msgstr "Left open on the bench, as if she had only just stepped away."
+
+msgid "ITEM_RAILWAY_LANTERN_NAME"
+msgstr "Rusted Railway Lantern"
+
+msgid "ITEM_WOODEN_WHISTLE_NAME"
+msgstr "Carved Wooden Whistle"
+
+msgid "ITEM_SOPHIA_FICHA_NAME"
+msgstr "Sophia's Ficha"
+
+msgid "ITEM_SOPHIA_FICHA_DESCRIPTION"
+msgstr "A brass telephone token. Number three."
+
+msgid "FICHA_NUMBER"
+msgstr "3"
+
+msgid "FICHA_MARK"
+msgstr "TELEFONE"
+
+msgid "ITEM_FICHA_NOTE_NAME"
+msgstr "Note on the Ficha"
+
+msgid "ITEM_FICHA_NOTE_DESCRIPTION"
+msgstr "Tied to the token with a thread."
+
+msgid "FICHA_NOTE_TEXT"
+msgstr "I knew you'd find it, Juli. You're the only one who actually pays attention.\n\nTake the token to the top of the hill — let's make that call."
+
+msgid "MILE_MARKER_TEXT"
+msgstr "KM 214"
+
+msgid "PROMPT_LEVER_PULL_DOWN"
+msgstr "Pull lever %d down"
+
+msgid "PROMPT_LEVER_PUSH_UP"
+msgstr "Push lever %d up"
+
+
+msgid "JOURNAL_LEFT"
+msgstr "Lucas thinks he can force his way through everything with a wrench.\n\nHe doesn't get that this old junction box follows a sequence. Remember our secret code for catching the night train, Juli?"
+
+msgid "JOURNAL_RIGHT"
+msgstr "First, you light the track.\nThen, you punch the ticket.\nFinally, you blow the signal."
+
+msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
+msgstr "An old brass railway lantern used by night watchmen."
+
+msgid "LANTERN_CLUE"
+msgstr "Keep your light above the fog."
+
+msgid "ITEM_TICKET_PUNCHER_NAME"
+msgstr "Brass Ticket Hole-Puncher"
+
+msgid "ITEM_TICKET_PUNCHER_DESCRIPTION"
+msgstr "A heavy, cast-iron conductor's ticket puncher."
+
+msgid "PUNCHER_CLUE"
+msgstr "Press deep into the paper."
+
+msgid "ITEM_WOODEN_WHISTLE_DESCRIPTION"
+msgstr "A hand-carved conductor's whistle on a faded lanyard."
+
+msgid "WHISTLE_CLUE"
+msgstr "Stand tall and make some noise!"

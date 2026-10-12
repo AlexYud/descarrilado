@@ -32,11 +32,20 @@ func _ready() -> void:
 		)
 		labels.append(label)
 
-	# The labels measure themselves a couple of frames after entering the tree.
-	await get_tree().process_frame
-	await get_tree().process_frame
+	# The labels measure themselves a couple of frames after entering the tree. A
+	# stack inside a box's contents may be out of the tree for a while first.
+	await _next_frame()
+	await _next_frame()
 
 	var y: float = 0.0
 	for label: Label3D in labels:
 		label.position.y = y
 		y -= label.get_aabb().size.y + gap
+
+
+## Waits one frame in the tree (and until the stack is back in it, if it left).
+func _next_frame() -> void:
+	while not is_inside_tree():
+		await tree_entered
+
+	await get_tree().process_frame
