@@ -48,6 +48,22 @@ const KEY_TURN_DEGREES: float = -90.0
 @export var build_hardware: bool = true
 ## Half the thickness of the door, where the handle and the keyhole sit.
 @export var door_half_thickness: float = 0.04
+## How far from the door the player stands to push it, and how far away a player
+## can be and still be walked up to it (farther than that, a script or a test is
+## calling, so nobody is walked anywhere).
+@export var approach_distance: float = 0.5
+@export var max_approach_distance: float = 3.0
+## Which of the door root's own axes sticks out of the door's faces (the thin one).
+@export var door_normal_local: Vector3 = Vector3(0.0, 0.0, 1.0)
+## Where along the door the player stands to push it, as a fraction of its width from
+## the hinge: 0.5 is the middle, 1 the free end. Negative (the default) means in front
+## of the handle. A long fence gate is pushed near its free end, not at the middle.
+@export_range(-1.0, 1.0, 0.05) var approach_handle_fraction: float = -1.0
+## A long, heavy gate: pushed with both hands (a bigger lean) and slower to swing.
+@export var heavy_gate: bool = false
+## Door sounds (latch, key, rattle, thud) are off for now; turn them on when real
+## recordings replace the stand-ins.
+@export var door_sounds_enabled: bool = false
 ## Plays this variant of opening every time instead of rolling one (for scripted
 ## scenes and tests): `standard`, `peek`, `stuck` or `quick`. Empty rolls one.
 @export var open_variant_override: StringName = &""
@@ -66,6 +82,12 @@ var _key_side: int = 0
 
 var _hardware: Dictionary = {}
 
+## The door's solid parts. While the door swings they let the player through: a
+## door that sweeps through a standing player would otherwise drag them along.
+var _door_bodies: Array[CollisionObject3D] = []
+var _body_layers: Dictionary = {}
+var _collision_suspended: bool = false
+
 var _choreo: StringName = &""
 var _choreo_t: float = 0.0
 var _choreo_total: float = 0.0
@@ -76,12 +98,18 @@ var _start_rotation: Vector3 = Vector3.ZERO
 var _target_rotation: Vector3 = Vector3.ZERO
 var _key_flight_from: Vector3 = Vector3.ZERO
 ## The rolled timings of the interaction being played (see `_plan_open` and the others).
+var _knobs: Array[DoorKnobInteractable] = []
+## What `_begin_choreo` was asked while the player is still walking up to the door.
+var _pending_start: Dictionary = {}
 var _plan: Dictionary = {}
 var _key_plan: Dictionary = {}
 var _cues: Dictionary = {}
 var _player_ref: Node = null
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
+## The player walks up to a door before pushing it. Tests that time the door's
+## own movements switch this off.
+static var approach_enabled: bool = true
 static var _sound_cache: Dictionary = {}
 ## The variant seen last for each kind of interaction, shared by every door.
 static var _last_variant: Dictionary = {}
@@ -112,6 +140,8 @@ func _ready() -> void:
 	else:
 		hinge.rotation_degrees = closed_rotation_degrees
 
+	_cache_door_bodies()
+
 	if build_hardware:
 		_build_hardware()
 
@@ -120,6 +150,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_set_collision_suspended(false)
 	_cancel_choreo(true)
 
 
@@ -128,6 +159,9 @@ func _process(delta: float) -> void:
 		return
 
 	if _choreo != &"":
+		# The door is solid while the player walks up to it and while it is tried,
+		# and lets them through while it swings.
+		_set_collision_suspended(_choreo == &"open" or _choreo == &"close")
 		_step_choreo(delta)
 		return
 
@@ -137,6 +171,9 @@ func _process(delta: float) -> void:
 
 	var swing_speed: float = (
 		_swing_speed_override if _swing_speed_override > 0.0 else rotate_speed
+	)
+	_set_collision_suspended(
+		hinge.rotation_degrees.distance_squared_to(target_rotation) > 0.0004
 	)
 	var weight: float = clamp(delta * swing_speed, 0.0, 1.0)
 	hinge.rotation_degrees = hinge.rotation_degrees.lerp(target_rotation, weight)
@@ -394,6 +431,7 @@ func _choose_open_side(player: Node) -> void:
 func _build_hardware() -> void:
 	var knobs: Array[DoorKnobInteractable] = []
 	_collect_knobs(door_root, knobs)
+	_knobs = knobs.duplicate()
 
 	for knob: DoorKnobInteractable in knobs:
 		var knob_mesh: MeshInstance3D = knob.get_node_or_null("KnobMesh") as MeshInstance3D
@@ -469,6 +507,33 @@ func _get_side_of(player: Node) -> int:
 func _begin_choreo(kind: StringName, player: Node, side: int, with_key: bool) -> void:
 	_cancel_choreo(false)
 
+	# Far from the handle the player first walks up to the door, slowly, looking at
+	# it; then the door's own choreography starts.
+	var movement: Node = _get_movement_controller(player)
+	if approach_enabled and movement != null and movement.has_method("begin_guided_walk"):
+		var target: Dictionary = _approach_target(player)
+		if (
+			not target.is_empty()
+			and bool(movement.call(
+				"begin_guided_walk",
+				target["stand"],
+				target["look"],
+				PlayerMovementController.WALK_SPEED * 0.8,
+				3.0
+			))
+		):
+			_choreo = &"approach"
+			_choreo_t = 0.0
+			_choreo_total = INF
+			_busy_seconds = INF
+			_player_ref = player
+			_pending_start = {"kind": kind, "side": side, "with_key": with_key}
+			return
+
+	_start_choreo(kind, player, side, with_key)
+
+
+func _start_choreo(kind: StringName, player: Node, side: int, with_key: bool) -> void:
 	_choreo = kind
 	_choreo_t = 0.0
 	_cues.clear()
@@ -520,6 +585,10 @@ func _begin_choreo(kind: StringName, player: Node, side: int, with_key: bool) ->
 func _step_choreo(delta: float) -> void:
 	_choreo_t += delta
 
+	if _choreo == &"approach":
+		_step_approach()
+		return
+
 	match _choreo:
 		&"open":
 			_eval_open()
@@ -546,6 +615,12 @@ func _finish_choreo() -> void:
 ## Stops the choreography where it is. `release_view` also lets go of the player's
 ## view; a new choreography that follows at once keeps hold of it instead.
 func _cancel_choreo(release_view: bool) -> void:
+	if _choreo == &"approach":
+		var walker: Node = _get_movement_controller(_player_ref)
+		if walker != null and walker.has_method("cancel_guided_walk"):
+			walker.call("cancel_guided_walk")
+		_pending_start = {}
+
 	var was_playing: bool = _choreo != &""
 	_choreo = &""
 	_choreo_t = 0.0
@@ -669,6 +744,12 @@ func _plan_open() -> Dictionary:
 				_stretch(_rand(1.4, 2.0), 1.0, &"smooth", _wobble(_rand(0.008, 0.025), true)),
 			]
 
+	if heavy_gate:
+		# A long gate swings more slowly and is pushed with more of the body.
+		for index: int in range(1, stretches.size()):
+			(stretches[index] as Dictionary)["d"] = float((stretches[index] as Dictionary)["d"]) * 1.3
+		lean *= 1.4
+
 	# The stretch that opens for real: the first marked one, else the last.
 	var open_index: int = stretches.size() - 1
 	for i: int in stretches.size():
@@ -697,7 +778,7 @@ func _plan_open() -> Dictionary:
 		"bounce": 0.35,
 		"lever_hold": lever_hold,
 		"lean": lean,
-		"nudge": _rand(0.7, 1.3),
+		"nudge": _rand(0.7, 1.3) * (1.4 if heavy_gate else 1.0),
 		"lean_side": _rand(-1.0, 1.0),
 		"pop_at": pop_at,
 	}
@@ -1108,6 +1189,9 @@ func _cue(id: StringName) -> bool:
 ## Plays a sound at `at`. Every play is a little different (volume and pitch), so
 ## repeating a door never repeats its sounds exactly.
 func _play(id: StringName, at: Vector3, volume_db: float = 0.0, pitch: float = 1.0) -> void:
+	if not door_sounds_enabled:
+		return
+
 	var stream: AudioStream = _get_stream(id)
 	if stream == null or not is_inside_tree():
 		return
@@ -1160,3 +1244,141 @@ func _smooth(value: float) -> float:
 
 func _ease_out(value: float) -> float:
 	return 1.0 - pow(1.0 - clampf(value, 0.0, 1.0), 2.0)
+
+
+# -- Walking up to the door -----------------------------------------------
+
+## Where the player stands to push the door (in front of the handle, on their own
+## side, at arm's length) and what they look at on the way. {} when no walk is
+## needed (they are there already), none is possible (something is in the way) or
+## the caller is not a player at the door (a script, a test far away).
+func _approach_target(player: Node) -> Dictionary:
+	if not player is Node3D or door_root == null:
+		return {}
+
+	var body: Node3D = player as Node3D
+	var normal: Vector3 = door_root.global_basis * door_normal_local
+	normal.y = 0.0
+	if normal.length() < 0.01:
+		return {}
+
+	normal = normal.normalized()
+	var side: float = (
+		1.0 if (body.global_position - door_root.global_position).dot(normal) >= 0.0 else -1.0
+	)
+	var handle: Vector3 = _handle_position(int(side), body)
+	var stand: Vector3 = handle + normal * side * approach_distance
+	stand.y = body.global_position.y
+
+	var gap: Vector3 = stand - body.global_position
+	gap.y = 0.0
+	if gap.length() < 0.12 or gap.length() > max_approach_distance:
+		return {}
+
+	if not _way_is_clear(body, stand):
+		return {}
+
+	return {"stand": stand, "look": handle}
+
+
+## The handle on `side` of the door, or the knob nearest the player on a door that
+## has no fitted handle (the fence gate).
+func _handle_position(side: int, body: Node3D) -> Vector3:
+	if approach_handle_fraction >= 0.0 and hinge != null:
+		return hinge.global_position + (
+			(door_root.global_position - hinge.global_position) * 2.0 * approach_handle_fraction
+		)
+
+	if _hardware.has(side):
+		return (_hardware[side] as DoorHardware).get_handle_global()
+
+	var best: Vector3 = door_root.global_position
+	var best_distance: float = INF
+	for knob: DoorKnobInteractable in _knobs:
+		var distance: float = knob.global_position.distance_to(body.global_position)
+		if distance < best_distance:
+			best_distance = distance
+			best = knob.global_position
+
+	return best
+
+
+func _step_approach() -> void:
+	var movement: Node = _get_movement_controller(_player_ref)
+	var walking: bool = movement != null and bool(movement.call("is_guided_walking"))
+	if walking and _choreo_t < 4.0:
+		return
+
+	if walking:
+		movement.call("cancel_guided_walk")
+
+	var pending: Dictionary = _pending_start
+	_pending_start = {}
+	_choreo = &""
+	_start_choreo(pending["kind"], _player_ref, pending["side"], pending["with_key"])
+
+
+## Whether nothing stands between the player and the spot (furniture, a wall):
+## rays at knee and chest height, down the middle and along both sides of the
+## player's width. The door itself does not count.
+func _way_is_clear(body: Node3D, stand: Vector3) -> bool:
+	var space: PhysicsDirectSpaceState3D = body.get_world_3d().direct_space_state
+	var direction: Vector3 = stand - body.global_position
+	direction.y = 0.0
+	direction = direction.normalized()
+	var sideways: Vector3 = Vector3(-direction.z, 0.0, direction.x)
+
+	for offset: float in [-0.22, 0.0, 0.22]:
+		for height: float in [-0.3, 0.2]:
+			var lift: Vector3 = sideways * offset + Vector3.UP * height
+			var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(
+				body.global_position + lift, stand + lift
+			)
+			if body is CollisionObject3D:
+				query.exclude = [(body as CollisionObject3D).get_rid()]
+
+			var hit: Dictionary = space.intersect_ray(query)
+			if hit.is_empty():
+				continue
+
+			# Rising ground is not an obstacle.
+			if (hit["normal"] as Vector3).y > 0.6:
+				continue
+
+			var collider: Node = hit["collider"] as Node
+			if collider != null and door_root.is_ancestor_of(collider):
+				continue
+
+			return false
+
+	return true
+
+
+# -- Letting the player through a swinging door ------------------------------
+
+func _cache_door_bodies() -> void:
+	_door_bodies.clear()
+	for node: Node in door_root.find_children("*", "CollisionObject3D", true, false):
+		if node is Area3D:
+			continue
+
+		_door_bodies.append(node as CollisionObject3D)
+
+
+## While suspended the door's solid parts are on no collision layer, so a swinging
+## door never pushes or drags a player standing in its way.
+func _set_collision_suspended(suspended: bool) -> void:
+	if suspended == _collision_suspended:
+		return
+
+	_collision_suspended = suspended
+
+	for body: CollisionObject3D in _door_bodies:
+		if not is_instance_valid(body):
+			continue
+
+		if suspended:
+			_body_layers[body] = body.collision_layer
+			body.collision_layer = 0
+		else:
+			body.collision_layer = int(_body_layers.get(body, 1))

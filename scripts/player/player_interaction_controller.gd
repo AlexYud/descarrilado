@@ -43,8 +43,8 @@ func update_state(dialogue_frozen: bool, inventory_open: bool) -> void:
 
 	if interactable != null and interactable.can_interact(player):
 		current_interactable = interactable
-		interaction_prompt.text = tr(
-			interactable.get_prompt_text()
+		interaction_prompt.text = InputBindings.format_text(
+			tr(interactable.get_prompt_text())
 		)
 		interaction_prompt.visible = true
 	else:

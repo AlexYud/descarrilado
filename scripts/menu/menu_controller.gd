@@ -190,6 +190,9 @@ var playable_scene_path: String = (
 
 @export var skip_action_name: StringName = &"skip_cinematic"
 @export var skip_hold_duration: float = 1.25
+## The skip hint stays hidden until the player presses a key (they want to skip);
+## it then shows for this long after their last key press (and while they hold).
+@export var skip_prompt_visible_seconds: float = 3.5
 
 
 # ============================================================
@@ -237,6 +240,10 @@ var updating_master_volume_slider: bool = false
 var skip_hold_elapsed: float = 0.0
 var skip_waiting_for_release: bool = false
 var skip_requested: bool = false
+var skip_prompt_visible_until_msec: int = 0
+## True only during the opening cinematic of a new game: loading a saved game has
+## nothing to skip, and shows no skip hint at all.
+var cinematic_skip_enabled: bool = false
 
 var playable_scene_load_path: String = ""
 var playable_scene_load_started: bool = false
@@ -969,6 +976,7 @@ func is_cinematic_transition_running() -> bool:
 # ============================================================
 
 func _begin_cinematic_skip() -> void:
+	cinematic_skip_enabled = true
 	skip_requested = false
 	skip_hold_elapsed = 0.0
 	skip_waiting_for_release = (
@@ -977,13 +985,45 @@ func _begin_cinematic_skip() -> void:
 	)
 
 	if cinematic_skip_prompt != null:
-		cinematic_skip_prompt.show()
+		# The hint names the key the player has chosen for skipping.
+		var skip_label: Label = cinematic_skip_prompt.get_node_or_null("SkipMargin/SkipVBox/SkipLabel") as Label
+		if skip_label != null:
+			skip_label.text = InputBindings.format_text(tr("CINEMATIC_HOLD_SKIP"))
 
+		# Hidden until the player presses a key.
+		cinematic_skip_prompt.hide()
+
+	skip_prompt_visible_until_msec = 0
 	_set_cinematic_skip_progress(0.0)
 
 
+## Any key or button press during the cinematic means the player may want to skip
+## it: only then is the hint shown (and it fades out again if they do nothing).
+func _input(event: InputEvent) -> void:
+	if not cinematic_skip_enabled or not transition_running or skip_requested or cinematic_skip_prompt == null:
+		return
+
+	var is_button: bool = (
+		event is InputEventKey
+		or event is InputEventMouseButton
+		or event is InputEventJoypadButton
+	)
+	var pressed: bool = is_button and event.is_pressed() and not event.is_echo()
+
+	if pressed and not skip_waiting_for_release:
+		_reveal_skip_prompt()
+
+
+func _reveal_skip_prompt() -> void:
+	if cinematic_skip_prompt == null:
+		return
+
+	skip_prompt_visible_until_msec = Time.get_ticks_msec() + int(skip_prompt_visible_seconds * 1000.0)
+	cinematic_skip_prompt.show()
+
+
 func _update_cinematic_skip(delta: float) -> void:
-	if not transition_running or skip_requested:
+	if not cinematic_skip_enabled or not transition_running or skip_requested:
 		return
 
 	if not InputMap.has_action(skip_action_name):
@@ -997,6 +1037,17 @@ func _update_cinematic_skip(delta: float) -> void:
 		if not skip_held:
 			skip_waiting_for_release = false
 		return
+
+	# The hint is on screen while the key is held and for a moment after the last
+	# press, then it goes away again.
+	if skip_held:
+		_reveal_skip_prompt()
+	elif (
+		cinematic_skip_prompt != null
+		and cinematic_skip_prompt.visible
+		and Time.get_ticks_msec() > skip_prompt_visible_until_msec
+	):
+		cinematic_skip_prompt.hide()
 
 	if not skip_held:
 		skip_hold_elapsed = 0.0
@@ -1050,6 +1101,7 @@ func _set_cinematic_skip_progress(value: float) -> void:
 
 
 func _reset_cinematic_skip() -> void:
+	cinematic_skip_enabled = false
 	skip_hold_elapsed = 0.0
 	skip_waiting_for_release = false
 	skip_requested = false

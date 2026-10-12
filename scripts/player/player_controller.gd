@@ -8,6 +8,9 @@ extends CharacterBody3D
 @onready var inspect_controller: PlayerInspectController = $InspectController
 @onready var flashlight_controller: Node = $Hand/SpotLight3D
 
+var focus_blur: FocusBlurController = null
+var motion_blur: MotionBlurController = null
+
 var dialogue_frozen: bool = false
 
 ## True while a full-screen puzzle view (the photo album) has the player's attention.
@@ -46,6 +49,17 @@ func _ready() -> void:
 	if inspect_controller != null:
 		inspect_controller.setup(self)
 
+	# Camera effects, each of which the player can switch off in the options.
+	focus_blur = FocusBlurController.new()
+	focus_blur.name = "FocusBlur"
+	add_child(focus_blur)
+	focus_blur.setup(self)
+
+	motion_blur = MotionBlurController.new()
+	motion_blur.name = "MotionBlur"
+	add_child(motion_blur)
+	motion_blur.setup(self)
+
 	call_deferred("_restore_manual_save_state")
 
 	if inventory_ui_controller != null:
@@ -76,6 +90,23 @@ func _input(event: InputEvent) -> void:
 				inventory_ui_controller
 				.should_return_to_inventory_after_inspect()
 			)
+
+		# Back from the text of a readable spot goes to the item, not out of it.
+		if (
+			inspect_controller.is_reading_text()
+			and (
+				event.is_action_pressed("ui_cancel")
+				or event.is_action_pressed("inventory")
+				or (
+					event is InputEventMouseButton
+					and event.pressed
+					and event.button_index == MOUSE_BUTTON_RIGHT
+				)
+			)
+		):
+			inspect_controller.try_close_text_overlay()
+			get_viewport().set_input_as_handled()
+			return
 
 		if event.is_action_pressed("ui_cancel"):
 			inspect_controller.close(return_to_inventory)

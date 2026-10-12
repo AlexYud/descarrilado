@@ -19,6 +19,7 @@ inspect_name = "ITEM_STATION_BADGE_NAME"
 inspect_description = "ITEM_STATION_BADGE_DESCRIPTION"
 
 [node name="Visual" type="MeshInstance3D" parent="." unique_id=2095970228]
+metadata/inspect_mode = "read"
 mesh = SubResource("BoxMesh_q8u5g")
 
 [node name="InteractArea" type="Area3D" parent="." unique_id=1125872014]

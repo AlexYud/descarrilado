@@ -105,15 +105,15 @@ func _check_clues() -> void:
 	# the order lantern, puncher, whistle, which is the order of the levers.
 	var lantern: Inspectable = shed.get_node("%RailwayLantern")
 	var whistle: Inspectable = shed.get_node("%CarvedWhistle")
-	_expect(_etching(lantern, "ClueLine") == "Keep your light above the fog.", "the lantern's base says to keep the light above")
-	_expect(_etching(whistle, "ClueLine") == "Stand tall and make some noise!", "the whistle's back says to stand tall")
+	_expect(_etching(lantern, "ClueSpot") == "Keep your light above the fog.", "the lantern's base says to keep the light above")
+	_expect(_etching(whistle, "ClueSpot") == "Stand tall and make some noise!", "the whistle's back says to stand tall")
 	for item: Node in [lantern, whistle]:
 		_expect(item.get_node("Visual").find_child("LeverLine", true, false) == null, item.name + " does not name a lever")
-		var clue: String = _etching(item, "ClueLine")
+		var clue: String = _etching(item, "ClueSpot")
 		_expect(not clue.contains("Rule") and not clue.contains("lever") and not clue.contains("LEVER"), item.name + " has no rule number")
 
-	_expect(_label_faces_away(lantern, "ClueLine", Vector3.DOWN), "the lantern's clue faces down")
-	_expect(_label_faces_away(whistle, "ClueLine", Vector3.FORWARD), "the whistle's clue faces back")
+	_expect(_label_faces_away(lantern, "ClueSpot", Vector3.DOWN), "the lantern's clue faces down")
+	_expect(_label_faces_away(whistle, "ClueSpot", Vector3.FORWARD), "the whistle's clue faces back")
 
 	for item_name: String in ["SophiaJournal", "RailwayLantern", "CarvedWhistle"]:
 		var item: Inspectable = shed.get_node("%" + item_name)
@@ -173,8 +173,8 @@ func _check_box_and_puncher() -> void:
 	await _read(puncher, 0.5)
 	_expect(tr(puncher.get_inspect_data()["name"]) == "Brass Ticket Hole-Puncher", "only the puncher is inspected, as the Brass Ticket Hole-Puncher")
 	_expect(tr(puncher.get_inspect_data()["description"]) == "A heavy, cast-iron conductor's ticket puncher.", "with its description")
-	_expect(_etching(puncher, "ClueLine") == "Press deep into the paper.", "the puncher's arm says to press deep")
-	_expect(_label_faces_away(puncher, "ClueLine", Vector3.FORWARD), "the puncher's clue faces back")
+	_expect(_etching(puncher, "ClueSpot") == "Press deep into the paper.", "the puncher's arm says to press deep")
+	_expect(_label_faces_away(puncher, "ClueSpot", Vector3.FORWARD), "the puncher's clue faces back")
 	_expect(puncher.get_node("Visual").find_child("LeverLine", true, false) == null, "the puncher does not name a lever")
 
 
@@ -318,18 +318,19 @@ func _is_collectable(node: Node) -> bool:
 
 ## The translated text of an etched line on an item's Visual.
 func _etching(item: Node, line: String) -> String:
-	var label: Label3D = item.get_node("Visual").find_child(line, true, false) as Label3D
-	return tr(label.text) if label != null else "<missing %s>" % line
+	# The clue is a readable spot (the words are shown as an overlay), not a label.
+	var spot: ReadableSpot = item.get_node("Visual").find_child(line, true, false) as ReadableSpot
+	return tr(spot.text_key) if spot != null else "<missing %s>" % line
 
 
 ## True when the line's text faces `direction` (in the item's own space), so the
 ## player has to turn the item to read it.
 func _label_faces_away(item: Node, line: String, direction: Vector3) -> bool:
-	var label: Label3D = item.get_node("Visual").find_child(line, true, false) as Label3D
-	if label == null:
+	var spot: ReadableSpot = item.get_node("Visual").find_child(line, true, false) as ReadableSpot
+	if spot == null:
 		return false
 
-	var normal: Vector3 = (label.global_basis * Vector3.BACK).normalized()
+	var normal: Vector3 = spot.get_facing_normal()
 	var visual: Node3D = item.get_node("Visual")
 	var wanted: Vector3 = (visual.global_basis * direction).normalized()
 	return normal.dot(wanted) > 0.9

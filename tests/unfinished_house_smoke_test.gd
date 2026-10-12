@@ -19,6 +19,7 @@ var flashlight: Node = null
 
 
 func _ready() -> void:
+	DoorController.approach_enabled = false
 	SaveManager.save_directory = TEST_SAVE_DIRECTORY
 	SaveManager.delete_slot(1)
 	SaveManager.create_new_game(

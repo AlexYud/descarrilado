@@ -24,7 +24,7 @@ msgid "MENU_QUIT"
 msgstr "Sair"
 
 msgid "CINEMATIC_HOLD_SKIP"
-msgstr "Segure Espaço para Pular"
+msgstr "Segure {skip_cinematic} para Pular"
 
 msgid "COMMON_LOADING"
 msgstr "Carregando..."
@@ -195,22 +195,22 @@ msgstr "Sem Limite"
 
 # Interações e tutoriais
 msgid "PROMPT_INTERACT"
-msgstr "[E] Interagir"
+msgstr "[{interact}] Interagir"
 
 msgid "PROMPT_PICK_UP"
-msgstr "[E] Pegar"
+msgstr "[{interact}] Pegar"
 
 msgid "PROMPT_OPEN"
-msgstr "[E] Abrir"
+msgstr "[{interact}] Abrir"
 
 msgid "PROMPT_CLOSE"
-msgstr "[E] Fechar"
+msgstr "[{interact}] Fechar"
 
 msgid "PROMPT_LOCKED"
 msgstr "[Trancado]"
 
 msgid "PROMPT_UNLOCK"
-msgstr "[E] Destrancar"
+msgstr "[{interact}] Destrancar"
 
 #. TRANSLATORS: %s é a tecla configurada para a lanterna.
 msgid "TUTORIAL_FLASHLIGHT"
@@ -232,14 +232,14 @@ msgid "INVENTORY_SLOT_ITEM"
 msgstr "Espaço {slot}\n{item}"
 
 msgid "INVENTORY_INSPECT_HINT"
-msgstr "Arraste com o botão esquerdo: girar    Roda: zoom    Botão direito: voltar"
+msgstr "Arrastar: girar    Roda: zoom    {inspect_flip}: virar    {inspect_reset}: restaurar    Botão direito: voltar"
 
 msgid "COMMON_OK"
 msgstr "OK"
 
 # Diálogo
 msgid "DIALOGUE_CONTINUE_HINT"
-msgstr "Pressione Enter ou clique para continuar"
+msgstr "Pressione {dialog_continue} ou clique para continuar"
 
 msgid "DIALOGUE_PLACEHOLDER"
 msgstr "Olá."
@@ -641,3 +641,286 @@ msgstr "Um apito de condutor entalhado à mão, preso a um cordão desbotado."
 
 msgid "WHISTLE_CLUE"
 msgstr "Fique de pé e faça barulho!"
+
+# Controls, key bindings and tutorial hints
+msgid "CONTROLS_SECTION_MOUSE"
+msgstr "Mouse"
+
+msgid "CONTROLS_MOUSE_SENSITIVITY"
+msgstr "Sensibilidade do mouse"
+
+msgid "CONTROLS_INVERT_Y"
+msgstr "Inverter olhar vertical"
+
+msgid "CONTROLS_SECTION_GAMEPLAY"
+msgstr "Jogabilidade"
+
+msgid "CONTROLS_SPRINT_MODE"
+msgstr "Andar mais rápido"
+
+msgid "CONTROLS_SPRINT_HOLD"
+msgstr "Segurar"
+
+msgid "CONTROLS_SPRINT_TOGGLE"
+msgstr "Alternar"
+
+msgid "CONTROLS_TUTORIAL_HINTS"
+msgstr "Dicas de tutorial"
+
+msgid "CONTROLS_SECTION_KEYS"
+msgstr "Teclas"
+
+msgid "BINDINGS_MOVEMENT"
+msgstr "Movimento"
+
+msgid "BINDINGS_ACTIONS"
+msgstr "Ações"
+
+msgid "BINDINGS_INTERFACE"
+msgstr "Interface"
+
+msgid "BINDINGS_PRIMARY"
+msgstr "Principal"
+
+msgid "BINDINGS_ALTERNATE"
+msgstr "Alternativa"
+
+msgid "BINDING_UP"
+msgstr "Andar para frente"
+
+msgid "BINDING_DOWN"
+msgstr "Andar para trás"
+
+msgid "BINDING_LEFT"
+msgstr "Andar para a esquerda"
+
+msgid "BINDING_RIGHT"
+msgstr "Andar para a direita"
+
+msgid "BINDING_SPRINT"
+msgstr "Andar mais rápido"
+
+msgid "BINDING_INTERACT"
+msgstr "Interagir"
+
+msgid "BINDING_FLASHLIGHT"
+msgstr "Lanterna"
+
+msgid "BINDING_INVENTORY"
+msgstr "Inventário"
+
+msgid "BINDING_SKIP_CINEMATIC"
+msgstr "Pular cinemática"
+
+msgid "BINDING_DIALOG_CONTINUE"
+msgstr "Continuar diálogo"
+
+msgid "BINDING_UNBOUND"
+msgstr "Sem tecla"
+
+msgid "BINDING_LISTENING"
+msgstr "Pressione uma tecla..."
+
+msgid "BINDING_LISTEN_HINT"
+msgstr "Pressione uma tecla ou botão do mouse para atribuir. Esc ou clique esquerdo cancela. Delete remove a tecla alternativa."
+
+msgid "BINDING_RESET"
+msgstr "Redefinir"
+
+msgid "BINDINGS_RESET_ALL"
+msgstr "Redefinir todos os controles"
+
+msgid "BINDINGS_RESET_TITLE"
+msgstr "Redefinir controles"
+
+msgid "BINDINGS_RESET_TEXT"
+msgstr "Redefinir todas as teclas e opções de controle para o padrão?"
+
+msgid "BINDING_CONFLICT_TITLE"
+msgstr "Tecla já em uso"
+
+msgid "BINDING_CONFLICT_TEXT"
+msgstr "{key} já é usada em \"{action}\"."
+
+msgid "BINDING_CONFLICT_SWAP"
+msgstr "Trocar"
+
+msgid "BINDING_CONFLICT_REPLACE"
+msgstr "Substituir"
+
+msgid "BINDING_CONFLICT_CANCEL"
+msgstr "Cancelar"
+
+msgid "BINDING_CONFLICT_BLOCKED"
+msgstr "{key} é a única tecla de \"{action}\". Atribua outra tecla a essa ação primeiro."
+
+msgid "BINDING_LAST_KEY"
+msgstr "Toda ação precisa de pelo menos uma tecla."
+
+msgid "BINDING_MOUSE_LEFT"
+msgstr "Botão esquerdo do mouse"
+
+msgid "BINDING_MOUSE_LEFT_SHORT"
+msgstr "BE"
+
+msgid "BINDING_MOUSE_RIGHT"
+msgstr "Botão direito do mouse"
+
+msgid "BINDING_MOUSE_RIGHT_SHORT"
+msgstr "BD"
+
+msgid "BINDING_MOUSE_MIDDLE"
+msgstr "Botão do meio do mouse"
+
+msgid "BINDING_MOUSE_MIDDLE_SHORT"
+msgstr "BM"
+
+msgid "BINDING_MOUSE_4"
+msgstr "Botão 4 do mouse"
+
+msgid "BINDING_MOUSE_4_SHORT"
+msgstr "M4"
+
+msgid "BINDING_MOUSE_5"
+msgstr "Botão 5 do mouse"
+
+msgid "BINDING_MOUSE_5_SHORT"
+msgstr "M5"
+
+msgid "KEY_NAME_SPACE"
+msgstr "Espaço"
+
+msgid "KEY_NAME_ENTER"
+msgstr "Enter"
+
+msgid "KEY_NAME_SHIFT"
+msgstr "Shift"
+
+msgid "KEY_NAME_CTRL"
+msgstr "Ctrl"
+
+msgid "KEY_NAME_ALT"
+msgstr "Alt"
+
+msgid "KEY_NAME_TAB"
+msgstr "Tab"
+
+msgid "KEY_NAME_BACKSPACE"
+msgstr "Backspace"
+
+msgid "KEY_NAME_DELETE"
+msgstr "Delete"
+
+msgid "KEY_NAME_UP"
+msgstr "Cima"
+
+msgid "KEY_NAME_DOWN"
+msgstr "Baixo"
+
+msgid "KEY_NAME_LEFT"
+msgstr "Esquerda"
+
+msgid "KEY_NAME_RIGHT"
+msgstr "Direita"
+
+msgid "TUTORIAL_SPRINT_HOLD"
+msgstr "Segure {sprint} para andar mais rápido"
+
+msgid "TUTORIAL_SPRINT_TOGGLE"
+msgstr "Pressione {sprint} para andar mais rápido"
+
+
+# Controls, key bindings and tutorial hints
+msgid "BINDINGS_INSPECT"
+msgstr "Examinar itens"
+
+msgid "BINDING_INSPECT_FLIP"
+msgstr "Virar o item"
+
+msgid "BINDING_INSPECT_RESET"
+msgstr "Restaurar a vista do item"
+
+msgid "INSPECT_FLIP"
+msgstr "Virar"
+
+msgid "INSPECT_RESET"
+msgstr "Restaurar"
+
+msgid "INSPECT_HINT_EXAMINE"
+msgstr "Arrastar: girar    Roda: zoom    {inspect_flip}: virar"
+
+msgid "INSPECT_HINT_READ"
+msgstr "Arrastar: inclinar    Roda: zoom    {inspect_flip}: virar o papel"
+
+# Readable documents: the writing shown as an overlay when the art is in another language
+msgid "READABLE_RECIPE"
+msgstr "A primeira vez que tentamos cozinhar uma refeição de verdade juntos.\n\nVocê insistiu em fazer a sopa de batata da sua mãe para me impressionar, mas quando desceu até a feira, comprou [color=#8fa8ff][u]3 quilos inteiros[/u][/color] de sal grosso em vez de três colherzinhas. A cozinha ficou com cheiro de mar, e o caldo estragou por completo.\n\nEm vez de admitir o erro, você sentou à mesa e engoliu dois pratos cheios em silêncio total só para provar que estava 'bem'. Eu ri até doer as costelas, e você finalmente abriu um sorriso.\n\n— S."
+
+msgid "READABLE_PANTRY_NOTE"
+msgstr "[color=#8fa8ff][u]6[/u][/color] minutos presos dentro desta despensa minúscula e escura enquanto sua família gritava na sala de jantar.\n\nO ar estava empoeirado e cheirava a madeira velha. Suas mãos tremiam nas minhas enquanto prendíamos a respiração, com medo de que alguém abrisse a porta e nos flagrasse.\n\nQuando você finalmente se inclinou e me beijou no escuro total, os gritos lá fora sumiram em nada. Lembro de pensar, bem ali, que eu nunca quis voltar para aquele corredor.\n\n— S."
+
+msgid "READABLE_DIARY"
+msgstr "Os pássaros começavam a cantar nas árvores lá fora, e o quarto estava frio, úmido e cinzento. Não tínhamos dormido um minuto sequer, só deitados no assoalho ouvindo o silêncio.\n\nSophia estava deitada ao meu lado, olhando para o teto inacabado sem dizer nada. Ela não falou em partir para a cidade. Não disse uma palavra sobre o trem ou sobre as passagens de ônibus.\n\nQuando deu [color=#8fa8ff][u]6h00[/u][/color] e o sol finalmente atravessou as árvores, ela ainda estava aqui ao meu lado. Foi naquele exato momento que eu soube que ela nunca iria embora. Ela é minha para sempre."
+
+msgid "READABLE_NOTE_CAPSULE"
+msgstr "Para abrir daqui a 5 anos.\n\nSophia, meu amor. Dentro desta caixa está tudo o que estamos construindo. Ela guarda o nosso objetivo, a nossa casa e o futuro que prometemos um ao outro em segredo.\n\nSe um dia você esquecer o código para abri-la, não precisa de chave. Só precisa refazer os passos de como tudo começou, na ordem exata em que a nossa história aconteceu.\n\n— L."
+
+msgid "READABLE_FICHA_NOTE"
+msgstr "Eu sabia que você ia achar, Juli. Você é a única que realmente presta atenção.\n\nLeve a ficha até o topo do morro — vamos fazer essa ligação."
+
+msgid "READABLE_JOURNAL"
+msgstr "O Lucas acha que consegue passar por tudo à força com uma chave inglesa.\n\nEle não entende que essa velha caixa de junção segue uma sequência. Lembra do nosso código secreto para pegar o trem da noite, Juli?\n\n[b]Primeiro, você ilumina os trilhos.[/b]\n[b]Depois, você fura o bilhete.[/b]\n[b]Por fim, você apita o sinal.[/b]"
+
+msgid "READABLE_HOUSE_AD"
+msgstr "[b]CASA À VENDA[/b]\nCentro da vila\n\nSala · Cozinha · Quarto · Quarto · Despensa\n\n[i]As janelas azuis são bonitas.[/i]\n\n[b]NOSSA?[/b]"
+
+msgid "READABLE_BUS_TICKET_SOPHIA"
+msgstr "[b]PASSAGEM DE ÔNIBUS[/b]\nVila ferroviária / São Paulo\nSó ida\n\nPassageiro: [i]Sophia[/i]"
+
+msgid "READABLE_BUS_TICKET_UNCLAIMED"
+msgstr "[b]PASSAGEM DE ÔNIBUS[/b]\nVila ferroviária / São Paulo\nSó ida\n\nPassageiro: [i]Se quiser.[/i]"
+
+msgid "READABLE_OVERLAY_SETTING"
+msgstr "Texto dos documentos"
+
+msgid "READABLE_OVERLAY_AUTO"
+msgstr "Automático (traduzir quando preciso)"
+
+msgid "READABLE_OVERLAY_ALWAYS"
+msgstr "Sempre"
+
+msgid "READABLE_OVERLAY_NEVER"
+msgstr "Nunca"
+
+# Readable spots on inspected items
+msgid "INSPECT_PROMPT_READ"
+msgstr "[{interact}] Ler"
+
+msgid "INSPECT_PROMPT_EXAMINE"
+msgstr "[{interact}] Examinar"
+
+msgid "INSPECT_BACK"
+msgstr "Voltar"
+
+msgid "INSPECT_SPOT_ENGRAVING"
+msgstr "Gravação"
+
+# Clean inspect view and camera effects
+msgid "INSPECT_VERB_READ"
+msgstr "Ler"
+
+msgid "INSPECT_VERB_EXAMINE"
+msgstr "Examinar"
+
+msgid "INSPECT_VERB_CLOSE"
+msgstr "Fechar"
+
+msgid "KEY_NAME_ESCAPE"
+msgstr "Esc"
+
+msgid "OPTIONS_DEPTH_OF_FIELD"
+msgstr "Profundidade de campo"
+
+msgid "OPTIONS_MOTION_BLUR"
+msgstr "Desfoque de movimento"
+

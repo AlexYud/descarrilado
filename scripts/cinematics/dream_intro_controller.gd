@@ -97,7 +97,6 @@ const BLACKOUT_RECT_PATH := NodePath(
 @export var tutorial_prompt_delay: float = 0.35
 
 @export var flashlight_action_name: String = "flashlight"
-@export var flashlight_button_text: String = "F"
 
 @export var flashlight_tutorial_text: String = (
 	"TUTORIAL_FLASHLIGHT"
@@ -227,7 +226,7 @@ func _on_text_language_changed(_locale: String) -> void:
 	if tutorial_prompt_label != null:
 		tutorial_prompt_label.text = (
 			tr(flashlight_tutorial_text)
-			% flashlight_button_text
+			% InputBindings.get_binding_label(StringName(flashlight_action_name), -1, true)
 		)
 
 
@@ -869,7 +868,7 @@ func _create_tutorial_prompt() -> void:
 
 	tutorial_prompt_label.text = (
 		tr(flashlight_tutorial_text)
-		% flashlight_button_text
+		% InputBindings.get_binding_label(StringName(flashlight_action_name), -1, true)
 	)
 
 	tutorial_prompt_label.horizontal_alignment = (
@@ -937,7 +936,7 @@ func _show_flashlight_tutorial_prompt() -> void:
 
 	tutorial_prompt_label.text = (
 		tr(flashlight_tutorial_text)
-		% flashlight_button_text
+		% InputBindings.get_binding_label(StringName(flashlight_action_name), -1, true)
 	)
 
 	tutorial_prompt_label.visible = true

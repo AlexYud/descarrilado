@@ -5,26 +5,20 @@ const FOOTSTEP_PITCH_MIN: float = 0.85
 const FOOTSTEP_PITCH_MAX: float = 1.0
 const SPRINT_FOOTSTEP_PITCH_MIN: float = 0.98
 const SPRINT_FOOTSTEP_PITCH_MAX: float = 1.12
-const CROUCH_FOOTSTEP_PITCH_MIN: float = 0.75
-const CROUCH_FOOTSTEP_PITCH_MAX: float = 0.9
 
 var player: CharacterBody3D = null
 var sfx_walk: AudioStreamPlayer = null
-var sfx_crouch_walk: AudioStreamPlayer = null
 
 var audio_trigger_areas: Dictionary = {}
 
 var _walk_base_db: float = 0.0
-var _crouch_base_db: float = 0.0
 var _left_foot: bool = false
 
 
 func setup(player_node: CharacterBody3D) -> void:
 	player = player_node
 	sfx_walk = player.get_node("SoundEffects/sfx_walk") as AudioStreamPlayer
-	sfx_crouch_walk = player.get_node("SoundEffects/sfx_crouch_walk") as AudioStreamPlayer
 	_walk_base_db = sfx_walk.volume_db
-	_crouch_base_db = sfx_crouch_walk.volume_db
 
 	register_audio_triggers()
 
@@ -33,22 +27,13 @@ func setup(player_node: CharacterBody3D) -> void:
 ## `strength` is how hard the foot came down (1 is a normal step). Each step varies
 ## in pitch and volume, and now and then one lands noticeably softer, so a long walk
 ## never sounds like one sample on repeat.
-func trigger_footstep(wants_crouch: bool, wants_sprint: bool, strength: float = 1.0) -> void:
+func trigger_footstep(wants_sprint: bool, strength: float = 1.0) -> void:
 	var loudness_db: float = (
 		randf_range(-2.5, 1.0)
 		+ 6.0 * log(clampf(strength, 0.35, 1.8)) / log(10.0)
 	)
 	if randf() < 0.12:
 		loudness_db -= randf_range(3.0, 6.0)
-
-	if wants_crouch:
-		sfx_walk.stop()
-		sfx_crouch_walk.pitch_scale = randf_range(CROUCH_FOOTSTEP_PITCH_MIN, CROUCH_FOOTSTEP_PITCH_MAX)
-		sfx_crouch_walk.volume_db = _crouch_base_db + loudness_db
-		sfx_crouch_walk.play()
-		return
-
-	sfx_crouch_walk.stop()
 
 	if wants_sprint:
 		sfx_walk.pitch_scale = randf_range(SPRINT_FOOTSTEP_PITCH_MIN, SPRINT_FOOTSTEP_PITCH_MAX)
@@ -65,9 +50,6 @@ func trigger_footstep(wants_crouch: bool, wants_sprint: bool, strength: float = 
 func stop_footsteps() -> void:
 	if sfx_walk.playing:
 		sfx_walk.stop()
-
-	if sfx_crouch_walk.playing:
-		sfx_crouch_walk.stop()
 
 
 func play_3d_sound(sound_path: String, sound_position: Vector3, max_distance: float = 10.0, debug: bool = false) -> AudioStreamPlayer3D:

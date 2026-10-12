@@ -52,6 +52,9 @@ size = Vector3(0.2, 1.3, 2.2)
 
 [node name="DoorController" type="Node3D" unique_id=944800287]
 script = ExtResource("1_ti8ei")
+door_normal_local = Vector3(1, 0, 0)
+approach_handle_fraction = 0.8
+heavy_gate = true
 
 [node name="Hinge" type="Node3D" parent="." unique_id=1507265073]
 

@@ -1,25 +1,22 @@
 extends Node
 class_name PlayerMovementController
 
+## Raised when a guided walk ends; `reached` is false if it was stopped by an
+## obstacle, a timeout or a cancel.
+signal guided_walk_finished(reached: bool)
+
 # Speeds in world units per second (the player is scaled 0.5 and one unit is
 # about 1.27 m): walk is an unhurried ~1.65 m/s, "sprint" a brisk ~2.9 m/s walk.
 const WALK_SPEED: float = 1.3
 const SPRINT_SPEED: float = 2.3
-const CROUCH_SPEED: float = 0.7
 ## Backwards and sideways steps are slower than forward ones.
 const STRAFE_SPEED_FACTOR: float = 0.88
 const BACKWARD_SPEED_FACTOR: float = 0.72
-
-const CROUCH_HEIGHT: float = -0.25
-const CROUCH_ACC: float = 8.0
-const STAND_HEIGHT: float = 2.0
-const CROUCH_COLLIDER_HEIGHT: float = 1.2
 
 # Distance covered by one step (world units): the step phase advances with the
 # distance walked, so a slow walk gives slow steps and the feet never "slide".
 const STEP_LENGTH_WALK: float = 0.65
 const STEP_LENGTH_FAST: float = 0.8
-const STEP_LENGTH_CROUCH: float = 0.4
 const MIN_STEP_SPEED: float = 0.2
 
 # Camera motion, in the camera's local units (the player is scaled 0.5, so one
@@ -71,7 +68,6 @@ const FOV_FAST_WALK: float = 1.5
 ## Share of the ground acceleration that applies in the air.
 @export var air_control: float = 0.3
 @export var camera_sensitivity: float = 0.15
-@export var jump_force: float = 3.0
 @export var gravity_force: float = 10.0
 @export var flashlight_lerp_speed: float = 6.0
 @export var camera_lerp_speed: float = 10.0
@@ -92,8 +88,6 @@ var collider: CollisionShape3D = null
 var look_yaw: float = 0.0
 var look_pitch: float = 0.0
 
-var is_crouching: bool = false
-var crouch_offset: float = 0.0
 
 ## Steps taken since the walk began; the whole part counts footfalls.
 var step_phase: float = 0.0
@@ -146,6 +140,22 @@ var gameplay_camera_rotation: Vector3 = Vector3.ZERO
 
 var cutscene_camera_controlled: bool = false
 
+## True while the player is walking fast (the sprint key held, or toggled on).
+var is_sprinting: bool = false
+
+var _sprint_toggled: bool = false
+
+# The guided walk: the player is walked to a spot at a slow, natural pace, looking
+# where they will act (used to walk up to a door before pushing it).
+var _guided_active: bool = false
+var _guided_target: Vector3 = Vector3.ZERO
+var _guided_look: Vector3 = Vector3.ZERO
+var _guided_speed: float = 1.0
+var _guided_time: float = 0.0
+var _guided_timeout: float = 3.0
+var _guided_best_distance: float = INF
+var _guided_stalled_for: float = 0.0
+
 
 func setup(
 	player_node: CharacterBody3D,
@@ -183,7 +193,8 @@ func handle_input(
 	event: InputEvent,
 	block_look: bool
 ) -> void:
-	if block_look or cutscene_camera_controlled:
+	# During a guided walk the view is steered by the walk.
+	if block_look or cutscene_camera_controlled or _guided_active:
 		return
 
 	if event is InputEventMouseMotion:
@@ -191,14 +202,17 @@ func handle_input(
 			event as InputEventMouseMotion
 		)
 
-		look_yaw += (
-			mouse_event.relative.x
-			* camera_sensitivity
+		var sensitivity: float = (
+			camera_sensitivity
+			* GameSettings.get_mouse_sensitivity_multiplier()
 		)
+
+		look_yaw += mouse_event.relative.x * sensitivity
 
 		look_pitch += (
 			mouse_event.relative.y
-			* camera_sensitivity
+			* sensitivity
+			* (-1.0 if GameSettings.get_invert_y() else 1.0)
 		)
 
 		look_pitch = clampf(
@@ -222,24 +236,28 @@ func physics_update(
 	_apply_look(delta)
 
 	if movement_frozen:
+		if _guided_active:
+			cancel_guided_walk()
+		is_sprinting = false
+		_sprint_toggled = false
 		_apply_gravity_only(delta)
 		_update_frozen_view(delta)
 		player.move_and_slide()
 		return
 
+	if _guided_active:
+		_physics_guided_walk(delta)
+		return
+
 	var move_dir: Vector3 = _get_move_direction()
 	var forward_dot: float = move_dir.dot(-head.basis.z)
-	var wants_crouch: bool = Input.is_action_pressed(
-		"crouch"
-	)
 	# Walking fast only makes sense while heading forward.
 	var wants_sprint: bool = (
-		Input.is_action_pressed("sprint")
-		and not wants_crouch
+		_is_sprint_requested(move_dir.length() > 0.01)
 		and forward_dot > 0.3
 	)
+	is_sprinting = wants_sprint
 	var current_speed: float = _get_current_speed(
-		wants_crouch,
 		wants_sprint
 	) * _get_direction_speed_factor(forward_dot)
 
@@ -249,17 +267,9 @@ func physics_update(
 		current_speed,
 		delta
 	)
-	_apply_vertical_movement(
-		delta,
-		wants_crouch
-	)
-	_update_crouch(
-		delta,
-		wants_crouch
-	)
+	_apply_vertical_movement(delta)
 	_update_view_effects(
 		delta,
-		wants_crouch,
 		wants_sprint
 	)
 
@@ -270,6 +280,7 @@ func begin_cutscene_camera_control(
 	final_camera_position: Vector3,
 	final_camera_rotation: Vector3
 ) -> void:
+	cancel_guided_walk()
 	cutscene_camera_controlled = true
 
 	original_camera_position = final_camera_position
@@ -299,11 +310,7 @@ func end_cutscene_camera_control() -> void:
 	)
 	_reset_view_motion()
 
-	var final_offset: Vector3 = Vector3(
-		0.0,
-		crouch_offset,
-		0.0
-	)
+	var final_offset: Vector3 = Vector3.ZERO
 
 	if head != null:
 		head.rotation.y = 0.0
@@ -341,11 +348,7 @@ func force_stop_immediately() -> void:
 	if cutscene_camera_controlled:
 		return
 
-	var final_offset: Vector3 = Vector3(
-		0.0,
-		crouch_offset,
-		0.0
-	)
+	var final_offset: Vector3 = Vector3.ZERO
 
 	if camera != null:
 		camera.position = (
@@ -365,7 +368,6 @@ func get_save_state() -> Dictionary:
 	return {
 		"look_yaw": look_yaw,
 		"look_pitch": look_pitch,
-		"is_crouching": is_crouching,
 	}
 
 
@@ -376,8 +378,6 @@ func restore_save_state(save_data: Dictionary) -> void:
 		-35.0,
 		75.0
 	)
-	is_crouching = bool(save_data.get("is_crouching", false))
-	crouch_offset = CROUCH_HEIGHT if is_crouching else 0.0
 	_reset_view_motion()
 	gameplay_camera_rotation = Vector3(
 		-deg_to_rad(look_pitch),
@@ -395,7 +395,7 @@ func restore_save_state(save_data: Dictionary) -> void:
 			0.0
 		)
 
-	var final_offset := Vector3(0.0, crouch_offset, 0.0)
+	var final_offset := Vector3.ZERO
 	if camera != null:
 		camera.position = original_camera_position + final_offset
 		camera.rotation = gameplay_camera_rotation
@@ -403,14 +403,6 @@ func restore_save_state(save_data: Dictionary) -> void:
 
 	if hand != null:
 		hand.position = original_hand_position + final_offset
-
-	if collider != null and collider.shape is CapsuleShape3D:
-		var capsule: CapsuleShape3D = collider.shape as CapsuleShape3D
-		capsule.height = (
-			CROUCH_COLLIDER_HEIGHT
-			if is_crouching
-			else STAND_HEIGHT
-		)
 
 
 func _apply_floor_settings() -> void:
@@ -467,13 +459,7 @@ func _get_move_direction() -> Vector3:
 	return Vector3.ZERO
 
 
-func _get_current_speed(
-	wants_crouch: bool,
-	wants_sprint: bool
-) -> float:
-	if wants_crouch:
-		return CROUCH_SPEED
-
+func _get_current_speed(wants_sprint: bool) -> float:
 	if wants_sprint:
 		return SPRINT_SPEED
 
@@ -511,19 +497,11 @@ func _apply_horizontal_movement(
 	player.velocity.z = next.y
 
 
-func _apply_vertical_movement(
-	delta: float,
-	wants_crouch: bool
-) -> void:
+func _apply_vertical_movement(delta: float) -> void:
 	if not player.is_on_floor():
 		player.velocity.y -= (
 			gravity_force * delta
 		)
-	elif (
-		Input.is_action_just_pressed("jump")
-		and not wants_crouch
-	):
-		player.velocity.y = jump_force
 	else:
 		player.velocity.y = (
 			-grounded_stick_velocity
@@ -544,57 +522,8 @@ func _apply_gravity_only(delta: float) -> void:
 		)
 
 
-func _update_crouch(
-	delta: float,
-	wants_crouch: bool
-) -> void:
-	is_crouching = wants_crouch
-
-	var target_offset: float = (
-		CROUCH_HEIGHT
-		if wants_crouch
-		else 0.0
-	)
-
-	crouch_offset = lerpf(
-		crouch_offset,
-		target_offset,
-		delta * CROUCH_ACC
-	)
-
-	if (
-		collider != null
-		and collider.shape is CapsuleShape3D
-	):
-		var capsule: CapsuleShape3D = (
-			collider.shape as CapsuleShape3D
-		)
-
-		var crouch_amount: float = clampf(
-			absf(
-				crouch_offset
-				/ CROUCH_HEIGHT
-			),
-			0.0,
-			1.0
-		)
-
-		var target_height: float = lerpf(
-			STAND_HEIGHT,
-			CROUCH_COLLIDER_HEIGHT,
-			crouch_amount
-		)
-
-		capsule.height = lerpf(
-			capsule.height,
-			target_height,
-			delta * CROUCH_ACC * 1.5
-		)
-
-
 func _update_view_effects(
 	delta: float,
-	wants_crouch: bool,
 	wants_sprint: bool
 ) -> void:
 	var horizontal_speed: float = Vector2(
@@ -611,7 +540,6 @@ func _update_view_effects(
 		_advance_steps(
 			delta,
 			horizontal_speed,
-			wants_crouch,
 			wants_sprint
 		)
 	elif audio_controller != null:
@@ -656,14 +584,11 @@ func _update_frozen_view(delta: float) -> void:
 func _advance_steps(
 	delta: float,
 	horizontal_speed: float,
-	wants_crouch: bool,
 	wants_sprint: bool
 ) -> void:
 	var step_length: float = STEP_LENGTH_WALK
 
-	if wants_crouch:
-		step_length = STEP_LENGTH_CROUCH
-	elif wants_sprint:
+	if wants_sprint:
 		step_length = STEP_LENGTH_FAST
 
 	# The cadence wanders a little, as a walker's does, instead of ticking like a clock.
@@ -674,12 +599,11 @@ func _advance_steps(
 	var step_index: int = int(floorf(step_phase))
 	if step_index != _last_step_index:
 		_last_step_index = step_index
-		_on_footfall(horizontal_speed, wants_crouch, wants_sprint)
+		_on_footfall(horizontal_speed, wants_sprint)
 
 
 func _on_footfall(
 	horizontal_speed: float,
-	wants_crouch: bool,
 	wants_sprint: bool
 ) -> void:
 	var strength: float = clampf(
@@ -687,9 +611,6 @@ func _on_footfall(
 		0.4,
 		1.6
 	)
-
-	if wants_crouch:
-		strength *= 0.5
 
 	# No two footfalls are alike: this one rolls its own weight, bob and sway.
 	strength *= _rng.randf_range(FOOTFALL_KICK_MIN, FOOTFALL_KICK_MAX)
@@ -704,7 +625,7 @@ func _on_footfall(
 	_step_spring_velocity -= STEP_KICK * strength
 
 	if audio_controller != null:
-		audio_controller.trigger_footstep(wants_crouch, wants_sprint, strength)
+		audio_controller.trigger_footstep(wants_sprint, strength)
 
 
 func _track_landing() -> void:
@@ -728,7 +649,7 @@ func _on_landed(fall_speed: float) -> void:
 	)
 
 	if audio_controller != null:
-		audio_controller.trigger_footstep(false, false)
+		audio_controller.trigger_footstep(false)
 
 
 ## Moves the camera and the hand the way a head and shoulders move while
@@ -763,12 +684,6 @@ func _apply_view_motion(
 	_step_spring_velocity += spring_accel * delta
 	_step_spring += _step_spring_velocity * delta
 
-	var crouch_amount: float = clampf(
-		absf(crouch_offset / CROUCH_HEIGHT),
-		0.0,
-		1.0
-	)
-
 	# Each footfall's own roll is eased in, so the change between steps never pops.
 	var follow: float = 1.0 - exp(-GAIT_FOLLOW_RATE * delta)
 	_gait_amount = lerpf(_gait_amount, _gait_amount_target, follow)
@@ -781,7 +696,6 @@ func _apply_view_motion(
 			BOB_SPEED_EXPONENT
 		)
 		* _bob_blend
-		* lerpf(1.0, 0.6, crouch_amount)
 	)
 	var intensity: float = base_intensity * _gait_amount
 	var roll_intensity: float = base_intensity * _gait_roll
@@ -848,9 +762,9 @@ func _apply_view_motion(
 		+ event[3]
 	)
 
-	# The crouch height is eased; the walking motion is added on top of it
-	# without being smoothed away.
-	var base_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
+	# The walking motion is added on top of the eased resting position without
+	# being smoothed away.
+	var base_offset: Vector3 = Vector3.ZERO
 	var hand_bob: Vector3 = Basis(Vector3.UP, head.rotation.y) * bob
 
 	camera.position = (
@@ -963,6 +877,8 @@ func _reset_view_motion() -> void:
 	_view_pitch = 0.0
 	_view_roll = 0.0
 	_air_fall_speed = 0.0
+	is_sprinting = false
+	_sprint_toggled = false
 	_view_yaw = 0.0
 	_event_kind = &""
 	gesture_offset = Vector3.ZERO
@@ -971,3 +887,117 @@ func _reset_view_motion() -> void:
 	_gesture_offset_applied = Vector3.ZERO
 	_gesture_pitch_applied = 0.0
 	_gesture_roll_applied = 0.0
+
+
+## Whether the sprint control asks for walking fast right now. Held, the key must
+## stay down. In toggle mode (an accessibility option) a press switches it on and
+## it lasts until the player stops, like most modern games.
+func _is_sprint_requested(moving: bool) -> bool:
+	if GameSettings.get_sprint_toggle():
+		if Input.is_action_just_pressed("sprint"):
+			_sprint_toggled = not _sprint_toggled
+
+		if not moving:
+			_sprint_toggled = false
+
+		return _sprint_toggled
+
+	_sprint_toggled = false
+	return Input.is_action_pressed("sprint")
+
+
+# ----------------------------------------------------------------------
+# Guided walk
+# ----------------------------------------------------------------------
+
+## Walks the player to `target` at `speed` (world units per second), slowing as
+## they arrive, with their gaze easing towards `look_target`. They keep their
+## footsteps, bob and weight: it is the normal walk, driven by the game instead of
+## the keys. Returns false (and does nothing) if the player cannot be walked now.
+## The mouse is ignored until `guided_walk_finished`.
+func begin_guided_walk(
+	target: Vector3,
+	look_target: Vector3,
+	speed: float = 1.0,
+	timeout: float = 3.0
+) -> bool:
+	if player == null or cutscene_camera_controlled or not player.is_on_floor():
+		return false
+
+	_guided_active = true
+	_guided_target = target
+	_guided_look = look_target
+	_guided_speed = speed
+	_guided_time = 0.0
+	_guided_timeout = timeout
+	_guided_best_distance = INF
+	_guided_stalled_for = 0.0
+	return true
+
+
+func is_guided_walking() -> bool:
+	return _guided_active
+
+
+func cancel_guided_walk() -> void:
+	_finish_guided_walk(false)
+
+
+func _finish_guided_walk(reached: bool) -> void:
+	if not _guided_active:
+		return
+
+	_guided_active = false
+	guided_walk_finished.emit(reached)
+
+
+func _physics_guided_walk(delta: float) -> void:
+	_guided_time += delta
+
+	var to_target: Vector3 = _guided_target - player.global_position
+	to_target.y = 0.0
+	var distance: float = to_target.length()
+
+	_steer_view_towards(_guided_look, delta)
+
+	# Done when there, out of time, or stuck against something.
+	if distance < _guided_best_distance - 0.02:
+		_guided_best_distance = distance
+		_guided_stalled_for = 0.0
+	else:
+		_guided_stalled_for += delta
+
+	if distance < 0.05:
+		_finish_guided_walk(true)
+	elif _guided_time >= _guided_timeout or _guided_stalled_for > 0.6:
+		_finish_guided_walk(false)
+
+	var move_dir: Vector3 = to_target.normalized() if _guided_active else Vector3.ZERO
+	var speed: float = _guided_speed * clampf(distance / 0.4, 0.25, 1.0)
+
+	is_sprinting = false
+	_track_landing()
+	_apply_horizontal_movement(move_dir, speed, delta)
+	_apply_vertical_movement(delta)
+	_update_view_effects(delta, false)
+	player.move_and_slide()
+
+
+## Eases yaw and pitch so the camera looks at `point`.
+func _steer_view_towards(point: Vector3, delta: float) -> void:
+	var eye: Vector3 = camera.global_position
+	var flat: Vector2 = Vector2(point.x - eye.x, point.z - eye.z)
+	if flat.length() < 0.01:
+		return
+
+	var follow: float = 1.0 - exp(-5.0 * delta)
+	var wanted_yaw: float = atan2(-flat.x, -flat.y)
+	var yaw: float = lerp_angle(-deg_to_rad(look_yaw), wanted_yaw, follow)
+	look_yaw = -rad_to_deg(yaw)
+
+	var wanted_pitch: float = clampf(
+		rad_to_deg(atan2(eye.y - point.y, flat.length())),
+		-35.0,
+		75.0
+	)
+	look_pitch = lerpf(look_pitch, wanted_pitch, follow)

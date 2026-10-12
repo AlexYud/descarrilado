@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://b82qja02e32sf" path="res://scripts/player/player_inventory_controller.gd" id="8_6eyey"]
 [ext_resource type="Script" uid="uid://cp2oxeafj8hxw" path="res://scripts/player/player_audio_controller.gd" id="8_d3wef"]
 [ext_resource type="Script" uid="uid://cfvq3wbgpg0u7" path="res://scripts/player/player_interaction_controller.gd" id="9_d3wef"]
+[ext_resource type="Script" path="res://scripts/player/tutorial_hint_controller.gd" id="20_tutorial"]
 [ext_resource type="Script" uid="uid://b2ltsypk5gd1d" path="res://scripts/ui/inventory_ui_controller.gd" id="9_o4126"]
 [ext_resource type="Script" uid="uid://wbwivqq87ip5" path="res://scripts/player/player_inspect_controller.gd" id="11_o4126"]
 [ext_resource type="PackedScene" uid="uid://bn1h2vof881ma" path="res://scenes/ui/pause_menu.tscn" id="13_lkdrv"]
@@ -151,10 +152,6 @@ pitch_scale = 0.64
 transform = Transform3D(1, 0, 0, 0, 0.99941, -0.0343413, 0, 0.0343413, 0.99941, 2.03645, 1.08635, -6.64623)
 stream = ExtResource("5_f1qol")
 
-[node name="sfx_crouch_walk" type="AudioStreamPlayer" parent="SoundEffects" unique_id=1336729071]
-stream = ExtResource("5_f1qol")
-pitch_scale = 0.64
-
 [node name="InteractionUI" type="CanvasLayer" parent="." unique_id=698068930]
 auto_translate_mode = 1
 
@@ -186,6 +183,9 @@ script = ExtResource("11_o4126")
 
 [node name="InteractionController" type="Node" parent="." unique_id=2016440755]
 script = ExtResource("9_d3wef")
+
+[node name="TutorialHints" type="Node" parent="."]
+script = ExtResource("20_tutorial")
 
 [node name="PauseMenu" parent="." unique_id=1457676507 instance=ExtResource("13_lkdrv")]
 main_menu_scene = ExtResource("14_p7iby")

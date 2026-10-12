@@ -24,6 +24,10 @@ const COMMON_WINDOW_RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(3840, 2160),
 ]
 
+@onready var controls_tab: ControlsSettingsTab = (
+	$OptionsMargin/OptionsVBox/OptionsTabs/Controls/ControlsVBox
+)
+
 @onready var options_tabs: TabContainer = (
 	$OptionsMargin
 	/OptionsVBox
@@ -120,6 +124,26 @@ const COMMON_WINDOW_RESOLUTIONS: Array[Vector2i] = [
 	/BrightnessValueLabel
 )
 
+@onready var depth_of_field_check_button: CheckButton = (
+	$OptionsMargin
+	/OptionsVBox
+	/OptionsTabs
+	/Graphics
+	/GraphicsVBox
+	/DepthOfFieldRow
+	/DepthOfFieldCheckButton
+)
+
+@onready var motion_blur_check_button: CheckButton = (
+	$OptionsMargin
+	/OptionsVBox
+	/OptionsTabs
+	/Graphics
+	/GraphicsVBox
+	/MotionBlurRow
+	/MotionBlurCheckButton
+)
+
 @onready var back_button: Button = (
 	$OptionsMargin
 	/OptionsVBox
@@ -200,6 +224,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
+	# Listening for a new key owns every key, Escape included.
+	if controls_tab.is_listening():
+		return
+
 	if event.is_action_pressed("ui_cancel"):
 		_request_back()
 		get_viewport().set_input_as_handled()
@@ -207,6 +235,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func open() -> void:
 	_refresh_localized_options()
+	controls_tab.refresh()
 	_sync_controls_from_settings()
 	show()
 	_focus_current_tab()
@@ -327,6 +356,7 @@ func _refresh_localized_options() -> void:
 	_populate_language_options()
 	_update_tab_titles()
 	_sync_controls_from_settings()
+	controls_tab.refresh()
 	syncing_controls = was_syncing
 
 
@@ -406,6 +436,20 @@ func _connect_control_signals() -> void:
 	):
 		vsync_check_button.toggled.connect(
 			_on_vsync_toggled
+		)
+
+	if not depth_of_field_check_button.toggled.is_connected(
+		_on_depth_of_field_toggled
+	):
+		depth_of_field_check_button.toggled.connect(
+			_on_depth_of_field_toggled
+		)
+
+	if not motion_blur_check_button.toggled.is_connected(
+		_on_motion_blur_toggled
+	):
+		motion_blur_check_button.toggled.connect(
+			_on_motion_blur_toggled
 		)
 
 	if not fps_limit_option.item_selected.is_connected(
@@ -530,6 +574,13 @@ func _sync_controls_from_settings() -> void:
 		GameSettings.get_fps_limit()
 	)
 
+	depth_of_field_check_button.set_pressed_no_signal(
+		GameSettings.get_depth_of_field_enabled()
+	)
+	motion_blur_check_button.set_pressed_no_signal(
+		GameSettings.get_motion_blur_enabled()
+	)
+
 	brightness_slider.value = (
 		GameSettings.get_brightness_percent()
 	)
@@ -621,7 +672,7 @@ func _focus_current_tab() -> void:
 		1:
 			quality_option.grab_focus()
 		2:
-			back_button.grab_focus()
+			controls_tab.focus_first()
 		TEXT_LANGUAGE_TAB_INDEX:
 			text_language_option.grab_focus()
 		_:
@@ -684,6 +735,20 @@ func _on_vsync_toggled(enabled: bool) -> void:
 		return
 
 	GameSettings.set_vsync_enabled(enabled)
+
+
+func _on_depth_of_field_toggled(enabled: bool) -> void:
+	if syncing_controls:
+		return
+
+	GameSettings.set_depth_of_field_enabled(enabled)
+
+
+func _on_motion_blur_toggled(enabled: bool) -> void:
+	if syncing_controls:
+		return
+
+	GameSettings.set_motion_blur_enabled(enabled)
 
 
 func _on_fps_limit_option_selected(index: int) -> void:
@@ -767,6 +832,7 @@ func _on_caption_size_option_selected(index: int) -> void:
 
 
 func _on_tab_changed(_tab: int) -> void:
+	controls_tab.cancel_listening()
 	if visible:
 		_focus_current_tab()
 

@@ -56,6 +56,7 @@
 [ext_resource type="Texture2D" uid="uid://hi36hnyybhlc" path="res://assets/textures/pine_needle_mulch/pine_needle_mulch_Color.jpg" id="gt_pine_needle_mulch_c"]
 [ext_resource type="Texture2D" uid="uid://bxod1j03kwo7b" path="res://assets/textures/pine_needle_mulch/pine_needle_mulch_NormalGL.jpg" id="gt_pine_needle_mulch_n"]
 [ext_resource type="PackedScene" path="res://scenes/objects/train_ticket.tscn" id="tt_ticket"]
+[ext_resource type="Script" path="res://scripts/interactions/tutorial_trigger.gd" id="60_trigger"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -1080,6 +1081,12 @@ omni_range = 20.0
 
 [node name="DoorController" parent="Scenery" unique_id=944800287 instance=ExtResource("14_vm3m4")]
 transform = Transform3D(-0.29896778, 0.22261663, -0.9279337, 0.047131047, 0.97466606, 0.2186434, 0.95309865, 0.021632805, -0.30188614, 10.320974, -1.3286178, 4.864848)
+
+[node name="SprintTutorialTrigger" type="Area3D" parent="Scenery"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, -1.3, 5)
+collision_layer = 0
+script = ExtResource("60_trigger")
+size = Vector3(2.5, 12, 18)
 
 [node name="Fences" type="Node3D" parent="Scenery" unique_id=607440531]
 

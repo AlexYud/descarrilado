@@ -19,6 +19,7 @@ inspect_name = "ITEM_STATION_PHOTO_NAME"
 inspect_description = "ITEM_STATION_PHOTO_DESCRIPTION"
 
 [node name="Visual" type="MeshInstance3D" parent="." unique_id=1511137268]
+metadata/inspect_mode = "read"
 transform = Transform3D(1, -2.6645353e-15, 7.1054274e-15, 1.7763568e-15, 1.0000002, 1.4901161e-08, -7.1054274e-15, -1.4901161e-08, 1.0000002, 0, 0.01150465, 0.002350092)
 mesh = SubResource("BoxMesh_rarhs")
 

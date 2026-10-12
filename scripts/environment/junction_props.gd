@@ -162,6 +162,39 @@ static func _etch(
 	)
 
 
+## An engraving too small to read in the model: a few scratched lines and a
+## `ReadableSpot` at the place, turned to face out of the surface. The words are never
+## baked into the item: the inspect view offers to read the spot when the player turns
+## that side to them and shows the translated text as an overlay, so one asset serves
+## every language.
+static func _engraving(
+	parent: Node3D,
+	node_name: String,
+	text_key: String,
+	spot_id: StringName,
+	pos: Vector3,
+	rot: Vector3,
+	width: float,
+	color: Color = ETCH
+) -> void:
+	var spot: ReadableSpot = ReadableSpot.new()
+	spot.name = node_name
+	spot.spot_id = spot_id
+	spot.text_key = text_key
+	spot.title_key = "INSPECT_SPOT_ENGRAVING"
+	spot.position = pos
+	spot.rotation_degrees = rot
+	parent.add_child(spot)
+
+	var scratch: StandardMaterial3D = HouseProps.material(color.darkened(0.45), 1.0)
+	for i: int in 3:
+		HouseProps.add_box(
+			spot, "Scratch%d" % i,
+			Vector3(width * (1.0 - 0.2 * i), width * 0.03, 0.0005),
+			Vector3(width * 0.03 * i, (i - 1) * width * 0.11, 0.0001), scratch
+		)
+
+
 # ============================================================
 # THE JOURNAL AND THE CLUE ITEMS
 # ============================================================
@@ -228,10 +261,7 @@ static func _build_lantern(root: Node3D) -> void:
 
 	# Rust streaks and the etching on the underside.
 	_stain(root, "Streak0", Vector3(0.008, 0.07, 0.002), Vector3(0.0, -0.09, 0.049), RUST_DARK)
-	_etch(
-		root, "ClueLine", "LANTERN_CLUE", Vector3(0.0, -0.1115, 0.0), 15, 0.0004,
-		Vector3(90.0, 0.0, 0.0), 260.0
-	)
+	_engraving(root, "ClueSpot", "LANTERN_CLUE", &"lantern_clue", Vector3(0.0, -0.1115, 0.0), Vector3(90.0, 0.0, 0.0), 0.07)
 
 
 ## A closed, rotting wooden box with a brass clasp. Nothing in it is shown until
@@ -291,9 +321,9 @@ static func _build_ticket_puncher(root: Node3D) -> void:
 	_stain(root, "Rust", Vector3(0.03, 0.01, 0.0004), Vector3(0.03, 0.0, 0.0072), RUST_DARK, Vector3(0.0, 0.0, 13.0))
 
 	# The clue, etched along the back of the upper arm.
-	_etch(
-		upper, "ClueLine", "PUNCHER_CLUE", Vector3(-0.054, 0.0, -0.0073), 10, 0.0004,
-		Vector3(0.0, 180.0, 0.0), 190.0, Color(0.82, 0.74, 0.55)
+	_engraving(
+		upper, "ClueSpot", "PUNCHER_CLUE", &"puncher_clue", Vector3(-0.054, 0.0, -0.0073),
+		Vector3(0.0, 180.0, 0.0), 0.05, Color(0.82, 0.74, 0.55)
 	)
 
 
@@ -319,8 +349,7 @@ static func _build_whistle(root: Node3D) -> void:
 	HouseProps.add_cylinder(root, "CordTail", 0.0025, 0.07, Vector3(0.088, -0.02, 0.0), cord, Vector3(0.0, 0.0, 12.0))
 
 	# The clue, on the back.
-	var back: Vector3 = Vector3(0.0, 180.0, 0.0)
-	_etch(root, "ClueLine", "WHISTLE_CLUE", Vector3(0.0, 0.0, -0.0151), 13, 0.0004, back, 240.0)
+	_engraving(root, "ClueSpot", "WHISTLE_CLUE", &"whistle_clue", Vector3(0.0, 0.0, -0.0151), Vector3(0.0, 180.0, 0.0), 0.08)
 
 
 ## Sophia's Ficha: a brass telephone token, thick enough to read in the hand.

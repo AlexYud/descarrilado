@@ -12,6 +12,7 @@ var test_failed: bool = false
 
 
 func _ready() -> void:
+	DoorController.approach_enabled = false
 	SaveManager.save_directory = TEST_SAVE_DIRECTORY
 	_expect_ok(SaveManager.delete_slot(1), "cleaning the manual test slot")
 	_expect_ok(
@@ -37,7 +38,6 @@ func _ready() -> void:
 	movement.restore_save_state({
 		"look_yaw": 24.0,
 		"look_pitch": -11.0,
-		"is_crouching": true,
 	})
 	var flashlight: Node = player.get_node("Hand/SpotLight3D")
 	flashlight.call("restore_save_state", {"is_on": true})

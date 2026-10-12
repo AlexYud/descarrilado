@@ -27,6 +27,7 @@ inspect_description = "ITEM_TRAIN_TICKET_DESCRIPTION"
 prompt_text = "PROMPT_INSPECT"
 
 [node name="Visual" type="Node3D" parent="."]
+metadata/inspect_mode = "read"
 metadata/inspect_id = "train_ticket"
 metadata/inspect_back_normal = Vector3(0, 0, -1)
 

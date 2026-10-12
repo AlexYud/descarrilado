@@ -1,10 +1,11 @@
 [gd_scene format=3 uid="uid://226bthejacww"]
 
 [ext_resource type="Script" uid="uid://bv0602pwe87nt" path="res://scripts/ui/options_panel_controller.gd" id="1_8b3e1"]
+[ext_resource type="Script" path="res://scripts/ui/controls_settings_tab.gd" id="2_controls"]
 
 [node name="OptionsPanel" type="PanelContainer" unique_id=132118116]
 auto_translate_mode = 1
-custom_minimum_size = Vector2(720, 480)
+custom_minimum_size = Vector2(880, 640)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -151,6 +152,28 @@ size_flags_horizontal = 3
 [node name="BrightnessValueLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/BrightnessRow" unique_id=720211032]
 layout_mode = 2
 
+[node name="DepthOfFieldRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox"]
+layout_mode = 2
+
+[node name="DepthOfFieldLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/DepthOfFieldRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_DEPTH_OF_FIELD"
+
+[node name="DepthOfFieldCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/DepthOfFieldRow"]
+layout_mode = 2
+
+[node name="MotionBlurRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox"]
+layout_mode = 2
+
+[node name="MotionBlurLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/MotionBlurRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_MOTION_BLUR"
+
+[node name="MotionBlurCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/MotionBlurRow"]
+layout_mode = 2
+
 [node name="Controls" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=155467256]
 visible = false
 layout_mode = 2
@@ -162,7 +185,8 @@ metadata/_tab_index = 2
 
 [node name="ControlsVBox" type="VBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Controls" unique_id=1275488644]
 layout_mode = 2
-size_flags_vertical = 0
+size_flags_vertical = 3
+script = ExtResource("2_controls")
 
 [node name="Language" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs"]
 visible = false

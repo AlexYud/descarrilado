@@ -70,6 +70,9 @@ func show_inventory(slots: Array[Dictionary]) -> void:
 	refresh(slots)
 
 
+## The state of looking at an item (the inventory is closed, or comes back when the
+## item is put away). The item's name, description and hints are drawn by the
+## inspect view itself, over the item, so nothing else is shown here.
 func show_inspect(slot_data: Dictionary, from_inventory: bool) -> void:
 	inventory_open = from_inventory
 	inspect_return_to_inventory = from_inventory
@@ -79,7 +82,7 @@ func show_inspect(slot_data: Dictionary, from_inventory: bool) -> void:
 		inventory_ui_layer.visible = true
 
 	if inventory_root != null:
-		inventory_root.visible = true
+		inventory_root.visible = false
 
 	if header_label != null:
 		header_label.text = tr("INVENTORY_INSPECT")
@@ -275,7 +278,7 @@ func _build_inventory_ui() -> void:
 
 	inspect_hint_label = Label.new()
 	inspect_hint_label.name = "InspectHintLabel"
-	inspect_hint_label.text = tr("INVENTORY_INSPECT_HINT")
+	inspect_hint_label.text = InputBindings.format_text(tr("INVENTORY_INSPECT_HINT"))
 	inspect_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	inspect_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inspect_vbox.add_child(inspect_hint_label)
@@ -292,8 +295,8 @@ func _connect_language_settings() -> void:
 
 func _on_text_language_changed(_locale: String) -> void:
 	if inspect_hint_label != null:
-		inspect_hint_label.text = tr(
-			"INVENTORY_INSPECT_HINT"
+		inspect_hint_label.text = InputBindings.format_text(
+			tr("INVENTORY_INSPECT_HINT")
 		)
 
 	if (

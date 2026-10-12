@@ -36,7 +36,6 @@ func _ready() -> void:
 				"movement": {
 					"look_yaw": 8.0,
 					"look_pitch": 3.0,
-					"is_crouching": false,
 				},
 				"inventory": [],
 				"flashlight": {"is_on": false},

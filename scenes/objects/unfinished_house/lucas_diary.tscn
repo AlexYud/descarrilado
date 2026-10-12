@@ -13,6 +13,9 @@ inspect_description = "ITEM_LUCAS_DIARY_DESCRIPTION"
 prompt_text = "PROMPT_INSPECT"
 
 [node name="Visual" type="Node3D" parent="."]
+metadata/readable_text = "READABLE_DIARY"
+metadata/art_language = "pt_BR"
+metadata/inspect_mode = "read"
 script = ExtResource("2_prop")
 kind = &"lucas_diary"
 metadata/inspect_id = "lucas_diary"

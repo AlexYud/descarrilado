@@ -12,8 +12,13 @@ signal voice_language_changed(locale: String)
 signal captions_enabled_changed(enabled: bool)
 signal caption_language_changed(locale: String)
 signal caption_size_changed(size_index: int)
+signal readable_text_mode_changed(mode: int)
 signal mouse_sensitivity_changed(percent: float)
 signal invert_y_changed(enabled: bool)
+signal sprint_toggle_changed(enabled: bool)
+signal tutorial_hints_changed(enabled: bool)
+signal depth_of_field_changed(enabled: bool)
+signal motion_blur_changed(enabled: bool)
 
 enum GraphicsQuality {
 	LOW,
@@ -40,6 +45,8 @@ const WINDOW_RESOLUTION_KEY: String = "window_resolution"
 const VSYNC_KEY: String = "vsync_enabled"
 const FPS_LIMIT_KEY: String = "fps_limit"
 const BRIGHTNESS_KEY: String = "brightness_percent"
+const DEPTH_OF_FIELD_KEY: String = "depth_of_field"
+const MOTION_BLUR_KEY: String = "motion_blur"
 
 const LANGUAGE_SECTION: String = "language"
 const TEXT_LOCALE_KEY: String = "text_locale"
@@ -47,6 +54,7 @@ const VOICE_LOCALE_KEY: String = "voice_locale"
 const CAPTIONS_ENABLED_KEY: String = "captions_enabled"
 const CAPTION_LOCALE_KEY: String = "caption_locale"
 const CAPTION_SIZE_KEY: String = "caption_size"
+const READABLE_TEXT_KEY: String = "readable_text_mode"
 
 const LOCALE_ENGLISH: String = "en"
 const LOCALE_BRAZILIAN_PORTUGUESE: String = "pt_BR"
@@ -59,6 +67,16 @@ const DEFAULT_CAPTION_LOCALE: String = LOCALE_ENGLISH
 const CAPTION_FONT_SIZES: Array[int] = [20, 26, 34, 44]
 const DEFAULT_CAPTION_SIZE: int = 1
 
+## When a document's text is shown as an easy-to-read overlay: only when its art is
+## in another language than the player's (the default), always, or never.
+enum ReadableText {
+	AUTO,
+	ALWAYS,
+	NEVER,
+}
+
+const DEFAULT_READABLE_TEXT: int = ReadableText.AUTO
+
 const SUPPORTED_VOICE_LOCALES: Array[String] = [
 	LOCALE_ENGLISH,
 	LOCALE_BRAZILIAN_PORTUGUESE,
@@ -69,6 +87,8 @@ const MOUSE_SENSITIVITY_KEY: String = (
 	"mouse_sensitivity_percent"
 )
 const INVERT_Y_KEY: String = "invert_y"
+const SPRINT_TOGGLE_KEY: String = "sprint_toggle"
+const TUTORIAL_HINTS_KEY: String = "tutorial_hints"
 
 const MASTER_BUS_NAME: String = "Master"
 
@@ -83,6 +103,9 @@ const DEFAULT_WINDOW_RESOLUTION: Vector2i = Vector2i(
 const DEFAULT_VSYNC_ENABLED: bool = true
 const DEFAULT_FPS_LIMIT: int = 60
 const DEFAULT_BRIGHTNESS_PERCENT: float = 100.0
+## The soft focus behind what the player looks at, and the blur of a fast turn.
+const DEFAULT_DEPTH_OF_FIELD: bool = true
+const DEFAULT_MOTION_BLUR: bool = true
 
 const MIN_BRIGHTNESS_PERCENT: float = 70.0
 const MAX_BRIGHTNESS_PERCENT: float = 130.0
@@ -91,6 +114,10 @@ const DEFAULT_MOUSE_SENSITIVITY_PERCENT: float = 100.0
 const MIN_MOUSE_SENSITIVITY_PERCENT: float = 25.0
 const MAX_MOUSE_SENSITIVITY_PERCENT: float = 200.0
 const DEFAULT_INVERT_Y: bool = false
+## Sprint is held by default; toggle mode (an accessibility option) switches it
+## on with one press until the player stops.
+const DEFAULT_SPRINT_TOGGLE: bool = false
+const DEFAULT_TUTORIAL_HINTS: bool = true
 
 const MIN_WINDOW_RESOLUTION: Vector2i = Vector2i(
 	640,
@@ -122,17 +149,22 @@ var fps_limit: int = DEFAULT_FPS_LIMIT
 var brightness_percent: float = (
 	DEFAULT_BRIGHTNESS_PERCENT
 )
+var depth_of_field_enabled: bool = DEFAULT_DEPTH_OF_FIELD
+var motion_blur_enabled: bool = DEFAULT_MOTION_BLUR
 
 var text_locale: String = DEFAULT_TEXT_LOCALE
 var voice_locale: String = DEFAULT_VOICE_LOCALE
 var captions_enabled: bool = DEFAULT_CAPTIONS_ENABLED
 var caption_locale: String = DEFAULT_CAPTION_LOCALE
 var caption_size: int = DEFAULT_CAPTION_SIZE
+var readable_text_mode: int = DEFAULT_READABLE_TEXT
 
 var mouse_sensitivity_percent: float = (
 	DEFAULT_MOUSE_SENSITIVITY_PERCENT
 )
 var invert_y: bool = DEFAULT_INVERT_Y
+var sprint_toggle: bool = DEFAULT_SPRINT_TOGGLE
+var tutorial_hints: bool = DEFAULT_TUTORIAL_HINTS
 
 var tracked_world_environments: Array[WorldEnvironment] = []
 
@@ -222,6 +254,16 @@ func save_settings() -> void:
 		BRIGHTNESS_KEY,
 		brightness_percent
 	)
+	config.set_value(
+		GRAPHICS_SECTION,
+		DEPTH_OF_FIELD_KEY,
+		depth_of_field_enabled
+	)
+	config.set_value(
+		GRAPHICS_SECTION,
+		MOTION_BLUR_KEY,
+		motion_blur_enabled
+	)
 
 	config.set_value(
 		LANGUAGE_SECTION,
@@ -248,6 +290,11 @@ func save_settings() -> void:
 		CAPTION_SIZE_KEY,
 		caption_size
 	)
+	config.set_value(
+		LANGUAGE_SECTION,
+		READABLE_TEXT_KEY,
+		readable_text_mode
+	)
 
 	config.set_value(
 		CONTROLS_SECTION,
@@ -258,6 +305,16 @@ func save_settings() -> void:
 		CONTROLS_SECTION,
 		INVERT_Y_KEY,
 		invert_y
+	)
+	config.set_value(
+		CONTROLS_SECTION,
+		SPRINT_TOGGLE_KEY,
+		sprint_toggle
+	)
+	config.set_value(
+		CONTROLS_SECTION,
+		TUTORIAL_HINTS_KEY,
+		tutorial_hints
 	)
 
 	var save_error: Error = config.save(SETTINGS_PATH)
@@ -395,6 +452,42 @@ func set_vsync_enabled(
 
 func get_vsync_enabled() -> bool:
 	return vsync_enabled
+
+
+func set_depth_of_field_enabled(
+	value: bool,
+	save_after_change: bool = true
+) -> void:
+	if depth_of_field_enabled == value:
+		return
+
+	depth_of_field_enabled = value
+	depth_of_field_changed.emit(value)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_depth_of_field_enabled() -> bool:
+	return depth_of_field_enabled
+
+
+func set_motion_blur_enabled(
+	value: bool,
+	save_after_change: bool = true
+) -> void:
+	if motion_blur_enabled == value:
+		return
+
+	motion_blur_enabled = value
+	motion_blur_changed.emit(value)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_motion_blur_enabled() -> bool:
+	return motion_blur_enabled
 
 
 func set_fps_limit(
@@ -562,6 +655,26 @@ func get_caption_size() -> int:
 	return caption_size
 
 
+func set_readable_text_mode(
+	value: int,
+	save_after_change: bool = true
+) -> void:
+	var new_mode: int = clampi(value, ReadableText.AUTO, ReadableText.NEVER)
+
+	if readable_text_mode == new_mode:
+		return
+
+	readable_text_mode = new_mode
+	readable_text_mode_changed.emit(readable_text_mode)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_readable_text_mode() -> int:
+	return readable_text_mode
+
+
 func get_caption_font_size() -> int:
 	return CAPTION_FONT_SIZES[caption_size]
 
@@ -621,6 +734,42 @@ func get_invert_y() -> bool:
 	return invert_y
 
 
+func set_sprint_toggle(
+	value: bool,
+	save_after_change: bool = true
+) -> void:
+	if sprint_toggle == value:
+		return
+
+	sprint_toggle = value
+	sprint_toggle_changed.emit(sprint_toggle)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_sprint_toggle() -> bool:
+	return sprint_toggle
+
+
+func set_tutorial_hints(
+	value: bool,
+	save_after_change: bool = true
+) -> void:
+	if tutorial_hints == value:
+		return
+
+	tutorial_hints = value
+	tutorial_hints_changed.emit(tutorial_hints)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_tutorial_hints() -> bool:
+	return tutorial_hints
+
+
 func reset_audio_to_default() -> void:
 	set_master_volume_percent(
 		DEFAULT_MASTER_VOLUME_PERCENT
@@ -634,6 +783,8 @@ func reset_graphics_to_default() -> void:
 	vsync_enabled = DEFAULT_VSYNC_ENABLED
 	fps_limit = DEFAULT_FPS_LIMIT
 	brightness_percent = DEFAULT_BRIGHTNESS_PERCENT
+	depth_of_field_enabled = DEFAULT_DEPTH_OF_FIELD
+	motion_blur_enabled = DEFAULT_MOTION_BLUR
 
 	_apply_quality_preset()
 	_apply_display_mode()
@@ -641,6 +792,8 @@ func reset_graphics_to_default() -> void:
 	_apply_fps_limit()
 	_apply_brightness()
 
+	depth_of_field_changed.emit(depth_of_field_enabled)
+	motion_blur_changed.emit(motion_blur_enabled)
 	quality_preset_changed.emit(quality_preset)
 	display_mode_changed.emit(display_mode)
 	window_resolution_changed.emit(window_resolution)
@@ -656,11 +809,17 @@ func reset_controls_to_default() -> void:
 		DEFAULT_MOUSE_SENSITIVITY_PERCENT
 	)
 	invert_y = DEFAULT_INVERT_Y
+	sprint_toggle = DEFAULT_SPRINT_TOGGLE
+	tutorial_hints = DEFAULT_TUTORIAL_HINTS
+	readable_text_mode = DEFAULT_READABLE_TEXT
 
 	mouse_sensitivity_changed.emit(
 		mouse_sensitivity_percent
 	)
 	invert_y_changed.emit(invert_y)
+	sprint_toggle_changed.emit(sprint_toggle)
+	tutorial_hints_changed.emit(tutorial_hints)
+	readable_text_mode_changed.emit(readable_text_mode)
 
 	save_settings()
 
@@ -674,16 +833,21 @@ func _set_default_values() -> void:
 	vsync_enabled = DEFAULT_VSYNC_ENABLED
 	fps_limit = DEFAULT_FPS_LIMIT
 	brightness_percent = DEFAULT_BRIGHTNESS_PERCENT
+	depth_of_field_enabled = DEFAULT_DEPTH_OF_FIELD
+	motion_blur_enabled = DEFAULT_MOTION_BLUR
 	text_locale = DEFAULT_TEXT_LOCALE
 	voice_locale = DEFAULT_VOICE_LOCALE
 	captions_enabled = DEFAULT_CAPTIONS_ENABLED
 	caption_locale = DEFAULT_CAPTION_LOCALE
 	caption_size = DEFAULT_CAPTION_SIZE
+	readable_text_mode = DEFAULT_READABLE_TEXT
 
 	mouse_sensitivity_percent = (
 		DEFAULT_MOUSE_SENSITIVITY_PERCENT
 	)
 	invert_y = DEFAULT_INVERT_Y
+	sprint_toggle = DEFAULT_SPRINT_TOGGLE
+	tutorial_hints = DEFAULT_TUTORIAL_HINTS
 
 
 func _load_values_from_config(config: ConfigFile) -> void:
@@ -742,6 +906,20 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			DEFAULT_BRIGHTNESS_PERCENT
 		)
 	)
+	depth_of_field_enabled = bool(
+		config.get_value(
+			GRAPHICS_SECTION,
+			DEPTH_OF_FIELD_KEY,
+			DEFAULT_DEPTH_OF_FIELD
+		)
+	)
+	motion_blur_enabled = bool(
+		config.get_value(
+			GRAPHICS_SECTION,
+			MOTION_BLUR_KEY,
+			DEFAULT_MOTION_BLUR
+		)
+	)
 
 	text_locale = str(
 		config.get_value(
@@ -778,6 +956,13 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			DEFAULT_CAPTION_SIZE
 		)
 	)
+	readable_text_mode = int(
+		config.get_value(
+			LANGUAGE_SECTION,
+			READABLE_TEXT_KEY,
+			DEFAULT_READABLE_TEXT
+		)
+	)
 
 	mouse_sensitivity_percent = float(
 		config.get_value(
@@ -791,6 +976,20 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			CONTROLS_SECTION,
 			INVERT_Y_KEY,
 			DEFAULT_INVERT_Y
+		)
+	)
+	sprint_toggle = bool(
+		config.get_value(
+			CONTROLS_SECTION,
+			SPRINT_TOGGLE_KEY,
+			DEFAULT_SPRINT_TOGGLE
+		)
+	)
+	tutorial_hints = bool(
+		config.get_value(
+			CONTROLS_SECTION,
+			TUTORIAL_HINTS_KEY,
+			DEFAULT_TUTORIAL_HINTS
 		)
 	)
 
@@ -825,6 +1024,7 @@ func _sanitize_values() -> void:
 	voice_locale = _sanitize_voice_locale(voice_locale)
 	caption_locale = _sanitize_caption_locale(caption_locale)
 	caption_size = clampi(caption_size, 0, CAPTION_FONT_SIZES.size() - 1)
+	readable_text_mode = clampi(readable_text_mode, ReadableText.AUTO, ReadableText.NEVER)
 
 	mouse_sensitivity_percent = clampf(
 		mouse_sensitivity_percent,

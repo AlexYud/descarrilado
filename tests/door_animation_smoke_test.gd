@@ -22,7 +22,7 @@ func _ready() -> void:
 	var floor_body: StaticBody3D = StaticBody3D.new()
 	var floor_shape: CollisionShape3D = CollisionShape3D.new()
 	var box: BoxShape3D = BoxShape3D.new()
-	box.size = Vector3(40.0, 1.0, 40.0)
+	box.size = Vector3(200.0, 1.0, 200.0)
 	floor_shape.shape = box
 	floor_body.add_child(floor_shape)
 	floor_body.position = Vector3(0.0, -0.5, 0.0)
@@ -34,10 +34,15 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 
+	# The player walks up to a door before pushing it; the timed checks below start
+	# from the player already standing at it, and the walking has its own check.
+	DoorController.approach_enabled = false
 	await _check_open_and_close()
 	await _check_locked_door()
 	await _check_unlocking_with_the_key()
 	await _check_variety()
+	await _check_approach()
+	await _check_gate()
 
 	print("DOOR_ANIMATION_SMOKE_TEST: ", "FAILED" if test_failed else "PASSED")
 	get_tree().quit(1 if test_failed else 0)
@@ -108,10 +113,12 @@ func _check_open_and_close() -> void:
 	await _wait(float(plan["open_start"]) + 0.8 - hang_at - 0.1)
 	_expect(opened_count == 1, "the door counts as opened once it swings")
 	_expect(_swing_degrees(door) > crack + 3.0, "and it swings")
+	_expect(door._door_bodies.size() > 0 and door._door_bodies[0].collision_layer == 0, "the swinging door lets the player through instead of dragging them")
 
 	await _wait(float(plan["main_end"]) + 0.6 - float(plan["open_start"]) - 0.8)
 	_expect(is_equal_approx(_swing_degrees(door), 85.0), "the door ends wide open")
 	_expect(_lever_angle(door) < 0.01, "the handle is back at rest")
+	_expect(door._door_bodies[0].collision_layer != 0, "and is solid again when it stops")
 	_expect(movement.gesture_offset.length() < 0.001, "the view is let go")
 	_expect(not door.is_busy(), "the door is free again")
 
@@ -276,3 +283,138 @@ func _until_still(door: DoorController) -> void:
 	while door._choreo != &"" and waited < 15.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
+
+
+## Far from the handle, the player first walks up to the door at a slow pace, looking
+## at it, and only then does the door start to move.
+func _check_approach() -> void:
+	DoorController.approach_enabled = true
+	Engine.time_scale = 1.0
+	var movement: PlayerMovementController = player.movement_controller
+
+	var door: DoorController = _make_door(Vector3(30.0, 0.0, 0.0))
+	await get_tree().physics_frame
+	player.global_position = Vector3(30.81, 1.05, 2.4)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+
+	door.interact(player)
+	_expect(door.is_open, "the door is open the moment the player opens it")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_expect(movement.is_guided_walking(), "the player starts walking to the door")
+	_expect(door.is_busy(), "the door waits for them")
+	_expect(_swing_degrees(door) < 0.01 and _lever_angle(door) < 0.01, "nothing moves yet")
+
+	await _wait(0.6)
+	var speed: float = Vector2(player.velocity.x, player.velocity.z).length()
+	_expect(speed > 0.3 and speed < PlayerMovementController.WALK_SPEED, "at a slow walking pace (%.2f)" % speed)
+	_expect(movement.step_phase > 0.0, "with footsteps")
+
+	await _until_walk_ends(movement)
+	var reached: Vector2 = Vector2(player.global_position.x - 30.81, player.global_position.z - 0.59)
+	_expect(reached.length() < 0.12, "they stop at arm's length in front of the handle (off by %.2f)" % reached.length())
+	var facing: Vector3 = -player.get_node("Head").global_basis.z
+	_expect(facing.z < -0.9, "looking at the door")
+
+	await _wait(0.5)
+	_expect(_lever_angle(door) > 0.3, "then the handle goes down")
+	await _until_still(door)
+	_expect(is_equal_approx(_swing_degrees(door), 85.0), "and the door opens as usual")
+	_expect(not movement.is_guided_walking(), "the walk is over")
+
+	# Something in the way: no walk, the door just opens.
+	var wall: StaticBody3D = StaticBody3D.new()
+	var wall_shape: CollisionShape3D = CollisionShape3D.new()
+	var wall_box: BoxShape3D = BoxShape3D.new()
+	wall_box.size = Vector3(4.0, 3.0, 0.2)
+	wall_shape.shape = wall_box
+	wall.add_child(wall_shape)
+	wall.position = Vector3(40.8, 1.0, 1.3)
+	add_child(wall)
+	var blocked: DoorController = _make_door(Vector3(40.0, 0.0, 0.0))
+	await get_tree().physics_frame
+	player.global_position = Vector3(40.81, 1.05, 2.4)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+	blocked.interact(player)
+	await get_tree().physics_frame
+	_expect(not movement.is_guided_walking(), "with a wall in the way nobody is walked through it")
+	_expect(blocked._choreo == &"open", "and the door starts at once")
+	await _until_still(blocked)
+	wall.queue_free()
+	blocked.queue_free()
+
+	# Too far away to be someone standing at the door (a script is calling).
+	var far_door: DoorController = _make_door(Vector3(50.0, 0.0, 0.0))
+	await get_tree().physics_frame
+	player.global_position = Vector3(50.81, 1.05, 6.0)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+	far_door.interact(player)
+	await get_tree().physics_frame
+	_expect(not movement.is_guided_walking(), "from far away nobody is walked up")
+	await _until_still(far_door)
+
+	# Already at the door: no walk.
+	var near_door: DoorController = _make_door(Vector3(60.0, 0.0, 0.0))
+	await get_tree().physics_frame
+	player.global_position = Vector3(60.81, 1.05, 0.62)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+	near_door.interact(player)
+	await get_tree().physics_frame
+	_expect(not movement.is_guided_walking(), "someone already at the door is not walked")
+	await _until_still(near_door)
+
+	DoorController.approach_enabled = false
+	door.queue_free()
+	far_door.queue_free()
+	near_door.queue_free()
+	await get_tree().physics_frame
+
+
+func _until_walk_ends(movement: PlayerMovementController) -> void:
+	var waited: float = 0.0
+	while movement.is_guided_walking() and waited < 6.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+
+
+## The long fence gate is pushed near its free end, not at its middle, and pushed with
+## more of the body.
+func _check_gate() -> void:
+	DoorController.approach_enabled = true
+	var gate: DoorController = (
+		load("res://scenes/objects/fence_door_interactable.tscn") as PackedScene
+	).instantiate()
+	gate.position = Vector3(70.0, 0.0, 0.0)
+	add_child(gate)
+	await get_tree().physics_frame
+
+	_expect(gate.heavy_gate, "the gate is a heavy one")
+	player.global_position = Vector3(70.8, 1.05, 3.0)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+
+	var target: Dictionary = gate._approach_target(player)
+	_expect(not target.is_empty(), "a player in front of the gate is walked to it")
+	var from_hinge: float = Vector2(
+		target["look"].x - gate.hinge.global_position.x,
+		target["look"].z - gate.hinge.global_position.z
+	).length()
+	var half_width: float = Vector2(
+		gate.door_root.global_position.x - gate.hinge.global_position.x,
+		gate.door_root.global_position.z - gate.hinge.global_position.z
+	).length()
+	_expect(
+		from_hinge > half_width * 1.5,
+		"they stand towards its free end (%.2f of a width %.2f)" % [from_hinge, half_width * 2.0]
+	)
+
+	var open_plan: Dictionary = gate._plan_open()
+	_expect(float(open_plan["main_end"]) > 2.0, "and it swings slowly")
+
+	DoorController.approach_enabled = false
+	gate.queue_free()
+	await get_tree().physics_frame

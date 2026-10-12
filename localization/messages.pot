@@ -629,3 +629,286 @@ msgstr ""
 
 msgid "WHISTLE_CLUE"
 msgstr ""
+
+# Controls, key bindings and tutorial hints
+msgid "CONTROLS_SECTION_MOUSE"
+msgstr ""
+
+msgid "CONTROLS_MOUSE_SENSITIVITY"
+msgstr ""
+
+msgid "CONTROLS_INVERT_Y"
+msgstr ""
+
+msgid "CONTROLS_SECTION_GAMEPLAY"
+msgstr ""
+
+msgid "CONTROLS_SPRINT_MODE"
+msgstr ""
+
+msgid "CONTROLS_SPRINT_HOLD"
+msgstr ""
+
+msgid "CONTROLS_SPRINT_TOGGLE"
+msgstr ""
+
+msgid "CONTROLS_TUTORIAL_HINTS"
+msgstr ""
+
+msgid "CONTROLS_SECTION_KEYS"
+msgstr ""
+
+msgid "BINDINGS_MOVEMENT"
+msgstr ""
+
+msgid "BINDINGS_ACTIONS"
+msgstr ""
+
+msgid "BINDINGS_INTERFACE"
+msgstr ""
+
+msgid "BINDINGS_PRIMARY"
+msgstr ""
+
+msgid "BINDINGS_ALTERNATE"
+msgstr ""
+
+msgid "BINDING_UP"
+msgstr ""
+
+msgid "BINDING_DOWN"
+msgstr ""
+
+msgid "BINDING_LEFT"
+msgstr ""
+
+msgid "BINDING_RIGHT"
+msgstr ""
+
+msgid "BINDING_SPRINT"
+msgstr ""
+
+msgid "BINDING_INTERACT"
+msgstr ""
+
+msgid "BINDING_FLASHLIGHT"
+msgstr ""
+
+msgid "BINDING_INVENTORY"
+msgstr ""
+
+msgid "BINDING_SKIP_CINEMATIC"
+msgstr ""
+
+msgid "BINDING_DIALOG_CONTINUE"
+msgstr ""
+
+msgid "BINDING_UNBOUND"
+msgstr ""
+
+msgid "BINDING_LISTENING"
+msgstr ""
+
+msgid "BINDING_LISTEN_HINT"
+msgstr ""
+
+msgid "BINDING_RESET"
+msgstr ""
+
+msgid "BINDINGS_RESET_ALL"
+msgstr ""
+
+msgid "BINDINGS_RESET_TITLE"
+msgstr ""
+
+msgid "BINDINGS_RESET_TEXT"
+msgstr ""
+
+msgid "BINDING_CONFLICT_TITLE"
+msgstr ""
+
+msgid "BINDING_CONFLICT_TEXT"
+msgstr ""
+
+msgid "BINDING_CONFLICT_SWAP"
+msgstr ""
+
+msgid "BINDING_CONFLICT_REPLACE"
+msgstr ""
+
+msgid "BINDING_CONFLICT_CANCEL"
+msgstr ""
+
+msgid "BINDING_CONFLICT_BLOCKED"
+msgstr ""
+
+msgid "BINDING_LAST_KEY"
+msgstr ""
+
+msgid "BINDING_MOUSE_LEFT"
+msgstr ""
+
+msgid "BINDING_MOUSE_LEFT_SHORT"
+msgstr ""
+
+msgid "BINDING_MOUSE_RIGHT"
+msgstr ""
+
+msgid "BINDING_MOUSE_RIGHT_SHORT"
+msgstr ""
+
+msgid "BINDING_MOUSE_MIDDLE"
+msgstr ""
+
+msgid "BINDING_MOUSE_MIDDLE_SHORT"
+msgstr ""
+
+msgid "BINDING_MOUSE_4"
+msgstr ""
+
+msgid "BINDING_MOUSE_4_SHORT"
+msgstr ""
+
+msgid "BINDING_MOUSE_5"
+msgstr ""
+
+msgid "BINDING_MOUSE_5_SHORT"
+msgstr ""
+
+msgid "KEY_NAME_SPACE"
+msgstr ""
+
+msgid "KEY_NAME_ENTER"
+msgstr ""
+
+msgid "KEY_NAME_SHIFT"
+msgstr ""
+
+msgid "KEY_NAME_CTRL"
+msgstr ""
+
+msgid "KEY_NAME_ALT"
+msgstr ""
+
+msgid "KEY_NAME_TAB"
+msgstr ""
+
+msgid "KEY_NAME_BACKSPACE"
+msgstr ""
+
+msgid "KEY_NAME_DELETE"
+msgstr ""
+
+msgid "KEY_NAME_UP"
+msgstr ""
+
+msgid "KEY_NAME_DOWN"
+msgstr ""
+
+msgid "KEY_NAME_LEFT"
+msgstr ""
+
+msgid "KEY_NAME_RIGHT"
+msgstr ""
+
+msgid "TUTORIAL_SPRINT_HOLD"
+msgstr ""
+
+msgid "TUTORIAL_SPRINT_TOGGLE"
+msgstr ""
+
+
+# Controls, key bindings and tutorial hints
+msgid "BINDINGS_INSPECT"
+msgstr ""
+
+msgid "BINDING_INSPECT_FLIP"
+msgstr ""
+
+msgid "BINDING_INSPECT_RESET"
+msgstr ""
+
+msgid "INSPECT_FLIP"
+msgstr ""
+
+msgid "INSPECT_RESET"
+msgstr ""
+
+msgid "INSPECT_HINT_EXAMINE"
+msgstr ""
+
+msgid "INSPECT_HINT_READ"
+msgstr ""
+
+# Readable documents: the writing shown as an overlay when the art is in another language
+msgid "READABLE_RECIPE"
+msgstr ""
+
+msgid "READABLE_PANTRY_NOTE"
+msgstr ""
+
+msgid "READABLE_DIARY"
+msgstr ""
+
+msgid "READABLE_NOTE_CAPSULE"
+msgstr ""
+
+msgid "READABLE_FICHA_NOTE"
+msgstr ""
+
+msgid "READABLE_JOURNAL"
+msgstr ""
+
+msgid "READABLE_HOUSE_AD"
+msgstr ""
+
+msgid "READABLE_BUS_TICKET_SOPHIA"
+msgstr ""
+
+msgid "READABLE_BUS_TICKET_UNCLAIMED"
+msgstr ""
+
+msgid "READABLE_OVERLAY_SETTING"
+msgstr ""
+
+msgid "READABLE_OVERLAY_AUTO"
+msgstr ""
+
+msgid "READABLE_OVERLAY_ALWAYS"
+msgstr ""
+
+msgid "READABLE_OVERLAY_NEVER"
+msgstr ""
+
+# Readable spots on inspected items
+msgid "INSPECT_PROMPT_READ"
+msgstr ""
+
+msgid "INSPECT_PROMPT_EXAMINE"
+msgstr ""
+
+msgid "INSPECT_BACK"
+msgstr ""
+
+msgid "INSPECT_SPOT_ENGRAVING"
+msgstr ""
+
+# Clean inspect view and camera effects
+msgid "INSPECT_VERB_READ"
+msgstr ""
+
+msgid "INSPECT_VERB_EXAMINE"
+msgstr ""
+
+msgid "INSPECT_VERB_CLOSE"
+msgstr ""
+
+msgid "KEY_NAME_ESCAPE"
+msgstr ""
+
+msgid "OPTIONS_DEPTH_OF_FIELD"
+msgstr ""
+
+msgid "OPTIONS_MOTION_BLUR"
+msgstr ""
+

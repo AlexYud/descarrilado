@@ -24,7 +24,7 @@ msgid "MENU_QUIT"
 msgstr "Quit"
 
 msgid "CINEMATIC_HOLD_SKIP"
-msgstr "Hold Space to Skip"
+msgstr "Hold {skip_cinematic} to Skip"
 
 msgid "COMMON_LOADING"
 msgstr "Loading..."
@@ -195,22 +195,22 @@ msgstr "Uncapped"
 
 # Interaction and tutorial prompts
 msgid "PROMPT_INTERACT"
-msgstr "[E] Interact"
+msgstr "[{interact}] Interact"
 
 msgid "PROMPT_PICK_UP"
-msgstr "[E] Pick Up"
+msgstr "[{interact}] Pick Up"
 
 msgid "PROMPT_OPEN"
-msgstr "[E] Open"
+msgstr "[{interact}] Open"
 
 msgid "PROMPT_CLOSE"
-msgstr "[E] Close"
+msgstr "[{interact}] Close"
 
 msgid "PROMPT_LOCKED"
 msgstr "[Locked]"
 
 msgid "PROMPT_UNLOCK"
-msgstr "[E] Unlock"
+msgstr "[{interact}] Unlock"
 
 #. TRANSLATORS: %s is the configured flashlight key.
 msgid "TUTORIAL_FLASHLIGHT"
@@ -232,14 +232,14 @@ msgid "INVENTORY_SLOT_ITEM"
 msgstr "Slot {slot}\n{item}"
 
 msgid "INVENTORY_INSPECT_HINT"
-msgstr "Left drag: rotate    Wheel: zoom    Right click: back"
+msgstr "Drag: turn    Wheel: zoom    {inspect_flip}: flip    {inspect_reset}: reset    Right click: back"
 
 msgid "COMMON_OK"
 msgstr "OK"
 
 # Dialogue
 msgid "DIALOGUE_CONTINUE_HINT"
-msgstr "Press Enter or click to continue"
+msgstr "Press {dialog_continue} or click to continue"
 
 msgid "DIALOGUE_PLACEHOLDER"
 msgstr "Hello."
@@ -641,3 +641,286 @@ msgstr "A hand-carved conductor's whistle on a faded lanyard."
 
 msgid "WHISTLE_CLUE"
 msgstr "Stand tall and make some noise!"
+
+# Controls, key bindings and tutorial hints
+msgid "CONTROLS_SECTION_MOUSE"
+msgstr "Mouse"
+
+msgid "CONTROLS_MOUSE_SENSITIVITY"
+msgstr "Mouse sensitivity"
+
+msgid "CONTROLS_INVERT_Y"
+msgstr "Invert vertical look"
+
+msgid "CONTROLS_SECTION_GAMEPLAY"
+msgstr "Gameplay"
+
+msgid "CONTROLS_SPRINT_MODE"
+msgstr "Walk faster"
+
+msgid "CONTROLS_SPRINT_HOLD"
+msgstr "Hold"
+
+msgid "CONTROLS_SPRINT_TOGGLE"
+msgstr "Toggle"
+
+msgid "CONTROLS_TUTORIAL_HINTS"
+msgstr "Tutorial hints"
+
+msgid "CONTROLS_SECTION_KEYS"
+msgstr "Key bindings"
+
+msgid "BINDINGS_MOVEMENT"
+msgstr "Movement"
+
+msgid "BINDINGS_ACTIONS"
+msgstr "Actions"
+
+msgid "BINDINGS_INTERFACE"
+msgstr "Interface"
+
+msgid "BINDINGS_PRIMARY"
+msgstr "Primary"
+
+msgid "BINDINGS_ALTERNATE"
+msgstr "Alternate"
+
+msgid "BINDING_UP"
+msgstr "Move forward"
+
+msgid "BINDING_DOWN"
+msgstr "Move backward"
+
+msgid "BINDING_LEFT"
+msgstr "Move left"
+
+msgid "BINDING_RIGHT"
+msgstr "Move right"
+
+msgid "BINDING_SPRINT"
+msgstr "Walk faster"
+
+msgid "BINDING_INTERACT"
+msgstr "Interact"
+
+msgid "BINDING_FLASHLIGHT"
+msgstr "Flashlight"
+
+msgid "BINDING_INVENTORY"
+msgstr "Inventory"
+
+msgid "BINDING_SKIP_CINEMATIC"
+msgstr "Skip cinematic"
+
+msgid "BINDING_DIALOG_CONTINUE"
+msgstr "Continue dialogue"
+
+msgid "BINDING_UNBOUND"
+msgstr "Unbound"
+
+msgid "BINDING_LISTENING"
+msgstr "Press a key..."
+
+msgid "BINDING_LISTEN_HINT"
+msgstr "Press a key or mouse button to assign it. Esc or left click cancels. Delete clears the alternate key."
+
+msgid "BINDING_RESET"
+msgstr "Reset"
+
+msgid "BINDINGS_RESET_ALL"
+msgstr "Reset all controls to default"
+
+msgid "BINDINGS_RESET_TITLE"
+msgstr "Reset controls"
+
+msgid "BINDINGS_RESET_TEXT"
+msgstr "Reset every key binding and control option to its default?"
+
+msgid "BINDING_CONFLICT_TITLE"
+msgstr "Key already in use"
+
+msgid "BINDING_CONFLICT_TEXT"
+msgstr "{key} is already used for \"{action}\"."
+
+msgid "BINDING_CONFLICT_SWAP"
+msgstr "Swap"
+
+msgid "BINDING_CONFLICT_REPLACE"
+msgstr "Replace"
+
+msgid "BINDING_CONFLICT_CANCEL"
+msgstr "Cancel"
+
+msgid "BINDING_CONFLICT_BLOCKED"
+msgstr "{key} is the only key for \"{action}\". Give that action another key first."
+
+msgid "BINDING_LAST_KEY"
+msgstr "Every action needs at least one key."
+
+msgid "BINDING_MOUSE_LEFT"
+msgstr "Left Mouse Button"
+
+msgid "BINDING_MOUSE_LEFT_SHORT"
+msgstr "LMB"
+
+msgid "BINDING_MOUSE_RIGHT"
+msgstr "Right Mouse Button"
+
+msgid "BINDING_MOUSE_RIGHT_SHORT"
+msgstr "RMB"
+
+msgid "BINDING_MOUSE_MIDDLE"
+msgstr "Middle Mouse Button"
+
+msgid "BINDING_MOUSE_MIDDLE_SHORT"
+msgstr "MMB"
+
+msgid "BINDING_MOUSE_4"
+msgstr "Mouse Button 4"
+
+msgid "BINDING_MOUSE_4_SHORT"
+msgstr "M4"
+
+msgid "BINDING_MOUSE_5"
+msgstr "Mouse Button 5"
+
+msgid "BINDING_MOUSE_5_SHORT"
+msgstr "M5"
+
+msgid "KEY_NAME_SPACE"
+msgstr "Space"
+
+msgid "KEY_NAME_ENTER"
+msgstr "Enter"
+
+msgid "KEY_NAME_SHIFT"
+msgstr "Shift"
+
+msgid "KEY_NAME_CTRL"
+msgstr "Ctrl"
+
+msgid "KEY_NAME_ALT"
+msgstr "Alt"
+
+msgid "KEY_NAME_TAB"
+msgstr "Tab"
+
+msgid "KEY_NAME_BACKSPACE"
+msgstr "Backspace"
+
+msgid "KEY_NAME_DELETE"
+msgstr "Delete"
+
+msgid "KEY_NAME_UP"
+msgstr "Up"
+
+msgid "KEY_NAME_DOWN"
+msgstr "Down"
+
+msgid "KEY_NAME_LEFT"
+msgstr "Left"
+
+msgid "KEY_NAME_RIGHT"
+msgstr "Right"
+
+msgid "TUTORIAL_SPRINT_HOLD"
+msgstr "Hold {sprint} to walk faster"
+
+msgid "TUTORIAL_SPRINT_TOGGLE"
+msgstr "Press {sprint} to walk faster"
+
+
+# Controls, key bindings and tutorial hints
+msgid "BINDINGS_INSPECT"
+msgstr "Inspecting items"
+
+msgid "BINDING_INSPECT_FLIP"
+msgstr "Flip item"
+
+msgid "BINDING_INSPECT_RESET"
+msgstr "Reset item view"
+
+msgid "INSPECT_FLIP"
+msgstr "Flip"
+
+msgid "INSPECT_RESET"
+msgstr "Reset"
+
+msgid "INSPECT_HINT_EXAMINE"
+msgstr "Drag: turn    Wheel: zoom    {inspect_flip}: flip"
+
+msgid "INSPECT_HINT_READ"
+msgstr "Drag: tilt    Wheel: zoom    {inspect_flip}: turn over"
+
+# Readable documents: the writing shown as an overlay when the art is in another language
+msgid "READABLE_RECIPE"
+msgstr "The very first time we tried to cook a real meal together.\n\nYou insisted on making your mother’s potato soup to impress me, but when you went down to the market, you bought [color=#8fa8ff][u]3 whole kilos[/u][/color] of coarse rock salt instead of three small spoons. The kitchen smelled like the sea, and the broth was completely ruined.\n\nInstead of admitting you made a mistake, you sat at the table and swallowed two overflowing bowls in total silence just to prove you were 'fine.' I laughed until my ribs hurt, and you finally cracked a smile.\n\n— S."
+
+msgid "READABLE_PANTRY_NOTE"
+msgstr "[color=#8fa8ff][u]6[/u][/color] minutes trapped inside this tiny, dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\n— S."
+
+msgid "READABLE_DIARY"
+msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute, just lying on the floorboards listening to the quiet.\n\nSophia lay beside me, staring up at the unfinished ceiling without saying a word. She didn't mention leaving for the city. She didn't say a word about the train or her bus stubs.\n\nWhen [color=#8fa8ff][u]6:00 AM[/u][/color] hit and the sun finally broke through the trees, she was still here next to me. That was the exact moment I knew she would never leave. She is mine forever."
+
+msgid "READABLE_NOTE_CAPSULE"
+msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— L."
+
+msgid "READABLE_FICHA_NOTE"
+msgstr "I knew you'd find it, Juli. You're the only one who actually pays attention.\n\nTake the token to the top of the hill — let's make that call."
+
+msgid "READABLE_JOURNAL"
+msgstr "Lucas thinks he can force his way through everything with a wrench.\n\nHe doesn't get that this old junction box follows a sequence. Remember our secret code for catching the night train, Juli?\n\n[b]First, you light the track.[/b]\n[b]Then, you punch the ticket.[/b]\n[b]Finally, you blow the signal.[/b]"
+
+msgid "READABLE_HOUSE_AD"
+msgstr "[b]HOUSE FOR SALE[/b]\nTown centre\n\nLiving room · Kitchen · Bedroom · Bedroom · Pantry\n\n[i]The blue windows are beautiful.[/i]\n\n[b]OURS?[/b]"
+
+msgid "READABLE_BUS_TICKET_SOPHIA"
+msgstr "[b]BUS TICKET[/b]\nRailway village / São Paulo\nOne way\n\nPassenger: [i]Sophia[/i]"
+
+msgid "READABLE_BUS_TICKET_UNCLAIMED"
+msgstr "[b]BUS TICKET[/b]\nRailway village / São Paulo\nOne way\n\nPassenger: [i]If you want.[/i]"
+
+msgid "READABLE_OVERLAY_SETTING"
+msgstr "Document text overlay"
+
+msgid "READABLE_OVERLAY_AUTO"
+msgstr "Auto (translate when needed)"
+
+msgid "READABLE_OVERLAY_ALWAYS"
+msgstr "Always"
+
+msgid "READABLE_OVERLAY_NEVER"
+msgstr "Never"
+
+# Readable spots on inspected items
+msgid "INSPECT_PROMPT_READ"
+msgstr "[{interact}] Read"
+
+msgid "INSPECT_PROMPT_EXAMINE"
+msgstr "[{interact}] Examine"
+
+msgid "INSPECT_BACK"
+msgstr "Back"
+
+msgid "INSPECT_SPOT_ENGRAVING"
+msgstr "Engraving"
+
+# Clean inspect view and camera effects
+msgid "INSPECT_VERB_READ"
+msgstr "Read"
+
+msgid "INSPECT_VERB_EXAMINE"
+msgstr "Examine"
+
+msgid "INSPECT_VERB_CLOSE"
+msgstr "Close"
+
+msgid "KEY_NAME_ESCAPE"
+msgstr "Esc"
+
+msgid "OPTIONS_DEPTH_OF_FIELD"
+msgstr "Depth of field"
+
+msgid "OPTIONS_MOTION_BLUR"
+msgstr "Motion blur"
+

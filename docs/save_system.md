@@ -17,7 +17,7 @@ validated and promoted.
 - Saves can be deleted after confirmation.
 - Starting a game creates its slot immediately.
 - **Save Game** in the gameplay pause menu records the current scene, player
-  position and view, crouch and flashlight state, inventory, collected items,
+  position and view, flashlight state, inventory, collected items,
   and registered interactable state. Loading a manual Dream Intro save skips
   the wake-up cinematic and restores normal player control.
 - Manual saving is unavailable during cinematics, dialogue, inspection,

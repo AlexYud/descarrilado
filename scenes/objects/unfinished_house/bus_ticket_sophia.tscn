@@ -13,6 +13,9 @@ inspect_description = "ITEM_BUS_TICKET_SOPHIA_DESCRIPTION"
 prompt_text = "PROMPT_INSPECT"
 
 [node name="Visual" type="Node3D" parent="."]
+metadata/readable_text = "READABLE_BUS_TICKET_SOPHIA"
+metadata/art_language = "pt_BR"
+metadata/inspect_mode = "read"
 script = ExtResource("2_prop")
 kind = &"bus_ticket_sophia"
 metadata/inspect_id = "bus_ticket_sophia"
