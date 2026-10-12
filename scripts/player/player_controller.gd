@@ -15,6 +15,8 @@ var modal_ui_open: bool = false
 var cutscene_frozen: bool = false
 var manual_save_blocked: bool = false
 
+var _movement_hold_until_msec: int = 0
+
 
 func _ready() -> void:
 	add_to_group(&"player")
@@ -198,6 +200,9 @@ func _physics_process(delta: float) -> void:
 	if inspect_controller != null and inspect_controller.is_open():
 		movement_frozen = true
 
+	if Time.get_ticks_msec() < _movement_hold_until_msec:
+		movement_frozen = true
+
 	if movement_controller != null:
 		movement_controller.physics_update(
 			delta,
@@ -214,6 +219,20 @@ func _physics_process(delta: float) -> void:
 	):
 		if interaction_controller != null:
 			interaction_controller.try_interact(self)
+
+
+## Keeps the player's feet still for a moment (their hands are busy with a door or
+## a lock). The player can still look around.
+func hold_movement(seconds: float) -> void:
+	_movement_hold_until_msec = maxi(
+		_movement_hold_until_msec,
+		Time.get_ticks_msec() + int(seconds * 1000.0)
+	)
+
+
+## Lets go at once, when what held the player was interrupted.
+func release_movement_hold() -> void:
+	_movement_hold_until_msec = 0
 
 
 func set_cutscene_frozen(is_frozen: bool) -> void:

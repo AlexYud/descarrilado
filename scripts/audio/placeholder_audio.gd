@@ -292,3 +292,175 @@ static func make_fire_crackle(seconds: float = 4.0) -> AudioStreamWAV:
 		samples[i] = smoothed * 0.16 + pop * 0.5
 
 	return _to_wav(samples, true)
+
+
+# ----------------------------------------------------------------------
+# Doors and locks
+# ----------------------------------------------------------------------
+## The latch bolt pulled back by the handle: a small tick, then a duller one.
+static func make_door_latch() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.16 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 83
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var first: float = (
+			rng.randf_range(-1.0, 1.0) * exp(-t * 260.0) * 0.5
+			+ sin(TAU * 2300.0 * t) * exp(-t * 170.0) * 0.45
+		)
+		var late: float = t - 0.055
+		var second: float = 0.0
+		if late > 0.0:
+			second = (
+				sin(TAU * 950.0 * late) * exp(-late * 110.0) * 0.4
+				+ sin(TAU * 150.0 * late) * exp(-late * 70.0) * 0.5
+			)
+		samples[i] = clampf(first + second, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A door pulled shut: the latch bolt snapping home in its keeper.
+static func make_door_latch_close() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.3 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 89
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var knock: float = sin(TAU * 105.0 * t) * exp(-t * 38.0) * 0.8
+		var ring: float = (
+			sin(TAU * 1500.0 * t) + 0.5 * sin(TAU * 2350.0 * t)
+		) * exp(-t * 85.0) * 0.3
+		var grit: float = rng.randf_range(-1.0, 1.0) * exp(-t * 190.0) * 0.45
+		samples[i] = clampf(knock + ring + grit, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A heavy door coming to rest against the wall or its frame.
+static func make_door_thud() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.45 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 97
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.3)
+		var body: float = sin(TAU * 58.0 * t) * exp(-t * 12.0)
+		var wood: float = sin(TAU * 140.0 * t) * exp(-t * 26.0) * 0.4
+		var slap: float = smoothed * exp(-t * 45.0) * 0.5
+		samples[i] = clampf((body + wood + slap) * 0.8, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A key sliding into a lock: a thin metal scrape that ends on a tick as it seats.
+static func make_key_insert() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.42 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 101
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.55)
+		var ridges: float = 0.55 + 0.45 * sin(TAU * 62.0 * t)
+		var scrape: float = 0.0
+		if t < 0.33:
+			scrape = smoothed * ridges * minf(t * 30.0, 1.0) * minf((0.33 - t) * 30.0, 1.0) * 0.32
+
+		var seated: float = t - 0.34
+		var tick: float = 0.0
+		if seated > 0.0:
+			tick = (
+				sin(TAU * 2700.0 * seated) * exp(-seated * 190.0) * 0.5
+				+ sin(TAU * 420.0 * seated) * exp(-seated * 120.0) * 0.4
+			)
+		samples[i] = clampf(scrape + tick, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A key forced round in a stiff old lock: grinding that catches and slips.
+static func make_key_turn(seconds: float = 0.7) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 107
+	var slip_phase: float = 0.0
+	var y1: float = 0.0
+	var y2: float = 0.0
+	var pole: float = 0.986
+
+	for i: int in samples.size():
+		var progress: float = float(i) / samples.size()
+		var strain: float = 0.5 + 0.5 * sin(TAU * 4.0 * progress + 1.0)
+		var drive: float = sin(PI * progress) * (0.5 + 0.5 * strain)
+		slip_phase += (16.0 + 14.0 * drive) / MIX_RATE
+		var knock: float = 0.0
+		if slip_phase >= 1.0:
+			slip_phase -= 1.0
+			knock = rng.randf_range(0.5, 1.0) * drive
+
+		var omega: float = TAU * (1150.0 + 250.0 * strain) / MIX_RATE
+		var y: float = knock + 2.0 * pole * cos(omega) * y1 - pole * pole * y2
+		y2 = y1
+		y1 = y
+		var grind: float = rng.randf_range(-1.0, 1.0) * drive * 0.025
+		samples[i] = clampf(y * 0.22 + grind, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## The lock's bolt thrown back: one heavy metallic knock.
+static func make_bolt_throw() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.4 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 113
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var thunk: float = sin(TAU * 78.0 * t) * exp(-t * 24.0) * 0.9
+		var ring: float = (
+			sin(TAU * 640.0 * t) + 0.6 * sin(TAU * 1480.0 * t)
+		) * exp(-t * 38.0) * 0.28
+		var grit: float = rng.randf_range(-1.0, 1.0) * exp(-t * 150.0) * 0.4
+		samples[i] = clampf(thunk + ring + grit, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A locked door tried hard: the latch rattling in its keeper, three times, weaker.
+static func make_locked_rattle() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.5 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 127
+	var hits: Array[float] = [0.0, 0.13, 0.26]
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var value: float = 0.0
+		for h: int in hits.size():
+			var local: float = t - hits[h]
+			if local < 0.0:
+				continue
+
+			var strength: float = 0.9 / (1.0 + h * 0.9)
+			value += (
+				(sin(TAU * 880.0 * local) + 0.6 * sin(TAU * 1730.0 * local)) * exp(-local * 52.0) * 0.3
+				+ sin(TAU * 120.0 * local) * exp(-local * 45.0) * 0.5
+				+ rng.randf_range(-1.0, 1.0) * exp(-local * 170.0) * 0.35
+			) * strength
+
+		samples[i] = clampf(value, -1.0, 1.0)
+
+	return _to_wav(samples, false)

@@ -238,9 +238,12 @@ func _check_key_and_pantry_scare() -> void:
 
 	# Opening the pantry door: a head is at the corridor window, OUTSIDE, for 1.5 s
 	# second, then it ducks away. Silently.
-	var sounds_before: int = house.find_children("*", "AudioStreamPlayer3D", true, false).size()
+	var sounds_before: Array[int] = _non_door_sound_ids()
 	pantry_door.interact(player)
 	_expect(pantry_door.is_open, "the player opens the pantry door")
+	_expect(not house.figure.visible, "nothing shows while the door is only being unlatched")
+	# The door cracks, hangs there a moment, then swings; the head shows as it swings.
+	await _until(func() -> bool: return house.figure.visible, "a silhouette at the corridor window", 5.0)
 	_expect(house.figure.visible, "a silhouette is at the corridor window")
 	_expect(house.hall_glow.visible, "the window glows behind it so it can be seen")
 	_expect(house.hall_light.visible, "a weak light comes in through the window")
@@ -250,8 +253,9 @@ func _check_key_and_pantry_scare() -> void:
 		house.figure.position.is_equal_approx(house.figure_position),
 		"the head is already in view the moment the door opens"
 	)
-	var sounds_after: int = house.find_children("*", "AudioStreamPlayer3D", true, false).size()
-	_expect(sounds_after == sounds_before, "the silhouette beat adds no sound")
+	var sounds_after: Array[int] = _non_door_sound_ids()
+	var new_sounds: Array = sounds_after.filter(func(id: int) -> bool: return not sounds_before.has(id))
+	_expect(new_sounds.is_empty(), "the silhouette beat adds no sound")
 
 	# A second and a half after the door opens it flees.
 	_expect(is_equal_approx(house.figure_wait_seconds, 1.5), "it flees 1.5 s after the door opens")
@@ -278,6 +282,26 @@ func _check_key_and_pantry_scare() -> void:
 	bedroom_door.interact(player)
 	_expect(not bedroom_door.is_locked and bedroom_door.is_open, "the key opens the bedroom door")
 	_expect(not player.has_inventory_item("master_key"), "the key is used up")
+
+	# The key is brought to the lock and turned (the player's feet are held meanwhile),
+	# then the door swings open slowly. The key stays in the lock.
+	await _wait(0.8)
+	var in_lock: Array[DoorHardware] = []
+	for hardware: Node in bedroom_door.find_children("Hardware*", "", true, false):
+		if hardware is DoorHardware and (hardware as DoorHardware).is_key_shown():
+			in_lock.append(hardware as DoorHardware)
+	_expect(in_lock.size() == 1, "the key shows at the keyhole")
+	_expect(
+		absf(bedroom_door.hinge.rotation_degrees.y - bedroom_door.closed_rotation_degrees.y) < 1.0,
+		"the door stays shut while the key is turned"
+	)
+	await _until(func() -> bool: return bedroom_door._choreo == &"", "the key and the opening playing out", 15.0)
+	_expect(
+		absf(bedroom_door.hinge.rotation_degrees.y - bedroom_door.closed_rotation_degrees.y) > 80.0,
+		"the door ends wide open"
+	)
+	_expect(in_lock[0].is_key_shown(), "the key is still in the lock")
+	_expect(not bedroom_door.is_busy(), "the door is free again")
 
 
 func _check_diary_and_footsteps() -> void:
@@ -355,6 +379,16 @@ func _close_view() -> void:
 
 func _wait(seconds: float) -> void:
 	await get_tree().create_timer(seconds).timeout
+
+
+## The doors make their own sounds (latch, hinge); the silhouette must add none.
+func _non_door_sound_ids() -> Array[int]:
+	var ids: Array[int] = []
+	for sound: Node in house.find_children("*", "AudioStreamPlayer3D", true, false):
+		if not house.get_node("Doors").is_ancestor_of(sound):
+			ids.append(sound.get_instance_id())
+
+	return ids
 
 
 func _until(condition: Callable, what: String, timeout_seconds: float = 10.0) -> void:
@@ -436,7 +470,7 @@ func _ray_finds(item: Node, stand: Vector3, aim: Vector3, what: String) -> void:
 
 	_expect(
 		found == item,
-		"the interaction ray reaches %s (hit %s)" % [what, str(ray.get_collider())]
+		"the interaction ray reaches %s (hit %s)" % [what, str(ray.get_collider().get_path()) if ray.get_collider() != null else "nothing"]
 	)
 
 

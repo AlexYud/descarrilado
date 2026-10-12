@@ -1,53 +1,68 @@
 extends Node
 class_name PlayerAudioController
 
-const FOOTSTEP_PITCH_MIN: float = 0.9
-const FOOTSTEP_PITCH_MAX: float = 1.1
-const SPRINT_FOOTSTEP_PITCH_MIN: float = 1.15
-const SPRINT_FOOTSTEP_PITCH_MAX: float = 1.35
-const CROUCH_FOOTSTEP_PITCH_MIN: float = 0.8
-const CROUCH_FOOTSTEP_PITCH_MAX: float = 1.0
+const FOOTSTEP_PITCH_MIN: float = 0.85
+const FOOTSTEP_PITCH_MAX: float = 1.0
+const SPRINT_FOOTSTEP_PITCH_MIN: float = 0.98
+const SPRINT_FOOTSTEP_PITCH_MAX: float = 1.12
+const CROUCH_FOOTSTEP_PITCH_MIN: float = 0.75
+const CROUCH_FOOTSTEP_PITCH_MAX: float = 0.9
 
 var player: CharacterBody3D = null
 var sfx_walk: AudioStreamPlayer = null
 var sfx_crouch_walk: AudioStreamPlayer = null
 
 var audio_trigger_areas: Dictionary = {}
-var last_step_phase: bool = false
+
+var _walk_base_db: float = 0.0
+var _crouch_base_db: float = 0.0
+var _left_foot: bool = false
 
 
 func setup(player_node: CharacterBody3D) -> void:
 	player = player_node
 	sfx_walk = player.get_node("SoundEffects/sfx_walk") as AudioStreamPlayer
 	sfx_crouch_walk = player.get_node("SoundEffects/sfx_crouch_walk") as AudioStreamPlayer
+	_walk_base_db = sfx_walk.volume_db
+	_crouch_base_db = sfx_crouch_walk.volume_db
 
 	register_audio_triggers()
 
 
-func update_footsteps(bob_time: float, wants_crouch: bool, wants_sprint: bool) -> void:
-	var step_phase: bool = sin(bob_time * 4.0) > 0.9
+## Plays one footstep; the movement controller calls it whenever a foot lands.
+## `strength` is how hard the foot came down (1 is a normal step). Each step varies
+## in pitch and volume, and now and then one lands noticeably softer, so a long walk
+## never sounds like one sample on repeat.
+func trigger_footstep(wants_crouch: bool, wants_sprint: bool, strength: float = 1.0) -> void:
+	var loudness_db: float = (
+		randf_range(-2.5, 1.0)
+		+ 6.0 * log(clampf(strength, 0.35, 1.8)) / log(10.0)
+	)
+	if randf() < 0.12:
+		loudness_db -= randf_range(3.0, 6.0)
 
-	if step_phase and not last_step_phase:
-		if wants_crouch:
-			sfx_walk.stop()
-			sfx_crouch_walk.pitch_scale = randf_range(CROUCH_FOOTSTEP_PITCH_MIN, CROUCH_FOOTSTEP_PITCH_MAX)
-			sfx_crouch_walk.play()
-		else:
-			sfx_crouch_walk.stop()
+	if wants_crouch:
+		sfx_walk.stop()
+		sfx_crouch_walk.pitch_scale = randf_range(CROUCH_FOOTSTEP_PITCH_MIN, CROUCH_FOOTSTEP_PITCH_MAX)
+		sfx_crouch_walk.volume_db = _crouch_base_db + loudness_db
+		sfx_crouch_walk.play()
+		return
 
-			if wants_sprint:
-				sfx_walk.pitch_scale = randf_range(SPRINT_FOOTSTEP_PITCH_MIN, SPRINT_FOOTSTEP_PITCH_MAX)
-			else:
-				sfx_walk.pitch_scale = randf_range(FOOTSTEP_PITCH_MIN, FOOTSTEP_PITCH_MAX)
+	sfx_crouch_walk.stop()
 
-			sfx_walk.play()
+	if wants_sprint:
+		sfx_walk.pitch_scale = randf_range(SPRINT_FOOTSTEP_PITCH_MIN, SPRINT_FOOTSTEP_PITCH_MAX)
+	else:
+		sfx_walk.pitch_scale = randf_range(FOOTSTEP_PITCH_MIN, FOOTSTEP_PITCH_MAX)
 
-	last_step_phase = step_phase
+	# The left and right foot sound a touch different.
+	_left_foot = not _left_foot
+	sfx_walk.pitch_scale *= 0.97 if _left_foot else 1.03
+	sfx_walk.volume_db = _walk_base_db + loudness_db
+	sfx_walk.play()
 
 
 func stop_footsteps() -> void:
-	last_step_phase = false
-
 	if sfx_walk.playing:
 		sfx_walk.stop()
 

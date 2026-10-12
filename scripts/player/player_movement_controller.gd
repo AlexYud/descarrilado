@@ -1,22 +1,75 @@
 extends Node
 class_name PlayerMovementController
 
-const WALK_SPEED: float = 2.0
-const SPRINT_SPEED: float = 5.0
-const CROUCH_SPEED: float = 1.0
+# Speeds in world units per second (the player is scaled 0.5 and one unit is
+# about 1.27 m): walk is an unhurried ~1.65 m/s, "sprint" a brisk ~2.9 m/s walk.
+const WALK_SPEED: float = 1.3
+const SPRINT_SPEED: float = 2.3
+const CROUCH_SPEED: float = 0.7
+## Backwards and sideways steps are slower than forward ones.
+const STRAFE_SPEED_FACTOR: float = 0.88
+const BACKWARD_SPEED_FACTOR: float = 0.72
 
 const CROUCH_HEIGHT: float = -0.25
 const CROUCH_ACC: float = 8.0
 const STAND_HEIGHT: float = 2.0
 const CROUCH_COLLIDER_HEIGHT: float = 1.2
 
-const BOB_FREQ: float = 4.0
-const BOB_AMP: float = 0.1
+# Distance covered by one step (world units): the step phase advances with the
+# distance walked, so a slow walk gives slow steps and the feet never "slide".
+const STEP_LENGTH_WALK: float = 0.65
+const STEP_LENGTH_FAST: float = 0.8
+const STEP_LENGTH_CROUCH: float = 0.4
+const MIN_STEP_SPEED: float = 0.2
+
+# Camera motion, in the camera's local units (the player is scaled 0.5, so one
+# local unit is about 0.63 m). Roughly a 3 cm sway up and down, 2 cm sideways.
+const BOB_VERTICAL: float = 0.02
+const BOB_LATERAL: float = 0.024
+const BOB_ROLL_DEGREES: float = 0.75
+const BOB_NOISE_DEGREES: float = 0.12
+const BOB_SPEED_EXPONENT: float = 0.8
+const BOB_BLEND_IN: float = 8.0
+const BOB_BLEND_OUT: float = 6.0
+## Each footfall kicks a damped spring, so the head drops and settles.
+const STEP_KICK: float = 0.35
+const STEP_SPRING_STIFFNESS: float = 170.0
+const STEP_SPRING_DAMPING: float = 13.0
+const STEP_NOD_DEGREES_PER_UNIT: float = 30.0
+const LANDING_KICK: float = 0.12
+const LANDING_MAX_KICK: float = 0.7
+const LANDING_MIN_FALL_SPEED: float = 2.0
+const BREATH_RATE: float = 0.22
+const BREATH_VERTICAL: float = 0.004
+const BREATH_PITCH_DEGREES: float = 0.12
+const GESTURE_SMOOTHING: float = 12.0
+
+# Variety, so a thousand steps are never the same step. Every footfall rolls its
+# own strength; slow drifts in stride, balance and cadence come from smooth noise;
+# now and then the body does something small and unprompted.
+const GAIT_AMOUNT_MIN: float = 0.8
+const GAIT_AMOUNT_MAX: float = 1.22
+const GAIT_ROLL_MIN: float = 0.7
+const GAIT_ROLL_MAX: float = 1.3
+const GAIT_FOLLOW_RATE: float = 4.0
+## One foot lands a little harder than the other, and which one drifts over time.
+const GAIT_ASYMMETRY: float = 0.14
+const GAIT_CADENCE_DRIFT: float = 0.07
+const FOOTFALL_KICK_MIN: float = 0.75
+const FOOTFALL_KICK_MAX: float = 1.3
+const NOISE_POSITION: float = 0.0016
+const IDLE_SWAY: float = 0.003
+const WALK_EVENT_SECONDS: Vector2 = Vector2(6.0, 15.0)
+const IDLE_EVENT_SECONDS: Vector2 = Vector2(8.0, 18.0)
 
 const BASE_FOV: float = 75.0
-const FOV_CHANGE: float = 1.5
+## The field of view widens only slightly when walking fast.
+const FOV_FAST_WALK: float = 1.5
 
-@export var player_acceleration: float = 5.0
+@export var player_acceleration: float = 4.0
+@export var player_deceleration: float = 9.0
+## Share of the ground acceleration that applies in the air.
+@export var air_control: float = 0.3
 @export var camera_sensitivity: float = 0.15
 @export var jump_force: float = 3.0
 @export var gravity_force: float = 10.0
@@ -41,7 +94,51 @@ var look_pitch: float = 0.0
 
 var is_crouching: bool = false
 var crouch_offset: float = 0.0
-var bob_time: float = 0.0
+
+## Steps taken since the walk began; the whole part counts footfalls.
+var step_phase: float = 0.0
+
+## Where an interaction (opening a door, turning a key) wants the view to be for a
+## moment: leaning in, dipping towards a keyhole. Camera-local units and degrees.
+## Interactions only set these targets; the controller eases towards them.
+var gesture_offset: Vector3 = Vector3.ZERO
+var gesture_pitch_degrees: float = 0.0
+var gesture_roll_degrees: float = 0.0
+
+var _gesture_offset_applied: Vector3 = Vector3.ZERO
+var _gesture_pitch_applied: float = 0.0
+var _gesture_roll_applied: float = 0.0
+
+var _last_step_index: int = 0
+var _bob_blend: float = 0.0
+var _motion_time: float = 0.0
+var _applied_bob: Vector3 = Vector3.ZERO
+var _applied_hand_bob: Vector3 = Vector3.ZERO
+var _step_spring: float = 0.0
+var _step_spring_velocity: float = 0.0
+var _view_pitch: float = 0.0
+var _view_roll: float = 0.0
+var _was_on_floor: bool = true
+var _air_fall_speed: float = 0.0
+
+var _noise: FastNoiseLite = FastNoiseLite.new()
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _gait_amount: float = 1.0
+var _gait_amount_target: float = 1.0
+var _gait_roll: float = 1.0
+var _gait_roll_target: float = 1.0
+var _gait_asymmetry: float = 0.0
+var _gait_asymmetry_target: float = 0.0
+var _steps_until_asymmetry: int = 8
+var _breath_phase: float = 0.0
+var _view_yaw: float = 0.0
+
+# The small unprompted movement being played, if any (see `_update_event`).
+var _event_wait: float = 8.0
+var _event_kind: StringName = &""
+var _event_time: float = 0.0
+var _event_length: float = 1.0
+var _event_direction: float = 1.0
 
 var original_camera_position: Vector3 = Vector3.ZERO
 var original_hand_position: Vector3 = Vector3.ZERO
@@ -72,6 +169,12 @@ func setup(
 	original_camera_position = Vector3.ZERO
 	gameplay_camera_rotation = Vector3.ZERO
 	original_hand_position = hand.position
+
+	_rng.randomize()
+	_noise.seed = _rng.randi()
+	_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	_noise.frequency = 1.0
+	_event_wait = _rng.randf_range(IDLE_EVENT_SECONDS.x, IDLE_EVENT_SECONDS.y)
 
 	_apply_floor_settings()
 
@@ -125,18 +228,22 @@ func physics_update(
 		return
 
 	var move_dir: Vector3 = _get_move_direction()
+	var forward_dot: float = move_dir.dot(-head.basis.z)
 	var wants_crouch: bool = Input.is_action_pressed(
 		"crouch"
 	)
+	# Walking fast only makes sense while heading forward.
 	var wants_sprint: bool = (
 		Input.is_action_pressed("sprint")
 		and not wants_crouch
+		and forward_dot > 0.3
 	)
 	var current_speed: float = _get_current_speed(
 		wants_crouch,
 		wants_sprint
-	)
+	) * _get_direction_speed_factor(forward_dot)
 
+	_track_landing()
 	_apply_horizontal_movement(
 		move_dir,
 		current_speed,
@@ -152,7 +259,6 @@ func physics_update(
 	)
 	_update_view_effects(
 		delta,
-		move_dir,
 		wants_crouch,
 		wants_sprint
 	)
@@ -171,7 +277,7 @@ func begin_cutscene_camera_control(
 
 	look_yaw = 0.0
 	look_pitch = 0.0
-	bob_time = 0.0
+	_reset_view_motion()
 
 	if player != null:
 		player.velocity.x = 0.0
@@ -191,7 +297,7 @@ func end_cutscene_camera_control() -> void:
 	look_pitch = -rad_to_deg(
 		gameplay_camera_rotation.x
 	)
-	bob_time = 0.0
+	_reset_view_motion()
 
 	var final_offset: Vector3 = Vector3(
 		0.0,
@@ -227,7 +333,7 @@ func force_stop_immediately() -> void:
 	if player.is_on_floor():
 		player.velocity.y = 0.0
 
-	bob_time = 0.0
+	_reset_view_motion()
 
 	if audio_controller != null:
 		audio_controller.stop_footsteps()
@@ -272,7 +378,7 @@ func restore_save_state(save_data: Dictionary) -> void:
 	)
 	is_crouching = bool(save_data.get("is_crouching", false))
 	crouch_offset = CROUCH_HEIGHT if is_crouching else 0.0
-	bob_time = 0.0
+	_reset_view_motion()
 	gameplay_camera_rotation = Vector3(
 		-deg_to_rad(look_pitch),
 		0.0,
@@ -319,12 +425,15 @@ func _apply_floor_settings() -> void:
 
 func _apply_look(delta: float) -> void:
 	head.rotation.y = -deg_to_rad(look_yaw)
-	camera.rotation.x = -deg_to_rad(look_pitch)
+	var aim_pitch: float = -deg_to_rad(look_pitch)
+	camera.rotation.x = aim_pitch + _view_pitch
+	camera.rotation.z = _view_roll
+	camera.rotation.y = _view_yaw
 
 	if flashlight != null:
 		flashlight.rotation.x = lerpf(
 			flashlight.rotation.x,
-			camera.rotation.x,
+			aim_pitch,
 			delta * flashlight_lerp_speed
 		)
 
@@ -371,26 +480,35 @@ func _get_current_speed(
 	return WALK_SPEED
 
 
+## Backwards steps are slower than forward ones, sideways ones in between.
+func _get_direction_speed_factor(forward_dot: float) -> float:
+	if forward_dot >= 0.0:
+		return lerpf(STRAFE_SPEED_FACTOR, 1.0, forward_dot)
+
+	return lerpf(STRAFE_SPEED_FACTOR, BACKWARD_SPEED_FACTOR, -forward_dot)
+
+
 func _apply_horizontal_movement(
 	move_dir: Vector3,
 	speed: float,
 	delta: float
 ) -> void:
-	var target_velocity: Vector3 = (
-		move_dir * speed
+	var current: Vector2 = Vector2(player.velocity.x, player.velocity.z)
+	var target: Vector2 = Vector2(move_dir.x, move_dir.z) * speed
+
+	# Getting going takes a moment and stopping is quicker, as with a real body.
+	var rate: float = (
+		player_acceleration
+		if target.length() > current.length()
+		else player_deceleration
 	)
 
-	player.velocity.x = lerpf(
-		player.velocity.x,
-		target_velocity.x,
-		player_acceleration * delta
-	)
+	if not player.is_on_floor():
+		rate *= air_control
 
-	player.velocity.z = lerpf(
-		player.velocity.z,
-		target_velocity.z,
-		player_acceleration * delta
-	)
+	var next: Vector2 = current.lerp(target, clampf(rate * delta, 0.0, 1.0))
+	player.velocity.x = next.x
+	player.velocity.z = next.y
 
 
 func _apply_vertical_movement(
@@ -476,99 +594,55 @@ func _update_crouch(
 
 func _update_view_effects(
 	delta: float,
-	move_dir: Vector3,
 	wants_crouch: bool,
 	wants_sprint: bool
 ) -> void:
-	var final_offset: Vector3 = Vector3(
-		0.0,
-		crouch_offset,
-		0.0
-	)
-
 	var horizontal_speed: float = Vector2(
 		player.velocity.x,
 		player.velocity.z
 	).length()
 
-	if (
-		move_dir.length() > 0.01
-		and player.is_on_floor()
-	):
-		bob_time += (
-			delta
-			* maxf(horizontal_speed, 1.0)
-		)
-
-		final_offset += _headbob(
-			bob_time
-		)
-
-		if audio_controller != null:
-			audio_controller.update_footsteps(
-				bob_time,
-				wants_crouch,
-				wants_sprint
-			)
-	else:
-		bob_time = 0.0
-
-		if audio_controller != null:
-			audio_controller.stop_footsteps()
-
-	camera.position = camera.position.lerp(
-		original_camera_position
-		+ final_offset,
-		delta * camera_lerp_speed
+	var walking: bool = (
+		player.is_on_floor()
+		and horizontal_speed > MIN_STEP_SPEED
 	)
 
-	hand.position = hand.position.lerp(
-		original_hand_position
-		+ final_offset,
-		delta * camera_lerp_speed
-	)
+	if walking:
+		_advance_steps(
+			delta,
+			horizontal_speed,
+			wants_crouch,
+			wants_sprint
+		)
+	elif audio_controller != null:
+		audio_controller.stop_footsteps()
 
-	var fov_speed: float = clampf(
+	_apply_view_motion(
+		delta,
 		horizontal_speed,
-		0.0,
-		SPRINT_SPEED * 2.0
+		walking
 	)
 
-	var target_fov: float = (
-		BASE_FOV
-		+ FOV_CHANGE * fov_speed
+	# Walking fast widens the view only a touch; nothing like a run.
+	var fast_walk: float = clampf(
+		(horizontal_speed - WALK_SPEED)
+		/ (SPRINT_SPEED - WALK_SPEED),
+		0.0,
+		1.0
 	)
 
 	camera.fov = lerpf(
 		camera.fov,
-		target_fov,
-		delta * 8.0
+		BASE_FOV + FOV_FAST_WALK * fast_walk,
+		delta * 4.0
 	)
 
 
 func _update_frozen_view(delta: float) -> void:
-	bob_time = 0.0
-
 	if audio_controller != null:
 		audio_controller.stop_footsteps()
 
-	var final_offset: Vector3 = Vector3(
-		0.0,
-		crouch_offset,
-		0.0
-	)
-
-	camera.position = camera.position.lerp(
-		original_camera_position
-		+ final_offset,
-		delta * camera_lerp_speed
-	)
-
-	hand.position = hand.position.lerp(
-		original_hand_position
-		+ final_offset,
-		delta * camera_lerp_speed
-	)
+	_apply_view_motion(delta, 0.0, false)
 
 	camera.fov = lerpf(
 		camera.fov,
@@ -577,17 +651,323 @@ func _update_frozen_view(delta: float) -> void:
 	)
 
 
-func _headbob(time: float) -> Vector3:
-	var pos: Vector3 = Vector3.ZERO
+## The step phase advances with the distance walked (one per step), so the
+## camera motion and the footsteps stay in time with how fast the body moves.
+func _advance_steps(
+	delta: float,
+	horizontal_speed: float,
+	wants_crouch: bool,
+	wants_sprint: bool
+) -> void:
+	var step_length: float = STEP_LENGTH_WALK
 
-	pos.y = (
-		sin(time * BOB_FREQ)
-		* BOB_AMP
+	if wants_crouch:
+		step_length = STEP_LENGTH_CROUCH
+	elif wants_sprint:
+		step_length = STEP_LENGTH_FAST
+
+	# The cadence wanders a little, as a walker's does, instead of ticking like a clock.
+	step_length *= 1.0 + GAIT_CADENCE_DRIFT * _noise_at(6.0, 0.12)
+
+	step_phase += horizontal_speed * delta / step_length
+
+	var step_index: int = int(floorf(step_phase))
+	if step_index != _last_step_index:
+		_last_step_index = step_index
+		_on_footfall(horizontal_speed, wants_crouch, wants_sprint)
+
+
+func _on_footfall(
+	horizontal_speed: float,
+	wants_crouch: bool,
+	wants_sprint: bool
+) -> void:
+	var strength: float = clampf(
+		horizontal_speed / WALK_SPEED,
+		0.4,
+		1.6
 	)
 
-	pos.x = (
-		cos(time * BOB_FREQ / 2.0)
-		* BOB_AMP
+	if wants_crouch:
+		strength *= 0.5
+
+	# No two footfalls are alike: this one rolls its own weight, bob and sway.
+	strength *= _rng.randf_range(FOOTFALL_KICK_MIN, FOOTFALL_KICK_MAX)
+	_gait_amount_target = _rng.randf_range(GAIT_AMOUNT_MIN, GAIT_AMOUNT_MAX)
+	_gait_roll_target = _rng.randf_range(GAIT_ROLL_MIN, GAIT_ROLL_MAX)
+
+	_steps_until_asymmetry -= 1
+	if _steps_until_asymmetry <= 0:
+		_gait_asymmetry_target = _rng.randf_range(-GAIT_ASYMMETRY, GAIT_ASYMMETRY)
+		_steps_until_asymmetry = _rng.randi_range(6, 14)
+
+	_step_spring_velocity -= STEP_KICK * strength
+
+	if audio_controller != null:
+		audio_controller.trigger_footstep(wants_crouch, wants_sprint, strength)
+
+
+func _track_landing() -> void:
+	var on_floor: bool = player.is_on_floor()
+
+	if on_floor:
+		if not _was_on_floor and _air_fall_speed >= LANDING_MIN_FALL_SPEED:
+			_on_landed(_air_fall_speed)
+
+		_air_fall_speed = 0.0
+	else:
+		_air_fall_speed = maxf(_air_fall_speed, -player.velocity.y)
+
+	_was_on_floor = on_floor
+
+
+func _on_landed(fall_speed: float) -> void:
+	_step_spring_velocity -= minf(
+		fall_speed * LANDING_KICK,
+		LANDING_MAX_KICK
 	)
 
-	return pos
+	if audio_controller != null:
+		audio_controller.trigger_footstep(false, false)
+
+
+## Moves the camera and the hand the way a head and shoulders move while
+## walking: a small sway that dips on every footfall and rolls from side to
+## side, a little wobble that never repeats exactly, and slow breathing when
+## standing still.
+func _apply_view_motion(
+	delta: float,
+	horizontal_speed: float,
+	walking: bool
+) -> void:
+	_motion_time += delta
+
+	_bob_blend = lerpf(
+		_bob_blend,
+		1.0 if walking else 0.0,
+		1.0 - exp(
+			-(BOB_BLEND_IN if walking else BOB_BLEND_OUT)
+			* delta
+		)
+	)
+
+	if not walking and _bob_blend < 0.02:
+		step_phase = 0.0
+		_last_step_index = 0
+
+	# Damped spring that the footfalls and landings kick downwards.
+	var spring_accel: float = (
+		-STEP_SPRING_STIFFNESS * _step_spring
+		- STEP_SPRING_DAMPING * _step_spring_velocity
+	)
+	_step_spring_velocity += spring_accel * delta
+	_step_spring += _step_spring_velocity * delta
+
+	var crouch_amount: float = clampf(
+		absf(crouch_offset / CROUCH_HEIGHT),
+		0.0,
+		1.0
+	)
+
+	# Each footfall's own roll is eased in, so the change between steps never pops.
+	var follow: float = 1.0 - exp(-GAIT_FOLLOW_RATE * delta)
+	_gait_amount = lerpf(_gait_amount, _gait_amount_target, follow)
+	_gait_roll = lerpf(_gait_roll, _gait_roll_target, follow)
+	_gait_asymmetry = lerpf(_gait_asymmetry, _gait_asymmetry_target, follow * 0.3)
+
+	var base_intensity: float = (
+		pow(
+			clampf(horizontal_speed / WALK_SPEED, 0.0, 1.6),
+			BOB_SPEED_EXPONENT
+		)
+		* _bob_blend
+		* lerpf(1.0, 0.6, crouch_amount)
+	)
+	var intensity: float = base_intensity * _gait_amount
+	var roll_intensity: float = base_intensity * _gait_roll
+
+	var stride_angle: float = TAU * step_phase
+	# Sharp dip as the foot lands, a rounder rise over the next one; one foot
+	# lands a little heavier than the other.
+	var vertical: float = (
+		(-cos(stride_angle) - 0.25 * cos(stride_angle * 2.0))
+		* BOB_VERTICAL * 0.8 * intensity
+		* (1.0 + _gait_asymmetry * cos(PI * step_phase))
+	)
+	# One period every two steps: the body shifts over the standing foot.
+	var sway: float = sin(PI * step_phase)
+
+	# Smooth noise that never repeats: the hand-held wobble, and the sway of a
+	# body that is never quite still.
+	var wobble_a: float = _noise_at(0.0, 0.9)
+	var wobble_b: float = _noise_at(1.0, 1.1)
+	var drift_x: float = _noise_at(2.0, 0.6)
+	var drift_y: float = _noise_at(3.0, 0.7)
+
+	_breath_phase += delta * BREATH_RATE * (1.0 + 0.2 * _noise_at(4.0, 0.05))
+	var breath: float = sin(TAU * _breath_phase) * (1.0 + 0.4 * _noise_at(5.0, 0.07))
+	var calm: float = 1.0 - _bob_blend
+
+	var event: PackedFloat32Array = _update_event(delta, walking)
+
+	var gesture_weight: float = 1.0 - exp(-GESTURE_SMOOTHING * delta)
+	_gesture_offset_applied = _gesture_offset_applied.lerp(gesture_offset, gesture_weight)
+	_gesture_pitch_applied = lerpf(_gesture_pitch_applied, gesture_pitch_degrees, gesture_weight)
+	_gesture_roll_applied = lerpf(_gesture_roll_applied, gesture_roll_degrees, gesture_weight)
+
+	var bob: Vector3 = Vector3(
+		(
+			sway * BOB_LATERAL * intensity
+			+ wobble_a * NOISE_POSITION * _bob_blend
+			+ drift_x * IDLE_SWAY * calm
+			+ event[0]
+		),
+		(
+			vertical + _step_spring
+			+ breath * BREATH_VERTICAL * calm
+			+ drift_y * IDLE_SWAY * 0.6 * calm
+			+ event[1]
+		),
+		0.0
+	) + _gesture_offset_applied
+
+	_view_roll = -deg_to_rad(
+		BOB_ROLL_DEGREES * sway * roll_intensity
+		+ BOB_NOISE_DEGREES * wobble_a * (0.3 + 0.7 * _bob_blend)
+		+ event[2]
+	) + deg_to_rad(_gesture_roll_applied)
+	_view_pitch = deg_to_rad(
+		_step_spring * STEP_NOD_DEGREES_PER_UNIT
+		+ breath * BREATH_PITCH_DEGREES * calm
+		+ BOB_NOISE_DEGREES * 0.7 * wobble_b * _bob_blend
+		+ event[4]
+		+ _gesture_pitch_applied
+	)
+	_view_yaw = deg_to_rad(
+		BOB_NOISE_DEGREES * 0.8 * wobble_b * (0.4 + 0.6 * _bob_blend)
+		+ event[3]
+	)
+
+	# The crouch height is eased; the walking motion is added on top of it
+	# without being smoothed away.
+	var base_offset: Vector3 = Vector3(0.0, crouch_offset, 0.0)
+	var hand_bob: Vector3 = Basis(Vector3.UP, head.rotation.y) * bob
+
+	camera.position = (
+		(camera.position - _applied_bob).lerp(
+			original_camera_position + base_offset,
+			delta * camera_lerp_speed
+		)
+		+ bob
+	)
+
+	hand.position = (
+		(hand.position - _applied_hand_bob).lerp(
+			original_hand_position + base_offset,
+			delta * camera_lerp_speed
+		)
+		+ hand_bob
+	)
+
+	_applied_bob = bob
+	_applied_hand_bob = hand_bob
+
+
+## Smooth noise from -1 to 1 that never repeats; `channel` picks an independent
+## stream and `rate` how fast it drifts.
+func _noise_at(channel: float, rate: float) -> float:
+	return clampf(_noise.get_noise_2d(_motion_time * rate, channel * 17.3) * 1.5, -1.0, 1.0)
+
+
+## The small unprompted movements of a living body, one at a time and far apart:
+## a shoulder rolling, a glance, a toe catching the ground, a shifted weight, a
+## deeper breath. Returns the offset x and y (camera units) and the roll, yaw and
+## pitch (degrees) to add to the view right now.
+func _update_event(delta: float, walking: bool) -> PackedFloat32Array:
+	var out: PackedFloat32Array = PackedFloat32Array([0.0, 0.0, 0.0, 0.0, 0.0])
+
+	if _event_kind == &"":
+		_event_wait -= delta
+		if _event_wait <= 0.0:
+			_start_event(walking)
+		return out
+
+	_event_time += delta
+	var progress: float = clampf(_event_time / _event_length, 0.0, 1.0)
+	var envelope: float = pow(sin(PI * progress), 2.0)
+	var side: float = _event_direction
+
+	match _event_kind:
+		&"shoulder":
+			out[0] = side * 0.012 * envelope
+			out[2] = side * 0.6 * envelope
+		&"glance":
+			out[3] = side * 0.7 * envelope
+			out[4] = 0.15 * envelope
+		&"shift":
+			out[0] = side * 0.015 * envelope
+			out[1] = -0.004 * envelope
+			out[2] = side * 0.4 * envelope
+		&"sigh":
+			out[1] = 0.006 * envelope
+			out[4] = 0.25 * envelope
+
+	if progress >= 1.0:
+		_event_kind = &""
+		_event_wait = _next_event_wait(walking)
+
+	return out
+
+
+func _start_event(walking: bool) -> void:
+	var roll: float = _rng.randf()
+	_event_time = 0.0
+	_event_direction = 1.0 if _rng.randf() < 0.5 else -1.0
+
+	if walking:
+		if roll < 0.4:
+			_event_kind = &"shoulder"
+			_event_length = _rng.randf_range(1.1, 1.6)
+		elif roll < 0.75:
+			_event_kind = &"glance"
+			_event_length = _rng.randf_range(1.0, 1.5)
+		else:
+			# A toe catches the ground: one stumbling dip, then back to the stride.
+			_step_spring_velocity -= 0.28
+			_event_wait = _next_event_wait(true)
+	else:
+		if roll < 0.4:
+			_event_kind = &"shift"
+			_event_length = _rng.randf_range(1.6, 2.4)
+		elif roll < 0.7:
+			_event_kind = &"glance"
+			_event_length = _rng.randf_range(1.0, 1.5)
+		else:
+			_event_kind = &"sigh"
+			_event_length = _rng.randf_range(2.4, 3.2)
+
+
+func _next_event_wait(walking: bool) -> float:
+	var range_seconds: Vector2 = WALK_EVENT_SECONDS if walking else IDLE_EVENT_SECONDS
+	return _rng.randf_range(range_seconds.x, range_seconds.y)
+
+
+func _reset_view_motion() -> void:
+	step_phase = 0.0
+	_last_step_index = 0
+	_bob_blend = 0.0
+	_applied_bob = Vector3.ZERO
+	_applied_hand_bob = Vector3.ZERO
+	_step_spring = 0.0
+	_step_spring_velocity = 0.0
+	_view_pitch = 0.0
+	_view_roll = 0.0
+	_air_fall_speed = 0.0
+	_view_yaw = 0.0
+	_event_kind = &""
+	gesture_offset = Vector3.ZERO
+	gesture_pitch_degrees = 0.0
+	gesture_roll_degrees = 0.0
+	_gesture_offset_applied = Vector3.ZERO
+	_gesture_pitch_applied = 0.0
+	_gesture_roll_applied = 0.0

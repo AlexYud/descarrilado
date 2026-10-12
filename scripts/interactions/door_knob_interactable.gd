@@ -16,6 +16,10 @@ func can_interact(player: Node) -> bool:
 		cached_prompt_text = prompt_text
 		return false
 
+	# The player's hands are already on the door.
+	if door_controller.is_busy():
+		return false
+
 	cached_prompt_text = door_controller.get_prompt_text_for_player(player)
 	return true
 
