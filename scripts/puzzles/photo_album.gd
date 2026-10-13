@@ -17,16 +17,9 @@ signal completed
 signal opened
 @warning_ignore("unused_signal")
 signal closed
-## The player took the keepsake photograph out of the finished album.
-signal keepsake_taken
 
 ## Every photograph that can go in this album (Collectible scenes).
 @export var photo_scenes: Array[PackedScene] = []
-
-## The one photograph the player may take from the finished album, once the
-## level enables it (`keepsake_enabled`).
-@export var keepsake_item_id: String = "photo_recent"
-@export var take_prompt_text: String = "PROMPT_TAKE_PHOTO"
 
 const STATE_SECTION: StringName = &"puzzles"
 const KEY_ARRANGEMENT: StringName = &"album_arrangement"
@@ -42,10 +35,6 @@ var locked: bool = false
 
 ## The level can switch the album off while something else is happening.
 var interaction_enabled: bool = true
-
-## While true and the keepsake is still in the album, interacting takes it
-## instead of opening the close-up. Set by the level.
-var keepsake_enabled: bool = false
 
 var view: AlbumView = null
 
@@ -72,40 +61,12 @@ func can_interact(_player: Node) -> bool:
 
 
 func get_prompt_text() -> String:
-	return take_prompt_text if _keepsake_available() else prompt_text
+	return prompt_text
 
 
 func interact(player: Node) -> void:
-	if _keepsake_available():
-		_take_keepsake(player)
-		return
-
 	view.open(player)
 
-
-func _keepsake_available() -> bool:
-	return keepsake_enabled and arrangement.has(keepsake_item_id)
-
-
-## Takes the keepsake out of the album, bypassing the lock, into the player's hands.
-func _take_keepsake(player: Node) -> void:
-	if not bool(player.call("has_inventory_space")):
-		DialogueManager.show_timed("ALBUM_NO_ROOM", 2.0)
-		return
-
-	var slot_index: int = arrangement.find(keepsake_item_id)
-	arrangement[slot_index] = ""
-	_refresh_slots()
-	SaveManager.set_state_value(
-		STATE_SECTION,
-		KEY_ARRANGEMENT,
-		arrangement.duplicate()
-	)
-
-	give_back(player, keepsake_item_id)
-	keepsake_enabled = false
-	arrangement_changed.emit()
-	keepsake_taken.emit()
 
 
 # ============================================================

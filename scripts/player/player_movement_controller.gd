@@ -729,7 +729,10 @@ func _apply_view_motion(
 	_gesture_pitch_applied = lerpf(_gesture_pitch_applied, gesture_pitch_degrees, gesture_weight)
 	_gesture_roll_applied = lerpf(_gesture_roll_applied, gesture_roll_degrees, gesture_weight)
 
-	var bob: Vector3 = Vector3(
+	# With head bobbing off only the scripted gestures (a door being opened) move the view.
+	var motion: float = 1.0 if GameSettings.get_head_bob_enabled() else 0.0
+
+	var procedural: Vector3 = Vector3(
 		(
 			sway * BOB_LATERAL * intensity
 			+ wobble_a * NOISE_POSITION * _bob_blend
@@ -743,24 +746,24 @@ func _apply_view_motion(
 			+ event[1]
 		),
 		0.0
-	) + _gesture_offset_applied
+	)
+	var bob: Vector3 = procedural * motion + _gesture_offset_applied
 
-	_view_roll = -deg_to_rad(
+	_view_roll = -deg_to_rad(motion * (
 		BOB_ROLL_DEGREES * sway * roll_intensity
 		+ BOB_NOISE_DEGREES * wobble_a * (0.3 + 0.7 * _bob_blend)
 		+ event[2]
-	) + deg_to_rad(_gesture_roll_applied)
-	_view_pitch = deg_to_rad(
+	)) + deg_to_rad(_gesture_roll_applied)
+	_view_pitch = deg_to_rad(motion * (
 		_step_spring * STEP_NOD_DEGREES_PER_UNIT
 		+ breath * BREATH_PITCH_DEGREES * calm
 		+ BOB_NOISE_DEGREES * 0.7 * wobble_b * _bob_blend
 		+ event[4]
-		+ _gesture_pitch_applied
-	)
-	_view_yaw = deg_to_rad(
+	) + _gesture_pitch_applied)
+	_view_yaw = deg_to_rad(motion * (
 		BOB_NOISE_DEGREES * 0.8 * wobble_b * (0.4 + 0.6 * _bob_blend)
 		+ event[3]
-	)
+	))
 
 	# The walking motion is added on top of the eased resting position without
 	# being smoothed away.

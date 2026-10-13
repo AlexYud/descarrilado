@@ -15,6 +15,11 @@ var dialogue_frozen: bool = false
 
 ## True while a full-screen puzzle view (the photo album) has the player's attention.
 var modal_ui_open: bool = false
+
+## True while a scene holds the player at a fixed view of something (the overlook
+## payphone): no walking, looking, interacting or flashlight, but the inventory
+## still opens. See `set_view_locked`.
+var view_locked: bool = false
 var cutscene_frozen: bool = false
 var manual_save_blocked: bool = false
 
@@ -184,7 +189,7 @@ func _input(event: InputEvent) -> void:
 
 		return
 
-	if dialogue_frozen or modal_ui_open:
+	if dialogue_frozen or modal_ui_open or view_locked:
 		return
 
 	var block_look: bool = false
@@ -217,6 +222,7 @@ func _physics_process(delta: float) -> void:
 	var gameplay_frozen: bool = (
 		dialogue_frozen
 		or modal_ui_open
+		or view_locked
 		or cutscene_frozen
 	)
 
@@ -311,7 +317,7 @@ func can_manual_save() -> bool:
 	if not SaveManager.has_active_game():
 		return false
 
-	if manual_save_blocked or cutscene_frozen or dialogue_frozen or modal_ui_open:
+	if manual_save_blocked or cutscene_frozen or dialogue_frozen or modal_ui_open or view_locked:
 		return false
 
 	if DialogueManager.has_method("is_dialogue_active"):
@@ -503,7 +509,7 @@ func is_flashlight_blocked() -> bool:
 	if cutscene_frozen:
 		return true
 
-	if dialogue_frozen or modal_ui_open:
+	if dialogue_frozen or modal_ui_open or view_locked:
 		return true
 
 	if (
@@ -598,6 +604,25 @@ func set_modal_ui_open(is_open: bool) -> void:
 
 	if interaction_controller != null:
 		interaction_controller.clear_prompt()
+
+
+## Holds the player at a fixed view (a scene supplies its own camera): they stop
+## moving, looking, interacting and using the flashlight; the inventory still opens.
+func set_view_locked(locked: bool) -> void:
+	if view_locked == locked:
+		return
+
+	view_locked = locked
+
+	if locked:
+		if movement_controller != null:
+			movement_controller.force_stop_immediately()
+
+		if audio_controller != null:
+			audio_controller.stop_footsteps()
+
+		if interaction_controller != null:
+			interaction_controller.clear_prompt()
 
 
 ## Shows an item that has just entered the inventory, flying in from where it

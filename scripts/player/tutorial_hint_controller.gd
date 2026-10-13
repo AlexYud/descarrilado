@@ -14,7 +14,9 @@ class_name TutorialHintController
 ##   pause menu, and it counts nothing while one of those is open.
 ## - It goes away the moment the player does it (a second of walking fast), or
 ##   after a while if ignored, and comes back once more later, then gives up.
-## - Players who find the faster pace before the hint appears never see it.
+## - Players who find the faster pace before the hint appears never see it: in a level
+##   with a trigger that means a player who is already walking fast when they reach it
+##   or while they are beyond it (the hint is not for them).
 ## - It is remembered per saved game, and can be turned off in the Controls
 ##   settings ("Tutorial hints").
 
@@ -110,9 +112,10 @@ func _process(delta: float) -> void:
 		).is_empty()
 
 	# Walking fast, for long enough, is the lesson learned. In a level with a trigger
-	# it only counts while the hint is on screen: whoever walked fast about the yard
-	# still gets the hint at the gate, and it goes away as soon as they do it again.
-	var may_learn: bool = is_showing or not _needs_trigger
+	# it only counts once they have reached it (or while the hint is on screen): whoever
+	# walked fast about the yard still gets the hint at the gate, but whoever is already
+	# walking fast past it needs none, and it goes away as soon as they do it.
+	var may_learn: bool = is_showing or not _needs_trigger or _triggered
 	if (
 		may_learn
 		and bool(movement.get("is_sprinting"))
@@ -149,7 +152,20 @@ func _process(delta: float) -> void:
 func trigger(id: StringName) -> void:
 	if id == &"sprint":
 		_triggered = true
+		# Already walking fast as they arrive: there is nothing to teach.
+		if _is_sprinting():
+			_mark_learned()
+			_hide()
 
+
+## True while the player is walking fast right now.
+func _is_sprinting() -> bool:
+	var movement: Node = _player.get("movement_controller") as Node
+	if movement == null:
+		return false
+
+	var speed: float = Vector2(_player.velocity.x, _player.velocity.z).length()
+	return bool(movement.get("is_sprinting")) and speed > PlayerMovementController.WALK_SPEED * 1.1
 
 ## The close-ups, dialogue, cutscenes and menus own the player's attention.
 func _is_gameplay_active() -> bool:
@@ -159,7 +175,7 @@ func _is_gameplay_active() -> bool:
 	if bool(_player.get("cutscene_frozen")) or bool(_player.get("dialogue_frozen")):
 		return false
 
-	if bool(_player.get("modal_ui_open")):
+	if bool(_player.get("modal_ui_open")) or bool(_player.get("view_locked")):
 		return false
 
 	var movement: Node = _player.get("movement_controller") as Node
@@ -178,6 +194,11 @@ func _is_gameplay_active() -> bool:
 
 
 func _show() -> void:
+	# Never over someone who is already doing it.
+	if _is_sprinting():
+		_mark_learned()
+		return
+
 	_showings += 1
 	_showing_time = 0.0
 	is_showing = true

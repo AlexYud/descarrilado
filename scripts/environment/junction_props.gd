@@ -35,7 +35,7 @@ const LEVER_REST_Y: float = 0.9
 static func has_kind(kind: StringName) -> bool:
 	return kind in [
 		&"sophia_journal", &"railway_lantern", &"switch_box", &"carved_whistle",
-		&"sophia_ficha", &"ficha_note", &"signal_box", &"waiting_shelter", &"ticket_puncher",
+		&"sophia_ficha", &"juliana_ficha", &"lucas_ficha", &"ficha_note", &"payphone_note", &"signal_box", &"waiting_shelter", &"ticket_puncher",
 		&"shelter_bench", &"backpack", &"track_bank", &"mile_marker",
 	]
 
@@ -54,8 +54,14 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_whistle(root)
 		&"sophia_ficha":
 			_build_ficha(root)
+		&"juliana_ficha":
+			_build_ficha(root, "FICHA_NUMBER_1", &"juliana")
+		&"lucas_ficha":
+			_build_ficha(root, "FICHA_NUMBER_2", &"lucas")
 		&"ficha_note":
 			_build_ficha_note(root)
+		&"payphone_note":
+			_build_payphone_note(root)
 		&"signal_box":
 			_build_signal_box(root)
 		&"waiting_shelter":
@@ -353,17 +359,44 @@ static func _build_whistle(root: Node3D) -> void:
 
 
 ## Sophia's Ficha: a brass telephone token, thick enough to read in the hand.
-static func _build_ficha(root: Node3D) -> void:
+static func _build_ficha(root: Node3D, number_key: String = "FICHA_NUMBER", variant: StringName = &"") -> void:
 	var brass: StandardMaterial3D = HouseProps.material(Color(0.66, 0.5, 0.18), 0.35, 0.9)
 	var dark: StandardMaterial3D = HouseProps.material(Color(0.3, 0.22, 0.08), 0.5, 0.8)
 
-	# A disc standing on its edge, facing +Z.
-	HouseProps.add_cylinder(root, "Coin", 0.026, 0.006, Vector3.ZERO, brass, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_ring(root, "Rim", 0.0225, 0.026, Vector3(0.0, 0.0, 0.0), dark)
+	# A disc standing on its edge, facing +Z. Lucas's was bent: the whole disc sits a
+	# little askew.
+	var coin_root: Node3D = root
+	if variant == &"lucas":
+		coin_root = Node3D.new()
+		coin_root.name = "Bent"
+		coin_root.rotation_degrees = Vector3(0.0, 9.0, 6.0)
+		root.add_child(coin_root)
+
+	HouseProps.add_cylinder(coin_root, "Coin", 0.026, 0.006, Vector3.ZERO, brass, Vector3(90.0, 0.0, 0.0))
+	HouseProps.add_ring(coin_root, "Rim", 0.0225, 0.026, Vector3(0.0, 0.0, 0.0), dark)
 	# The groove across the middle that telephone tokens have.
-	HouseProps.add_box(root, "Groove", Vector3(0.036, 0.004, 0.0012), Vector3(0.0, 0.0, 0.0031), dark)
-	_etch(root, "Number", "FICHA_NUMBER", Vector3(0.0, 0.011, 0.0031), 30, 0.0004)
-	_etch(root, "Mark", "FICHA_MARK", Vector3(0.0, -0.011, 0.0031), 12, 0.0004)
+	HouseProps.add_box(coin_root, "Groove", Vector3(0.036, 0.004, 0.0012), Vector3(0.0, 0.0, 0.0031), dark)
+	_etch(coin_root, "Number", number_key, Vector3(0.0, 0.011, 0.0031), 30, 0.0004)
+	_etch(coin_root, "Mark", "FICHA_MARK", Vector3(0.0, -0.011, 0.0031), 12, 0.0004)
+
+	match variant:
+		&"juliana":
+			# Chipped blue nail polish smudged on the rim.
+			var polish: StandardMaterial3D = HouseProps.material(Color(0.16, 0.34, 0.74), 0.25, 0.0)
+			HouseProps.add_box(root, "PolishChip", Vector3(0.011, 0.0042, 0.0072), Vector3(0.0206, 0.0132, 0.0), polish, Vector3(0.0, 0.0, 38.0))
+			HouseProps.add_box(root, "PolishFleck", Vector3(0.004, 0.0035, 0.004), Vector3(0.0132, 0.0212, 0.0), polish, Vector3(0.0, 0.0, 62.0))
+			HouseProps.add_box(root, "PolishSmear", Vector3(0.009, 0.0012, 0.0008), Vector3(0.0168, 0.0094, 0.0033), polish, Vector3(0.0, 0.0, 38.0))
+		&"lucas":
+			# Dents, scratches and a flattened edge.
+			var scratch: StandardMaterial3D = HouseProps.material(Color(0.36, 0.26, 0.09), 0.7, 0.6)
+			for i: int in 5:
+				HouseProps.add_box(
+					coin_root, "Scratch%d" % i, Vector3(0.026 - i * 0.003, 0.0006, 0.0004),
+					Vector3(-0.002 + i * 0.002, -0.017 + i * 0.0085, 0.0034),
+					scratch, Vector3(0.0, 0.0, 22.0 + i * 17.0)
+				)
+			HouseProps.add_box(coin_root, "Dent", Vector3(0.012, 0.007, 0.0075), Vector3(-0.0215, 0.012, 0.0), dark, Vector3(0.0, 0.0, -28.0))
+			HouseProps.add_box(coin_root, "Flat", Vector3(0.016, 0.003, 0.007), Vector3(0.0, -0.0262, 0.0), dark)
 
 
 ## The note that came with the Ficha: a small card, folded once.
@@ -378,6 +411,21 @@ static func _build_ficha_note(root: Node3D) -> void:
 	HouseProps.add_paragraphs(
 		note, "Text", "FICHA_NOTE_TEXT",
 		Vector3(-0.062, 0.045, 0.0009), 22, 0.00025, HouseProps.INK_BLUE, 496.0
+	)
+
+
+## The little note taped to the side of the overlook payphone: a scrap of paper, two
+## lines in felt pen, held by two strips of tape. Faces +Z, centred on the origin.
+static func _build_payphone_note(root: Node3D) -> void:
+	var note: MeshInstance3D = HouseProps._add_paper(
+		root, "Paper", Vector2(0.1, 0.07), Vector3.ZERO, HouseProps.PAPER
+	)
+	var tape: StandardMaterial3D = HouseProps.material(Color(0.78, 0.74, 0.55), 0.6)
+	HouseProps.add_box(root, "TapeLeft", Vector3(0.026, 0.012, 0.0007), Vector3(-0.042, 0.034, 0.0012), tape, Vector3(0.0, 0.0, 28.0))
+	HouseProps.add_box(root, "TapeRight", Vector3(0.026, 0.012, 0.0007), Vector3(0.042, 0.034, 0.0012), tape, Vector3(0.0, 0.0, -24.0))
+	HouseProps.add_paragraphs(
+		note, "Text", "OVERLOOK_NOTE_TEXT",
+		Vector3(-0.043, 0.014, 0.0009), 22, 0.00022, HouseProps.INK_BLUE, 400.0
 	)
 
 

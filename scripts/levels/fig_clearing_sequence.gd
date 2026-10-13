@@ -9,8 +9,9 @@ class_name FigClearingSequence
 ## until recorded audio exists, and the sounds are generated placeholders.
 ##
 ## The scene ends the moment the recording does: rain, campfire and flashlight
-## cut out together and the album offers the last photograph
-## as a keepsake. Nothing else happens.
+## cut out together. A moment later a Ficha (Juliana's, a telephone token) lies on the
+## table beside the album: the only thing the player takes from the clearing. The
+## photographs are never taken (they are only put in the album). Nothing else happens.
 ##
 ## Stages: EXPLORING (the cassette turns in silence, photos to find) > FINALE
 ## (album solved, tape rewinds) > RECORDING (the memory plays) > DONE. Nothing
@@ -29,16 +30,21 @@ enum Stage {
 const STATE_SECTION: StringName = &"puzzles"
 const KEY_WHY_SAID: StringName = &"fig_clearing_why_said"
 const KEY_RECORDING_DONE: StringName = &"fig_clearing_recording_done"
-const KEY_PHOTO_TAKEN: StringName = &"fig_clearing_photo_taken"
 
 const LINE_WHY_THIS_PLACE: String = "CAPTION_JULIANA_WHY_THIS_PLACE"
-const LINE_TAKE_PHOTO: String = "CAPTION_JULIANA_TAKE_PHOTO"
 
 @export_category("Puzzle")
 @export var album: PhotoAlbum
 @export var recorder: CassetteRecorder
 ## The campfire; it goes out when the recording ends.
 @export var fire: CampfireFire
+
+@export_category("Ficha")
+## Juliana's Ficha (a Collectible scene) and where it lies once the recording is over.
+@export var ficha_scene: PackedScene
+@export var ficha_spot: Marker3D
+## How long after the recording ends the Ficha is there.
+@export var ficha_delay_seconds: float = 1.6
 
 @export_category("Recording")
 @export var rain_player: AudioStreamPlayer
@@ -55,13 +61,12 @@ var stage: Stage = Stage.EXPLORING
 
 var _why_said: bool = false
 var _recording_done: bool = false
-var _photo_taken: bool = false
+var _ficha: Node3D = null
 
 
 func _ready() -> void:
 	_why_said = _read_flag(KEY_WHY_SAID)
 	_recording_done = _read_flag(KEY_RECORDING_DONE)
-	_photo_taken = _read_flag(KEY_PHOTO_TAKEN)
 
 	_connect_signals()
 	_restore_stage()
@@ -70,14 +75,13 @@ func _ready() -> void:
 func _connect_signals() -> void:
 	album.opened.connect(_on_album_opened)
 	album.completed.connect(_on_album_completed)
-	album.keepsake_taken.connect(_on_keepsake_taken)
 
 
 ## Resumes from saved progress. A recording already heard is never replayed.
 func _restore_stage() -> void:
 	if _recording_done:
 		fire.extinguish()
-		album.keepsake_enabled = not _photo_taken
+		_place_ficha()
 		stage = Stage.DONE
 		return
 
@@ -104,13 +108,6 @@ func _on_album_opened() -> void:
 
 func _on_album_completed() -> void:
 	_run_finale()
-
-
-## Juliana takes the last photograph, the one that asks "will you come?".
-func _on_keepsake_taken() -> void:
-	_photo_taken = true
-	_write_flag(KEY_PHOTO_TAKEN)
-	CaptionManager.say(LINE_TAKE_PHOTO)
 
 
 # ============================================================
@@ -151,16 +148,39 @@ func _play_recording() -> void:
 	recorder.stop_turning()
 
 
-## The scene is over: saving is allowed again and the album can give up its keepsake.
+## The scene is over: saving is allowed again, and the Ficha is there for the taking.
 func _end_scene() -> void:
 	_recording_done = true
 	_write_flag(KEY_RECORDING_DONE)
 	_set_saving_blocked(false)
-	album.keepsake_enabled = true
 	album.interaction_enabled = true
 	stage = Stage.DONE
 	sequence_completed.emit()
 
+	await _wait(ficha_delay_seconds)
+	_place_ficha(true)
+
+
+## Puts Juliana's Ficha on the table beside the album, flat, unless she has taken it
+## (the Collectible removes itself then). `with_sound` adds the small clink of it being
+## set down.
+func _place_ficha(with_sound: bool = false) -> void:
+	if ficha_scene == null or ficha_spot == null or _ficha != null:
+		return
+
+	_ficha = ficha_scene.instantiate() as Node3D
+	ficha_spot.get_parent().add_child(_ficha)
+	_ficha.global_transform = ficha_spot.global_transform
+	_ficha.rotate_object_local(Vector3.RIGHT, deg_to_rad(-90.0))
+
+	if with_sound and is_instance_valid(_ficha):
+		var clink: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+		clink.stream = PlaceholderAudio.make_coin_clatter()
+		clink.volume_db = -8.0
+		clink.unit_size = 4.0
+		ficha_spot.add_child(clink)
+		clink.finished.connect(clink.queue_free)
+		clink.play()
 
 
 func _play_rain(enabled: bool) -> void:

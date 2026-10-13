@@ -25,6 +25,7 @@ var _sensitivity_value: Label = null
 var _invert_check: CheckButton = null
 var _sprint_option: OptionButton = null
 var _hints_check: CheckButton = null
+var _head_bob_check: CheckButton = null
 var _readable_option: OptionButton = null
 var _reset_all_button: Button = null
 
@@ -158,6 +159,11 @@ func _build_mouse_section() -> void:
 	_invert_check = CheckButton.new()
 	_invert_check.toggled.connect(_on_invert_toggled)
 	row.add_child(_invert_check)
+
+	row = _add_row("CONTROLS_HEAD_BOB")
+	_head_bob_check = CheckButton.new()
+	_head_bob_check.toggled.connect(_on_head_bob_toggled)
+	row.add_child(_head_bob_check)
 
 
 func _build_keys_section() -> void:
@@ -335,6 +341,7 @@ func _refresh() -> void:
 	_sensitivity_slider.value = GameSettings.get_mouse_sensitivity_percent()
 	_sensitivity_value.text = "%d%%" % roundi(GameSettings.get_mouse_sensitivity_percent())
 	_invert_check.set_pressed_no_signal(GameSettings.get_invert_y())
+	_head_bob_check.set_pressed_no_signal(GameSettings.get_head_bob_enabled())
 	_hints_check.set_pressed_no_signal(GameSettings.get_tutorial_hints())
 
 	_sprint_option.clear()
@@ -533,6 +540,11 @@ func _on_sensitivity_changed(value: float) -> void:
 func _on_invert_toggled(enabled: bool) -> void:
 	if not _syncing:
 		GameSettings.set_invert_y(enabled)
+
+
+func _on_head_bob_toggled(enabled: bool) -> void:
+	if not _syncing:
+		GameSettings.set_head_bob_enabled(enabled)
 
 
 func _on_sprint_mode_selected(index: int) -> void:

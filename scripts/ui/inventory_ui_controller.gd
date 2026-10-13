@@ -11,6 +11,7 @@ var current_slots: Array[Dictionary] = []
 var current_inspect_data: Dictionary = {}
 var inspect_return_to_inventory: bool = false
 
+
 var inventory_ui_layer: CanvasLayer = null
 var inventory_root: Control = null
 var inventory_panel: PanelContainer = null

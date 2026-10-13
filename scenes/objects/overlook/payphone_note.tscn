@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/inspectable_interactable.gd" id="1_inspectable"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.14, 0.11, 0.08)
+
+[node name="PayphoneNote" type="Node3D"]
+script = ExtResource("1_inspectable")
+inspect_name = "ITEM_PAYPHONE_NOTE_NAME"
+inspect_description = "ITEM_PAYPHONE_NOTE_DESCRIPTION"
+prompt_text = "PROMPT_INSPECT"
+
+[node name="Visual" type="Node3D" parent="."]
+metadata/readable_text = "READABLE_OVERLOOK_NOTE"
+metadata/art_language = "pt_BR"
+metadata/inspect_mode = "read"
+script = ExtResource("2_prop")
+kind = &"payphone_note"
+metadata/inspect_id = "payphone_note"
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

@@ -449,12 +449,6 @@ msgstr "The year of the rain."
 msgid "ALBUM_CAPTION_3"
 msgstr "Not long ago."
 
-msgid "PROMPT_TAKE_PHOTO"
-msgstr "Take the photograph"
-
-msgid "CAPTION_JULIANA_TAKE_PHOTO"
-msgstr "I'll take it with me."
-
 
 msgid "PROMPT_ENTER_CODE"
 msgstr "Enter the code"
@@ -923,4 +917,73 @@ msgstr "Depth of field"
 
 msgid "OPTIONS_MOTION_BLUR"
 msgstr "Motion blur"
+
+# The overlook payphone
+msgid "FICHA_NUMBER_1"
+msgstr "1"
+
+msgid "FICHA_NUMBER_2"
+msgstr "2"
+
+msgid "ITEM_JULIANA_FICHA_NAME"
+msgstr "Juliana's Ficha"
+
+msgid "ITEM_JULIANA_FICHA_DESCRIPTION"
+msgstr "A brass telephone token. Blue nail polish is chipped on its rim."
+
+msgid "ITEM_LUCAS_FICHA_NAME"
+msgstr "Lucas's Ficha"
+
+msgid "ITEM_LUCAS_FICHA_DESCRIPTION"
+msgstr "A brass telephone token, dented, scratched and a little bent."
+
+msgid "PROMPT_EXAMINE_ORELHAO"
+msgstr "Examine Orelhão"
+
+msgid "PROMPT_PICK_UP_RECEIVER"
+msgstr "Pick up Receiver"
+
+msgid "CAPTION_SPEAKER_SOPHIA_PHONE"
+msgstr "Sophia"
+
+msgid "CAPTION_PHONE_01"
+msgstr "Juli? Hey! God, you took forever to call. I've been sitting on my bed for an hour waiting for you."
+
+msgid "CAPTION_PHONE_02"
+msgstr "Juli? Juli, don't listen to her! Don't go to my house!"
+
+msgid "CAPTION_PHONE_03"
+msgstr "I left the front door unlocked for you. Just walk upstairs, I'm waiting in my room..."
+
+msgid "CAPTION_PHONE_04"
+msgstr "Juli, I'm not at home! I've been calling you from the station! The thing on that line... she's sitting in my room, but she ISN'T ME. Hang up the phone, Juli! HANG UP!"
+
+# The overlook payphone
+
+# Overlook payphone: inserting fichas, the note
+msgid "PROMPT_INSERT_FICHA"
+msgstr "Insert ficha %d"
+
+msgid "CAPTION_JULIANA_NEED_FICHAS"
+msgstr "I need some fichas..."
+
+msgid "ITEM_PAYPHONE_NOTE_NAME"
+msgstr "Taped Note"
+
+msgid "ITEM_PAYPHONE_NOTE_DESCRIPTION"
+msgstr "Stuck to the side of the payphone."
+
+msgid "OVERLOOK_NOTE_TEXT"
+msgstr "One ficha for each of us."
+
+msgid "READABLE_OVERLOOK_NOTE"
+msgstr "One ficha for each of us."
+
+# Overlook payphone: inserting fichas, the note
+msgid "OVERLOOK_PHONE_STEP_AWAY"
+msgstr "Step away"
+
+# Comfort: head bobbing
+msgid "CONTROLS_HEAD_BOB"
+msgstr "Head bobbing"
 

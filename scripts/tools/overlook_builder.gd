@@ -44,6 +44,9 @@ var fence_curve_radius: float = 22.0
 
 ## Bench distance from the viewpoint toward the city.
 var bench_distance: float = 5.0
+## The model is 2.5 m long and 1.25 m high: this makes it a real park bench (about 1.8 m by
+## 0.9 m), in line with the other assets.
+var bench_scale: float = 0.72
 
 ## The fence and bench are meant for level ground. The terrain is flattened in
 ## a box spanning these distances along the view direction from the viewpoint
@@ -189,7 +192,7 @@ func build_scene(terrain: Terrain3D, save_path: String) -> Error:
 
 	# The bench seat faces local -X, so turn it until -X points at the city.
 	bench_body.transform = Transform3D(
-		Basis(Vector3.UP, atan2(direction.y, -direction.x)),
+		Basis(Vector3.UP, atan2(direction.y, -direction.x)).scaled(Vector3.ONE * bench_scale),
 		Vector3(bench_position.x, bench_height, bench_position.y)
 	)
 

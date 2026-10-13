@@ -464,3 +464,80 @@ static func make_locked_rattle() -> AudioStreamWAV:
 		samples[i] = clampf(value, -1.0, 1.0)
 
 	return _to_wav(samples, false)
+
+
+## The faint hiss and hum of a telephone line, looping.
+static func make_line_hiss(seconds: float = 3.0) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 97
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.55)
+		var hum: float = sin(TAU * 100.0 * t) * 0.05
+		var crackle: float = rng.randf_range(-1.0, 1.0) * 0.5 if rng.randf() < 0.0008 else 0.0
+		samples[i] = smoothed * 0.09 + hum + crackle
+
+	return _to_wav(samples, true)
+
+
+## A receiver lifted off its hook or put back: a short plastic knock and a click.
+static func make_receiver_knock() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.3 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 101
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var knock: float = sin(TAU * 210.0 * t) * exp(-t * 38.0) * 0.7
+		var plastic: float = rng.randf_range(-1.0, 1.0) * exp(-t * 130.0) * 0.4
+		var click: float = sin(TAU * 1700.0 * (t - 0.14)) * exp(-(t - 0.14) * 160.0) * 0.25 if t > 0.14 else 0.0
+		samples[i] = knock + plastic + click
+
+	return _to_wav(samples, false)
+
+
+## The electrical hum of a failing street lamp's ballast, looping: a low mains buzz with
+## its harmonics and a slow, uneven waver.
+static func make_lamp_hum(seconds: float = 2.0) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 131
+	var grit: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		grit = lerpf(grit, rng.randf_range(-1.0, 1.0), 0.3)
+		# Whole numbers of cycles in the loop, so it joins without a click.
+		var buzz: float = (
+			sin(TAU * 100.0 * t) * 0.5
+			+ sin(TAU * 200.0 * t) * 0.3
+			+ sin(TAU * 300.0 * t) * 0.18
+			+ sin(TAU * 500.0 * t) * 0.08
+		)
+		var waver: float = 0.75 + 0.25 * sin(TAU * 1.0 * t)
+		samples[i] = buzz * waver * 0.55 + grit * 0.06
+
+	return _to_wav(samples, true)
+
+
+## A lamp striking again after darkness: a sharp electric snap and a short ring.
+static func make_lamp_pop() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.35 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 137
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var snap: float = rng.randf_range(-1.0, 1.0) * exp(-t * 160.0) * 0.9
+		var zap: float = sin(TAU * 2600.0 * t) * exp(-t * 90.0) * 0.35
+		var thump: float = sin(TAU * 90.0 * t) * exp(-t * 28.0) * 0.5
+		samples[i] = snap + zap + thump
+
+	return _to_wav(samples, false)

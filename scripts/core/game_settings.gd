@@ -17,6 +17,7 @@ signal mouse_sensitivity_changed(percent: float)
 signal invert_y_changed(enabled: bool)
 signal sprint_toggle_changed(enabled: bool)
 signal tutorial_hints_changed(enabled: bool)
+signal head_bob_changed(enabled: bool)
 signal depth_of_field_changed(enabled: bool)
 signal motion_blur_changed(enabled: bool)
 
@@ -89,6 +90,7 @@ const MOUSE_SENSITIVITY_KEY: String = (
 const INVERT_Y_KEY: String = "invert_y"
 const SPRINT_TOGGLE_KEY: String = "sprint_toggle"
 const TUTORIAL_HINTS_KEY: String = "tutorial_hints"
+const HEAD_BOB_KEY: String = "head_bob"
 
 const MASTER_BUS_NAME: String = "Master"
 
@@ -118,6 +120,9 @@ const DEFAULT_INVERT_Y: bool = false
 ## on with one press until the player stops.
 const DEFAULT_SPRINT_TOGGLE: bool = false
 const DEFAULT_TUTORIAL_HINTS: bool = true
+## The camera sways and dips with each step. Off (a comfort option, for players it makes
+## ill) the view stays steady while walking.
+const DEFAULT_HEAD_BOB: bool = true
 
 const MIN_WINDOW_RESOLUTION: Vector2i = Vector2i(
 	640,
@@ -165,6 +170,7 @@ var mouse_sensitivity_percent: float = (
 var invert_y: bool = DEFAULT_INVERT_Y
 var sprint_toggle: bool = DEFAULT_SPRINT_TOGGLE
 var tutorial_hints: bool = DEFAULT_TUTORIAL_HINTS
+var head_bob_enabled: bool = DEFAULT_HEAD_BOB
 
 var tracked_world_environments: Array[WorldEnvironment] = []
 
@@ -315,6 +321,11 @@ func save_settings() -> void:
 		CONTROLS_SECTION,
 		TUTORIAL_HINTS_KEY,
 		tutorial_hints
+	)
+	config.set_value(
+		CONTROLS_SECTION,
+		HEAD_BOB_KEY,
+		head_bob_enabled
 	)
 
 	var save_error: Error = config.save(SETTINGS_PATH)
@@ -770,6 +781,24 @@ func get_tutorial_hints() -> bool:
 	return tutorial_hints
 
 
+func set_head_bob_enabled(
+	value: bool,
+	save_after_change: bool = true
+) -> void:
+	if head_bob_enabled == value:
+		return
+
+	head_bob_enabled = value
+	head_bob_changed.emit(value)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_head_bob_enabled() -> bool:
+	return head_bob_enabled
+
+
 func reset_audio_to_default() -> void:
 	set_master_volume_percent(
 		DEFAULT_MASTER_VOLUME_PERCENT
@@ -811,6 +840,7 @@ func reset_controls_to_default() -> void:
 	invert_y = DEFAULT_INVERT_Y
 	sprint_toggle = DEFAULT_SPRINT_TOGGLE
 	tutorial_hints = DEFAULT_TUTORIAL_HINTS
+	head_bob_enabled = DEFAULT_HEAD_BOB
 	readable_text_mode = DEFAULT_READABLE_TEXT
 
 	mouse_sensitivity_changed.emit(
@@ -819,6 +849,7 @@ func reset_controls_to_default() -> void:
 	invert_y_changed.emit(invert_y)
 	sprint_toggle_changed.emit(sprint_toggle)
 	tutorial_hints_changed.emit(tutorial_hints)
+	head_bob_changed.emit(head_bob_enabled)
 	readable_text_mode_changed.emit(readable_text_mode)
 
 	save_settings()
@@ -848,6 +879,7 @@ func _set_default_values() -> void:
 	invert_y = DEFAULT_INVERT_Y
 	sprint_toggle = DEFAULT_SPRINT_TOGGLE
 	tutorial_hints = DEFAULT_TUTORIAL_HINTS
+	head_bob_enabled = DEFAULT_HEAD_BOB
 
 
 func _load_values_from_config(config: ConfigFile) -> void:
@@ -990,6 +1022,13 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			CONTROLS_SECTION,
 			TUTORIAL_HINTS_KEY,
 			DEFAULT_TUTORIAL_HINTS
+		)
+	)
+	head_bob_enabled = bool(
+		config.get_value(
+			CONTROLS_SECTION,
+			HEAD_BOB_KEY,
+			DEFAULT_HEAD_BOB
 		)
 	)
 

@@ -437,12 +437,6 @@ msgstr ""
 msgid "ALBUM_CAPTION_3"
 msgstr ""
 
-msgid "PROMPT_TAKE_PHOTO"
-msgstr ""
-
-msgid "CAPTION_JULIANA_TAKE_PHOTO"
-msgstr ""
-
 
 msgid "PROMPT_ENTER_CODE"
 msgstr ""
@@ -910,5 +904,74 @@ msgid "OPTIONS_DEPTH_OF_FIELD"
 msgstr ""
 
 msgid "OPTIONS_MOTION_BLUR"
+msgstr ""
+
+# The overlook payphone
+msgid "FICHA_NUMBER_1"
+msgstr ""
+
+msgid "FICHA_NUMBER_2"
+msgstr ""
+
+msgid "ITEM_JULIANA_FICHA_NAME"
+msgstr ""
+
+msgid "ITEM_JULIANA_FICHA_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_LUCAS_FICHA_NAME"
+msgstr ""
+
+msgid "ITEM_LUCAS_FICHA_DESCRIPTION"
+msgstr ""
+
+msgid "PROMPT_EXAMINE_ORELHAO"
+msgstr ""
+
+msgid "PROMPT_PICK_UP_RECEIVER"
+msgstr ""
+
+msgid "CAPTION_SPEAKER_SOPHIA_PHONE"
+msgstr ""
+
+msgid "CAPTION_PHONE_01"
+msgstr ""
+
+msgid "CAPTION_PHONE_02"
+msgstr ""
+
+msgid "CAPTION_PHONE_03"
+msgstr ""
+
+msgid "CAPTION_PHONE_04"
+msgstr ""
+
+# The overlook payphone
+
+# Overlook payphone: inserting fichas, the note
+msgid "PROMPT_INSERT_FICHA"
+msgstr ""
+
+msgid "CAPTION_JULIANA_NEED_FICHAS"
+msgstr ""
+
+msgid "ITEM_PAYPHONE_NOTE_NAME"
+msgstr ""
+
+msgid "ITEM_PAYPHONE_NOTE_DESCRIPTION"
+msgstr ""
+
+msgid "OVERLOOK_NOTE_TEXT"
+msgstr ""
+
+msgid "READABLE_OVERLOOK_NOTE"
+msgstr ""
+
+# Overlook payphone: inserting fichas, the note
+msgid "OVERLOOK_PHONE_STEP_AWAY"
+msgstr ""
+
+# Comfort: head bobbing
+msgid "CONTROLS_HEAD_BOB"
 msgstr ""
 

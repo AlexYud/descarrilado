@@ -19,8 +19,10 @@ class_name UnfinishedHouseSequence
 ##   and down the corridor towards the master bedroom, the footsteps getting
 ##   louder and closer while the player reads.
 ##
-## Taking the unclaimed bus ticket from the capsule raises `sequence_completed`.
-## The house stays as it is; nothing else happens.
+## Everything in the capsule is read in place (the advertisement and both bus tickets)
+## except Lucas's Ficha, lying on top where it is easy to take: it is the only thing the
+## player takes from the house, and taking it (closing its view) raises
+## `sequence_completed`. The house stays as it is; nothing else happens.
 
 signal sequence_completed
 
@@ -28,13 +30,13 @@ const STATE_SECTION: StringName = &"puzzles"
 const KEY_KEY_DONE: StringName = &"house_key_scare_done"
 const KEY_SILHOUETTE_DONE: StringName = &"house_silhouette_done"
 const KEY_DIARY_DONE: StringName = &"house_diary_scare_done"
-const KEY_TICKET_TAKEN: StringName = &"house_ticket_taken"
+const KEY_FICHA_TAKEN: StringName = &"house_ficha_taken"
 
 @export_category("Clues")
 ## `inspect_id` metadata of the Visual of each clue.
 @export var key_id: StringName = &"master_key"
 @export var diary_id: StringName = &"lucas_diary"
-@export var ticket_id: StringName = &"bus_ticket_unclaimed"
+@export var ficha_id: StringName = &"lucas_ficha"
 
 @export_category("Key: every door slams shut")
 ## Parent of the house's doors (every DoorController child slams shut).
@@ -72,7 +74,7 @@ const KEY_TICKET_TAKEN: StringName = &"house_ticket_taken"
 var _key_done: bool = false
 var _silhouette_done: bool = false
 var _diary_done: bool = false
-var _ticket_taken: bool = false
+var _ficha_taken: bool = false
 var _silhouette_armed: bool = false
 
 var _run_step: AudioStreamWAV = null
@@ -82,7 +84,7 @@ func _ready() -> void:
 	_key_done = _read_flag(KEY_KEY_DONE)
 	_silhouette_done = _read_flag(KEY_SILHOUETTE_DONE)
 	_diary_done = _read_flag(KEY_DIARY_DONE)
-	_ticket_taken = _read_flag(KEY_TICKET_TAKEN)
+	_ficha_taken = _read_flag(KEY_FICHA_TAKEN)
 
 	# Loaded after the doors slammed but before the silhouette was seen.
 	_silhouette_armed = _key_done and not _silhouette_done
@@ -126,9 +128,9 @@ func _on_inspect_closed(closed_id: String) -> void:
 		_key_done = true
 		_write_flag(KEY_KEY_DONE)
 		_run_door_scare()
-	elif id == ticket_id and not _ticket_taken:
-		_ticket_taken = true
-		_write_flag(KEY_TICKET_TAKEN)
+	elif id == ficha_id and not _ficha_taken:
+		_ficha_taken = true
+		_write_flag(KEY_FICHA_TAKEN)
 		sequence_completed.emit()
 
 

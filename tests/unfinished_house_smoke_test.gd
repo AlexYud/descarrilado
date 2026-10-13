@@ -173,11 +173,15 @@ func _check_padlock() -> void:
 func _check_capsule_contents() -> void:
 	var ad: Inspectable = capsule.get_node("Contents/HouseAdvertisement")
 	var ticket_sophia: Inspectable = capsule.get_node("Contents/BusTicketSophia")
-	var ticket_unclaimed: Collectible = capsule.get_node("Contents/BusTicketUnclaimed")
+	var ticket_unclaimed: Inspectable = capsule.get_node("Contents/BusTicketUnclaimed")
+	var ficha: Collectible = capsule.get_node("Contents/LucasFicha")
 	_expect(not _is_collectable(ad), "the house advertisement is read in place")
 	_expect(not _is_collectable(ticket_sophia), "Sophia's ticket is read in place")
+	_expect(not _is_collectable(ticket_unclaimed), "the unclaimed ticket is read in place too")
+	_expect(_is_collectable(ficha) and ficha.item_id == "lucas_ficha", "Lucas's Ficha is the one thing to take")
 
 	await _ray_finds(ticket_unclaimed, _front_of(capsule, 1.05), ticket_unclaimed.global_position, "the unclaimed ticket in the chest")
+	await _ray_finds(ficha, _front_of(capsule, 1.05), ficha.global_position, "the Ficha in the chest")
 	await _ray_finds(ticket_sophia, _front_of(capsule, 1.05), ticket_sophia.global_position, "Sophia's ticket in the chest")
 	await _ray_finds(
 		ad, _front_of(capsule, 1.05), ad.global_position + capsule.global_basis.z * 0.09,
@@ -185,16 +189,18 @@ func _check_capsule_contents() -> void:
 	)
 	await _read(ad, 0.5)
 	await _read(ticket_sophia, 0.5)
-	_expect(completed_count == 0, "nothing ends the scene before the last ticket is taken")
+	await _read(ticket_unclaimed, 0.5)
+	_expect(not player.has_inventory_item("bus_ticket_unclaimed"), "reading the unclaimed ticket takes nothing")
+	_expect(completed_count == 0, "nothing ends the scene before the Ficha is taken")
 
-	_expect(ticket_unclaimed.can_interact(player), "the unclaimed ticket can be taken")
-	ticket_unclaimed.interact(player)
-	_expect(player.has_inventory_item("bus_ticket_unclaimed"), "the ticket goes in the inventory")
+	_expect(ficha.can_interact(player), "the Ficha can be taken")
+	ficha.interact(player)
+	_expect(player.has_inventory_item("lucas_ficha"), "the Ficha goes in the inventory")
 	_expect(player.inspect_controller.is_open(), "taking it shows it in the inspect view")
 	await _wait(0.6)
 	_close_view()
 	await _wait(0.6)
-	_expect(completed_count == 1, "closing the ticket raises sequence_completed once")
+	_expect(completed_count == 1, "closing the Ficha raises sequence_completed once")
 	await _wait(1.0)
 	_expect(completed_count == 1, "and nothing else happens after it")
 

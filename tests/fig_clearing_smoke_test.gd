@@ -158,17 +158,29 @@ func _run() -> void:
 	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight stays off")
 	_expect(player.can_manual_save(), "saving is allowed again")
 
-	# The album now offers the last photograph, which asks "will you come?".
+	# The album can no longer give up a photograph; a moment after the tape ends
+	# Juliana's Ficha lies on the table beside it, the one thing to take.
 	_expect(album.can_interact(player), "the album can be used after the memory")
-	_expect(album.get_prompt_text() == "PROMPT_TAKE_PHOTO", "it offers to take the photograph")
-	album.interact(player)
-	_expect(player.has_inventory_item("photo_recent"), "the keepsake photograph is taken")
-	_expect(album.arrangement[2] == "", "it leaves the album")
+	_expect(album.get_prompt_text() == "PROMPT_OPEN_ALBUM", "it only opens to look: no photograph can be taken from it")
+	var ficha: Collectible = clearing._ficha as Collectible
+	_expect(ficha != null and ficha.item_id == "juliana_ficha", "Juliana's Ficha lies beside the album")
 	_expect(
-		bool(SaveManager.get_state_value(&"puzzles", &"fig_clearing_photo_taken", false)),
+		ficha != null and ficha.global_position.distance_to(clearing.ficha_spot.global_position) < 0.05,
+		"on the table, where the spot is"
+	)
+	_expect(ficha != null and ficha.get_prompt_text() == "PROMPT_PICK_UP", "and it can be picked up")
+	ficha.interact(player)
+	_expect(player.has_inventory_item("juliana_ficha"), "the Ficha goes in the inventory")
+	_expect(album.arrangement[2] == "photo_recent", "the photograph stays in the album")
+	_expect(not player.has_inventory_item("photo_recent"), "so the Ficha is the only thing taken")
+	_expect(
+		bool(SaveManager.get_state_value(&"collectibles", &"juliana_ficha", false)),
 		"taking it is remembered"
 	)
-	_expect(album.get_prompt_text() == "PROMPT_OPEN_ALBUM", "the album then only opens to look")
+	await _wait(1.0)
+	player.inspect_controller.close(false)
+	player.inventory_ui_controller.close()
+	await _wait(1.0)
 	album.interact(player)
 	_expect(view.is_open(), "the finished album can still be looked at")
 	view.close()

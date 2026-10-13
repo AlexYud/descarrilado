@@ -22,6 +22,7 @@ func _ready() -> void:
 	await _check_controls_tab()
 	await _check_tutorial()
 	await _check_tutorial_trigger()
+	await _check_head_bob()
 
 	InputBindings.reset_all()
 	InputBindings.settings_path = InputBindings.SETTINGS_PATH
@@ -296,8 +297,104 @@ func _check_tutorial_trigger() -> void:
 	_expect(hints.is_showing, "and a little walking later")
 	Input.action_release("up")
 
+	# Someone who is already walking fast when they reach the trigger needs no hint.
 	player.queue_free()
+	await get_tree().process_frame
+	SaveManager.delete_slot(1)
+	SaveManager.create_new_game(1, TEST_SCENE_PATH, "tutorial_test_start", "SAVE_LOCATION_DREAM_INTRO")
+	TutorialHintController._learned_this_run = false
+
+	var fast_player: CharacterBody3D = (load("res://scenes/player/player.tscn") as PackedScene).instantiate()
+	add_child(fast_player)
+	fast_player.global_position = Vector3(0.0, 0.1, 0.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var fast_hints: TutorialHintController = fast_player.get_node("TutorialHints")
+	fast_hints.distance_after_trigger = 2.0
+	fast_hints.fade_seconds = 0.05
+	GameSettings.set_sprint_toggle(false, false)
+	Input.action_press("sprint")
+	Input.action_press("up")
+	var showed: bool = false
+	var waited: float = 0.0
+	while fast_player.global_position.z > -13.0 and waited < 14.0:
+		await get_tree().physics_frame
+		waited += get_physics_process_delta_time()
+		showed = showed or fast_hints.is_showing
+
+	await get_tree().create_timer(1.5).timeout
+	showed = showed or fast_hints.is_showing
+	Input.action_release("up")
+	Input.action_release("sprint")
+	_expect(fast_player.global_position.z < -9.0, "the fast walker went through the trigger")
+	_expect(not showed, "already walking fast at the trigger: the hint never shows")
+	_expect(fast_hints._learned, "and it counts as learned")
+
+	fast_player.queue_free()
 	trigger.queue_free()
 	floor_body.queue_free()
 	SaveManager.delete_slot(1)
+	await get_tree().process_frame
+
+
+## Head bobbing can be turned off in the options: walking then leaves the view steady.
+func _check_head_bob() -> void:
+	_expect(GameSettings.get_head_bob_enabled(), "head bobbing is on by default")
+
+	var tab: ControlsSettingsTab = ControlsSettingsTab.new()
+	add_child(tab)
+	await get_tree().process_frame
+	_expect(tab._head_bob_check != null and tab._head_bob_check.button_pressed, "the Controls tab shows it as on")
+	tab._head_bob_check.button_pressed = false
+	_expect(not GameSettings.get_head_bob_enabled(), "its switch turns it off")
+	tab._head_bob_check.button_pressed = true
+	_expect(GameSettings.get_head_bob_enabled(), "and on again")
+	tab.queue_free()
+
+	var floor_body: StaticBody3D = StaticBody3D.new()
+	var floor_shape: CollisionShape3D = CollisionShape3D.new()
+	var box: BoxShape3D = BoxShape3D.new()
+	box.size = Vector3(200.0, 1.0, 200.0)
+	floor_shape.shape = box
+	floor_body.add_child(floor_shape)
+	floor_body.position = Vector3(0.0, -0.5, 0.0)
+	add_child(floor_body)
+
+	var player: CharacterBody3D = (load("res://scenes/player/player.tscn") as PackedScene).instantiate()
+	add_child(player)
+	player.global_position = Vector3(0.0, 0.1, 0.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var camera: Camera3D = player.get_node("Head/Camera3D")
+
+	var spread: Array[float] = []
+	for bob_on: bool in [true, false]:
+		GameSettings.set_head_bob_enabled(bob_on, false)
+		player.global_position = Vector3(0.0, 0.1, 0.0)
+		Input.action_press("up")
+		await get_tree().create_timer(1.2).timeout
+		var lowest: float = INF
+		var highest: float = -INF
+		var roll_low: float = INF
+		var roll_high: float = -INF
+		var elapsed: float = 0.0
+		while elapsed < 2.5:
+			await get_tree().process_frame
+			elapsed += get_process_delta_time()
+			lowest = minf(lowest, camera.position.y)
+			highest = maxf(highest, camera.position.y)
+			roll_low = minf(roll_low, camera.rotation.z)
+			roll_high = maxf(roll_high, camera.rotation.z)
+
+		Input.action_release("up")
+		spread.append(highest - lowest)
+		spread.append(roll_high - roll_low)
+		await get_tree().create_timer(0.8).timeout
+
+	_expect(spread[0] > 0.004 and spread[1] > 0.004, "walking with head bobbing on moves the view (%.4f m, %.4f rad)" % [spread[0], spread[1]])
+	_expect(spread[2] < 0.0005 and spread[3] < 0.0005, "with it off the view is steady (%.5f m, %.5f rad)" % [spread[2], spread[3]])
+	GameSettings.set_head_bob_enabled(true, false)
+
+	player.queue_free()
+	floor_body.queue_free()
 	await get_tree().process_frame

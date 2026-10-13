@@ -47,7 +47,7 @@ transform = Transform3D(0.89505756, 0, 0.44595066, 0, 1, 0, -0.44595066, 0, 0.89
 transform = Transform3D(0.9236604, 0, 0.38321197, 0, 1, 0, -0.38321197, 0, 0.9236604, 179.28052, -18.101887, 29.404888)
 
 [node name="Bench" type="StaticBody3D" parent="." unique_id=1341486038]
-transform = Transform3D(-0.68630034, 0, -0.7273183, 0, 1, 0, 0.7273183, 0, -0.68630034, 171.4315, -18.741886, 23.363409)
+transform = Transform3D(-0.4941362, 0, -0.5236692, 0, 0.72, 0, 0.5236692, 0, -0.4941362, 171.4315, -18.741886, 23.363409)
 
 [node name="Visual" type="Node3D" parent="Bench" unique_id=1755718748 instance=ExtResource("2_vmbno")]
 

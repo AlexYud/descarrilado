@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/levels/overlook_phone.tscn" id="1_phone"]
+[ext_resource type="PackedScene" uid="uid://dechhjfthr7jj" path="res://scenes/environment/world_environment_store.tscn" id="2_environment"]
+[ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="4_grass_color"]
+[ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="5_grass_normal"]
+[ext_resource type="Script" uid="uid://1oscv5i3peyg" path="res://scripts/levels/play_test_setup.gd" id="6_setup"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(90, 66)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.5, 0.5, 0.46, 1)
+albedo_texture = ExtResource("4_grass_color")
+normal_enabled = true
+normal_texture = ExtResource("5_grass_normal")
+uv1_scale = Vector3(24, 18, 24)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
+size = Vector3(90, 1, 66)
+
+[node name="OverlookPhonePlayTest" type="Node3D"]
+
+[node name="WorldEnvironmentStore" parent="." instance=ExtResource("2_environment")]
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 38.1)
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.012, 0)
+mesh = SubResource("PlaneMesh_ground")
+surface_material_override/0 = SubResource("Mat_ground")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_ground")
+
+[node name="OverlookPhone" parent="." instance=ExtResource("1_phone")]
+start_with_fichas = true
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 4.5)
+
+[node name="PlayTestSetup" type="Node3D" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("6_setup")
+player = NodePath("../Player")
+start_yaw_degrees = 0.0

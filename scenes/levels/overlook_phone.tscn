@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/overlook_phone_sequence.gd" id="1_sequence"]
+[ext_resource type="Script" path="res://scripts/interactions/orelhao_interactable.gd" id="2_interactable"]
+[ext_resource type="Script" path="res://scripts/environment/orelhao_model.gd" id="3_model"]
+[ext_resource type="Script" path="res://scripts/environment/overlook_phone_dressing.gd" id="4_dressing"]
+[ext_resource type="PackedScene" path="res://scenes/objects/overlook/payphone_note.tscn" id="5_note"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hood"]
+size = Vector3(0.8, 1.35, 0.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_post"]
+size = Vector3(0.16, 0.78, 0.16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.7, 2.1, 1.2)
+
+[node name="OverlookPhone" type="Node3D" node_paths=PackedStringArray("model", "interactable", "lamp")]
+script = ExtResource("1_sequence")
+model = NodePath("Orelhao/Model")
+interactable = NodePath("Orelhao")
+lamp = NodePath("Dressing")
+
+[node name="Orelhao" type="Node3D" parent="."]
+transform = Transform3D(0.69282, 0, -0.4, 0, 0.8, 0, 0.4, 0, 0.69282, 0, 0, 0)
+script = ExtResource("2_interactable")
+
+[node name="Model" type="Node3D" parent="Orelhao"]
+script = ExtResource("3_model")
+
+[node name="Body" type="StaticBody3D" parent="Orelhao"]
+
+[node name="Hood" type="CollisionShape3D" parent="Orelhao/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -0.02)
+shape = SubResource("BoxShape3D_hood")
+
+[node name="Post" type="CollisionShape3D" parent="Orelhao/Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39, -0.12)
+shape = SubResource("BoxShape3D_post")
+
+[node name="InteractArea" type="Area3D" parent="Orelhao"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Orelhao/InteractArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0.35)
+shape = SubResource("BoxShape3D_area")
+
+[node name="Dressing" type="Node3D" parent="."]
+script = ExtResource("4_dressing")
+
+[node name="PayphoneNote" parent="Orelhao" instance=ExtResource("5_note")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -0.464, 1.2, 0.0)

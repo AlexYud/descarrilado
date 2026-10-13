@@ -18,6 +18,11 @@ const INTRO_NARRATION: StringName = &"intro_narration"
 ## The cassette recording in the fig tree clearing (placeholder timing).
 const FIG_RECORDING: StringName = &"fig_recording"
 
+## Sophia on the overlook payphone (placeholder timing: one long line, an interruption,
+## the lure, the warning).
+const OVERLOOK_CALL: StringName = &"overlook_call"
+
+const SPEAKER_SOPHIA_PHONE: String = "CAPTION_SPEAKER_SOPHIA_PHONE"
 const SPEAKER_SOPHIA_RECORDING: String = "CAPTION_SPEAKER_SOPHIA_RECORDING"
 const SPEAKER_JULIANA_RECORDING: String = "CAPTION_SPEAKER_JULIANA_RECORDING"
 
@@ -39,6 +44,14 @@ const TRACKS: Dictionary = {
 		{"start": 26.5, "end": 29.5, "key": "CAPTION_REC_07", "speaker": SPEAKER_SOPHIA_RECORDING},
 		# Silent tail: the bus engine turns into the cassette mechanism.
 		{"start": 29.5, "end": 33.0, "key": ""},
+	],
+	OVERLOOK_CALL: [
+		{"start": 1.0, "end": 8.6, "key": "CAPTION_PHONE_01", "speaker": SPEAKER_SOPHIA_PHONE},
+		{"start": 9.8, "end": 13.8, "key": "CAPTION_PHONE_02", "speaker": SPEAKER_SOPHIA_PHONE},
+		{"start": 15.2, "end": 21.2, "key": "CAPTION_PHONE_03", "speaker": SPEAKER_SOPHIA_PHONE},
+		{"start": 22.6, "end": 36.4, "key": "CAPTION_PHONE_04", "speaker": SPEAKER_SOPHIA_PHONE},
+		# The line goes on hissing for a moment after she stops.
+		{"start": 36.4, "end": 38.0, "key": ""},
 	],
 }
 
