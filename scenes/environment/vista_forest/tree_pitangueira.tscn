@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://scenes/environment/vista_forest/tree_pitangueira.res" id="1_625pi"]
+
+[node name="Tree_pitangueira" type="Node3D" unique_id=1265566395]
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=840849004]
+mesh = ExtResource("1_625pi")

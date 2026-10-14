@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://scenes/environment/vista_forest/canopy_medium.res" id="1_7jxak"]
+
+[node name="Canopy_medium" type="Node3D" unique_id=972908787]
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=1538597338]
+mesh = ExtResource("1_7jxak")

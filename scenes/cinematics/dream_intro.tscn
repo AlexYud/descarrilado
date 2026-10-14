@@ -37,7 +37,15 @@
 [ext_resource type="PackedScene" uid="uid://4srcgjw2ks7y" path="res://assets/models/wooden_structures/bench/bench.glb" id="27_8gc8m"]
 [ext_resource type="PackedScene" uid="uid://cecg41a512ghj" path="res://assets/models/foliage/white_flower_02/white_flower_02.glb" id="28_fqs3f"]
 [ext_resource type="Script" uid="uid://c33mwk4p5fq3f" path="res://scripts/environment/ultra_weather_layer.gd" id="28_ultra_weather"]
-[ext_resource type="Script" uid="uid://jacixkrenj73" path="res://scripts/optimization/runtime_multimesh_batcher.gd" id="39_city_batcher"]
+[ext_resource type="PackedScene" path="res://scenes/environment/town_vista.scn" id="town_vista"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/tree_medium.tscn" id="tree_medium"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/tree_broad.tscn" id="tree_broad"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/tree_pitangueira.tscn" id="tree_pitangueira"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/tree_araucaria.tscn" id="tree_araucaria"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/canopy_medium.tscn" id="stand_medium"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/canopy_broad.tscn" id="stand_broad"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/canopy_pitangueira.tscn" id="stand_pitangueira"]
+[ext_resource type="PackedScene" path="res://scenes/environment/vista_forest/canopy_araucaria.tscn" id="stand_araucaria"]
 [ext_resource type="Script" uid="uid://bxof8c1bh5a56" path="res://scripts/environment/horror_night_environment.gd" id="50_m4dyg"]
 [ext_resource type="PackedScene" path="res://scenes/environment/forest_boundaries.tscn" id="99_boundaries"]
 [ext_resource type="PackedScene" path="res://scenes/environment/overlook.tscn" id="99_overlook"]
@@ -378,12 +386,89 @@ uv_scale = 0.35
 detiling_rotation = 0.25
 detiling_shift = 0.25
 
-[sub_resource type="Terrain3DAssets" id="Terrain3DAssets_uas77"]
-mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_j607m"), SubResource("Terrain3DMeshAsset_yilg7"), SubResource("Terrain3DMeshAsset_ywnw5"), SubResource("Terrain3DMeshAsset_e6tct"), SubResource("Terrain3DMeshAsset_romvk"), SubResource("Terrain3DMeshAsset_j64lv"), SubResource("Terrain3DMeshAsset_pyuur"), SubResource("Terrain3DMeshAsset_scb0d"), SubResource("Terrain3DMeshAsset_rhjrb"), SubResource("Terrain3DMeshAsset_vqhyl"), SubResource("Terrain3DMeshAsset_r8hnu"), SubResource("Terrain3DMeshAsset_vx2e6"), SubResource("Terrain3DMeshAsset_07f30"), SubResource("Terrain3DMeshAsset_8gc8m"), SubResource("Terrain3DMeshAsset_hxwua"), SubResource("Terrain3DMeshAsset_6m8mj"), SubResource("Terrain3DMeshAsset_fqs3f"), SubResource("Terrain3DMeshAsset_roe5p"), SubResource("Terrain3DMeshAsset_sgxxr"), SubResource("Terrain3DMeshAsset_i8qao"), SubResource("Terrain3DMeshAsset_aj685")])
-texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_svmu2"), SubResource("Terrain3DTextureAsset_uas77"), SubResource("Terrain3DTextureAsset_gtforest_floor_leaves"), SubResource("Terrain3DTextureAsset_gtmoss_ground"), SubResource("Terrain3DTextureAsset_gtdark_humus"), SubResource("Terrain3DTextureAsset_gtpine_needle_mulch"), SubResource("Terrain3DTextureAsset_gtmossy_rock")])
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vista_medium"]
+name = "vista_mediun_generic_tree"
+id = 21
+scene_file = ExtResource("tree_medium")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1600.0
 
-[sub_resource type="BoxMesh" id="BoxMesh_3lhsg"]
-size = Vector3(10, 10, 20)
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vista_broad"]
+name = "vista_tree_test"
+id = 22
+scene_file = ExtResource("tree_broad")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1600.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vista_pitangueira"]
+name = "vista_pitangueira"
+id = 23
+scene_file = ExtResource("tree_pitangueira")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1600.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vista_araucaria"]
+name = "vista_araucaria"
+id = 24
+scene_file = ExtResource("tree_araucaria")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1600.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_stand_medium"]
+name = "vista_canopy_medium"
+id = 25
+scene_file = ExtResource("stand_medium")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1150.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_stand_broad"]
+name = "vista_canopy_broad"
+id = 26
+scene_file = ExtResource("stand_broad")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1150.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_stand_pitangueira"]
+name = "vista_canopy_pitangueira"
+id = 27
+scene_file = ExtResource("stand_pitangueira")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1150.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_stand_araucaria"]
+name = "vista_canopy_araucaria"
+id = 28
+scene_file = ExtResource("stand_araucaria")
+density = 0.05
+cast_shadows = 0
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 1150.0
+
+[sub_resource type="Terrain3DAssets" id="Terrain3DAssets_uas77"]
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_j607m"), SubResource("Terrain3DMeshAsset_yilg7"), SubResource("Terrain3DMeshAsset_ywnw5"), SubResource("Terrain3DMeshAsset_e6tct"), SubResource("Terrain3DMeshAsset_romvk"), SubResource("Terrain3DMeshAsset_j64lv"), SubResource("Terrain3DMeshAsset_pyuur"), SubResource("Terrain3DMeshAsset_scb0d"), SubResource("Terrain3DMeshAsset_rhjrb"), SubResource("Terrain3DMeshAsset_vqhyl"), SubResource("Terrain3DMeshAsset_r8hnu"), SubResource("Terrain3DMeshAsset_vx2e6"), SubResource("Terrain3DMeshAsset_07f30"), SubResource("Terrain3DMeshAsset_8gc8m"), SubResource("Terrain3DMeshAsset_hxwua"), SubResource("Terrain3DMeshAsset_6m8mj"), SubResource("Terrain3DMeshAsset_fqs3f"), SubResource("Terrain3DMeshAsset_roe5p"), SubResource("Terrain3DMeshAsset_sgxxr"), SubResource("Terrain3DMeshAsset_i8qao"), SubResource("Terrain3DMeshAsset_aj685"), SubResource("Terrain3DMeshAsset_vista_medium"), SubResource("Terrain3DMeshAsset_vista_broad"), SubResource("Terrain3DMeshAsset_vista_pitangueira"), SubResource("Terrain3DMeshAsset_vista_araucaria"), SubResource("Terrain3DMeshAsset_stand_medium"), SubResource("Terrain3DMeshAsset_stand_broad"), SubResource("Terrain3DMeshAsset_stand_pitangueira"), SubResource("Terrain3DMeshAsset_stand_araucaria")])
+texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_svmu2"), SubResource("Terrain3DTextureAsset_uas77"), SubResource("Terrain3DTextureAsset_gtforest_floor_leaves"), SubResource("Terrain3DTextureAsset_gtmoss_ground"), SubResource("Terrain3DTextureAsset_gtdark_humus"), SubResource("Terrain3DTextureAsset_gtpine_needle_mulch"), SubResource("Terrain3DTextureAsset_gtmossy_rock")])
 
 [sub_resource type="MultiMesh" id="MultiMesh_vm3m4"]
 transform_format = 1
@@ -570,513 +655,11 @@ size_flags_vertical = 3
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="CityBlockout" type="Node3D" parent="." unique_id=1480771236]
-transform = Transform3D(0.47131094, 0, 0.8819671, 0, 1, 0, -0.8819671, 0, 0.47131094, 487.71063, -194.49289, -411.48553)
-script = ExtResource("39_city_batcher")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="CityBlockout" unique_id=274956535]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.92728, -1.7443647, -82.77214)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D" unique_id=1273603941]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="CityBlockout" unique_id=238018069]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 22.92728, -1.7443647, -53.186207)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D2" unique_id=1863202952]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D3" type="MeshInstance3D" parent="CityBlockout" unique_id=614176601]
-transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, -15.353909, -1.7443647, -81.02559)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D3" unique_id=682984968]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D4" type="MeshInstance3D" parent="CityBlockout" unique_id=2075746925]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, -47.288296, -1.7443647, -54.93276)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D4" unique_id=2128533049]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D5" type="MeshInstance3D" parent="CityBlockout" unique_id=2116741587]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.533596, -1.7443647, -39.64226)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D5" unique_id=133787010]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D6" type="MeshInstance3D" parent="CityBlockout" unique_id=1985700924]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -22.533596, -0.61612225, -10.056323)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D6" unique_id=1493758322]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D7" type="MeshInstance3D" parent="CityBlockout" unique_id=488074313]
-transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, -54.536953, -0.61612225, -26.285511)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D7" unique_id=1400668406]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D8" type="MeshInstance3D" parent="CityBlockout" unique_id=131415505]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 5.395115, -1.7443647, -25.754688)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D8" unique_id=1828449941]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D9" type="MeshInstance3D" parent="CityBlockout" unique_id=963425516]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121.92575, -1.7443647, -82.77214)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D9" unique_id=453756379]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D10" type="MeshInstance3D" parent="CityBlockout" unique_id=1786367714]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 121.92575, -1.7443647, -53.186207)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D10" unique_id=1085346882]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D11" type="MeshInstance3D" parent="CityBlockout" unique_id=1656708494]
-transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, 83.64456, -1.7443647, -81.02559)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D11" unique_id=1705607010]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D12" type="MeshInstance3D" parent="CityBlockout" unique_id=36239461]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 51.71018, -1.7443647, -54.93276)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D12" unique_id=417339569]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D13" type="MeshInstance3D" parent="CityBlockout" unique_id=621590081]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.464874, -1.7443647, -39.64226)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D13" unique_id=1091536423]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D14" type="MeshInstance3D" parent="CityBlockout" unique_id=1368860832]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 76.464874, -0.61612225, -10.056323)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D14" unique_id=764887770]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D15" type="MeshInstance3D" parent="CityBlockout" unique_id=1479992595]
-transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, 44.46152, -0.61612225, -26.285511)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D15" unique_id=98565896]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D16" type="MeshInstance3D" parent="CityBlockout" unique_id=229003216]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, 104.393585, -1.7443647, -25.754688)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D16" unique_id=1510037550]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D17" type="MeshInstance3D" parent="CityBlockout" unique_id=409777974]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.988705, -1.7443647, -121.01903)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D17" unique_id=252740161]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D18" type="MeshInstance3D" parent="CityBlockout" unique_id=1124502769]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -46.988705, -1.7443647, -91.43309)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D18" unique_id=1775551939]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D19" type="MeshInstance3D" parent="CityBlockout" unique_id=419045512]
-transform = Transform3D(0.8819329, 0, -0.4713749, 0, 1, 0, 0.4713749, 0, 0.8819329, -85.2699, -1.7443647, -119.27248)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D19" unique_id=480134036]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D20" type="MeshInstance3D" parent="CityBlockout" unique_id=590312222]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, -117.204285, -1.7443647, -93.17964)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D20" unique_id=237318328]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D21" type="MeshInstance3D" parent="CityBlockout" unique_id=1959679664]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -92.449585, -1.7443647, -77.889145)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D21" unique_id=1942695536]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D22" type="MeshInstance3D" parent="CityBlockout" unique_id=2129916487]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -92.449585, -0.61612225, -48.30321)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D22" unique_id=928395790]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D23" type="MeshInstance3D" parent="CityBlockout" unique_id=993134700]
-transform = Transform3D(-0.49208865, 0, 0.8705451, 0, 1, 0, -0.8705451, 0, -0.49208865, -124.45294, -0.61612225, -64.532394)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D23" unique_id=69081980]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D24" type="MeshInstance3D" parent="CityBlockout" unique_id=1820728175]
-transform = Transform3D(0.47137487, 0, 0.8819329, 0, 1, 0, -0.8819329, 0, 0.47137487, -64.520874, -1.7443647, -64.00157)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D24" unique_id=1515586739]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D25" type="MeshInstance3D" parent="CityBlockout" unique_id=1135540852]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 69.63211, -1.7443647, -87.35588)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D25" unique_id=731078260]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D26" type="MeshInstance3D" parent="CityBlockout" unique_id=1238904]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, 40.47733, -1.7443647, -82.32332)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D26" unique_id=367178150]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D27" type="MeshInstance3D" parent="CityBlockout" unique_id=430800713]
-transform = Transform3D(-0.31448853, 0, -0.94926125, 0, 1, 0, 0.94926125, 0, -0.31448853, 61.399387, -1.7443647, -124.78209)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D27" unique_id=1038788429]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D28" type="MeshInstance3D" parent="CityBlockout" unique_id=1295727651]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 30.254795, -1.7443647, -151.8127)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D28" unique_id=1040014194]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D29" type="MeshInstance3D" parent="CityBlockout" unique_id=194468788]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, 19.397861, -1.7443647, -124.817856)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D29" unique_id=1489962697]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D30" type="MeshInstance3D" parent="CityBlockout" unique_id=849482653]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, -9.756924, -0.61612225, -119.78526)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D30" unique_id=917810490]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D31" type="MeshInstance3D" parent="CityBlockout" unique_id=1538610344]
-transform = Transform3D(0.77415407, 0, 0.6329972, 0, 1, 0, -0.6329972, 0, 0.77415407, 0.7920265, -0.61612225, -154.08284)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D31" unique_id=2037691818]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D32" type="MeshInstance3D" parent="CityBlockout" unique_id=1129967749]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, 10.463413, -1.7443647, -94.93385)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D32" unique_id=1222990526]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D33" type="MeshInstance3D" parent="CityBlockout" unique_id=977748603]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, -44.825893, -1.7443647, 36.970623)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D33" unique_id=1066354201]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D34" type="MeshInstance3D" parent="CityBlockout" unique_id=1799491749]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, -73.98068, -1.7443647, 42.003185)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D34" unique_id=1711794421]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D35" type="MeshInstance3D" parent="CityBlockout" unique_id=524912972]
-transform = Transform3D(-0.31448853, 0, -0.94926125, 0, 1, 0, 0.94926125, 0, -0.31448853, -53.05862, -1.7443647, -0.45558453)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D35" unique_id=230504027]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D36" type="MeshInstance3D" parent="CityBlockout" unique_id=1196795058]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, -84.20322, -1.7443647, -27.486195)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D36" unique_id=697542817]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D37" type="MeshInstance3D" parent="CityBlockout" unique_id=750716880]
-transform = Transform3D(0.17010015, 0, -0.9854268, 0, 1, 0, 0.9854268, 0, 0.17010015, -95.06015, -1.7443647, -0.49135113)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D37" unique_id=1496116709]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D38" type="MeshInstance3D" parent="CityBlockout" unique_id=1954894761]
-transform = Transform3D(0.9854268, 0, 0.1701002, 0, 1, 0, -0.1701002, 0, 0.9854268, -124.214935, -0.61612225, 4.5412416)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D38" unique_id=72432791]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D39" type="MeshInstance3D" parent="CityBlockout" unique_id=1613892200]
-transform = Transform3D(0.77415407, 0, 0.6329972, 0, 1, 0, -0.6329972, 0, 0.77415407, -113.665985, -0.61612225, -29.756336)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D39" unique_id=2069096773]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D40" type="MeshInstance3D" parent="CityBlockout" unique_id=766032551]
-transform = Transform3D(0.94926125, 0, -0.31448853, 0, 1, 0, 0.31448853, 0, 0.94926125, -103.9946, -1.7443647, 29.39265)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D40" unique_id=1245332375]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D41" type="MeshInstance3D" parent="CityBlockout" unique_id=1331747841]
-transform = Transform3D(0.80526346, 0, 0.5929172, 0, 1, 0, -0.5929172, 0, 0.80526346, -1.0017357, -1.7443647, 15.466107)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D41" unique_id=1092337625]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D42" type="MeshInstance3D" parent="CityBlockout" unique_id=659899520]
-transform = Transform3D(-0.5929172, 0, 0.80526346, 0, 1, 0, -0.80526346, 0, -0.5929172, 16.540257, -1.7443647, 39.2906)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D42" unique_id=1921000376]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D43" type="MeshInstance3D" parent="CityBlockout" unique_id=1023230592]
-transform = Transform3D(0.98967475, 0, 0.1433322, 0, 1, 0, -0.1433322, 0, 0.98967475, -30.79263, -1.7443647, 39.57011)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D43" unique_id=1243923012]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D44" type="MeshInstance3D" parent="CityBlockout" unique_id=1866927546]
-transform = Transform3D(-0.1433322, 0, 0.98967475, 0, 1, 0, -0.98967475, 0, -0.1433322, -41.03732, -1.7443647, 79.51613)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D44" unique_id=1092314920]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D45" type="MeshInstance3D" parent="CityBlockout" unique_id=846152872]
-transform = Transform3D(0.80526346, 0, 0.5929172, 0, 1, 0, -0.5929172, 0, 0.80526346, -12.037258, -1.7443647, 77.151566)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D45" unique_id=241448468]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D46" type="MeshInstance3D" parent="CityBlockout" unique_id=1300965961]
-transform = Transform3D(-0.5929172, 0, 0.80526346, 0, 1, 0, -0.80526346, 0, -0.5929172, 5.504795, -0.61612225, 100.97603)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D46" unique_id=527543441]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D47" type="MeshInstance3D" parent="CityBlockout" unique_id=1153042890]
-transform = Transform3D(-0.9124222, 0, 0.40925035, 0, 1, 0, -0.40925035, 0, -0.9124222, -29.888973, -0.61612225, 106.88257)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D47" unique_id=616851462]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D48" type="MeshInstance3D" parent="CityBlockout" unique_id=1017402234]
-transform = Transform3D(-0.1433322, 0, 0.98967475, 0, 1, 0, -0.98967475, 0, -0.1433322, 18.686863, -1.7443647, 71.77525)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D48" unique_id=136722918]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D49" type="MeshInstance3D" parent="CityBlockout" unique_id=37778145]
-transform = Transform3D(0.14588279, 0, -0.9893019, 0, 1, 0, 0.9893019, 0, 0.14588279, 27.547947, -1.7443647, 92.229034)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D49" unique_id=1812063503]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D50" type="MeshInstance3D" parent="CityBlockout" unique_id=35185110]
-transform = Transform3D(-0.9412633, 0, 0.33767328, 0, 1, 0, -0.33767328, 0, -0.9412633, 69.480865, -1.7443647, 114.186035)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D50" unique_id=1951391218]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D51" type="MeshInstance3D" parent="CityBlockout" unique_id=1890408583]
-transform = Transform3D(-0.33767328, 0, -0.9412633, 0, 1, 0, 0.9412633, 0, -0.33767328, 97.26712, -1.7443647, 83.713684)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D51" unique_id=1161495452]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D52" type="MeshInstance3D" parent="CityBlockout" unique_id=1862975428]
-transform = Transform3D(-0.9893019, 0, -0.14588274, 0, 1, 0, 0.14588274, 0, -0.9893019, 70.54666, -1.7443647, 72.19803)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D52" unique_id=1071780284]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D53" type="MeshInstance3D" parent="CityBlockout" unique_id=1583657309]
-transform = Transform3D(0.14588279, 0, -0.9893019, 0, 1, 0, 0.9893019, 0, 0.14588279, 66.23056, -0.61612225, 42.928585)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D53" unique_id=780378340]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D54" type="MeshInstance3D" parent="CityBlockout" unique_id=732523802]
-transform = Transform3D(0.61382174, 0, -0.7894446, 0, 1, 0, 0.7894446, 0, 0.61382174, 100.259125, -0.61612225, 54.315456)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D54" unique_id=544261344]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D55" type="MeshInstance3D" parent="CityBlockout" unique_id=862886143]
-transform = Transform3D(-0.33767328, 0, -0.9412633, 0, 1, 0, 0.9412633, 0, -0.33767328, 40.89078, -1.7443647, 62.533382)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D55" unique_id=1743301518]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D56" type="MeshInstance3D" parent="CityBlockout" unique_id=55038921]
-transform = Transform3D(0.5729909, 0, -0.8195618, 0, 1, 0, 0.8195618, 0, 0.5729909, 52.287388, -1.7443647, 165.8368)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D56" unique_id=330195263]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D57" type="MeshInstance3D" parent="CityBlockout" unique_id=158241352]
-transform = Transform3D(0.8195618, 0, 0.5729909, 0, 1, 0, -0.5729909, 0, 0.8195618, 28.03983, -1.7443647, 182.78926)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D57" unique_id=2117737204]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D58" type="MeshInstance3D" parent="CityBlockout" unique_id=558680447]
-transform = Transform3D(0.11901865, 0, -0.9928921, 0, 1, 0, 0.9928921, 0, 0.11901865, 28.921177, -1.7443647, 135.46375)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D58" unique_id=1018550155]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D59" type="MeshInstance3D" parent="CityBlockout" unique_id=603891334]
-transform = Transform3D(0.9928921, 0, 0.11901865, 0, 1, 0, -0.11901865, 0, 0.9928921, -10.761562, -1.7443647, 124.24252)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D59" unique_id=573000886]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D60" type="MeshInstance3D" parent="CityBlockout" unique_id=1838576339]
-transform = Transform3D(0.5729909, 0, -0.8195618, 0, 1, 0, 0.8195618, 0, 0.5729909, -9.108913, -1.7443647, 153.29185)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D60" unique_id=713573776]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 7.6269073, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D61" type="MeshInstance3D" parent="CityBlockout" unique_id=1486997225]
-transform = Transform3D(0.8195618, 0, 0.5729909, 0, 1, 0, -0.5729909, 0, 0.8195618, -33.35641, -0.61612225, 170.24437)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D61" unique_id=1860631387]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D62" type="MeshInstance3D" parent="CityBlockout" unique_id=595694333]
-transform = Transform3D(0.43150315, 0, 0.9021114, 0, 1, 0, -0.9021114, 0, 0.43150315, -38.393154, -0.61612225, 134.71635)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D62" unique_id=130651549]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, 0.12041855, 0)
-omni_range = 20.0
-
-[node name="MeshInstance3D63" type="MeshInstance3D" parent="CityBlockout" unique_id=1355439993]
-transform = Transform3D(0.9928921, 0, 0.11901865, 0, 1, 0, -0.11901865, 0, 0.9928921, -4.4876976, -1.7443647, 184.13858)
-mesh = SubResource("BoxMesh_3lhsg")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="CityBlockout/MeshInstance3D63" unique_id=2028386551]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.91394, -85, 0)
-omni_range = 20.0
+[node name="OverlookVistaFocus" type="Marker3D" parent="." unique_id=906431155]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 166, -18.7, 24.5)
+
+[node name="TownVista" parent="." unique_id=689862804 instance=ExtResource("town_vista")]
+transform = Transform3D(0.8712, 0, -0.4909, 0, 1, 0, 0.4909, 0, 0.8712, 379.31, -56, -348)
 
 [node name="Scenery" type="Node3D" parent="." unique_id=1263090054]
 
@@ -1460,6 +1043,7 @@ script = ExtResource("28_ultra_weather")
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=181820833]
 environment = SubResource("Environment_5xrpx")
 script = ExtResource("50_m4dyg")
+vista_focus_path = NodePath("../OverlookVistaFocus")
 moon_light_path = NodePath("../MoonLight")
 
 [node name="MoonLight" type="DirectionalLight3D" parent="." unique_id=2022234852]

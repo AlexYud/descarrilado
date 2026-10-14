@@ -154,6 +154,77 @@ var low_altitude_height_density_multiplier: float = 0.0
 
 
 # ============================================================
+# OVERLOOK VISTA
+# ============================================================
+
+@export_category("Overlook Vista")
+
+## While the forest atmosphere is locked, the fog still clears and the moon rises as the
+## player walks onto the city overlook, so the town in the valley can be seen. Leave empty
+## to turn this off. The reveal uses the low altitude fog and camera distance values below.
+@export var vista_focus_path: NodePath
+
+## Within this distance of the focus the vista is fully shown.
+@export_range(1.0, 200.0, 1.0)
+var vista_full_distance: float = 14.0
+
+## The vista starts to appear this far from the focus.
+@export_range(2.0, 400.0, 1.0)
+var vista_start_distance: float = 60.0
+
+## Moonlight and ambient light at the full vista (the forest has almost none): enough to
+## read the mountains and the town's walls from far away.
+@export_range(0.0, 3.0, 0.01)
+var vista_moon_energy: float = 0.045
+
+@export_range(0.0, 3.0, 0.01)
+var vista_ambient_energy: float = 0.02
+
+## The mist of the valley (like the low cloud on the serra at Paranapiacaba): depth fog that
+## starts a little way out and thickens with distance, so the far mountains fade into a hazy,
+## darker mass instead of standing out against the black sky.
+@export_range(0.0, 1.0, 0.01)
+var vista_mist_density: float = 0.88
+
+@export_range(0.0, 600.0, 1.0)
+var vista_mist_begin: float = 70.0
+
+@export_range(100.0, 4000.0, 1.0)
+var vista_mist_end: float = 1150.0
+
+## Above 1 the mist stays thin near and builds up far away.
+@export_range(0.2, 4.0, 0.05)
+var vista_mist_curve: float = 1.1
+
+@export var vista_mist_color: Color = Color(0.02, 0.05, 0.055)
+
+@export_range(0.0, 2.0, 0.01)
+var vista_mist_energy: float = 0.16
+
+## How much the mist also tints the sky near the horizon (0 keeps it black).
+@export_range(0.0, 1.0, 0.01)
+var vista_mist_sky_affect: float = 0.5
+
+## Bloom while on the overlook, so the city lights glow in the mist (0 turns it off).
+@export_range(0.0, 3.0, 0.05)
+var vista_glow_intensity: float = 0.55
+
+@export_range(0.0, 1.0, 0.01)
+var vista_glow_bloom: float = 0.2
+
+@export_range(0.0, 4.0, 0.05)
+var vista_glow_threshold: float = 1.0
+
+## A layer of mist that pools in the valley: denser below this world height (the town sits at
+## about -56 and the floor at -64), so the town floats in it and the mountains rise out of it.
+@export_range(-200.0, 200.0, 1.0)
+var vista_mist_height: float = -34.0
+
+@export_range(0.0, 1.0, 0.005)
+var vista_mist_height_density: float = 0.06
+
+
+# ============================================================
 # DREAM ALTITUDE VISIBILITY
 # ============================================================
 
@@ -247,6 +318,7 @@ var menu_fog_curve: float = 1.35
 # ============================================================
 
 var _fog_altitude_target: Node3D = null
+var _vista_focus: Node3D = null
 var _runtime_moon: DirectionalLight3D = null
 
 var _base_fog_density: float = 0.0
@@ -256,6 +328,9 @@ var _base_volumetric_fog_density: float = 0.0
 
 var _forest_fog: Dictionary = DREAM_FOREST_FOG[QUALITY_HIGH]
 var _base_fog_sky_affect: float = 1.0
+var _base_fog_color: Color = Color.BLACK
+var _base_fog_energy: float = 0.0
+var _base_fog_curve: float = 1.0
 var _dream_sky: Sky = null
 
 var _base_moon_energy: float = 0.0
@@ -298,6 +373,13 @@ func _process(_delta: float) -> void:
 		return
 
 	if lock_forest_atmosphere:
+		var vista: float = _get_vista_blend()
+		if vista > 0.001:
+			_apply_vista(vista)
+			return
+
+		if environment.glow_enabled and vista_glow_intensity > 0.0:
+			environment.glow_enabled = false
 		_restore_base_dream_fog()
 		_restore_base_dream_lighting()
 		_apply_forest_camera_distance()
@@ -334,6 +416,69 @@ func _process(_delta: float) -> void:
 		_update_dream_lighting_for_altitude(altitude)
 	else:
 		_restore_base_dream_lighting()
+
+
+# ============================================================
+# OVERLOOK VISTA
+# ============================================================
+
+## 0 in the forest, 1 on the overlook: how far the player has walked towards the focus.
+func _get_vista_blend() -> float:
+	if vista_focus_path.is_empty():
+		return 0.0
+
+	if _vista_focus == null or not is_instance_valid(_vista_focus):
+		_vista_focus = get_node_or_null(vista_focus_path) as Node3D
+
+	if _vista_focus == null:
+		return 0.0
+
+	if _fog_altitude_target == null or not is_instance_valid(_fog_altitude_target):
+		_fog_altitude_target = _find_altitude_target()
+
+	if _fog_altitude_target == null:
+		return 0.0
+
+	var distance: float = _fog_altitude_target.global_position.distance_to(_vista_focus.global_position)
+	return 1.0 - smoothstep(vista_full_distance, maxf(vista_start_distance, vista_full_distance + 1.0), distance)
+
+
+## The fog and the camera distance follow the low altitude values (with their curve, so the
+## forest stays dense until the player is close), the light rises to the vista values.
+func _apply_vista(vista: float) -> void:
+	var virtual_altitude: float = lerpf(fog_reduction_start_altitude, fog_reduction_end_altitude, vista)
+	_update_dream_fog_for_altitude(virtual_altitude)
+	_follow_player_fog_height()
+	_update_dream_camera_distance_for_altitude(virtual_altitude)
+
+	var light: float = pow(vista, maxf(0.1, altitude_visibility_curve))
+
+	# The valley mist: depth fog that builds up with distance, in a cool grey that the moon lights.
+	environment.fog_density = lerpf(environment.fog_density, vista_mist_density, light)
+	environment.fog_depth_begin = lerpf(environment.fog_depth_begin, vista_mist_begin, light)
+	environment.fog_depth_end = maxf(environment.fog_depth_begin + 1.0, lerpf(environment.fog_depth_end, vista_mist_end, light))
+	environment.fog_depth_curve = lerpf(_base_fog_curve, vista_mist_curve, light)
+	environment.fog_light_color = _base_fog_color.lerp(vista_mist_color, light)
+	environment.fog_light_energy = lerpf(_base_fog_energy, vista_mist_energy, light)
+	environment.fog_sky_affect = lerpf(environment.fog_sky_affect, vista_mist_sky_affect, light)
+	# Bloom: only on the overlook (it is a whole-screen pass), fading in with the view.
+	if vista_glow_intensity > 0.0 and light > 0.02:
+		environment.glow_enabled = true
+		environment.glow_intensity = vista_glow_intensity * light
+		environment.glow_bloom = vista_glow_bloom
+		environment.glow_hdr_threshold = vista_glow_threshold
+		environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+	elif environment.glow_enabled:
+		environment.glow_enabled = false
+	environment.fog_height = lerpf(environment.fog_height, vista_mist_height, light)
+	environment.fog_height_density = lerpf(environment.fog_height_density, vista_mist_height_density, light)
+	environment.ambient_light_energy = lerpf(_base_ambient_energy, maxf(vista_ambient_energy, _base_ambient_energy), light)
+	environment.background_energy_multiplier = _base_background_energy * lerpf(1.0, low_altitude_background_multiplier, light)
+	if _runtime_moon == null or not is_instance_valid(_runtime_moon):
+		_runtime_moon = _find_moon_light()
+
+	if _runtime_moon != null:
+		_runtime_moon.light_energy = lerpf(_base_moon_energy, maxf(vista_moon_energy, _base_moon_energy), light)
 
 
 # ============================================================
@@ -1031,6 +1176,9 @@ func _apply_fog(
 	)
 
 	env.volumetric_fog_enabled = false
+	_base_fog_color = env.fog_light_color
+	_base_fog_energy = env.fog_light_energy
+	_base_fog_curve = env.fog_depth_curve
 
 
 func _apply_dream_depth_fog(

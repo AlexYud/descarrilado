@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://dhsme8p2ir0uy"]
+
+[ext_resource type="Script" uid="uid://bgkdxit0anb73" path="res://scripts/environment/town_blockout.gd" id="1_town"]
+[ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="Script" uid="uid://1oscv5i3peyg" path="res://scripts/levels/play_test_setup.gd" id="3_setup"]
+
+[node name="TownBlockoutPlayTest" type="Node3D" unique_id=159366478]
+
+[node name="TownBlockout" type="Node3D" parent="." unique_id=1534731267]
+script = ExtResource("1_town")
+
+[node name="Player" parent="." unique_id=1840496306 instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.9, 7.6, -35.3)
+
+[node name="PlayTestSetup" type="Node3D" parent="." unique_id=1922234276 node_paths=PackedStringArray("player")]
+script = ExtResource("3_setup")
+player = NodePath("../Player")
+start_yaw_degrees = 180.0

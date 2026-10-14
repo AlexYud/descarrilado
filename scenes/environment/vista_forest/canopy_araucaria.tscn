@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://scenes/environment/vista_forest/canopy_araucaria.res" id="1_glmsw"]
+
+[node name="Canopy_araucaria" type="Node3D" unique_id=2097147142]
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=1490597318]
+mesh = ExtResource("1_glmsw")
