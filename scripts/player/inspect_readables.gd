@@ -25,7 +25,6 @@ signal spot_read(spot_id: StringName)
 ## The text opened or closed (the inspect view changes its corner prompt).
 signal reading_changed(is_reading: bool)
 
-const ACCENT: Color = Color(0.86, 0.1, 0.24)
 ## A spot stays offered until it is this many degrees beyond its own cone.
 const RELEASE_MARGIN_DEGREES: float = 10.0
 const FADE_SECONDS: float = 0.28
@@ -69,7 +68,7 @@ func build_ui(root: Control) -> void:
 	_prompt.pressed.connect(activate)
 	root.add_child(_prompt)
 
-	# The 3D view steps back behind a dark veil: the item stays faintly visible.
+	# The 3D view steps back behind a dark veil: the item stays faintly visible. (Black, as the inspect view always was.)
 	_veil = ColorRect.new()
 	_veil.name = "ReadableVeil"
 	_veil.color = Color(0.0, 0.0, 0.0, 0.93)
@@ -90,15 +89,14 @@ func build_ui(root: Control) -> void:
 	_title = Label.new()
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_title.add_theme_color_override("font_color", ACCENT)
+	_title.theme_type_variation = &"HeaderLabel"
 	_text_box.add_child(_title)
 
 	_body = RichTextLabel.new()
 	_body.bbcode_enabled = true
 	_body.fit_content = true
 	_body.scroll_active = false
-	_body.add_theme_color_override("default_color", Color(0.95, 0.94, 0.9))
-	_body.add_theme_constant_override("line_separation", 6)
+	_body.theme_type_variation = &"NoteText"
 	_text_box.add_child(_body)
 
 	if not GameSettings.text_language_changed.is_connected(_on_language_changed):
@@ -421,11 +419,10 @@ func _layout() -> void:
 	var serif: Font = controller.get_ui_font(false)
 	var bold: Font = controller.get_ui_font(true)
 
-	_title.add_theme_font_override("font", bold)
 	_title.add_theme_font_size_override("font_size", int(body * 1.5))
 	_body.add_theme_font_override("normal_font", serif)
 	_body.add_theme_font_override("bold_font", bold)
-	_body.add_theme_font_override("italics_font", serif)
+	_body.add_theme_font_override("italics_font", UIConfig.font(UIConfig.weight_body, UIConfig.spacing_body, true))
 	for size_name: String in ["normal_font_size", "bold_font_size", "italics_font_size"]:
 		_body.add_theme_font_size_override(size_name, text_size)
 

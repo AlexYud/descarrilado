@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameSettings="*res://scripts/core/game_settings.gd"
+ThemeManager="*res://scripts/ui/theme_manager.gd"
 InputBindings="*res://scripts/core/input_bindings.gd"
 SaveManager="*res://scripts/save/save_manager.gd"
 HorrorFilter="*res://scenes/ui/filters/horror_filter.tscn"
@@ -38,6 +39,10 @@ enabled=PackedStringArray("res://addons/terrain_3d/plugin.cfg")
 [filesystem]
 
 import/blender/enabled=false
+
+[gui]
+
+theme/custom="res://resources/ui/the_hole_theme.tres"
 
 [input]
 

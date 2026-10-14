@@ -185,7 +185,7 @@ func _build_keys_section() -> void:
 
 	for category: Dictionary in InputBindings.get_categories():
 		var heading: Label = Label.new()
-		heading.modulate = Color(0.85, 0.8, 0.65, 0.9)
+		heading.theme_type_variation = &"AccentLabel"
 		_track_text(heading, category["label"])
 		_content.add_child(heading)
 
@@ -264,25 +264,10 @@ func _add_binding_row(action: StringName) -> void:
 	_rows[action] = {"name": name_label, "slots": slots, "reset": reset}
 
 
-## Key buttons look like buttons: a dark plate with a thin edge, lighter on hover.
+## Key buttons look like buttons (the theme).
 func _style_button(button: Button) -> void:
-	button.add_theme_stylebox_override("normal", _plate(Color(0.16, 0.17, 0.19, 1.0), Color(0.34, 0.35, 0.38, 1.0)))
-	button.add_theme_stylebox_override("hover", _plate(Color(0.22, 0.23, 0.26, 1.0), Color(0.55, 0.52, 0.42, 1.0)))
-	button.add_theme_stylebox_override("pressed", _plate(Color(0.12, 0.13, 0.15, 1.0), Color(0.7, 0.62, 0.4, 1.0)))
-	button.add_theme_stylebox_override("focus", _plate(Color(0.0, 0.0, 0.0, 0.0), Color(0.8, 0.72, 0.5, 1.0)))
-
-
-func _plate(fill: Color, edge: Color) -> StyleBoxFlat:
-	var plate: StyleBoxFlat = StyleBoxFlat.new()
-	plate.bg_color = fill
-	plate.border_color = edge
-	plate.set_border_width_all(1)
-	plate.set_corner_radius_all(3)
-	plate.content_margin_left = 10.0
-	plate.content_margin_right = 10.0
-	plate.content_margin_top = 5.0
-	plate.content_margin_bottom = 5.0
-	return plate
+	# The theme styles the buttons (UIConfig); these key buttons are only a little smaller.
+	button.add_theme_font_size_override("font_size", UIConfig.font_size_body)
 
 
 func _add_sprint_mode_row() -> void:
@@ -327,7 +312,7 @@ func _refresh() -> void:
 				button.text = InputBindings.label_for_binding(binding)
 
 			button.modulate = (
-				Color(1.0, 0.92, 0.6, 1.0) if is_listening_here
+				UIConfig.color_accent.lightened(0.6) if is_listening_here
 				else Color(1.0, 1.0, 1.0, 0.45 if binding.is_empty() else 1.0)
 			)
 

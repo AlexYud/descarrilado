@@ -7,6 +7,7 @@ signal window_resolution_changed(resolution: Vector2i)
 signal vsync_changed(enabled: bool)
 signal fps_limit_changed(limit: int)
 signal brightness_changed(percent: float)
+signal ui_size_changed(size_index: int)
 signal text_language_changed(locale: String)
 signal voice_language_changed(locale: String)
 signal captions_enabled_changed(enabled: bool)
@@ -46,6 +47,7 @@ const WINDOW_RESOLUTION_KEY: String = "window_resolution"
 const VSYNC_KEY: String = "vsync_enabled"
 const FPS_LIMIT_KEY: String = "fps_limit"
 const BRIGHTNESS_KEY: String = "brightness_percent"
+const UI_SIZE_KEY: String = "ui_size_index"
 const DEPTH_OF_FIELD_KEY: String = "depth_of_field"
 const MOTION_BLUR_KEY: String = "motion_blur"
 
@@ -66,6 +68,9 @@ const DEFAULT_CAPTION_LOCALE: String = LOCALE_ENGLISH
 
 ## Caption text sizes (Small, Medium, Large, Extra Large), in pixels.
 const CAPTION_FONT_SIZES: Array[int] = [20, 26, 34, 44]
+## The UI sizes: 0 small, 1 medium, 2 large (the font sizes of each are in UIConfig.UI_SIZES).
+const UI_SIZE_COUNT: int = 3
+const DEFAULT_UI_SIZE_INDEX: int = 1
 const DEFAULT_CAPTION_SIZE: int = 1
 
 ## When a document's text is shown as an easy-to-read overlay: only when its art is
@@ -162,6 +167,7 @@ var voice_locale: String = DEFAULT_VOICE_LOCALE
 var captions_enabled: bool = DEFAULT_CAPTIONS_ENABLED
 var caption_locale: String = DEFAULT_CAPTION_LOCALE
 var caption_size: int = DEFAULT_CAPTION_SIZE
+var ui_size_index: int = DEFAULT_UI_SIZE_INDEX
 var readable_text_mode: int = DEFAULT_READABLE_TEXT
 
 var mouse_sensitivity_percent: float = (
@@ -259,6 +265,11 @@ func save_settings() -> void:
 		GRAPHICS_SECTION,
 		BRIGHTNESS_KEY,
 		brightness_percent
+	)
+	config.set_value(
+		GRAPHICS_SECTION,
+		UI_SIZE_KEY,
+		ui_size_index
 	)
 	config.set_value(
 		GRAPHICS_SECTION,
@@ -666,6 +677,26 @@ func get_caption_size() -> int:
 	return caption_size
 
 
+func set_ui_size_index(
+	value: int,
+	save_after_change: bool = true
+) -> void:
+	var new_index: int = clampi(value, 0, UI_SIZE_COUNT - 1)
+
+	if ui_size_index == new_index:
+		return
+
+	ui_size_index = new_index
+	ui_size_changed.emit(ui_size_index)
+
+	if save_after_change:
+		save_settings()
+
+
+func get_ui_size_index() -> int:
+	return ui_size_index
+
+
 func set_readable_text_mode(
 	value: int,
 	save_after_change: bool = true
@@ -829,6 +860,7 @@ func reset_graphics_to_default() -> void:
 	vsync_changed.emit(vsync_enabled)
 	fps_limit_changed.emit(fps_limit)
 	brightness_changed.emit(brightness_percent)
+	ui_size_changed.emit(ui_size_index)
 
 	save_settings()
 
@@ -872,6 +904,7 @@ func _set_default_values() -> void:
 	caption_locale = DEFAULT_CAPTION_LOCALE
 	caption_size = DEFAULT_CAPTION_SIZE
 	readable_text_mode = DEFAULT_READABLE_TEXT
+	ui_size_index = DEFAULT_UI_SIZE_INDEX
 
 	mouse_sensitivity_percent = (
 		DEFAULT_MOUSE_SENSITIVITY_PERCENT
@@ -936,6 +969,13 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			GRAPHICS_SECTION,
 			BRIGHTNESS_KEY,
 			DEFAULT_BRIGHTNESS_PERCENT
+		)
+	)
+	ui_size_index = int(
+		config.get_value(
+			GRAPHICS_SECTION,
+			UI_SIZE_KEY,
+			DEFAULT_UI_SIZE_INDEX
 		)
 	)
 	depth_of_field_enabled = bool(
@@ -1063,6 +1103,7 @@ func _sanitize_values() -> void:
 	voice_locale = _sanitize_voice_locale(voice_locale)
 	caption_locale = _sanitize_caption_locale(caption_locale)
 	caption_size = clampi(caption_size, 0, CAPTION_FONT_SIZES.size() - 1)
+	ui_size_index = clampi(ui_size_index, 0, UI_SIZE_COUNT - 1)
 	readable_text_mode = clampi(readable_text_mode, ReadableText.AUTO, ReadableText.NEVER)
 
 	mouse_sensitivity_percent = clampf(

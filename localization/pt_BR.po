@@ -157,6 +157,18 @@ msgstr "VSync"
 msgid "OPTIONS_FPS_LIMIT"
 msgstr "Limite de FPS"
 
+msgid "OPTIONS_UI_SIZE"
+msgstr "Tamanho da interface"
+
+msgid "OPTIONS_UI_SIZE_SMALL"
+msgstr "Pequeno"
+
+msgid "OPTIONS_UI_SIZE_MEDIUM"
+msgstr "Médio"
+
+msgid "OPTIONS_UI_SIZE_LARGE"
+msgstr "Grande"
+
 msgid "OPTIONS_BRIGHTNESS"
 msgstr "Brilho"
 

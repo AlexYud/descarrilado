@@ -45,10 +45,6 @@ const META_ART_LANGUAGE: StringName = &"art_language"
 const MODE_EXAMINE: StringName = &"examine"
 const MODE_READ: StringName = &"read"
 
-## The accent of an item's title.
-const CAPTION_ACCENT: Color = Color(0.84, 0.16, 0.22)
-
-
 ## Fallback viewing distance. Each item is placed at the distance that makes it fill
 ## a comfortable part of the view (see `_fit_distance_for`); the player can zoom
 ## in and out around that.
@@ -164,7 +160,6 @@ var _readable_on: bool = false
 var _shift_current: Vector2 = Vector2.ZERO
 var _shift_target: Vector2 = Vector2.ZERO
 var _largest: float = 0.1
-var _fonts: Array[Font] = [null, null]
 var _controls_tween: Tween = null
 
 # How the item sits in front of the camera, all relative to the camera so that it
@@ -889,9 +884,7 @@ func _build_bottom_row() -> void:
 	title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	title_label.add_theme_color_override("font_color", KeyHint.INK)
-	title_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
-	title_label.add_theme_constant_override("outline_size", 5)
+	title_label.theme_type_variation = &"ItemTitleLabel"
 	inspect_overlay_root.add_child(title_label)
 
 	close_hint = KeyHint.new()
@@ -904,9 +897,7 @@ func _build_bottom_row() -> void:
 	controls_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	controls_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	controls_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	controls_label.add_theme_color_override("font_color", Color(0.86, 0.86, 0.82, 0.8))
-	controls_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
-	controls_label.add_theme_constant_override("outline_size", 4)
+	controls_label.theme_type_variation = &"HintLabel"
 	inspect_overlay_root.add_child(controls_label)
 
 
@@ -955,21 +946,9 @@ func get_item_title() -> String:
 	return tr(_caption_name_key) if not _caption_name_key.is_empty() else ""
 
 
-## The font of the inspect view: a serif, as the horror games this one looks up to
-## use for their quiet text. Falls back on whatever the system has; a bundled font
-## would replace this for release.
+## The font of the inspect view: the game's UI font (UIConfig), regular or bold.
 func get_ui_font(bold: bool) -> Font:
-	var index: int = 1 if bold else 0
-	if _fonts[index] == null:
-		var font: SystemFont = SystemFont.new()
-		font.font_names = PackedStringArray(
-			["Georgia", "Palatino Linotype", "Times New Roman", "Liberation Serif", "serif"]
-		)
-		font.font_weight = 700 if bold else 400
-		font.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
-		_fonts[index] = font
-
-	return _fonts[index]
+	return UIConfig.font(UIConfig.weight_title if bold else UIConfig.weight_body, UIConfig.spacing_body)
 
 
 # -- Layout: one central column --------------------------------------------
@@ -1011,7 +990,6 @@ func _layout_overlay() -> void:
 	close_hint.position = Vector2(left + column - close_hint.size.x, row_top)
 
 	var title_width: float = maxf(column - close_hint.size.x - 28.0, 40.0)
-	title_label.add_theme_font_override("font", get_ui_font(true))
 	title_label.add_theme_font_size_override("font_size", int(body * 1.2))
 	title_label.position = Vector2(left, row_top)
 	title_label.size = Vector2(title_width, close_hint.size.y)

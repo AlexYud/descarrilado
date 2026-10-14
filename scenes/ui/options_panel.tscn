@@ -5,7 +5,7 @@
 
 [node name="OptionsPanel" type="PanelContainer" unique_id=132118116]
 auto_translate_mode = 1
-custom_minimum_size = Vector2(880, 640)
+custom_minimum_size = Vector2(860, 650)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -23,10 +23,10 @@ script = ExtResource("1_8b3e1")
 
 [node name="OptionsMargin" type="MarginContainer" parent="." unique_id=490332840]
 layout_mode = 2
-theme_override_constants/margin_left = 48
-theme_override_constants/margin_top = 48
-theme_override_constants/margin_right = 36
-theme_override_constants/margin_bottom = 36
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 26
 
 [node name="OptionsVBox" type="VBoxContainer" parent="OptionsMargin" unique_id=247466834]
 layout_mode = 2
@@ -34,12 +34,15 @@ layout_mode = 2
 [node name="OptionsTitle" type="Label" parent="OptionsMargin/OptionsVBox" unique_id=186427042]
 layout_mode = 2
 size_flags_horizontal = 4
+theme_type_variation = &"HeaderLabel"
 text = "OPTIONS_TITLE"
 
 [node name="OptionsTabs" type="TabContainer" parent="OptionsMargin/OptionsVBox" unique_id=671055078]
+custom_minimum_size = Vector2(0, 420)
 layout_mode = 2
 size_flags_vertical = 3
 current_tab = 1
+use_hidden_tabs_for_min_size = true
 
 [node name="Audio" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=368117221]
 visible = false
@@ -81,6 +84,18 @@ metadata/_tab_index = 1
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_constants/separation = 8
+
+[node name="UIScaleRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox"]
+layout_mode = 2
+
+[node name="UIScaleLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/UIScaleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_UI_SIZE"
+
+[node name="UIScaleOption" type="OptionButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/UIScaleRow"]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
 
 [node name="QualityRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox" unique_id=1513323713]
 layout_mode = 2

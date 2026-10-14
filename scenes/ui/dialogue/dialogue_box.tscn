@@ -28,6 +28,7 @@ layout_mode = 2
 
 [node name="MessageLabel" type="Label" parent="Root/BottomMargin/Panel/VBox" unique_id=521202641]
 layout_mode = 2
+theme_type_variation = &"DialogueLabel"
 text = "DIALOGUE_PLACEHOLDER"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -35,6 +36,7 @@ autowrap_mode = 2
 
 [node name="HintLabel" type="Label" parent="Root/BottomMargin/Panel/VBox" unique_id=9767359]
 layout_mode = 2
+theme_type_variation = &"AccentLabel"
 text = "DIALOGUE_CONTINUE_HINT"
 horizontal_alignment = 1
 autowrap_mode = 2

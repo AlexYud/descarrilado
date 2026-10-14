@@ -17,6 +17,7 @@
 [ext_resource type="Script" uid="uid://bqqsmamhcpifb" path="res://scripts/ui/menu_cinematic_pause.gd" id="18_pause_bridge"]
 [ext_resource type="PackedScene" path="res://scenes/ui/save_slots_panel.tscn" id="19_save_slots"]
 
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
 [sub_resource type="Animation" id="Animation_yivn6"]
@@ -300,7 +301,7 @@ layout_mode = 2
 
 [node name="TitleLabel" type="Label" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=645727401]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_type_variation = &"TitleLabel"
 text = "GAME_TITLE"
 
 [node name="MenuSpacer01" type="Control" parent="UI/MainMenuUI/LeftPanel/MenuColumn/MenuMargin/VBoxContainer" unique_id=1050070901]

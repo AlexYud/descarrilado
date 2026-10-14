@@ -94,6 +94,16 @@ const COMMON_WINDOW_RESOLUTIONS: Array[Vector2i] = [
 	/VSyncCheckButton
 )
 
+@onready var ui_scale_option: OptionButton = (
+	$OptionsMargin
+	/OptionsVBox
+	/OptionsTabs
+	/Graphics
+	/GraphicsVBox
+	/UIScaleRow
+	/UIScaleOption
+)
+
 @onready var fps_limit_option: OptionButton = (
 	$OptionsMargin
 	/OptionsVBox
@@ -216,6 +226,7 @@ func _ready() -> void:
 	_update_tab_titles()
 	_connect_control_signals()
 	_connect_settings_signals()
+	get_viewport().size_changed.connect(_fit_window)
 	_sync_controls_from_settings()
 	hide()
 
@@ -233,7 +244,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## The window's fixed size: never smaller than the .tscn minimum (the content fits it), and on a big
+## screen it grows with it (80% of the height, half the width), so the Controls tab's long list of
+## key bindings has room. It is the SAME size on every tab.
+const WINDOW_MIN_SIZE: Vector2 = Vector2(860.0, 650.0)
+const WINDOW_SCREEN_HEIGHT: float = 0.8
+const WINDOW_SCREEN_WIDTH: float = 0.5
+
+
+func _fit_window() -> void:
+	var screen: Vector2 = get_viewport().get_visible_rect().size
+	custom_minimum_size = Vector2(
+		maxf(WINDOW_MIN_SIZE.x, screen.x * WINDOW_SCREEN_WIDTH),
+		maxf(WINDOW_MIN_SIZE.y, screen.y * WINDOW_SCREEN_HEIGHT)
+	)
+
+
 func open() -> void:
+	_fit_window()
 	_refresh_localized_options()
 	controls_tab.refresh()
 	_sync_controls_from_settings()
@@ -284,6 +312,11 @@ func _populate_graphics_options() -> void:
 		tr("DISPLAY_EXCLUSIVE_FULLSCREEN"),
 		DISPLAY_EXCLUSIVE_FULLSCREEN
 	)
+
+	ui_scale_option.clear()
+	ui_scale_option.add_item(tr("OPTIONS_UI_SIZE_SMALL"))
+	ui_scale_option.add_item(tr("OPTIONS_UI_SIZE_MEDIUM"))
+	ui_scale_option.add_item(tr("OPTIONS_UI_SIZE_LARGE"))
 
 	fps_limit_option.clear()
 	fps_limit_option.add_item("30", 30)
@@ -452,6 +485,9 @@ func _connect_control_signals() -> void:
 			_on_motion_blur_toggled
 		)
 
+	if not ui_scale_option.item_selected.is_connected(_on_ui_scale_option_selected):
+		ui_scale_option.item_selected.connect(_on_ui_scale_option_selected)
+
 	if not fps_limit_option.item_selected.is_connected(
 		_on_fps_limit_option_selected
 	):
@@ -573,6 +609,8 @@ func _sync_controls_from_settings() -> void:
 		fps_limit_option,
 		GameSettings.get_fps_limit()
 	)
+
+	ui_scale_option.select(GameSettings.get_ui_size_index())
 
 	depth_of_field_check_button.set_pressed_no_signal(
 		GameSettings.get_depth_of_field_enabled()
@@ -749,6 +787,13 @@ func _on_motion_blur_toggled(enabled: bool) -> void:
 		return
 
 	GameSettings.set_motion_blur_enabled(enabled)
+
+
+func _on_ui_scale_option_selected(index: int) -> void:
+	if syncing_controls:
+		return
+
+	GameSettings.set_ui_size_index(index)
 
 
 func _on_fps_limit_option_selected(index: int) -> void:

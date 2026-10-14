@@ -113,7 +113,7 @@ func _build_ui() -> void:
 	add_child(root)
 
 	var dim: ColorRect = ColorRect.new()
-	dim.color = Color(0.0, 0.0, 0.0, 0.78)
+	dim.color = UIConfig.panel_color(0.86)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(dim)
@@ -129,14 +129,14 @@ func _build_ui() -> void:
 
 	_title_label = Label.new()
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title_label.add_theme_font_size_override(&"font_size", 28)
+	_title_label.theme_type_variation = &"HeaderLabel"
 	column.add_child(_title_label)
 
 	column.add_child(_build_wheels())
 
 	_hint_label = Label.new()
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hint_label.modulate = Color(1.0, 1.0, 1.0, 0.7)
+	_hint_label.theme_type_variation = &"AccentLabel"
 	column.add_child(_hint_label)
 
 	_back_button = Button.new()

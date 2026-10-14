@@ -1703,6 +1703,13 @@ func _connect_viewport() -> void:
 			_apply_responsive_ui
 		)
 
+	if not GameSettings.ui_size_changed.is_connected(_on_ui_size_changed):
+		GameSettings.ui_size_changed.connect(_on_ui_size_changed)
+
+
+func _on_ui_size_changed(_size_index: int) -> void:
+	_apply_responsive_ui()
+
 
 func _apply_responsive_ui() -> void:
 	var viewport: Viewport = get_viewport()
@@ -1731,10 +1738,13 @@ func _apply_responsive_ui() -> void:
 		max_ui_scale
 	)
 
+	# The base sizes are the Large UI size's; the player's UI size (UIConfig) scales them down.
+	var large: Dictionary = UIConfig.UI_SIZES[UIConfig.UI_SIZES.size() - 1]
 	var title_size: int = int(
 		round(
 			float(title_base_font_size)
 			* ui_scale
+			* float(UIConfig.font_size_title) / float(large["title"])
 		)
 	)
 
@@ -1742,6 +1752,7 @@ func _apply_responsive_ui() -> void:
 		round(
 			float(button_base_font_size)
 			* ui_scale
+			* float(UIConfig.font_size_button) / float(large["button"])
 		)
 	)
 

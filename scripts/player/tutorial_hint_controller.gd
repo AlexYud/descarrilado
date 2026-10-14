@@ -306,7 +306,5 @@ func _build_ui() -> void:
 	_label.offset_top = -bottom_margin
 	_label.offset_bottom = -bottom_margin + 44.0
 	_label.add_theme_font_size_override("normal_font_size", font_size)
-	_label.add_theme_color_override("default_color", Color(0.92, 0.92, 0.88, 1.0))
-	_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
-	_label.add_theme_constant_override("outline_size", 6)
+	_label.theme_type_variation = &"HintText"
 	_layer.add_child(_label)

@@ -2,17 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/captions/caption_manager.gd" id="1_captions"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_caption"]
-bg_color = Color(0, 0, 0, 0)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-content_margin_left = 22.0
-content_margin_top = 10.0
-content_margin_right = 22.0
-content_margin_bottom = 12.0
-
 [node name="CaptionManager" type="CanvasLayer"]
 layer = 1100
 script = ExtResource("1_captions")
@@ -43,13 +32,11 @@ visible = false
 layout_mode = 2
 size_flags_vertical = 8
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_caption")
+theme_type_variation = &"CaptionPanel"
 
 [node name="CaptionLabel" type="Label" parent="Root/Anchor/CaptionPanel"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.96, 0.94, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
+theme_type_variation = &"CaptionLabel"
 theme_override_font_sizes/font_size = 26
 horizontal_alignment = 1
 vertical_alignment = 1

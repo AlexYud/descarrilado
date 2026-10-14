@@ -33,15 +33,15 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Window" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(760, 560)
+custom_minimum_size = Vector2(660, 440)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="Center/Window"]
 layout_mode = 2
-theme_override_constants/margin_left = 48
-theme_override_constants/margin_top = 40
-theme_override_constants/margin_right = 48
-theme_override_constants/margin_bottom = 40
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 34
+theme_override_constants/margin_bottom = 28
 
 [node name="Content" type="VBoxContainer" parent="Center/Window/Margin"]
 layout_mode = 2
@@ -49,12 +49,13 @@ theme_override_constants/separation = 16
 
 [node name="TitleLabel" type="Label" parent="Center/Window/Margin/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_type_variation = &"HeaderLabel"
 text = "SAVE_NEW_GAME_TITLE"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="Center/Window/Margin/Content"]
 layout_mode = 2
+theme_type_variation = &"AccentLabel"
 text = "SAVE_SELECT_NEW_GAME"
 horizontal_alignment = 1
 
@@ -68,14 +69,15 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="SlotButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot1"]
-custom_minimum_size = Vector2(0, 92)
+custom_minimum_size = Vector2(0, 74)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 1"
 alignment = 0
 
 [node name="DeleteButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot1"]
-custom_minimum_size = Vector2(112, 0)
+theme_type_variation = &"DangerButton"
+custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "SAVE_DELETE"
 
@@ -84,14 +86,15 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="SlotButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot2"]
-custom_minimum_size = Vector2(0, 92)
+custom_minimum_size = Vector2(0, 74)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 2"
 alignment = 0
 
 [node name="DeleteButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot2"]
-custom_minimum_size = Vector2(112, 0)
+theme_type_variation = &"DangerButton"
+custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "SAVE_DELETE"
 
@@ -100,19 +103,20 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="SlotButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot3"]
-custom_minimum_size = Vector2(0, 92)
+custom_minimum_size = Vector2(0, 74)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "Slot 3"
 alignment = 0
 
 [node name="DeleteButton" type="Button" parent="Center/Window/Margin/Content/Slots/Slot3"]
-custom_minimum_size = Vector2(112, 0)
+theme_type_variation = &"DangerButton"
+custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "SAVE_DELETE"
 
 [node name="BackButton" type="Button" parent="Center/Window/Margin/Content"]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 text = "COMMON_BACK"
 

@@ -904,20 +904,7 @@ func _create_tutorial_prompt() -> void:
 		tutorial_prompt_font_size
 	)
 
-	tutorial_prompt_label.add_theme_color_override(
-		"font_color",
-		Color(0.92, 0.92, 0.88, 1.0)
-	)
-
-	tutorial_prompt_label.add_theme_color_override(
-		"font_outline_color",
-		Color(0.0, 0.0, 0.0, 0.9)
-	)
-
-	tutorial_prompt_label.add_theme_constant_override(
-		"outline_size",
-		6
-	)
+	tutorial_prompt_label.theme_type_variation = &"HintLabel"
 
 	ui_layer.add_child(tutorial_prompt_label)
 

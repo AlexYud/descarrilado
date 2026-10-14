@@ -4,7 +4,6 @@ class_name AlbumSlotUI
 ## An empty space on an album page in the close-up: a drop target that shows
 ## the photograph placed there, if any.
 
-const EMPTY_COLOR: Color = Color(0.05, 0.045, 0.04)
 const SLOT_SIZE: Vector2 = Vector2(264.0, 176.0)
 
 var index: int = 0
@@ -17,10 +16,8 @@ func setup(owner_view: AlbumView, slot_number: int) -> void:
 	index = slot_number
 	custom_minimum_size = SLOT_SIZE
 
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = EMPTY_COLOR
+	var style: StyleBoxFlat = UIConfig.panel_style(UIConfig.color_border, 0.9, Vector2i(4, 4))
 	style.set_border_width_all(2)
-	style.border_color = Color(0.2, 0.18, 0.15)
 	add_theme_stylebox_override(&"panel", style)
 
 
