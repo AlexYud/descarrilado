@@ -182,7 +182,7 @@ static func _engraving(
 	rot: Vector3,
 	width: float,
 	color: Color = ETCH
-) -> void:
+) -> ReadableSpot:
 	var spot: ReadableSpot = ReadableSpot.new()
 	spot.name = node_name
 	spot.spot_id = spot_id
@@ -199,6 +199,8 @@ static func _engraving(
 			Vector3(width * (1.0 - 0.2 * i), width * 0.03, 0.0005),
 			Vector3(width * 0.03 * i, (i - 1) * width * 0.11, 0.0001), scratch
 		)
+
+	return spot
 
 
 # ============================================================
@@ -381,6 +383,9 @@ static func _build_ficha(root: Node3D, number_key: String = "FICHA_NUMBER", vari
 
 	match variant:
 		&"juliana":
+			# Her message scratched into the back of the token: a hidden detail, found only by turning the token
+			# until the scratch faces you (nothing hints at it before); it is then read as an overlay.
+			_engraving(coin_root, "ScratchSpot", "FICHA_SCRATCH_JULIANA", &"ficha_scratch", Vector3(0.0, 0.0, -0.0031), Vector3(0.0, 180.0, 0.0), 0.034)
 			# Chipped blue nail polish smudged on the rim.
 			var polish: StandardMaterial3D = HouseProps.material(Color(0.16, 0.34, 0.74), 0.25, 0.0)
 			HouseProps.add_box(root, "PolishChip", Vector3(0.011, 0.0042, 0.0072), Vector3(0.0206, 0.0132, 0.0), polish, Vector3(0.0, 0.0, 38.0))

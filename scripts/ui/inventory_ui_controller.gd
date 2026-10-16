@@ -6,7 +6,15 @@ signal inspect_requested(slot_data: Dictionary)
 var player: Node = null
 
 var inventory_open: bool = false
+## Height of a row of the list (two lines of a long name fit).
+const ROW_HEIGHT: float = 48.0
+const DESCRIPTION_HEIGHT: float = 120.0
+
+## One row per item carried (see `refresh`).
 var inventory_slot_buttons: Array[Button] = []
+var item_list: VBoxContainer = null
+var empty_label: Label = null
+var description_label: Label = null
 var current_slots: Array[Dictionary] = []
 var current_inspect_data: Dictionary = {}
 var inspect_return_to_inventory: bool = false
@@ -69,6 +77,7 @@ func show_inventory(slots: Array[Dictionary]) -> void:
 
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	refresh(slots)
+	_focus_first_item.call_deferred()
 
 
 ## The state of looking at an item (the inventory is closed, or comes back when the
@@ -121,27 +130,64 @@ func close() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
+## Rebuilds the list: one row per item carried, in the order they were picked up. There is no
+## limit; a long list scrolls. The row under the pointer or the keyboard (one cursor, see
+## ThemeManager) shows its description under the list.
 func refresh(slots: Array[Dictionary]) -> void:
 	current_slots = slots
 
-	if inventory_slot_buttons.is_empty():
+	if item_list == null:
 		return
 
-	for i in range(inventory_slot_buttons.size()):
-		var slot_data: Dictionary = slots[i]
-		var item_name: String = str(slot_data.get("name", ""))
+	for row: Button in inventory_slot_buttons:
+		item_list.remove_child(row)
+		row.free()
 
-		if item_name == "":
-			inventory_slot_buttons[i].text = tr(
-				"INVENTORY_SLOT_EMPTY"
-			).format({"slot": i + 1})
-		else:
-			inventory_slot_buttons[i].text = tr(
-				"INVENTORY_SLOT_ITEM"
-			).format({
-				"slot": i + 1,
-				"item": tr(item_name),
-			})
+	inventory_slot_buttons.clear()
+
+	var shown: int = 0
+	for i in range(slots.size()):
+		var slot_data: Dictionary = slots[i]
+		if str(slot_data.get("id", "")).is_empty():
+			continue
+
+		var row: Button = Button.new()
+		row.name = "Item%d" % (shown + 1)
+		row.text = tr(str(slot_data.get("name", "")))
+		row.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.clip_text = false
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.custom_minimum_size = Vector2(0.0, ROW_HEIGHT)
+		row.set_meta(&"slot_index", i)
+		row.pressed.connect(_on_slot_button_pressed.bind(i))
+		row.focus_entered.connect(_show_description.bind(i))
+		item_list.add_child(row)
+		inventory_slot_buttons.append(row)
+		shown += 1
+
+	if empty_label != null:
+		empty_label.visible = shown == 0
+		empty_label.text = tr("INVENTORY_EMPTY")
+
+	_show_description(-1)
+
+
+func _show_description(slot_index: int) -> void:
+	if description_label == null:
+		return
+
+	if slot_index < 0 or slot_index >= current_slots.size():
+		description_label.text = ""
+		return
+
+	description_label.text = tr(str(current_slots[slot_index].get("description", "")))
+
+
+## The keyboard cursor starts on the first item, so Up/Down work at once.
+func _focus_first_item() -> void:
+	if not inventory_slot_buttons.is_empty() and inventory_open:
+		inventory_slot_buttons[0].grab_focus()
 
 
 func _remove_existing_runtime_ui() -> void:
@@ -154,6 +200,9 @@ func _remove_existing_runtime_ui() -> void:
 		old_inventory_root.queue_free()
 
 	inventory_slot_buttons.clear()
+	item_list = null
+	empty_label = null
+	description_label = null
 	inventory_ui_layer = null
 	inventory_root = null
 	inventory_panel = null
@@ -213,32 +262,34 @@ func _build_inventory_ui() -> void:
 	inventory_content.add_theme_constant_override("separation", 16)
 	main_vbox.add_child(inventory_content)
 
-	var grid_center: CenterContainer = CenterContainer.new()
-	grid_center.name = "GridCenter"
-	grid_center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid_center.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	inventory_content.add_child(grid_center)
+	var scroll: ScrollContainer = ScrollContainer.new()
+	scroll.name = "Scroll"
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	inventory_content.add_child(scroll)
 
-	var slots_grid: GridContainer = GridContainer.new()
-	slots_grid.name = "Slots"
-	slots_grid.columns = 2
-	slots_grid.add_theme_constant_override("h_separation", 14)
-	slots_grid.add_theme_constant_override("v_separation", 14)
-	grid_center.add_child(slots_grid)
+	item_list = VBoxContainer.new()
+	item_list.name = "Items"
+	item_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	item_list.add_theme_constant_override("separation", 6)
+	scroll.add_child(item_list)
 
-	for i in range(6):
-		var slot_button: Button = Button.new()
-		slot_button.name = "Slot%d" % (i + 1)
-		slot_button.custom_minimum_size = Vector2(150.0, 124.0)
-		slot_button.text = tr(
-			"INVENTORY_SLOT_EMPTY"
-		).format({"slot": i + 1})
-		slot_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		slot_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		slot_button.pressed.connect(_on_slot_button_pressed.bind(i))
-		slots_grid.add_child(slot_button)
+	empty_label = Label.new()
+	empty_label.name = "Empty"
+	empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	empty_label.theme_type_variation = &"HintLabel"
+	empty_label.visible = false
+	inventory_content.add_child(empty_label)
 
-		inventory_slot_buttons.append(slot_button)
+	# What the item under the cursor is, in a fixed-height box so the list does not jump.
+	description_label = Label.new()
+	description_label.name = "Description"
+	description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	description_label.custom_minimum_size = Vector2(0.0, DESCRIPTION_HEIGHT)
+	description_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	description_label.theme_type_variation = &"HintLabel"
+	inventory_content.add_child(description_label)
 
 	inspect_content = VBoxContainer.new()
 	inspect_content.name = "InspectContent"
@@ -314,12 +365,7 @@ func _on_text_language_changed(_locale: String) -> void:
 	if header_label != null:
 		header_label.text = tr("INVENTORY_TITLE")
 
-	if (
-		not current_slots.is_empty()
-		and current_slots.size()
-		>= inventory_slot_buttons.size()
-	):
-		refresh(current_slots)
+	refresh(current_slots)
 
 
 ## Clicking an item opens it in the inspect view; there is nothing else to do

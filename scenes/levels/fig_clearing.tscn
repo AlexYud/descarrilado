@@ -7,6 +7,9 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_childhood.tscn" id="7_childhood"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_adolescence.tscn" id="8_adolescence"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_recent.tscn" id="9_recent"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_workshop.tscn" id="30_workshop"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_clock.tscn" id="31_clock"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_track.tscn" id="32_track"]
 [ext_resource type="PackedScene" uid="uid://cjkk68a68rvy1" path="res://assets/models/trees/custom_tree/tree_test.glb" id="10_tree"]
 [ext_resource type="PackedScene" uid="uid://bcmu0upxtqw7r" path="res://assets/models/camping/tent/tent.glb" id="11_tent"]
 [ext_resource type="PackedScene" uid="uid://cje0ebg64e0a7" path="res://assets/models/camping/campfire/campfire.glb" id="12_campfire"]
@@ -51,6 +54,15 @@ size = Vector3(1.5, 0.06, 0.8)
 [sub_resource type="StandardMaterial3D" id="Mat_wood"]
 albedo_color = Color(0.28, 0.2, 0.13, 1)
 roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_log"]
+top_radius = 0.07
+bottom_radius = 0.07
+height = 0.7
+radial_segments = 8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_firewood"]
+size = Vector3(0.7, 0.38, 0.56)
 
 [sub_resource type="BoxMesh" id="BoxMesh_table_leg"]
 size = Vector3(0.07, 0.72, 0.07)
@@ -163,6 +175,59 @@ shape = SubResource("CylinderShape3D_fire")
 [node name="CampfireFire" parent="Scenery/Campfire" unique_id=243946880 instance=ExtResource("23_fire")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 
+
+[node name="Firewood" type="StaticBody3D" parent="Scenery"]
+transform = Transform3D(0.9396926, 0, -0.3420201, 0, 1, 0, 0.3420201, 0, 0.9396926, -0.7, 0, 3.9)
+
+[node name="Log1" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.07, -0.21)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log2" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.07, -0.07)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log3" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.07, 0.07)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log4" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.07, 0.21)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log5" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.191, -0.14)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log6" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.191, 0)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log7" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.191, 0.14)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log8" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.312, -0.07)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="Log9" type="MeshInstance3D" parent="Scenery/Firewood"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.312, 0.07)
+mesh = SubResource("CylinderMesh_log")
+surface_material_override/0 = SubResource("Mat_wood")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Scenery/Firewood"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19, 0)
+shape = SubResource("BoxShape3D_firewood")
+
 [node name="CampTable" type="StaticBody3D" parent="Scenery" unique_id=43846904]
 transform = Transform3D(0.62014085, 0, -0.78449047, 0, 1, 0, 0.78449047, 0, 0.62014085, 1.7515242, 0, -0.6934475)
 
@@ -216,6 +281,17 @@ transform = Transform3D(0.9553365, -0.29552022, -1.29175985e-08, 0, -4.371139e-0
 
 [node name="PhotoRecent" parent="Props" unique_id=938142182 instance=ExtResource("9_recent")]
 transform = Transform3D(-0.69922113, 0.71490544, 3.1249513e-08, 0, -4.371139e-08, 1, 0.71490544, 0.69922113, 3.0563925e-08, 0.21402094, 0.004, 2.358548)
+
+
+[node name="PhotoWorkshop" parent="Props" instance=ExtResource("30_workshop")]
+transform = Transform3D(0.8525245, 0.5226872, 0, 0, 0, 1, 0.5226872, -0.8525245, 0, 2.209, 0.786, -0.352)
+
+[node name="PhotoClock" parent="Props" instance=ExtResource("31_clock")]
+transform = Transform3D(0.9210610, -0.3894183, 0, 0, 0, 1, -0.3894183, -0.9210610, 0, -0.7, 0.386, 3.9)
+
+[node name="PhotoTrack" parent="Props" instance=ExtResource("32_track")]
+transform = Transform3D(0.4535961, -0.8912074, 0, 0, 0, 1, -0.8912074, -0.4535961, 0, 2.35, 0.004, -3.25)
+
 
 [node name="FichaSpot" type="Marker3D" parent="Props"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.63, 0.784, -0.34)

@@ -132,6 +132,8 @@ var inspect_overlay_layer: CanvasLayer = null
 var inspect_overlay_root: Control = null
 var title_label: Label = null
 var close_hint: KeyHint = null
+var read_hint: KeyHint = null
+var rotate_hint: KeyHint = null
 var controls_label: Label = null
 var readables: InspectReadables = null
 
@@ -864,6 +866,7 @@ func _build_overlay() -> void:
 	readables.build_ui(inspect_overlay_root)
 	readables.spot_read.connect(func(spot_id: StringName) -> void: spot_read.emit(current_inspect_id, spot_id))
 	readables.reading_changed.connect(_on_reading_changed)
+	readables.read_availability_changed.connect(_layout_overlay)
 
 	_build_bottom_row()
 
@@ -891,6 +894,18 @@ func _build_bottom_row() -> void:
 	close_hint.name = "InspectClose"
 	close_hint.pressed.connect(_on_close_button_pressed)
 	inspect_overlay_root.add_child(close_hint)
+
+	# The two things to do with the item, in the same key-cap style as Close: read (when it has plain
+	# writing) and rotate. Centred in the column, a row above the name and Close.
+	read_hint = KeyHint.new()
+	read_hint.name = "InspectRead"
+	read_hint.pressed.connect(_on_read_hint_pressed)
+	inspect_overlay_root.add_child(read_hint)
+
+	rotate_hint = KeyHint.new()
+	rotate_hint.name = "InspectRotate"
+	rotate_hint.pressed.connect(_flip)
+	inspect_overlay_root.add_child(rotate_hint)
 
 	controls_label = Label.new()
 	controls_label.name = "InspectControls"
@@ -996,11 +1011,50 @@ func _layout_overlay() -> void:
 
 	controls_label.add_theme_font_override("font", get_ui_font(false))
 	controls_label.add_theme_font_size_override("font_size", maxi(int(body * 0.85), 12))
-	controls_label.position = Vector2(left, row_top - body * 2.4)
+	controls_label.position = Vector2(left, row_top - body * 7.6)
 	controls_label.size = Vector2(column, body * 1.6)
+
+	_layout_action_row(left, column, row_top, body)
 
 	if readables != null:
 		readables.relayout()
+
+
+## "[E] Read   [R] Rotate", centred a row above the name and Close. Rotate is always there; Read only
+## while there is plain writing facing the player (a ticket, either side; a photograph once turned to
+## its back). Hidden details (a whistle's engraving) never add a Read: they are found by turning the
+## item. No row while a text is open (Back is the only choice then).
+func _layout_action_row(left: float, column: float, row_top: float, body: int) -> void:
+	if read_hint == null or rotate_hint == null:
+		return
+
+	var can_read: bool = readables != null and readables.has_obvious_reading()
+	var reading: bool = readables != null and readables.is_text_open()
+	var show_row: bool = not reading
+
+	read_hint.visible = show_row and can_read
+	rotate_hint.visible = show_row
+	if not show_row:
+		return
+
+	var font: Font = get_ui_font(false)
+	read_hint.set_hint(InputBindings.get_binding_label(&"interact", -1, true), tr("INSPECT_VERB_READ"), body, font)
+	rotate_hint.set_hint(InputBindings.get_binding_label(&"inspect_flip", -1, true), tr("INSPECT_VERB_ROTATE"), body, font)
+
+	# Two fixed places, Read then Rotate, centred as a pair whether or not Read is showing: when Read
+	# appears or goes it only fades in or out, nothing moves.
+	var gap: float = body * 2.0
+	var width: float = read_hint.size.x + gap + rotate_hint.size.x
+	var x: float = left + (column - width) * 0.5
+	var y: float = row_top - body * 5.3
+	read_hint.position = Vector2(x, y)
+	rotate_hint.position = Vector2(x + read_hint.size.x + gap, y)
+
+
+func _on_read_hint_pressed() -> void:
+	if readables != null:
+		readables.activate()
+		_layout_overlay()
 
 
 func _on_reading_changed(_is_reading: bool) -> void:

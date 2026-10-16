@@ -232,6 +232,9 @@ msgstr "Pressione %s para ligar a lanterna"
 msgid "INVENTORY_TITLE"
 msgstr "Inventário"
 
+msgid "INVENTORY_EMPTY"
+msgstr "Você não está carregando nada."
+
 msgid "INVENTORY_INSPECT"
 msgstr "Inspecionar"
 
@@ -348,37 +351,79 @@ msgid "PROMPT_INSPECT"
 msgstr "Examinar"
 
 msgid "ITEM_PHOTO_CHILDHOOD_NAME"
-msgstr "Foto Antiga: Duas Meninas"
+msgstr "Foto Antiga: Joelho Ralado"
 
 msgid "ITEM_PHOTO_CHILDHOOD_DESCRIPTION"
 msgstr "Duas meninas sentadas debaixo da mesma figueira. Uma está com o joelho ralado; a outra o enfaixa com uma tira rasgada da própria camisa da escola. As bordas estão irregulares, como se a foto tivesse sido arrancada de um álbum."
 
 msgid "ITEM_PHOTO_ADOLESCENCE_NAME"
-msgstr "Foto Antiga: Chuva"
+msgstr "Foto Antiga: Chuva na Estação"
 
 msgid "ITEM_PHOTO_ADOLESCENCE_DESCRIPTION"
 msgstr "Duas meninas sob um guarda-chuva pequeno em meio a uma chuva forte. Quase todo ele está inclinado sobre uma delas; o ombro de fora da outra está encharcado. Um anel fraco, de um copo molhado, mancha o verso."
 
 msgid "ITEM_PHOTO_RECENT_NAME"
-msgstr "Foto Antiga: Ponto de Ônibus"
+msgstr "Foto Antiga: Partida no Ponto de Ônibus"
 
 msgid "ITEM_PHOTO_RECENT_DESCRIPTION"
 msgstr "Uma jovem está sozinha num ponto de ônibus rural, acima da estrada que sai da cidade, segurando algo dobrado. Há uma frase escrita no verso."
 
 msgid "PHOTO_FRONT_CHILDHOOD"
-msgstr "[Foto provisória: duas meninas, cerca de 8 anos, sob a figueira]"
+msgstr "[Foto provisória: Duas Meninas sob a Figueira. Elas têm cerca de 8 anos.]"
 
 msgid "PHOTO_FRONT_ADOLESCENCE"
-msgstr "[Foto provisória: duas meninas, cerca de 15 anos, sob um guarda-chuva na chuva]"
+msgstr "[Foto provisória: Duas Meninas sob um Guarda-chuva. Elas têm cerca de 15 anos.]"
 
 msgid "PHOTO_FRONT_RECENT"
-msgstr "[Foto provisória: uma mulher, cerca de 28 anos, num ponto de ônibus]"
+msgstr "[Foto provisória: Sophia no Ponto de Ônibus. Ela tem cerca de 28 anos.]"
 
-msgid "PHOTO_BACK_CHILDHOOD"
-msgstr "ELA SEMPRE ME ACHA. — S."
+msgid "FICHA_SCRATCH_JULIANA"
+msgstr "LIGUE PARA ELA"
 
-msgid "PHOTO_BACK_RECENT"
-msgstr "QUANDO EU FOR, VOCÊ VEM?"
+msgid "ITEM_PHOTO_CLOCK_DESCRIPTION"
+msgstr "Uma menina está sozinha numa torre de sinalização apertada, sob um grande relógio de estação. Há uma frase escrita no verso."
+
+msgid "ITEM_PHOTO_CLOCK_NAME"
+msgstr "Foto Antiga: Relógio da Estação"
+
+msgid "ITEM_PHOTO_TRACK_DESCRIPTION"
+msgstr "Uma linha de trem some na neblina. Não há ninguém no quadro. Um carimbo de data está impresso no canto, e há uma frase escrita no verso."
+
+msgid "ITEM_PHOTO_TRACK_NAME"
+msgstr "Foto Antiga: A Linha Vazia"
+
+msgid "ITEM_PHOTO_WORKSHOP_DESCRIPTION"
+msgstr "Um rapaz de macacão engordurado segura uma chave inglesa quase do tamanho do braço, de olhos apertados contra o flash. Há uma frase escrita no verso."
+
+msgid "ITEM_PHOTO_WORKSHOP_NAME"
+msgstr "Foto Antiga: Lucas na Oficina"
+
+msgid "PHOTO_FRONT_CLOCK"
+msgstr "[Foto provisória: Juliana Sozinha na Torre]"
+
+msgid "PHOTO_FRONT_TRACK"
+msgstr "[Foto provisória: Linha de Trem na Neblina]"
+
+msgid "PHOTO_FRONT_WORKSHOP"
+msgstr "[Foto provisória: Rapaz com Chave Inglesa]"
+
+msgid "PHOTO_NOTE_ADOLESCENCE"
+msgstr "1995. Choveu por três horas. A Sophia insistiu em me dar o lado mais seco. Acabou resfriada por uma semana, mas só riu disso."
+
+msgid "PHOTO_NOTE_CHILDHOOD"
+msgstr "Julho de 1988. Ela caiu no cascalho atrás da torre de sinalização. Jurou que algo debaixo do assoalho agarrou o tornozelo dela. Eu disse que era só um fio solto. Menti. Eu também vi."
+
+msgid "PHOTO_NOTE_CLOCK"
+msgstr "Primeira noite de plantão sozinha. Outubro de 1999."
+
+msgid "PHOTO_NOTE_RECENT"
+msgstr "O dia em que ela disse que ia embora para a capital. Ela não parava de olhar por cima do meu ombro, para as árvores atrás de mim, como se esperasse que alguém a impedisse."
+
+msgid "PHOTO_NOTE_TRACK"
+msgstr "Não lembro de ter tirado esta foto. O carimbo diz 1988, mas eu nunca fiquei sozinha nos trilhos à noite naquela época."
+
+msgid "PHOTO_NOTE_WORKSHOP"
+msgstr "Lucas no turno da noite. Ele sempre achou que força bruta consertava as máquinas desta cidade."
 
 msgid "ITEM_TRAIN_TICKET_NAME"
 msgstr "Bilhete de Trem"
@@ -915,11 +960,17 @@ msgstr "Gravação"
 msgid "INSPECT_VERB_READ"
 msgstr "Ler"
 
+msgid "INSPECT_VERB_TURN"
+msgstr "Virar"
+
 msgid "INSPECT_VERB_EXAMINE"
 msgstr "Examinar"
 
 msgid "INSPECT_VERB_CLOSE"
 msgstr "Fechar"
+
+msgid "INSPECT_VERB_ROTATE"
+msgstr "Girar"
 
 msgid "KEY_NAME_ESCAPE"
 msgstr "Esc"

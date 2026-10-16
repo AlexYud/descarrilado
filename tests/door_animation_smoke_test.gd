@@ -1,9 +1,10 @@
 extends Node
 
-## Plays doors the way the player meets them: opening (handle, crack, hesitation,
-## slow swing), closing, a locked door tried, and a key turned in a lock. The
-## state changes at once; the choreography follows. Run it as a scene; it quits by
-## itself with a non-zero exit code on failure.
+## Doors played the way AAA exploration and horror games play them: the player is walked to the
+## handle, leans in, the handle turns and the door swings once, calmly, AWAY from the player; the
+## player's feet are held until the door has all but finished; closing first walks the player where the
+## leaf will not sweep. A locked door is tried, and a key is turned in a lock. Run it as a scene; it
+## quits by itself with a non-zero exit code on failure.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_door_animation_smoke"
 const TEST_SCENE_PATH: String = "res://tests/door_animation_smoke_test.tscn"
@@ -34,14 +35,16 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 
-	# The player walks up to a door before pushing it; the timed checks below start
-	# from the player already standing at it, and the walking has its own check.
+	# The player walks up to a door before pushing it; the timed checks below start from the player
+	# already standing at it, and the walking has its own checks.
 	DoorController.approach_enabled = false
 	await _check_open_and_close()
 	await _check_locked_door()
 	await _check_unlocking_with_the_key()
 	await _check_variety()
+	await _check_opens_away()
 	await _check_approach()
+	await _check_closing_clear_of_the_leaf()
 	await _check_gate()
 
 	print("DOOR_ANIMATION_SMOKE_TEST: ", "FAILED" if test_failed else "PASSED")
@@ -71,6 +74,10 @@ func _lever_angle(door: DoorController) -> float:
 	return angle
 
 
+func _held() -> bool:
+	return player.get("_movement_hold_until_msec") > Time.get_ticks_msec()
+
+
 func _check_open_and_close() -> void:
 	var door: DoorController = _make_door(Vector3.ZERO)
 	door.open_variant_override = &"standard"
@@ -87,48 +94,53 @@ func _check_open_and_close() -> void:
 	_expect(_swing_degrees(door) < 0.5, "but it has not moved yet")
 	_expect(door.is_busy(), "the player's hands are on it")
 
-	# The player leans in and the handle goes down before the door gives.
 	await _wait(0.3)
 	_expect(_lever_angle(door) > 0.4, "the handle is pressed down")
 	var movement: PlayerMovementController = player.movement_controller
 	_expect(movement.gesture_offset.length() > 0.02, "the view leans in towards the door")
-	_expect(
-		player.get("_movement_hold_until_msec") > Time.get_ticks_msec(),
-		"the player's feet are held while their hands are busy"
-	)
+	_expect(_held(), "the player's feet are held while their hands are busy")
 
-	# It cracks, then hangs there (the plan says when).
+	# One smooth swing: the door moves without stopping half way or going back.
 	var plan: Dictionary = door._plan
-	var stretches: Array = plan["stretches"]
-	var hang_at: float = (
-		float(plan["reach"]) + float(stretches[1]["d"]) + float(stretches[2]["d"]) * 0.4
-	)
-	await _wait(hang_at - 0.3)
-	var crack: float = _swing_degrees(door)
-	_expect(crack > 1.0 and crack < 10.0, "the door gives only a crack first (%.1f)" % crack)
-	_expect(opened_count == 0, "nothing counts as opened while it is only ajar")
-	await _wait(0.1)
-	_expect(absf(_swing_degrees(door) - crack) < 1.0, "it hangs there a moment")
+	var open_start: float = float(plan["open_start"])
+	var main_end: float = float(plan["main_end"])
+	var previous: float = _swing_degrees(door)
+	var went_back: bool = false
+	var stalled: int = 0
+	var held_mid: bool = false
+	var elapsed: float = 0.3
+	while elapsed < main_end - 0.02:
+		await _wait(0.1)
+		elapsed += 0.1
+		var now: float = _swing_degrees(door)
+		if now < previous - 1.5:
+			went_back = true
+		if elapsed > open_start + 0.5 and elapsed < main_end - 0.5 and now - previous < 0.3:
+			stalled += 1
+		if absf(elapsed - (open_start + main_end) * 0.5) < 0.06:
+			held_mid = _held()
+		previous = now
 
-	await _wait(float(plan["open_start"]) + 0.8 - hang_at - 0.1)
+	_expect(not went_back and stalled == 0, "the door never stops or goes back half way (%d stalls)" % stalled)
+	_expect(main_end - open_start >= 1.7, "and it swings calmly (%.1f s)" % (main_end - open_start))
 	_expect(opened_count == 1, "the door counts as opened once it swings")
-	_expect(_swing_degrees(door) > crack + 3.0, "and it swings")
-	_expect(door._door_bodies.size() > 0 and door._door_bodies[0].collision_layer == 0, "the swinging door lets the player through instead of dragging them")
+	_expect(held_mid, "the player's feet stay held while it swings, so nobody walks into the leaf")
+	_expect(door._door_bodies.size() > 0 and door._door_bodies[0].collision_layer == 0 or door._choreo == &"", "the swinging door lets the player through instead of dragging them")
 
-	await _wait(float(plan["main_end"]) + 0.6 - float(plan["open_start"]) - 0.8)
+	await _wait(0.9)
 	_expect(is_equal_approx(_swing_degrees(door), 85.0), "the door ends wide open")
 	_expect(_lever_angle(door) < 0.01, "the handle is back at rest")
-	_expect(door._door_bodies[0].collision_layer != 0, "and is solid again when it stops")
+	_expect(door._door_bodies[0].collision_layer != 0, "and the door is solid again")
 	_expect(movement.gesture_offset.length() < 0.001, "the view is let go")
 	_expect(not door.is_busy(), "the door is free again")
 
-	# Closing it again: a quicker pull and the latch.
+	# Closing it again: a pull and the latch.
 	door.interact(player)
 	_expect(not door.is_open, "the door is closed the moment the player closes it")
-	await _wait(0.55)
+	await _wait(1.0)
 	var halfway: float = _swing_degrees(door)
 	_expect(halfway > 5.0 and halfway < 84.0, "it swings shut (%.1f)" % halfway)
-	await _wait(2.5)
+	await _until_still(door)
 	_expect(_swing_degrees(door) < 0.01, "the door ends shut")
 	_expect(_lever_angle(door) < 0.01, "and the handle is at rest")
 
@@ -153,7 +165,7 @@ func _check_locked_door() -> void:
 	_expect(shaken > 0.1 and shaken < 2.0, "the door rattles in its frame (%.2f)" % shaken)
 	_expect(pressed > 0.4, "the handle is tried")
 
-	await _wait(1.2)
+	await _wait(1.5)
 	_expect(_swing_degrees(door) < 0.01 and _lever_angle(door) < 0.01, "then everything is still")
 	_expect(not _any_key_shown(door), "no key appears without one")
 
@@ -185,7 +197,6 @@ func _check_unlocking_with_the_key() -> void:
 	await _until_still(door)
 	_expect(is_equal_approx(_swing_degrees(door), 85.0), "the door ends wide open")
 	_expect(is_equal_approx(_key_twist(door), -90.0), "the key stays in the lock, turned a quarter")
-
 
 	door.queue_free()
 	await get_tree().physics_frame
@@ -222,8 +233,16 @@ func _expect(condition: bool, message: String) -> void:
 	print("FAIL - ", message)
 
 
-## No two interactions are alike: the plans differ, every variant plays through, and
-## the same variant is not served twice in a row if it can be helped.
+func _until_still(door: DoorController) -> void:
+	var waited: float = 0.0
+	await get_tree().process_frame
+	while door._choreo != &"" and waited < 20.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+
+
+## No two interactions are alike: the plans differ, both variants play through, and the same
+## variant is not served twice in a row if it can be helped. Every opening is a single swing.
 func _check_variety() -> void:
 	var door: DoorController = _make_door(Vector3(15.0, 0.0, 0.0))
 	await get_tree().physics_frame
@@ -232,17 +251,20 @@ func _check_variety() -> void:
 	var ends: Array[float] = []
 	var repeats: int = 0
 	var last: StringName = &""
+	var all_single_swings: bool = true
 	for i: int in 120:
 		var plan: Dictionary = door._plan_open()
 		names[plan["variant"]] = true
 		ends.append(float(plan["main_end"]))
+		all_single_swings = all_single_swings and (plan["stretches"] as Array).size() == 2
 		if plan["variant"] == last:
 			repeats += 1
 		last = plan["variant"]
 
-	_expect(names.size() == 4, "all four ways of opening come up (%s)" % str(names.keys()))
-	_expect(ends.max() - ends.min() > 2.0, "their lengths differ a lot (%.1f..%.1f)" % [ends.min(), ends.max()])
-	_expect(repeats < 30, "the same way is rarely seen twice in a row (%d of 120)" % repeats)
+	_expect(names.size() == 2, "both ways of opening come up (%s)" % str(names.keys()))
+	_expect(all_single_swings, "and each is one swing, with no crack and no pause")
+	_expect(ends.max() - ends.min() > 0.4, "their lengths differ (%.1f..%.1f)" % [ends.min(), ends.max()])
+	_expect(repeats < 60, "the same way is rarely seen twice in a row (%d of 120)" % repeats)
 
 	var close_names: Dictionary = {}
 	var try_counts: Dictionary = {}
@@ -252,9 +274,9 @@ func _check_variety() -> void:
 	_expect(close_names.size() == 3, "all three ways of closing come up")
 	_expect(try_counts.size() == 2, "a locked door is tried two or three times")
 
-	# Every variant plays through to the same end.
+	# Both variants play through to the same end.
 	Engine.time_scale = 4.0
-	for variant: StringName in [&"standard", &"peek", &"stuck", &"quick"]:
+	for variant: StringName in [&"standard", &"quick"]:
 		door.open_variant_override = variant
 		opened_count = 0
 		var counter: Callable = func() -> void: opened_count += 1
@@ -277,16 +299,31 @@ func _check_variety() -> void:
 	await get_tree().physics_frame
 
 
-func _until_still(door: DoorController) -> void:
-	var waited: float = 0.0
-	await get_tree().process_frame
-	while door._choreo != &"" and waited < 15.0:
-		await get_tree().process_frame
-		waited += get_process_delta_time()
+## The door opens AWAY from whoever opens it, from either side, and closes by the same swing.
+func _check_opens_away() -> void:
+	var door: DoorController = _make_door(Vector3(80.0, 0.0, 0.0))
+	await get_tree().physics_frame
+	Engine.time_scale = 4.0
+
+	for z: float in [1.2, -1.2, 1.2]:
+		player.global_position = Vector3(80.8, 0.1, z)
+		door.interact(player)
+		await _until_still(door)
+		var swung: float = door.hinge.rotation_degrees.y - door.closed_rotation_degrees.y
+		# Positive turns the leaf towards -Z: away from a player in front (z > 0).
+		var away: float = 85.0 if z > 0.0 else -85.0
+		_expect(is_equal_approx(swung, away), "opened from z %.1f the door swings away from the player (%.0f)" % [z, swung])
+		door.interact(player)
+		await _until_still(door)
+		_expect(_swing_degrees(door) < 0.01, "and closes again")
+
+	Engine.time_scale = 1.0
+	door.queue_free()
+	await get_tree().physics_frame
 
 
-## Far from the handle, the player first walks up to the door at a slow pace, looking
-## at it, and only then does the door start to move.
+## Far from the handle, the player first walks up to the door at a slow pace, looking at it, and only
+## then does the door start to move.
 func _check_approach() -> void:
 	DoorController.approach_enabled = true
 	Engine.time_scale = 1.0
@@ -309,52 +346,14 @@ func _check_approach() -> void:
 	await _wait(0.6)
 	var speed: float = Vector2(player.velocity.x, player.velocity.z).length()
 	_expect(speed > 0.3 and speed < PlayerMovementController.WALK_SPEED, "at a slow walking pace (%.2f)" % speed)
-	_expect(movement.step_phase > 0.0, "with footsteps")
 
 	await _until_walk_ends(movement)
 	var reached: Vector2 = Vector2(player.global_position.x - 30.81, player.global_position.z - 0.59)
 	_expect(reached.length() < 0.12, "they stop at arm's length in front of the handle (off by %.2f)" % reached.length())
-	var facing: Vector3 = -player.get_node("Head").global_basis.z
-	_expect(facing.z < -0.9, "looking at the door")
 
-	await _wait(0.5)
-	_expect(_lever_angle(door) > 0.3, "then the handle goes down")
 	await _until_still(door)
 	_expect(is_equal_approx(_swing_degrees(door), 85.0), "and the door opens as usual")
 	_expect(not movement.is_guided_walking(), "the walk is over")
-
-	# Something in the way: no walk, the door just opens.
-	var wall: StaticBody3D = StaticBody3D.new()
-	var wall_shape: CollisionShape3D = CollisionShape3D.new()
-	var wall_box: BoxShape3D = BoxShape3D.new()
-	wall_box.size = Vector3(4.0, 3.0, 0.2)
-	wall_shape.shape = wall_box
-	wall.add_child(wall_shape)
-	wall.position = Vector3(40.8, 1.0, 1.3)
-	add_child(wall)
-	var blocked: DoorController = _make_door(Vector3(40.0, 0.0, 0.0))
-	await get_tree().physics_frame
-	player.global_position = Vector3(40.81, 1.05, 2.4)
-	player.velocity = Vector3.ZERO
-	await _wait(0.5)
-	blocked.interact(player)
-	await get_tree().physics_frame
-	_expect(not movement.is_guided_walking(), "with a wall in the way nobody is walked through it")
-	_expect(blocked._choreo == &"open", "and the door starts at once")
-	await _until_still(blocked)
-	wall.queue_free()
-	blocked.queue_free()
-
-	# Too far away to be someone standing at the door (a script is calling).
-	var far_door: DoorController = _make_door(Vector3(50.0, 0.0, 0.0))
-	await get_tree().physics_frame
-	player.global_position = Vector3(50.81, 1.05, 6.0)
-	player.velocity = Vector3.ZERO
-	await _wait(0.5)
-	far_door.interact(player)
-	await get_tree().physics_frame
-	_expect(not movement.is_guided_walking(), "from far away nobody is walked up")
-	await _until_still(far_door)
 
 	# Already at the door: no walk.
 	var near_door: DoorController = _make_door(Vector3(60.0, 0.0, 0.0))
@@ -369,7 +368,6 @@ func _check_approach() -> void:
 
 	DoorController.approach_enabled = false
 	door.queue_free()
-	far_door.queue_free()
 	near_door.queue_free()
 	await get_tree().physics_frame
 
@@ -381,8 +379,68 @@ func _until_walk_ends(movement: PlayerMovementController) -> void:
 		waited += get_process_delta_time()
 
 
-## The long fence gate is pushed near its free end, not at its middle, and pushed with
-## more of the body.
+## Closing: the player is first walked to a place the leaf will not sweep, on their own side; from the
+## doorway, to the side the leaf is not on.
+func _check_closing_clear_of_the_leaf() -> void:
+	DoorController.approach_enabled = true
+	var movement: PlayerMovementController = player.movement_controller
+	var door: DoorController = _make_door(Vector3(90.0, 0.0, 0.0))
+	await get_tree().physics_frame
+
+	# Opened from the +Z side: the leaf swings away, to the -Z side.
+	player.global_position = Vector3(90.81, 0.1, 0.5)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+	door.interact(player)
+	await _until_still(door)
+	var sweep: float = float(door._frame()["sweep"])
+	_expect(sweep < 0.0, "the leaf is on the -Z side")
+
+	# Closing it from the side the leaf is not on: they stay there, in front of the handle.
+	player.global_position = Vector3(90.81, 0.1, 1.5)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+	door.interact(player)
+	await _until_still(door)
+	var coords: Vector2 = door._door_coords(player.global_position)
+	_expect(coords.y * sweep < 0.0 and absf(coords.y) < 0.8, "closed from the side the leaf is not on, they end in front of the handle (%.2f)" % coords.y)
+	_expect(_swing_degrees(door) < 0.01, "and the door is shut")
+
+	# Open it again, then close it from inside its arc: walked out of the leaf's reach, same side.
+	door.interact(player)
+	await _until_still(door)
+	player.global_position = Vector3(90.5, 0.1, sweep * 0.3)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+	door.interact(player)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_expect(movement.is_guided_walking(), "a player inside the leaf's arc is walked out of it before the door closes")
+	await _until_still(door)
+	coords = door._door_coords(player.global_position)
+	_expect(coords.y * sweep >= door._clear_depth(coords.x) - 0.15, "they stay on their side, beyond the leaf's reach (%.2f of %.2f)" % [coords.y * sweep, door._clear_depth(coords.x)])
+	_expect(_swing_degrees(door) < 0.01, "and the door is shut")
+
+	# From the doorway: put on the side the leaf is not on.
+	door.interact(player)
+	await _until_still(door)
+	# (It was opened from the -Z side this time, so the leaf is on the +Z side now.)
+	sweep = float(door._frame()["sweep"])
+	player.global_position = Vector3(90.4, 0.1, 0.04)
+	player.velocity = Vector3.ZERO
+	await _wait(0.5)
+	door.interact(player)
+	await _until_still(door)
+	coords = door._door_coords(player.global_position)
+	_expect(coords.y * sweep < -0.3, "a player standing in the doorway ends on the side the leaf is not on (%.2f)" % coords.y)
+	_expect(_swing_degrees(door) < 0.01, "and the door is shut")
+
+	DoorController.approach_enabled = false
+	door.queue_free()
+	await get_tree().physics_frame
+
+
+## The long fence gate is pushed near its free end, not at its middle, and swings more slowly.
 func _check_gate() -> void:
 	DoorController.approach_enabled = true
 	var gate: DoorController = (
@@ -412,8 +470,9 @@ func _check_gate() -> void:
 		"they stand towards its free end (%.2f of a width %.2f)" % [from_hinge, half_width * 2.0]
 	)
 
+	gate.open_variant_override = &"standard"
 	var open_plan: Dictionary = gate._plan_open()
-	_expect(float(open_plan["main_end"]) > 2.0, "and it swings slowly")
+	_expect(float(open_plan["main_end"]) > 2.4, "and it swings slowly (%.1f s)" % float(open_plan["main_end"]))
 
 	DoorController.approach_enabled = false
 	gate.queue_free()

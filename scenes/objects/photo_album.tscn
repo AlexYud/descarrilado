@@ -5,6 +5,9 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_childhood.tscn" id="3_childhood"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_adolescence.tscn" id="4_adolescence"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_recent.tscn" id="5_recent"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_workshop.tscn" id="6_workshop"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_clock.tscn" id="7_clock"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_track.tscn" id="8_track"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_cover"]
 albedo_color = Color(0.16, 0.1, 0.08, 1)
@@ -33,7 +36,7 @@ size = Vector3(0.76, 0.08, 0.29)
 [node name="PhotoAlbum" type="Node3D"]
 script = ExtResource("1_album")
 prompt_text = "PROMPT_OPEN_ALBUM"
-photo_scenes = Array[PackedScene]([ExtResource("3_childhood"), ExtResource("4_adolescence"), ExtResource("5_recent")])
+photo_scenes = Array[PackedScene]([ExtResource("3_childhood"), ExtResource("4_adolescence"), ExtResource("5_recent"), ExtResource("6_workshop"), ExtResource("7_clock"), ExtResource("8_track")])
 
 [node name="Cover" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)

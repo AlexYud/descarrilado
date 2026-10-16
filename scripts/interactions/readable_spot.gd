@@ -35,6 +35,16 @@ enum PromptKind {
 ## It has to face the player this long before the prompt appears, so that a spot
 ## swept past while turning the item does not flash a prompt.
 @export_range(0.0, 1.5, 0.05) var dwell_seconds: float = 0.2
+## For writing on the BACK of something flat (a photograph): the spot is offered while the item
+## shows its other side to the player too, with the prompt "Turn over" instead of "Read"; opening
+## it turns the item round to show the spot squarely. (The same prompt key as any spot: [E].)
+@export var offer_from_behind: bool = false
+## Plain writing on a face of a document (a ticket's front and back, the back of a photograph): the
+## inspect view lists "[E] Read" and "[R] Rotate" under the item from the start, and E reads the
+## face that is toward the player (or turns the item to the writing). False (the default) is a small
+## hidden detail (an engraving, a scratch) that is only found by turning the item: nothing says it
+## is there until it faces the player.
+@export var obvious: bool = false
 ## Draws the arrow in the editor (never in the game).
 @export var show_editor_arrow: bool = true
 
@@ -57,6 +67,21 @@ func get_facing_dot(viewer_direction: Vector3) -> float:
 
 func is_facing(viewer_direction: Vector3, extra_degrees: float = 0.0) -> bool:
 	return get_facing_dot(viewer_direction) >= cos(deg_to_rad(facing_angle_degrees + extra_degrees))
+
+
+## True when the spot may be offered to a viewer in `viewer_direction`: it faces them, or (with
+## `offer_from_behind`) it faces straight away from them.
+func is_offerable(viewer_direction: Vector3, extra_degrees: float = 0.0) -> bool:
+	if is_facing(viewer_direction, extra_degrees):
+		return true
+
+	return offer_from_behind and is_facing(-viewer_direction, extra_degrees)
+
+
+## True when the spot faces away from a viewer in `viewer_direction` (so reading it means turning
+## the item over).
+func is_facing_away(viewer_direction: Vector3) -> bool:
+	return get_facing_dot(viewer_direction) < 0.0
 
 
 ## The localization key of the prompt ("[E] Read" / "[E] Examine").

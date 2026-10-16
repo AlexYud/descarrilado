@@ -1,12 +1,14 @@
 extends Node
 class_name PlayerInventoryController
 
-const INVENTORY_SIZE: int = 6
 const ITEM_SCENE_PATHS := {
 	"cellphone": "res://scenes/objects/cellphone.tscn",
 	"flashlight": "res://scenes/objects/flashlight.tscn",
 }
 
+## The items carried, in the order they were picked up. There is no limit (a game of keys, notes and
+## photographs has no use for one, and nothing is ever dropped): the list simply grows, and the
+## inventory screen scrolls.
 var inventory_slots: Array[Dictionary] = []
 
 
@@ -14,16 +16,10 @@ func setup() -> void:
 	_free_inspect_visuals()
 	inventory_slots.clear()
 
-	for i in range(INVENTORY_SIZE):
-		inventory_slots.append(_create_empty_inventory_slot())
 
-
+## Always true: the inventory has no limit.
 func has_space() -> bool:
-	for slot_data: Dictionary in inventory_slots:
-		if _is_inventory_slot_empty(slot_data):
-			return true
-
-	return false
+	return true
 
 
 func has_item(item_id: String) -> bool:
@@ -41,20 +37,14 @@ func add_item(
 	inspect_visual_template: Node3D = null,
 	item_scene_path: String = ""
 ) -> bool:
-	for i in range(inventory_slots.size()):
-		var slot_data: Dictionary = inventory_slots[i]
-
-		if _is_inventory_slot_empty(slot_data):
-			inventory_slots[i] = {
-				"id": item_id,
-				"name": item_name,
-				"description": item_description,
-				"inspect_visual_template": inspect_visual_template,
-				"item_scene_path": item_scene_path,
-			}
-			return true
-
-	return false
+	inventory_slots.append({
+		"id": item_id,
+		"name": item_name,
+		"description": item_description,
+		"inspect_visual_template": inspect_visual_template,
+		"item_scene_path": item_scene_path,
+	})
+	return true
 
 
 func remove_item(item_id: String) -> bool:
@@ -63,7 +53,7 @@ func remove_item(item_id: String) -> bool:
 
 		if str(slot_data.get("id", "")) == item_id:
 			_free_slot_inspect_visual(slot_data)
-			inventory_slots[i] = _create_empty_inventory_slot()
+			inventory_slots.remove_at(i)
 			return true
 
 	return false
@@ -89,12 +79,11 @@ func get_serializable_slots() -> Array[Dictionary]:
 	return serialized_slots
 
 
+## Older saves hold a fixed list of six with empty entries: the empty ones are skipped.
 func restore_serializable_slots(saved_slots: Array) -> void:
 	setup()
 
-	var slot_count: int = mini(saved_slots.size(), INVENTORY_SIZE)
-	for index: int in range(slot_count):
-		var saved_value: Variant = saved_slots[index]
+	for saved_value: Variant in saved_slots:
 		if not saved_value is Dictionary:
 			continue
 
@@ -109,7 +98,7 @@ func restore_serializable_slots(saved_slots: Array) -> void:
 		if item_scene_path.is_empty():
 			item_scene_path = str(ITEM_SCENE_PATHS.get(item_id, ""))
 
-		inventory_slots[index] = {
+		inventory_slots.append({
 			"id": item_id,
 			"name": str(saved_slot.get("name", "")),
 			"description": str(saved_slot.get("description", "")),
@@ -117,21 +106,7 @@ func restore_serializable_slots(saved_slots: Array) -> void:
 				item_scene_path
 			),
 			"item_scene_path": item_scene_path,
-		}
-
-
-func _create_empty_inventory_slot() -> Dictionary:
-	return {
-		"id": "",
-		"name": "",
-		"description": "",
-		"inspect_visual_template": null,
-		"item_scene_path": "",
-	}
-
-
-func _is_inventory_slot_empty(slot_data: Dictionary) -> bool:
-	return str(slot_data.get("id", "")) == ""
+		})
 
 
 func _create_inspect_visual(item_scene_path: String) -> Node3D:

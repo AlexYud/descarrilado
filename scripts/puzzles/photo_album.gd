@@ -5,13 +5,18 @@ class_name PhotoAlbum
 ## close-up (AlbumView) where the player drags photographs from their hands
 ## onto the spaces, in any order, and takes them back out again.
 ##
-## Nothing tells the player whether a single placement is right. Only when
-## every space holds its own photograph, which is the chronological order,
-## does the album lock and `completed` fire.
+## There are more photographs than spaces (distractors). Nothing tells the player whether a
+## single placement is right. The album is judged only when EVERY space is full: with each
+## space holding its own photograph (the chronological order of the three story photos) it locks
+## and `completed` fires; full but wrong, `wrong_arrangement` fires (the level plays a glitch)
+## and everything stays as placed.
 
 signal arrangement_changed
 ## Every slot holds its own photograph. Fires once; the album is then locked.
 signal completed
+## Every slot is full but not with the right photographs in the right order. Fires each time
+## such an arrangement is made (not again until something changes).
+signal wrong_arrangement
 ## The close-up opened or closed.
 @warning_ignore("unused_signal")
 signal opened
@@ -130,6 +135,28 @@ func take_out(slot_index: int) -> String:
 	return item_id
 
 
+## True when no space is empty.
+func is_full() -> bool:
+	if slots.is_empty():
+		return false
+
+	for item_id: String in arrangement:
+		if item_id.is_empty():
+			return false
+
+	return true
+
+
+## The photographs that are not in the album (in the player's hands, or still lying about).
+func get_unplaced_photo_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for item_id: String in get_photo_ids():
+		if not arrangement.has(item_id):
+			ids.append(item_id)
+
+	return ids
+
+
 func is_correct() -> bool:
 	if slots.is_empty():
 		return false
@@ -187,6 +214,8 @@ func _changed() -> void:
 		locked = true
 		SaveManager.set_state_value(STATE_SECTION, KEY_COMPLETE, true)
 		completed.emit()
+	elif not locked and is_full():
+		wrong_arrangement.emit()
 
 
 func _refresh_slots() -> void:

@@ -24,10 +24,15 @@ class_name InspectReadables
 signal spot_read(spot_id: StringName)
 ## The text opened or closed (the inspect view changes its corner prompt).
 signal reading_changed(is_reading: bool)
+## Whether there is plain writing to read right now changed (the inspect view shows or hides "[E] Read").
+signal read_availability_changed
 
 ## A spot stays offered until it is this many degrees beyond its own cone.
 const RELEASE_MARGIN_DEGREES: float = 10.0
 const FADE_SECONDS: float = 0.28
+## Plain writing counts as facing the player this many degrees beyond its own cone (a little generous,
+## so "[E] Read" is there as soon as the face is plainly toward them).
+const OBVIOUS_MARGIN_DEGREES: float = 12.0
 ## Text this short is shown large and centred (an engraving), longer text as reading.
 const SHORT_TEXT_LENGTH: int = 120
 
@@ -40,6 +45,8 @@ var _candidate: ReadableSpot = null
 var _dwell: float = 0.0
 var _document_offered: bool = false
 var _prompt_shown: bool = false
+var _prompt_turns: bool = false
+var _read_available: bool = false
 
 var _reading: bool = false
 var _reading_spot: ReadableSpot = null
@@ -127,6 +134,7 @@ func end() -> void:
 	_dwell = 0.0
 	_document_offered = false
 	_prompt_shown = false
+	_read_available = false
 	_reading = false
 	_reading_spot = null
 	_fading_out = false
@@ -187,6 +195,11 @@ func update(delta: float) -> void:
 
 	_update_spots(delta)
 
+	var readable_now: bool = has_obvious_reading()
+	if readable_now != _read_available:
+		_read_available = readable_now
+		read_availability_changed.emit()
+
 	# A document whose art is in another language offers its text when no spot is.
 	var document_wanted: bool = (
 		_offered == null and _candidate == null and controller.has_document_text()
@@ -196,6 +209,10 @@ func update(delta: float) -> void:
 		_apply_prompt()
 
 	if _prompt_shown:
+		# The verb follows the item as it is turned: "Read" facing the writing, "Turn over" if it is behind.
+		if _offered != null and _offered.is_facing_away(controller.camera.global_basis.z) != _prompt_turns:
+			_refresh_prompt()
+
 		_place_prompt()
 
 
@@ -211,10 +228,10 @@ func _update_spots(delta: float) -> void:
 	var best_dot: float = -2.0
 	for spot: ReadableSpot in _spots:
 		var margin: float = RELEASE_MARGIN_DEGREES if spot == _offered else 0.0
-		if not spot.is_facing(toward_viewer, margin):
+		if not spot.is_offerable(toward_viewer, margin):
 			continue
 
-		var dot: float = spot.get_facing_dot(toward_viewer)
+		var dot: float = absf(spot.get_facing_dot(toward_viewer))
 		if dot > best_dot:
 			best_dot = dot
 			best = spot
@@ -251,7 +268,9 @@ func _apply_prompt() -> void:
 	if _prompt == null:
 		return
 
-	var wanted: bool = _offered != null or _document_offered
+	# Plain writing is announced by the hint row under the item, not on the item: only a hidden
+	# detail (an engraving, a scratch) gets a prompt, and only once it is found.
+	var wanted: bool = _offered != null and not _offered.obvious
 	if wanted:
 		_refresh_prompt()
 
@@ -275,14 +294,50 @@ func _apply_prompt() -> void:
 # Opening and closing the text
 # ----------------------------------------------------------------------
 
+## True when there is plain writing to read RIGHT NOW: a whole document's text, or an `obvious`
+## spot that faces the player (so a photograph shows "[E] Read" only once it is turned to its back,
+## a ticket on both sides). The inspect view shows "[E] Read" while this is true.
+func has_obvious_reading() -> bool:
+	if controller != null and controller.has_document_text():
+		return true
+
+	return _best_obvious_spot() != null
+
+
+## True when E would open something now: what the item's facing offers, or plain writing.
+func can_activate() -> bool:
+	return _offered != null or _document_offered or has_obvious_reading()
+
+
+## The plain-writing spot that faces the player best (null if the item has none).
+func _best_obvious_spot() -> ReadableSpot:
+	var toward_viewer: Vector3 = controller.camera.global_basis.z
+	var best: ReadableSpot = null
+	var best_dot: float = -2.0
+	for spot: ReadableSpot in _spots:
+		if not spot.obvious or not spot.is_facing(toward_viewer, OBVIOUS_MARGIN_DEGREES):
+			continue
+
+		var dot: float = spot.get_facing_dot(toward_viewer)
+		if dot > best_dot:
+			best_dot = dot
+			best = spot
+
+	return best
+
+
 ## Opens what is offered. False if nothing is.
 func activate() -> bool:
-	if _reading or _item == null or (_offered == null and not _document_offered):
+	if _reading or _item == null or not can_activate():
 		return false
 
 	_reading = true
 	_fading_out = false
 	_reading_spot = _offered
+	# Plain writing is always on offer (the hint row under the item): with nothing offered by the
+	# way the item faces, the face toward the player is read, or the item turns to its writing.
+	if _reading_spot == null and not controller.has_document_text():
+		_reading_spot = _best_obvious_spot()
 	var spot_id: StringName = &""
 	if _reading_spot != null:
 		_focus_orientation = _frame_orientation_for(_reading_spot)
@@ -347,7 +402,7 @@ func handle_input(event: InputEvent) -> bool:
 
 		return true
 
-	if event.is_action_pressed("interact") and (_offered != null or _document_offered):
+	if event.is_action_pressed("interact") and can_activate():
 		activate()
 		return true
 
@@ -377,8 +432,13 @@ func _refresh_prompt() -> void:
 		return
 
 	var verb_key: String = "INSPECT_VERB_READ"
+	_prompt_turns = false
 	if _offered != null and _offered.prompt_kind == ReadableSpot.PromptKind.EXAMINE:
 		verb_key = "INSPECT_VERB_EXAMINE"
+
+	if _offered != null and _offered.is_facing_away(controller.camera.global_basis.z):
+		verb_key = "INSPECT_VERB_TURN"
+		_prompt_turns = true
 
 	_prompt.set_hint(
 		InputBindings.get_binding_label(&"interact", -1, true),
@@ -426,6 +486,8 @@ func _layout() -> void:
 	for size_name: String in ["normal_font_size", "bold_font_size", "italics_font_size"]:
 		_body.add_theme_font_size_override(size_name, text_size)
 
+	# More air between the title and the text than between the text's own paragraphs.
+	_text_box.add_theme_constant_override("separation", int(body * 1.7))
 	_title.custom_minimum_size.x = column
 	_body.custom_minimum_size = Vector2(column, 0.0)
 	_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if short else HORIZONTAL_ALIGNMENT_LEFT

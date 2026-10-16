@@ -6,7 +6,8 @@ extends SpotLight3D
 
 @export_category("Startup Flicker")
 @export var startup_flicker_enabled: bool = true
-@export var startup_flicker_chance_percent: int = 70
+## 100: the light never comes on perfectly, it always stutters first (the pattern is random).
+@export var startup_flicker_chance_percent: int = 100
 @export var startup_flicker_duration_min: float = 0.65
 @export var startup_flicker_duration_max: float = 1.0
 @export var startup_flicker_on_time_min: float = 0.08
@@ -122,6 +123,16 @@ func set_flashlight_input_enabled(enabled: bool) -> void:
 		flashlight_on = false
 		_reset_light_effects()
 		visible = false
+
+
+## Switches the light on from script, as if the key had been pressed (with the usual start-up
+## flicker). Does nothing while the flashlight cannot be used.
+func turn_on() -> void:
+	if not _can_toggle_flashlight():
+		return
+
+	flashlight_on = true
+	_begin_startup_flicker()
 
 
 ## Switches the light off from script. The player can switch it on again.
@@ -340,16 +351,23 @@ func _begin_startup_flicker() -> void:
 		return
 
 	startup_flicker_active = true
-	startup_flicker_forced_off = false
+	# Half the time it starts dark, so the first beat is not always the same.
+	startup_flicker_forced_off = rng.randf() < 0.5
 	startup_flicker_time_remaining = _random_flicker_duration(
 		startup_flicker_duration_min,
 		startup_flicker_duration_max
 	)
-	startup_flicker_timer = _random_flicker_duration(
-		startup_flicker_on_time_min,
-		startup_flicker_on_time_max
-	)
-	visible = true
+	if startup_flicker_forced_off:
+		startup_flicker_timer = _random_flicker_duration(
+			startup_flicker_off_time_min,
+			startup_flicker_off_time_max
+		)
+	else:
+		startup_flicker_timer = _random_flicker_duration(
+			startup_flicker_on_time_min,
+			startup_flicker_on_time_max
+		)
+	visible = not startup_flicker_forced_off
 
 
 func _update_startup_flicker(delta: float) -> void:

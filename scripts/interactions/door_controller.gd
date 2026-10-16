@@ -1,23 +1,29 @@
 extends Node3D
 class_name DoorController
 
-## A door the player can open, close and unlock.
+## A door the player can open, close and unlock, played the way AAA exploration and horror games
+## (Resident Evil, The Last of Us) play theirs.
 ##
-## The state (`is_open`, `is_locked`) changes the moment the player interacts; what
-## the player sees is a short choreography that follows it, played by `_process`:
-## the player leans in, the handle turns and the latch clicks, the door gives a
-## crack and hangs there a moment, then swings open slowly and
-## settles. A locked door rattles; with the key the key is brought to the keyhole,
-## slid in, hitches, turns with a grinding, and stays in the lock. Scripted changes
-## (`force_open`, `slam_shut`, restoring a save) skip the choreography.
+## The state (`is_open`, `is_locked`) changes the moment the player interacts; what the player sees is a
+## short choreography played by `_process`: the player is walked to arm's length in front of the
+## handle (their feet are held from then on), leans in, the handle turns and the latch clicks, and the
+## door swings in ONE smooth movement and settles. The player gets control back when the door has all
+## but finished, so nobody walks into the leaf. A locked door rattles; with the key the key is
+## brought to the keyhole, slid in, hitches, turns with a grinding, and stays in the lock. Scripted
+## changes (`force_open`, `slam_shut`, restoring a save) skip the choreography.
 ##
-## No two interactions are alike: each picks one of several variants (a cautious
-## peek, a stuck door that pops free, a quick shove...) and rolls its timings, so
-## the same door never plays the same way twice in a row.
+## A door opens AWAY from whoever opens it (the side they are not on), so the leaf never swings into
+## them: this is what those games do, and it keeps door and player from ever sharing space on opening.
+## `swing_sign` is only the default side (for a script and for a door that starts open). Closing is
+## the same swing back, and the player is first walked to a place the leaf will not sweep: on their
+## own side in front of the handle; if that side is the one the open leaf is on, beyond the leaf's reach;
+## from the doorway itself, to the side the leaf is not on.
+##
+## No two interactions are alike: each picks a variant (a standard or a quick shove) and rolls its
+## timings, so the same door never plays the same way twice in a row.
 
-## Raised when the player opens this door (not when a script does). With the
-## choreography it comes when the door starts to swing open for real, after the
-## crack, not when the button is pressed.
+## Raised when the player opens this door (not when a script does). With the choreography it comes
+## when the door starts to swing open, not when the button is pressed.
 signal opened_by_player
 
 ## How far the key turns in the lock (negative is clockwise, seen from the face).
@@ -27,6 +33,8 @@ const KEY_TURN_DEGREES: float = -90.0
 @export var door_root: Node3D
 
 @export var open_angle_degrees: float = 85.0
+## The default side the door swings to (for a script, and for a door that starts open): +1 towards its local -Z side, -1 towards +Z. A player opening it makes it swing away from them instead.
+@export_enum("Towards -Z:1", "Towards +Z:-1") var swing_sign: int = 1
 @export var rotate_speed: float = 0.6
 @export var starts_open: bool = false
 @export var starts_locked: bool = false
@@ -65,7 +73,7 @@ const KEY_TURN_DEGREES: float = -90.0
 ## recordings replace the stand-ins.
 @export var door_sounds_enabled: bool = false
 ## Plays this variant of opening every time instead of rolling one (for scripted
-## scenes and tests): `standard`, `peek`, `stuck` or `quick`. Empty rolls one.
+## scenes and tests): `standard` or `quick`. Empty rolls one.
 @export var open_variant_override: StringName = &""
 
 var is_open: bool = false
@@ -92,6 +100,8 @@ var _choreo: StringName = &""
 var _choreo_t: float = 0.0
 var _choreo_total: float = 0.0
 var _busy_seconds: float = 0.0
+## How long (from the start of the choreography) the player's feet are held still.
+var _hold_seconds: float = 0.0
 var _lead: float = 0.0
 var _side: int = 1
 var _start_rotation: Vector3 = Vector3.ZERO
@@ -130,7 +140,7 @@ func _ready() -> void:
 	_rng.randomize()
 
 	closed_rotation_degrees = hinge.rotation_degrees
-	current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, absf(open_angle_degrees), 0.0)
+	current_open_rotation_degrees = _fixed_open_rotation()
 
 	is_locked = starts_locked
 	is_open = starts_open and not is_locked
@@ -162,6 +172,7 @@ func _process(delta: float) -> void:
 		# The door is solid while the player walks up to it and while it is tried,
 		# and lets them through while it swings.
 		_set_collision_suspended(_choreo == &"open" or _choreo == &"close")
+		_hold_player()
 		_step_choreo(delta)
 		return
 
@@ -247,17 +258,17 @@ func interact(player: Node) -> void:
 		opened_by_player.emit()
 
 
-## Opens the door by itself, with no player involved. `swing_sign` picks the
-## side it swings towards (+1 or -1 around the hinge). A locked door stays shut.
-func force_open(swing_sign: float = 1.0) -> void:
+## Opens the door by itself, with no player involved. `swing_override` (+1 or -1 around the
+## hinge) picks the side it swings towards; 0 uses the door's own `swing_sign`. A locked door
+## stays shut.
+func force_open(swing_override: float = 0.0) -> void:
 	if hinge == null or is_locked or is_open:
 		return
 
 	_cancel_choreo(true)
-	current_open_rotation_degrees = closed_rotation_degrees + Vector3(
-		0.0,
-		absf(open_angle_degrees) * signf(swing_sign),
-		0.0
+	current_open_rotation_degrees = (
+		_fixed_open_rotation() if swing_override == 0.0
+		else closed_rotation_degrees + Vector3(0.0, absf(open_angle_degrees) * signf(swing_override), 0.0)
 	)
 	is_open = true
 	_remember_persistent_state()
@@ -314,12 +325,9 @@ func _restore_persistent_state() -> void:
 	_key_side = int(saved_state.get("key_side", 0))
 	var signed_open_angle: float = float(saved_state.get(
 		"signed_open_angle_degrees",
-		absf(open_angle_degrees)
+		float(swing_sign) * absf(open_angle_degrees)
 	))
-	current_open_rotation_degrees = (
-		closed_rotation_degrees
-		+ Vector3(0.0, signed_open_angle, 0.0)
-	)
+	current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, signed_open_angle, 0.0)
 	hinge.rotation_degrees = (
 		current_open_rotation_degrees
 		if is_open
@@ -393,33 +401,27 @@ func _consume_required_key(player: Node) -> bool:
 	return bool(player.call("consume_inventory_item", required_key_id))
 
 
+## +1 or -1: the way the door is open or opens now (its default side until it has been opened).
+func _open_sign() -> float:
+	var swung: float = current_open_rotation_degrees.y - closed_rotation_degrees.y
+	return signf(swung) if absf(swung) > 0.01 else float(swing_sign)
+
+
+## The side a script opens the door to, and where a door that starts open stands: its default.
+func _fixed_open_rotation() -> Vector3:
+	return closed_rotation_degrees + Vector3(0.0, absf(open_angle_degrees) * float(swing_sign), 0.0)
+
+
+## A door opens AWAY from whoever opens it, as in Resident Evil and The Last of Us: the side the
+## player is not on, so the leaf never swings into them. (Closing it is the same swing back.)
 func _choose_open_side(player: Node) -> void:
-	var angle_magnitude: float = absf(open_angle_degrees)
-
-	if hinge == null or door_root == null:
-		current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, angle_magnitude, 0.0)
-		return
-
-	if not (player is Node3D):
-		current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, angle_magnitude, 0.0)
-		return
-
-	var player_node: Node3D = player as Node3D
-	var player_position: Vector3 = player_node.global_position
-
-	var positive_local_center: Vector3 = door_root.position.rotated(Vector3.UP, deg_to_rad(angle_magnitude))
-	var negative_local_center: Vector3 = door_root.position.rotated(Vector3.UP, deg_to_rad(-angle_magnitude))
-
-	var positive_global_center: Vector3 = hinge.to_global(positive_local_center)
-	var negative_global_center: Vector3 = hinge.to_global(negative_local_center)
-
-	var positive_distance_sq: float = player_position.distance_squared_to(positive_global_center)
-	var negative_distance_sq: float = player_position.distance_squared_to(negative_global_center)
-
-	if positive_distance_sq >= negative_distance_sq:
-		current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, angle_magnitude, 0.0)
-	else:
-		current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, -angle_magnitude, 0.0)
+	var magnitude: float = absf(open_angle_degrees)
+	var away: float = float(swing_sign)
+	if player is Node3D and is_inside_tree():
+		# The side of the door's plane the player is on; positive rotation swings towards -Z.
+		var local_z: float = to_local((player as Node3D).global_position).z
+		away = 1.0 if local_z >= 0.0 else -1.0
+	current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, magnitude * away, 0.0)
 
 
 # ----------------------------------------------------------------------
@@ -511,7 +513,7 @@ func _begin_choreo(kind: StringName, player: Node, side: int, with_key: bool) ->
 	# it; then the door's own choreography starts.
 	var movement: Node = _get_movement_controller(player)
 	if approach_enabled and movement != null and movement.has_method("begin_guided_walk"):
-		var target: Dictionary = _approach_target(player)
+		var target: Dictionary = _close_target(player) if kind == &"close" else _approach_target(player)
 		if (
 			not target.is_empty()
 			and bool(movement.call(
@@ -557,13 +559,14 @@ func _start_choreo(kind: StringName, player: Node, side: int, with_key: bool) ->
 			var main_end: float = _plan["main_end"]
 			_choreo_total = _lead + main_end + float(_plan["bounce"])
 			_busy_seconds = _lead + open_start + (main_end - open_start) * 0.8
-			hold_seconds = _lead + open_start + 0.1
+			# The feet stay still until the door has all but finished, so nobody walks into the leaf.
+			hold_seconds = _lead + open_start + (main_end - open_start) * 0.9
 		&"close":
 			_target_rotation = closed_rotation_degrees
 			_plan = _plan_close()
 			_choreo_total = float(_plan["total"])
 			_busy_seconds = _choreo_total
-			hold_seconds = float(_plan["reach"]) + float(_plan["pull"]) * 0.7
+			hold_seconds = float(_plan["reach"]) + float(_plan["pull"]) + float(_plan["settle"]) * 0.5
 		_:
 			_target_rotation = _start_rotation
 			_plan = _plan_locked()
@@ -578,8 +581,11 @@ func _start_choreo(kind: StringName, player: Node, side: int, with_key: bool) ->
 		else:
 			_key_flight_from = (_hardware[side] as DoorHardware).global_position + Vector3(0.0, -0.1, 0.3)
 
-	if player != null and player.has_method("hold_movement"):
-		player.call("hold_movement", hold_seconds)
+	_hold_seconds = hold_seconds
+
+	# Closing: whoever is in the door's way (or in the doorway) is walked clear while it is closed.
+	if kind == &"close":
+		_walk_player_clear(player, _close_target(player))
 
 
 func _step_choreo(delta: float) -> void:
@@ -622,6 +628,7 @@ func _cancel_choreo(release_view: bool) -> void:
 		_pending_start = {}
 
 	var was_playing: bool = _choreo != &""
+	_hold_seconds = 0.0
 	_choreo = &""
 	_choreo_t = 0.0
 	_cues.clear()
@@ -687,87 +694,28 @@ func _stretch(d: float, to: float, ease_kind: StringName = &"smooth", extra: Dic
 
 
 func _plan_open() -> Dictionary:
-	var variant: StringName = _pick_variant(
-		&"open", {&"standard": 0.4, &"peek": 0.25, &"stuck": 0.2, &"quick": 0.15}
-	)
-	var stretches: Array = []
-	var reach: float = 0.3
+	var variant: StringName = _pick_variant(&"open", {&"standard": 0.65, &"quick": 0.35})
+	var reach: float = _rand(0.3, 0.4)
+	var swing: float = _rand(1.8, 2.2)
 	var lean: float = _rand(0.8, 1.2)
-	var pop_at: float = -1.0
 
-	match variant:
-		&"peek":
-			# Cautious: the door barely opens, a long wait, a wider look, then slowly.
-			reach = _rand(0.3, 0.4)
-			var crack: float = _rand(0.10, 0.13)
-			var look: float = _rand(0.22, 0.3)
-			stretches = [
-				_stretch(reach, 0.0),
-				_stretch(_rand(0.7, 0.95), crack, &"in"),
-				_stretch(_rand(0.8, 1.2), crack + 0.01),
-				_stretch(_rand(0.6, 0.8), look, &"smooth", {"opens": true}),
-				_stretch(_rand(0.3, 0.5), look + 0.006),
-				_stretch(_rand(1.7, 2.2), 1.0, &"smooth", _wobble(0.02)),
-			]
-			lean *= 1.1
-		&"stuck":
-			# The wood is swollen: a shudder, a hard push, then it pops free.
-			reach = _rand(0.28, 0.36)
-			var shudder: float = _rand(0.008, 0.014)
-			var freed: float = _rand(0.08, 0.11)
-			stretches = [
-				_stretch(reach, 0.0),
-				_stretch(_rand(0.2, 0.28), shudder, &"out"),
-				_stretch(_rand(0.3, 0.5), shudder + 0.001),
-				_stretch(_rand(0.12, 0.18), freed, &"snap", {"opens": true}),
-				_stretch(_rand(0.15, 0.3), freed + 0.006),
-				_stretch(_rand(1.2, 1.7), 1.0, &"smooth", _wobble(0.015)),
-			]
-			lean *= 1.25
-			pop_at = reach + float(stretches[1]["d"]) + float(stretches[2]["d"])
-		&"quick":
-			reach = _rand(0.18, 0.24)
-			stretches = [
-				_stretch(reach, 0.0),
-				_stretch(_rand(0.25, 0.35), 0.09, &"in"),
-				_stretch(_rand(0.05, 0.12), 0.1),
-				_stretch(_rand(0.9, 1.25), 1.0, &"smooth", _wobble(0.008, true)),
-			]
-			lean *= 0.6
-		_:
-			reach = _rand(0.26, 0.36)
-			var crack: float = _rand(0.045, 0.08)
-			stretches = [
-				_stretch(reach, 0.0),
-				_stretch(_rand(0.45, 0.7), crack, &"in"),
-				_stretch(_rand(0.3, 0.6), crack + 0.008),
-				_stretch(_rand(1.4, 2.0), 1.0, &"smooth", _wobble(_rand(0.008, 0.025), true)),
-			]
+	if variant == &"quick":
+		reach = _rand(0.24, 0.3)
+		swing = _rand(1.4, 1.7)
+		lean *= 0.6
 
 	if heavy_gate:
 		# A long gate swings more slowly and is pushed with more of the body.
-		for index: int in range(1, stretches.size()):
-			(stretches[index] as Dictionary)["d"] = float((stretches[index] as Dictionary)["d"]) * 1.3
+		swing *= 1.3
 		lean *= 1.4
 
-	# The stretch that opens for real: the first marked one, else the last.
-	var open_index: int = stretches.size() - 1
-	for i: int in stretches.size():
-		if (stretches[i] as Dictionary).get("opens", false):
-			open_index = i
-			break
-
-	var open_start: float = 0.0
-	var main_end: float = 0.0
-	for i: int in stretches.size():
-		if i == open_index:
-			open_start = main_end
-		main_end += float((stretches[i] as Dictionary)["d"])
-
-	# The handle lets go a little after the door starts to move.
-	var lever_hold: float = open_start - 0.05
-	if variant == &"stuck":
-		lever_hold = open_start + 0.2
+	# The handle goes down, then the door swings: one smooth movement, no pause half way.
+	var stretches: Array = [
+		_stretch(reach, 0.0),
+		_stretch(swing, 1.0, &"smooth"),
+	]
+	var open_start: float = reach
+	var main_end: float = reach + swing
 
 	return {
 		"variant": variant,
@@ -775,12 +723,13 @@ func _plan_open() -> Dictionary:
 		"stretches": stretches,
 		"open_start": open_start,
 		"main_end": main_end,
-		"bounce": 0.35,
-		"lever_hold": lever_hold,
+		"bounce": 0.3,
+		# The handle lets go a little after the door starts to move.
+		"lever_hold": open_start + 0.15,
 		"lean": lean,
 		"nudge": _rand(0.7, 1.3) * (1.4 if heavy_gate else 1.0),
 		"lean_side": _rand(-1.0, 1.0),
-		"pop_at": pop_at,
+		"pop_at": -1.0,
 	}
 
 
@@ -794,18 +743,18 @@ func _wobble(amount: float, random_count: bool = false) -> Dictionary:
 func _plan_close() -> Dictionary:
 	var variant: StringName = _pick_variant(&"close", {&"standard": 0.5, &"soft": 0.3, &"brisk": 0.2})
 	var reach: float = _rand(0.18, 0.26)
-	var pull: float = _rand(0.75, 1.05)
-	var settle: float = _rand(0.34, 0.44)
+	var pull: float = _rand(1.5, 1.9)
+	var settle: float = _rand(0.45, 0.55)
 	var latch_db: float = -2.0
 	var fraction: float = _rand(0.92, 0.95)
 
 	match variant:
 		&"soft":
-			pull = _rand(1.1, 1.5)
-			settle = _rand(0.5, 0.7)
+			pull = _rand(2.0, 2.5)
+			settle = _rand(0.6, 0.8)
 			latch_db = -8.0
 		&"brisk":
-			pull = _rand(0.5, 0.7)
+			pull = _rand(1.1, 1.4)
 			settle = _rand(0.22, 0.3)
 			latch_db = 2.0
 
@@ -972,6 +921,10 @@ func _eval_open() -> void:
 		roll += float(key_view[2])
 
 	_set_view(offset, pitch, roll)
+
+	# Pulling the door towards themselves, the player steps back out of its arc as it starts to swing.
+	if open_time >= open_start - 0.05 and _cue(&"step_back"):
+		_walk_player_clear(_player_ref, _step_back_target(_player_ref))
 
 	var at: Vector3 = _sound_position()
 	if open_time >= reach * 0.7 and _cue(&"latch"):
@@ -1244,6 +1197,165 @@ func _smooth(value: float) -> float:
 
 func _ease_out(value: float) -> float:
 	return 1.0 - pow(1.0 - clampf(value, 0.0, 1.0), 2.0)
+
+
+# -- Where the player may stand: clear of the door's swing ----------------------
+#
+# The door's own frame: `a` is the distance along the closed leaf from the hinge, `b` the distance in
+# front of it (along its normal). Opened, the leaf sweeps a quarter disc of radius `width` on the swing
+# side; a player in that disc would be in the door's way.
+
+## How far beyond the leaf's reach the player stands, so the door never brushes them.
+const CLEARANCE: float = 0.2
+
+
+func _frame() -> Dictionary:
+	var closed_yaw: Basis = Basis(Vector3.UP, deg_to_rad(closed_rotation_degrees.y))
+	var leaf: Vector3 = closed_yaw * door_root.position
+	leaf.y = 0.0
+	var half: float = leaf.length()
+	var direction: Vector3 = leaf.normalized() if half > 0.01 else Vector3.RIGHT
+	return {
+		"origin": hinge.position,
+		"dir": direction,
+		"normal": direction.rotated(Vector3.UP, -PI * 0.5),
+		"width": half * 2.0,
+		# The sign of `b` on the side the door swings into (the side it was opened to).
+		"sweep": -_open_sign(),
+	}
+
+
+## (a, b) of a world point in the door's frame.
+func _door_coords(world: Vector3) -> Vector2:
+	var frame: Dictionary = _frame()
+	var rel: Vector3 = to_local(world) - (frame["origin"] as Vector3)
+	return Vector2(rel.dot(frame["dir"] as Vector3), rel.dot(frame["normal"] as Vector3))
+
+
+## The world point at (a, b) in the door's frame, at height `y`.
+func _world_from_door(a: float, b: float, y: float) -> Vector3:
+	var frame: Dictionary = _frame()
+	var world: Vector3 = to_global(
+		(frame["origin"] as Vector3) + (frame["dir"] as Vector3) * a + (frame["normal"] as Vector3) * b
+	)
+	world.y = y
+	return world
+
+
+## How far in front of the closed door a player at `a` must be to be outside the swept disc.
+func _clear_depth(a: float) -> float:
+	var reach: float = float(_frame()["width"]) + CLEARANCE
+	return sqrt(maxf(reach * reach - a * a, 0.0))
+
+
+## Where along the door the handle is (the distance from the hinge).
+func _handle_lateral() -> float:
+	var width: float = float(_frame()["width"])
+	if approach_handle_fraction >= 0.0:
+		return approach_handle_fraction * width
+
+	if door_root.basis.x.dot(Vector3.RIGHT) > 0.9:
+		for face: Variant in _hardware:
+			return width * 0.5 + (_hardware[face] as DoorHardware).position.x
+
+	return width * 0.9
+
+
+## Which side of the door a player is on, for closing it: the side they are on, and in the doorway
+## itself the side the door does not sweep.
+func _player_side(coords: Vector2) -> float:
+	if absf(coords.y) < 0.12:
+		return -float(_frame()["sweep"])
+
+	return signf(coords.y)
+
+
+## Where the player is walked to before the door is closed: in front of the handle, on their own
+## side; when that side is the one the door sweeps, out of its way (beyond the leaf's reach), so the
+## door never closes through them. {} when they are there already, it is too far or something is
+## in the way.
+func _close_target(player: Node) -> Dictionary:
+	if not player is Node3D or hinge == null or door_root == null:
+		return {}
+
+	var body: Node3D = player as Node3D
+	var side: float = _player_side(_door_coords(body.global_position))
+	var lateral: float = _handle_lateral()
+	var depth: float = approach_distance
+	if side == float(_frame()["sweep"]):
+		depth = maxf(depth, _clear_depth(lateral))
+
+	var stand: Vector3 = _world_from_door(lateral, side * depth, body.global_position.y)
+	var gap: Vector3 = stand - body.global_position
+	gap.y = 0.0
+	if gap.length() < 0.12 or gap.length() > max_approach_distance + 1.0:
+		return {}
+
+	if not _way_is_clear(body, stand):
+		return {}
+
+	return {"stand": stand, "look": door_root.global_position}
+
+
+## Where a player pulling the door open (standing on the side it swings into) steps back to, out of
+## the leaf's arc. {} when the door swings away from them or they are clear already.
+func _step_back_target(player: Node) -> Dictionary:
+	if not player is Node3D or hinge == null or door_root == null:
+		return {}
+
+	var body: Node3D = player as Node3D
+	var sweep: float = float(_frame()["sweep"])
+	var coords: Vector2 = _door_coords(body.global_position)
+	if coords.y * sweep <= 0.0 or coords.x < -0.3:
+		return {}
+
+	var needed: float = _clear_depth(coords.x)
+	if absf(coords.y) >= needed:
+		return {}
+
+	var depth: float = minf(needed, absf(coords.y) + 1.5)
+	var stand: Vector3 = _world_from_door(coords.x, sweep * depth, body.global_position.y)
+	if not _way_is_clear(body, stand):
+		return {}
+
+	return {"stand": stand, "look": door_root.global_position}
+
+
+## Walks the player to `target` (see above) at the door's pace, while the door does its own thing.
+## The hold on their feet is lifted for the walk.
+func _walk_player_clear(player: Node, target: Dictionary) -> void:
+	if target.is_empty() or not approach_enabled:
+		return
+
+	var movement: Node = _get_movement_controller(player)
+	if movement == null or not movement.has_method("begin_guided_walk"):
+		return
+
+	if player.has_method("release_movement_hold"):
+		player.call("release_movement_hold")
+
+	movement.call(
+		"begin_guided_walk",
+		target["stand"],
+		target["look"],
+		PlayerMovementController.WALK_SPEED * 0.8,
+		2.5
+	)
+
+
+## Keeps the player's feet still while the door is being worked, except while they are being walked.
+func _hold_player() -> void:
+	if _choreo == &"approach" or _choreo_t >= _hold_seconds:
+		return
+
+	if _player_ref == null or not is_instance_valid(_player_ref) or not _player_ref.has_method("hold_movement"):
+		return
+
+	var movement: Node = _get_movement_controller(_player_ref)
+	if movement != null and movement.has_method("is_guided_walking") and bool(movement.call("is_guided_walking")):
+		return
+
+	_player_ref.call("hold_movement", 0.1)
 
 
 # -- Walking up to the door -----------------------------------------------

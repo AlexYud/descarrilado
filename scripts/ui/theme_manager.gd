@@ -82,8 +82,18 @@ func _on_node_added(node: Node) -> void:
 
 			button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
 
+		# One cursor at a time: the mouse moves the keyboard/pad focus with it, so the arrow is never
+		# shown on a hovered item and on a focused one at once (how console-style menus do it on PC).
+		if not button.mouse_entered.is_connected(_focus_on_hover.bind(button)):
+			button.mouse_entered.connect(_focus_on_hover.bind(button))
+
 		if UIConfig.uppercase_buttons:
 			_track_for_capitals(button)
+
+
+func _focus_on_hover(button: Button) -> void:
+	if is_instance_valid(button) and not button.disabled and button.focus_mode != Control.FOCUS_NONE and button.is_visible_in_tree():
+		button.grab_focus()
 
 
 ## Plain buttons get the arrow and the capitals; check boxes, switches, drop-downs and the like do not.

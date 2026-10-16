@@ -248,6 +248,66 @@ static func make_coin_clatter() -> AudioStreamWAV:
 	return _to_wav(samples, false)
 
 
+## A subtle burst of radio static with a stutter, like a memory failing to line up: noise gated
+## in uneven chunks, a little bit-crushed, a low dropout hum under it. About 0.55 s, quiet.
+static func make_static_glitch() -> AudioStreamWAV:
+	var seconds: float = 0.55
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 404
+	var smoothed: float = 0.0
+	var held: float = 0.0
+	# The gate: chunk lengths in seconds, alternating open and shut.
+	var chunks: Array[float] = [0.07, 0.03, 0.11, 0.05, 0.05, 0.02, 0.14, 0.08]
+	var chunk_ends: Array[float] = []
+	var total: float = 0.0
+	for length: float in chunks:
+		total += length
+		chunk_ends.append(total)
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var open: bool = true
+		for k: int in chunk_ends.size():
+			if t < chunk_ends[k]:
+				open = k % 2 == 0
+				break
+
+		var noise: float = rng.randf_range(-1.0, 1.0)
+		smoothed = lerpf(smoothed, noise, 0.6)
+		# Every few samples the value is held: a rough, crushed texture.
+		if i % 3 == 0:
+			held = smoothed
+
+		var envelope: float = clampf(1.0 - t / seconds, 0.0, 1.0)
+		var hum: float = sin(TAU * 55.0 * t) * 0.12 * envelope
+		samples[i] = ((held * 0.32 if open else 0.0) + hum) * envelope
+
+	return _to_wav(samples, false)
+
+
+## One bright metallic clink, a small token set down on wood: a ringing overtone pair over a
+## tiny knock, decaying in about a second.
+static func make_metal_clink() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(1.0 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 512
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var ring: float = (
+			sin(TAU * 3120.0 * t) * 0.55
+			+ sin(TAU * 4710.0 * t) * 0.3
+			+ sin(TAU * 6330.0 * t) * 0.14
+		) * exp(-t * 9.0)
+		var knock: float = rng.randf_range(-1.0, 1.0) * exp(-t * 400.0) * 0.5
+		samples[i] = clampf((ring + knock) * 0.7, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
 static func _to_wav(samples: PackedFloat32Array, loop: bool) -> AudioStreamWAV:
 	var bytes: PackedByteArray = PackedByteArray()
 	bytes.resize(samples.size() * 2)

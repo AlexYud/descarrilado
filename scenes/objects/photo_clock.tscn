@@ -1,0 +1,93 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/collectible_interactable.gd" id="1_collectible"]
+[ext_resource type="Script" path="res://scripts/interactions/readable_spot.gd" id="2_spot"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_card"]
+albedo_color = Color(0.86, 0.82, 0.7, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Mat_picture"]
+albedo_color = Color(0.3, 0.36, 0.4, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_ink"]
+albedo_color = Color(0.2, 0.2, 0.28, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_card"]
+size = Vector3(0.15, 0.1, 0.004)
+
+[sub_resource type="QuadMesh" id="QuadMesh_picture"]
+size = Vector2(0.134, 0.084)
+
+[sub_resource type="BoxMesh" id="BoxMesh_line"]
+size = Vector3(0.1, 0.0016, 0.0004)
+
+[sub_resource type="BoxMesh" id="BoxMesh_line_short"]
+size = Vector3(0.062, 0.0016, 0.0004)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.17, 0.12, 0.05)
+
+[node name="PhotoClock" type="Node3D"]
+script = ExtResource("1_collectible")
+item_id = "photo_clock"
+item_name = "ITEM_PHOTO_CLOCK_NAME"
+item_description = "ITEM_PHOTO_CLOCK_DESCRIPTION"
+
+[node name="Visual" type="Node3D" parent="."]
+metadata/inspect_id = "photo_clock"
+metadata/card_color = Color(0.3, 0.36, 0.4, 1)
+metadata/card_label = "PHOTO_FRONT_CLOCK"
+metadata/card_size = Vector2(0.15, 0.1)
+metadata/inspect_back_normal = Vector3(0, 0, -1)
+
+[node name="Card" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("BoxMesh_card")
+surface_material_override/0 = SubResource("Mat_card")
+
+[node name="Picture" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0021)
+mesh = SubResource("QuadMesh_picture")
+surface_material_override/0 = SubResource("Mat_picture")
+
+[node name="FrontLabel" type="Label3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0026)
+pixel_size = 0.0005
+shaded = true
+modulate = Color(0.95, 0.95, 0.9, 1)
+outline_modulate = Color(0, 0, 0, 1)
+text = "PHOTO_FRONT_CLOCK"
+font_size = 24
+outline_size = 6
+autowrap_mode = 3
+width = 250.0
+
+[node name="BackNote" type="Node3D" parent="Visual"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.0026)
+script = ExtResource("2_spot")
+spot_id = &"back_note"
+title_key = ""
+text_key = "PHOTO_NOTE_CLOCK"
+obvious = true
+
+[node name="Line1" type="MeshInstance3D" parent="Visual/BackNote"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.026, 0.0002)
+mesh = SubResource("BoxMesh_line")
+surface_material_override/0 = SubResource("Mat_ink")
+
+[node name="Line2" type="MeshInstance3D" parent="Visual/BackNote"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002, 0.012, 0.0002)
+mesh = SubResource("BoxMesh_line")
+surface_material_override/0 = SubResource("Mat_ink")
+
+[node name="Line3" type="MeshInstance3D" parent="Visual/BackNote"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.019, -0.002, 0.0002)
+mesh = SubResource("BoxMesh_line_short")
+surface_material_override/0 = SubResource("Mat_ink")
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

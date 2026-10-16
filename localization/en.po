@@ -232,6 +232,9 @@ msgstr "Press %s to turn on the flashlight"
 msgid "INVENTORY_TITLE"
 msgstr "Inventory"
 
+msgid "INVENTORY_EMPTY"
+msgstr "You are carrying nothing."
+
 msgid "INVENTORY_INSPECT"
 msgstr "Inspect"
 
@@ -348,37 +351,79 @@ msgid "PROMPT_INSPECT"
 msgstr "Inspect"
 
 msgid "ITEM_PHOTO_CHILDHOOD_NAME"
-msgstr "Old Photograph: Two Girls"
+msgstr "Old Photograph: Scraped Knee"
 
 msgid "ITEM_PHOTO_CHILDHOOD_DESCRIPTION"
 msgstr "Two girls sit beneath the same fig tree. One has a scraped knee; the other is wrapping it with a strip torn from her school shirt. The edges are ragged, as if it was pulled out of an album."
 
 msgid "ITEM_PHOTO_ADOLESCENCE_NAME"
-msgstr "Old Photograph: Rain"
+msgstr "Old Photograph: Rain at the Station"
 
 msgid "ITEM_PHOTO_ADOLESCENCE_DESCRIPTION"
 msgstr "Two girls under one small umbrella in heavy rain. Almost all of it is tilted over one of them; the other one's outer shoulder is soaked. A faint ring from a wet cup stains the back."
 
 msgid "ITEM_PHOTO_RECENT_NAME"
-msgstr "Old Photograph: Bus Stop"
+msgstr "Old Photograph: Bus Stop Departure"
 
 msgid "ITEM_PHOTO_RECENT_DESCRIPTION"
 msgstr "A young woman stands alone at a rural bus stop above the road out of town, holding something folded. There is handwriting on the back."
 
 msgid "PHOTO_FRONT_CHILDHOOD"
-msgstr "[Placeholder photo: two girls, about 8 years old, under the fig tree]"
+msgstr "[Placeholder photo: Two Girls under the Fig Tree. They are about 8 years old.]"
 
 msgid "PHOTO_FRONT_ADOLESCENCE"
-msgstr "[Placeholder photo: two girls, about 15, under an umbrella in the rain]"
+msgstr "[Placeholder photo: Two Girls under an Umbrella. They are about 15.]"
 
 msgid "PHOTO_FRONT_RECENT"
-msgstr "[Placeholder photo: a woman, about 28, at a bus stop]"
+msgstr "[Placeholder photo: Sophia at the Bus Stop. She is about 28.]"
 
-msgid "PHOTO_BACK_CHILDHOOD"
-msgstr "SHE ALWAYS FINDS ME. — S."
+msgid "FICHA_SCRATCH_JULIANA"
+msgstr "CALL HER"
 
-msgid "PHOTO_BACK_RECENT"
-msgstr "WHEN I GO, WILL YOU COME?"
+msgid "ITEM_PHOTO_CLOCK_DESCRIPTION"
+msgstr "A girl stands alone in a cramped signal tower under a big station clock. There is handwriting on the back."
+
+msgid "ITEM_PHOTO_CLOCK_NAME"
+msgstr "Old Photograph: Station Clock"
+
+msgid "ITEM_PHOTO_TRACK_DESCRIPTION"
+msgstr "A railway line vanishes into fog. Nobody is in the frame. A date stamp is printed in the corner, and there is handwriting on the back."
+
+msgid "ITEM_PHOTO_TRACK_NAME"
+msgstr "Old Photograph: The Empty Track"
+
+msgid "ITEM_PHOTO_WORKSHOP_DESCRIPTION"
+msgstr "A young man in greasy overalls holds a wrench almost as long as his arm, squinting into the flash. There is handwriting on the back."
+
+msgid "ITEM_PHOTO_WORKSHOP_NAME"
+msgstr "Old Photograph: Lucas at the Workshop"
+
+msgid "PHOTO_FRONT_CLOCK"
+msgstr "[Placeholder photo: Juliana Alone in the Tower]"
+
+msgid "PHOTO_FRONT_TRACK"
+msgstr "[Placeholder photo: Foggy Railway Line]"
+
+msgid "PHOTO_FRONT_WORKSHOP"
+msgstr "[Placeholder photo: Young Man with Wrench]"
+
+msgid "PHOTO_NOTE_ADOLESCENCE"
+msgstr "1995. It poured for three hours. Sophia insisted on giving me the drier side. She ended up with a cold for a week, but she just laughed about it."
+
+msgid "PHOTO_NOTE_CHILDHOOD"
+msgstr "July 1988. She fell on the gravel behind the signal tower. She swore something under the floorboards grabbed her ankle. I told her it was just a loose wire. I lied. I saw it too."
+
+msgid "PHOTO_NOTE_CLOCK"
+msgstr "First night on duty alone. October 1999."
+
+msgid "PHOTO_NOTE_RECENT"
+msgstr "The day she said she was leaving for the capital. She kept looking over my shoulder at the trees behind me, like she was waiting for someone to stop her."
+
+msgid "PHOTO_NOTE_TRACK"
+msgstr "I don't remember taking this. The date stamp says 1988, but I was never at the tracks alone at night back then."
+
+msgid "PHOTO_NOTE_WORKSHOP"
+msgstr "Lucas working the late shift. He always thought brute force could fix the machinery in this town."
 
 msgid "ITEM_TRAIN_TICKET_NAME"
 msgstr "Train Ticket"
@@ -915,11 +960,17 @@ msgstr "Engraving"
 msgid "INSPECT_VERB_READ"
 msgstr "Read"
 
+msgid "INSPECT_VERB_TURN"
+msgstr "Turn over"
+
 msgid "INSPECT_VERB_EXAMINE"
 msgstr "Examine"
 
 msgid "INSPECT_VERB_CLOSE"
 msgstr "Close"
+
+msgid "INSPECT_VERB_ROTATE"
+msgstr "Rotate"
 
 msgid "KEY_NAME_ESCAPE"
 msgstr "Esc"

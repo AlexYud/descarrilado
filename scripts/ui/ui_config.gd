@@ -544,7 +544,12 @@ static func build_theme() -> Theme:
 	theme.set_color("title_color", "Window", color_text)
 	theme.set_color("title_outline_modulate", "Window", clear)
 	theme.set_constant("title_height", "Window", 44)
-	theme.set_constant("close_h_offset", "Window", 14)
+	# The close button: vertically centred in the title bar, 14 px in from the right edge (the offsets
+	# are measured to the icon's top left corner, so they depend on the icon's size).
+	var close_icon: Texture2D = ThemeDB.get_default_theme().get_icon("close", "Window")
+	var close_size: Vector2 = close_icon.get_size() if close_icon != null else Vector2(14.0, 14.0)
+	theme.set_constant("close_h_offset", "Window", int(14.0 + close_size.x))
+	theme.set_constant("close_v_offset", "Window", int(44.0 * 0.5 + close_size.y * 0.5))
 
 	# ---- Lists ----
 	theme.set_stylebox("panel", "ItemList", _flat(panel_color(0.9), color_border, 1, Vector2i(8, 6)))

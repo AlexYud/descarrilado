@@ -8,10 +8,16 @@ class_name FigClearingSequence
 ## decision about what the clearing does lives here. Voice lines are captions
 ## until recorded audio exists, and the sounds are generated placeholders.
 ##
-## The scene ends the moment the recording does: rain, campfire and flashlight
-## cut out together. A moment later a Ficha (Juliana's, a telephone token) lies on the
-## table beside the album: the only thing the player takes from the clearing. The
-## photographs are never taken (they are only put in the album). Nothing else happens.
+## Six photographs lie about the clearing and only three belong in the album (the others are
+## red herrings). The album is judged when every space is full: right, the finale starts; wrong,
+## a short burst of static says the memory does not line up.
+##
+## The scene ends the moment the recording does: rain, campfire and flashlight cut out together,
+## into total darkness. After `ficha_delay_seconds` of it a metallic CLINK sounds on the table,
+## the flashlight comes back, and by its light the fire pit holds cold ash and Juliana's Ficha
+## (a telephone token scratched with "CALL HER") lies beside the album: the only thing the player
+## takes from the clearing. The photographs are never taken (they are only put in the album; the
+## strays go when it is solved). Nothing else happens.
 ##
 ## Stages: EXPLORING (the cassette turns in silence, photos to find) > FINALE
 ## (album solved, tape rewinds) > RECORDING (the memory plays) > DONE. Nothing
@@ -43,8 +49,10 @@ const LINE_WHY_THIS_PLACE: String = "CAPTION_JULIANA_WHY_THIS_PLACE"
 ## Juliana's Ficha (a Collectible scene) and where it lies once the recording is over.
 @export var ficha_scene: PackedScene
 @export var ficha_spot: Marker3D
-## How long after the recording ends the Ficha is there.
-@export var ficha_delay_seconds: float = 1.6
+## How long the dark lasts after the recording ends, before the clink and the Ficha.
+@export var ficha_delay_seconds: float = 2.0
+## How long after the clink the flashlight comes back on.
+@export var flashlight_return_seconds: float = 0.45
 
 @export_category("Recording")
 @export var rain_player: AudioStreamPlayer
@@ -75,10 +83,15 @@ func _ready() -> void:
 func _connect_signals() -> void:
 	album.opened.connect(_on_album_opened)
 	album.completed.connect(_on_album_completed)
+	album.wrong_arrangement.connect(_on_album_wrong)
 
 
 ## Resumes from saved progress. A recording already heard is never replayed.
 func _restore_stage() -> void:
+	# Whatever the state, a solved album has taken the strays (they must not clog the inventory).
+	if _recording_done or album.locked:
+		_remove_stray_photos.call_deferred()
+
 	if _recording_done:
 		fire.extinguish()
 		_place_ficha()
@@ -110,6 +123,16 @@ func _on_album_completed() -> void:
 	_run_finale()
 
 
+## Every space is full and it is not right: a subtle burst of static, nothing else.
+func _on_album_wrong() -> void:
+	var glitch: AudioStreamPlayer = AudioStreamPlayer.new()
+	glitch.stream = PlaceholderAudio.make_static_glitch()
+	glitch.volume_db = -13.0
+	add_child(glitch)
+	glitch.finished.connect(glitch.queue_free)
+	glitch.play()
+
+
 # ============================================================
 # FINALE AND RECORDING
 # ============================================================
@@ -121,6 +144,9 @@ func _run_finale() -> void:
 	stage = Stage.FINALE
 	_set_saving_blocked(true)
 	album.interaction_enabled = false
+	# Deferred: the album's close-up gives a displaced photograph back to the hands only after it has
+	# raised `completed`.
+	_remove_stray_photos.call_deferred()
 
 	# The album closes itself shortly after the last photo falls into place.
 	if album.view.is_open():
@@ -148,7 +174,7 @@ func _play_recording() -> void:
 	recorder.stop_turning()
 
 
-## The scene is over: saving is allowed again, and the Ficha is there for the taking.
+## The scene is over: saving is allowed again. In the dark, then a clink, the flashlight and the Ficha.
 func _end_scene() -> void:
 	_recording_done = true
 	_write_flag(KEY_RECORDING_DONE)
@@ -159,6 +185,8 @@ func _end_scene() -> void:
 
 	await _wait(ficha_delay_seconds)
 	_place_ficha(true)
+	await _wait(flashlight_return_seconds)
+	_turn_flashlight_on()
 
 
 ## Puts Juliana's Ficha on the table beside the album, flat, unless she has taken it
@@ -175,8 +203,8 @@ func _place_ficha(with_sound: bool = false) -> void:
 
 	if with_sound and is_instance_valid(_ficha):
 		var clink: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
-		clink.stream = PlaceholderAudio.make_coin_clatter()
-		clink.volume_db = -8.0
+		clink.stream = PlaceholderAudio.make_metal_clink()
+		clink.volume_db = -4.0
 		clink.unit_size = 4.0
 		ficha_spot.add_child(clink)
 		clink.finished.connect(clink.queue_free)
@@ -196,8 +224,8 @@ func _play_rain(enabled: bool) -> void:
 
 
 ## The campfire and the flashlight (if it is on) cut out in the same instant,
-## with no fade, as if the scene had changed. The player can switch the
-## flashlight back on.
+## with no fade, as if the scene had changed: total darkness (the fire pit is left with cold ash).
+## The flashlight comes back by itself after the clink.
 func _put_out_lights() -> void:
 	fire.extinguish()
 
@@ -242,3 +270,28 @@ func _read_flag(key: StringName) -> bool:
 
 func _write_flag(key: StringName) -> void:
 	SaveManager.set_state_value(STATE_SECTION, key, true)
+
+
+## The flashlight comes back after the dark (with its usual start-up flicker).
+func _turn_flashlight_on() -> void:
+	var flashlight: Node = _get_flashlight()
+	if flashlight != null and flashlight.has_method("turn_on"):
+		flashlight.call("turn_on")
+
+
+## The photographs that are not in the solved album are gone from the player's hands and from the
+## clearing: the album took them (they would otherwise fill three of the six inventory slots for
+## the rest of the game).
+func _remove_stray_photos() -> void:
+	var stray: Array[String] = album.get_unplaced_photo_ids()
+	var target: Node = _get_player()
+	if target != null and target.has_method("consume_inventory_item"):
+		for item_id: String in stray:
+			while target.has_method("has_inventory_item") and bool(target.call("has_inventory_item", item_id)):
+				if not bool(target.call("consume_inventory_item", item_id)):
+					break
+
+	for node: Node in find_children("*", "Collectible", true, false):
+		var photo: Collectible = node as Collectible
+		if photo != null and stray.has(photo.item_id):
+			photo.queue_free()

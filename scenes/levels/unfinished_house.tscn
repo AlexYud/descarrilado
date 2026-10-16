@@ -28,6 +28,7 @@ script = ExtResource("2_builder")
 
 [node name="BackDoor" parent="Doors" unique_id=1712536259 instance=ExtResource("5_door")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.865, 0, 0)
+swing_sign = -1
 persistent_id = &"house_back_door"
 
 [node name="FrontDoor" parent="Doors" unique_id=731664303 instance=ExtResource("5_door")]

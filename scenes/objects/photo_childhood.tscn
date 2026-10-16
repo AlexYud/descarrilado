@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/interactions/collectible_interactable.gd" id="1_collectible"]
+[ext_resource type="Script" path="res://scripts/interactions/readable_spot.gd" id="2_spot"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_card"]
 albedo_color = Color(0.86, 0.82, 0.7, 1)
@@ -10,11 +11,21 @@ roughness = 0.9
 albedo_color = Color(0.36, 0.43, 0.3, 1)
 roughness = 0.8
 
+[sub_resource type="StandardMaterial3D" id="Mat_ink"]
+albedo_color = Color(0.2, 0.2, 0.28, 1)
+roughness = 1.0
+
 [sub_resource type="BoxMesh" id="BoxMesh_card"]
 size = Vector3(0.15, 0.1, 0.004)
 
 [sub_resource type="QuadMesh" id="QuadMesh_picture"]
 size = Vector2(0.134, 0.084)
+
+[sub_resource type="BoxMesh" id="BoxMesh_line"]
+size = Vector3(0.1, 0.0016, 0.0004)
+
+[sub_resource type="BoxMesh" id="BoxMesh_line_short"]
+size = Vector3(0.062, 0.0016, 0.0004)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
 size = Vector3(0.17, 0.12, 0.05)
@@ -53,16 +64,28 @@ outline_size = 6
 autowrap_mode = 3
 width = 250.0
 
-[node name="BackLabel" type="Label3D" parent="Visual"]
+[node name="BackNote" type="Node3D" parent="Visual"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.0026)
-pixel_size = 0.0005
-shaded = true
-modulate = Color(0.22, 0.22, 0.26, 1)
-text = "PHOTO_BACK_CHILDHOOD"
-font_size = 24
-outline_size = 0
-autowrap_mode = 3
-width = 250.0
+script = ExtResource("2_spot")
+spot_id = &"back_note"
+title_key = ""
+text_key = "PHOTO_NOTE_CHILDHOOD"
+obvious = true
+
+[node name="Line1" type="MeshInstance3D" parent="Visual/BackNote"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.026, 0.0002)
+mesh = SubResource("BoxMesh_line")
+surface_material_override/0 = SubResource("Mat_ink")
+
+[node name="Line2" type="MeshInstance3D" parent="Visual/BackNote"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002, 0.012, 0.0002)
+mesh = SubResource("BoxMesh_line")
+surface_material_override/0 = SubResource("Mat_ink")
+
+[node name="Line3" type="MeshInstance3D" parent="Visual/BackNote"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.019, -0.002, 0.0002)
+mesh = SubResource("BoxMesh_line_short")
+surface_material_override/0 = SubResource("Mat_ink")
 
 [node name="InteractArea" type="Area3D" parent="."]
 

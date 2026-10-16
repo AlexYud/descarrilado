@@ -39,6 +39,8 @@ func _ready() -> void:
 	await _check_examining()
 	await _check_readable_overlay()
 	await _check_readable_spots()
+	await _check_action_row()
+	await _check_inventory_list()
 	GameSettings.set_text_locale("en", false)
 
 	print("INSPECT_SMOKE_TEST: ", "FAILED" if test_failed else "PASSED")
@@ -241,7 +243,8 @@ func _check_readable_overlay() -> void:
 
 	_expect(inspect._readable_on, "in English the Portuguese art has its text offered")
 	_expect(inspect.readables.is_document_offered(), "as a document text")
-	_expect(inspect.readables._prompt.visible and inspect.readables._prompt._text_label.text == tr("INSPECT_VERB_READ"), "with a prompt to read it")
+	_expect(inspect.read_hint.visible and inspect.read_hint._text_label.text == tr("INSPECT_VERB_READ"), "with a [E] Read button under it")
+	_expect(inspect.rotate_hint.visible, "and a [R] Rotate button")
 	var stacks: Array[Node] = inspect.current_visual_copy.find_children("*", "ParagraphStack", true, false)
 	_expect(stacks.size() > 0 and not (stacks[0] as Node3D).visible, "the stand-in writing on the paper steps aside")
 	var middle: Vector3 = inspect.current_visual_copy.global_transform * inspect._center_local
@@ -399,3 +402,70 @@ func _check_readable_spots() -> void:
 	await _until(func() -> bool: return not inspect.is_open(), 4.0)
 	_expect(not inspect.is_open(), "a second Back puts the item away")
 	whistle.queue_free()
+
+
+## The two choices under the item, in the same style as Close: "[E] Read" (only where there is plain
+## writing, like a ticket's front and back) and "[R] Rotate", centred a row above the name and Close.
+## A hidden detail (a whistle's engraving) gets neither: it is found by turning the item.
+func _check_action_row() -> void:
+	GameSettings.set_text_locale("en", false)
+	var ticket: Inspectable = await _spawn("res://scenes/objects/train_ticket.tscn", Vector3(0.0, 1.0, -3.0))
+	await _wait(0.6)
+	await _open(ticket)
+	await _wait(0.6)
+
+	_expect(inspect.read_hint.visible and inspect.rotate_hint.visible, "a ticket shows Read and Rotate")
+	_expect(inspect.read_hint._text_label.text == tr("INSPECT_VERB_READ") and inspect.rotate_hint._text_label.text == tr("INSPECT_VERB_ROTATE"), "worded Read and Rotate")
+	_expect(inspect.read_hint._key_label.text == InputBindings.get_binding_label(&"interact", -1, true), "with the player's own keys")
+	_expect(inspect.rotate_hint.position.y < inspect.title_label.position.y and inspect.rotate_hint.position.y < inspect.close_hint.position.y, "a row above the name and Close")
+	var row_left: float = inspect.read_hint.position.x
+	var row_right: float = inspect.rotate_hint.position.x + inspect.rotate_hint.size.x
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	_expect(absf((row_left + row_right) * 0.5 - view.x * 0.5) < 3.0, "centred on the screen")
+	_expect(not inspect.readables._prompt.visible, "and no prompt over the item itself")
+
+	# The front, then (after turning it over) the back.
+	inspect.handle_input(_press(KEY_E))
+	await _wait(0.8)
+	_expect(inspect.is_reading_text() and inspect.readables._body.text == tr("TICKET_FRONT_TEXT"), "Read shows the front of the ticket")
+	_expect(not inspect.read_hint.visible and not inspect.rotate_hint.visible, "with no row while the text is open")
+	inspect.handle_input(_press(KEY_E))
+	await _wait(0.8)
+	_expect(not inspect.is_reading_text() and inspect.read_hint.visible, "the row comes back with the item")
+	inspect.handle_input(_action("inspect_flip"))
+	await _wait(1.6)
+	inspect.handle_input(_press(KEY_E))
+	await _wait(0.8)
+	_expect(inspect.readables._body.text == tr("TICKET_BACK_TEXT"), "after turning it over, Read shows the back")
+	inspect.handle_input(_press(KEY_E))
+	await _wait(0.8)
+	await _close()
+	ticket.queue_free()
+
+	var whistle: Inspectable = await _spawn(KEY, Vector3(0.0, 1.0, -3.0))
+	await _open(whistle)
+	await _wait(0.4)
+	_expect(not inspect.read_hint.visible and inspect.rotate_hint.visible, "a whistle, whose writing is a hidden detail, offers only Rotate")
+	await _close()
+	whistle.queue_free()
+
+
+## The inventory is a list without a limit, and its single cursor follows the mouse.
+func _check_inventory_list() -> void:
+	var before: int = player.inventory_controller.get_slots().size()
+	for i: int in 9:
+		player.add_item_to_inventory("test_item_%d" % i, "ITEM_WOODEN_WHISTLE_NAME", "ITEM_WOODEN_WHISTLE_DESCRIPTION", null, "")
+	_expect(player.has_inventory_space(), "the inventory never fills")
+	_expect(player.inventory_controller.get_slots().size() == before + 9, "nine more items fit")
+	player.inventory_ui_controller.show_inventory(player.inventory_controller.get_slots())
+	await _wait(0.3)
+	_expect(player.inventory_ui_controller.inventory_slot_buttons.size() == before + 9, "the list has a row for each")
+	var rows: Array[Button] = player.inventory_ui_controller.inventory_slot_buttons
+	_expect(rows[0].has_focus(), "the cursor starts on the first")
+	rows[3].mouse_entered.emit()
+	await _wait(0.1)
+	_expect(rows[3].has_focus() and not rows[0].has_focus(), "the mouse moves the one cursor: never two arrows at once")
+	_expect(player.inventory_ui_controller.description_label.text != "", "the item under the cursor is described")
+	player.inventory_ui_controller.close()
+	for i: int in 9:
+		player.consume_inventory_item("test_item_%d" % i)
