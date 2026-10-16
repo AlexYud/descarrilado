@@ -56,10 +56,8 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_alarm_clock(root)
 		&"pantry_shelves":
 			_build_pantry_shelves(root)
-		&"lurking_head":
-			_build_lurking_head(root)
-		&"window_mist":
-			_build_window_mist(root)
+		&"standing_silhouette":
+			_build_standing_silhouette(root)
 		_:
 			push_warning("HouseProps: unknown prop kind '%s'." % kind)
 
@@ -315,18 +313,8 @@ static func _build_kitchen_recipe(root: Node3D) -> void:
 		Vector3(90.0, 0.0, 0.0)
 	)
 
-	# The quantity from the story, circled twice in blue ink on the wrapper.
-	var ink: StandardMaterial3D = material(INK_BLUE, 0.6)
-	var ring_center: Vector3 = Vector3(0.1135, -0.02, 0.0022)
-	add_text(
-		root, "Three", "3", ring_center + Vector3(0.0, 0.0, 0.0006), 44, 0.0004,
-		INK_BLUE, 0.0, true
-	)
-	add_ring(root, "CircleA", 0.0098, 0.0108, ring_center, ink)
-	add_ring(root, "CircleB", 0.0113, 0.0123, ring_center + Vector3(0.0007, 0.0004, 0.0), ink)
 
-
-## A folded note lying on a shelf, with the first number underlined.
+## A folded note lying on a shelf.
 static func _build_pantry_note(root: Node3D) -> void:
 	var note: MeshInstance3D = _add_paper(
 		root, "Paper", Vector2(0.14, 0.17), Vector3.ZERO, PAPER
@@ -338,11 +326,6 @@ static func _build_pantry_note(root: Node3D) -> void:
 	add_paragraphs(
 		note, "Text", "JAR_NOTE_TEXT",
 		Vector3(-0.062, 0.078, 0.0009), 22, 0.00025, INK_BLUE, 496.0
-	)
-	# The first number, underlined.
-	add_box(
-		note, "Underline", Vector3(0.0036, 0.0006, 0.0004),
-		Vector3(-0.0603, 0.0722, 0.0011), material(INK_BLUE, 0.6)
 	)
 
 
@@ -415,18 +398,14 @@ static func _build_lucas_diary(root: Node3D) -> void:
 			Vector3(-0.118 + length * 0.5, 0.07 - i * 0.0125, 0.0043), rule
 		)
 
-	# The date and time as a heading, underlined heavily in black ink, then the entry.
+	# The date and time as a heading, then the entry.
 	add_text(
 		root, "Heading", "DIARY_HEADING",
 		Vector3(0.013, 0.077, 0.0042), 22, 0.00025, INK_DARK
 	)
-	add_box(
-		root, "HeadingUnderline", Vector3(0.07, 0.0014, 0.0004),
-		Vector3(0.013 + 0.035, 0.0705, 0.0043), material(INK_DARK, 0.7)
-	)
 	add_paragraphs(
 		root, "Text", "DIARY_TEXT",
-		Vector3(0.013, 0.064, 0.0042), 22, 0.00025, INK_DARK, 400.0
+		Vector3(0.013, 0.064, 0.0042), 17, 0.00025, INK_DARK, 400.0
 	)
 
 
@@ -518,60 +497,56 @@ static func _build_bus_ticket(root: Node3D, handwriting_key: String) -> void:
 # THE TIME CAPSULE
 # ============================================================
 
-## A small wooden chest with a brass combination padlock. Its origin is the
-## middle of the base. Nodes the puzzle script looks up: LidPivot, Padlock
-## (with Digit0..2) and Shackle.
+## A small, shallow wooden chest closed with an iron clasp, filled to just under the brim so that what is
+## in it can be seen from a standing player's eyes without leaning over the front wall: the interior
+## is padded up to 2.5 cm below the rim (the contents lie on the padding, at `CONTENTS_HEIGHT`). Its
+## origin is the middle of the base. Nodes the script looks up: LidPivot and Latch.
 static func _build_time_capsule(root: Node3D) -> void:
 	var wood: StandardMaterial3D = material(Color(0.36, 0.24, 0.14), 0.85)
 	var brass: StandardMaterial3D = material(BRASS, 0.4, 0.85)
 
 	var body: CSGBox3D = CSGBox3D.new()
 	body.name = "Body"
-	body.size = Vector3(0.44, 0.2, 0.28)
-	body.position = Vector3(0.0, 0.1, 0.0)
+	body.size = Vector3(0.44, 0.12, 0.28)
+	body.position = Vector3(0.0, 0.06, 0.0)
 	body.material = wood
 	root.add_child(body)
 
 	var hollow: CSGBox3D = CSGBox3D.new()
 	hollow.name = "Hollow"
 	hollow.operation = CSGShape3D.OPERATION_SUBTRACTION
-	hollow.size = Vector3(0.4, 0.2, 0.24)
+	hollow.size = Vector3(0.4, 0.12, 0.24)
 	hollow.material = wood
 	hollow.position = Vector3(0.0, 0.03, 0.0)
 	body.add_child(hollow)
 
-	add_box(root, "BandLeft", Vector3(0.02, 0.202, 0.284), Vector3(-0.15, 0.1, 0.0), brass)
-	add_box(root, "BandRight", Vector3(0.02, 0.202, 0.284), Vector3(0.15, 0.1, 0.0), brass)
+	# The padding the keepsakes lie on, nearly up to the rim.
+	add_box(
+		root, "Padding", Vector3(0.396, 0.065, 0.236), Vector3(0.0, 0.0625, 0.0),
+		material(Color(0.3, 0.12, 0.11), 1.0)
+	)
+
+	add_box(root, "BandLeft", Vector3(0.02, 0.122, 0.284), Vector3(-0.15, 0.06, 0.0), brass)
+	add_box(root, "BandRight", Vector3(0.02, 0.122, 0.284), Vector3(0.15, 0.06, 0.0), brass)
 
 	var pivot: Node3D = Node3D.new()
 	pivot.name = "LidPivot"
-	pivot.position = Vector3(0.0, 0.2, -0.14)
+	pivot.position = Vector3(0.0, 0.12, -0.14)
 	root.add_child(pivot)
 	add_box(pivot, "Lid", Vector3(0.46, 0.035, 0.3), Vector3(0.0, 0.0175, 0.14), wood)
 	add_box(pivot, "LidBandLeft", Vector3(0.02, 0.038, 0.304), Vector3(-0.15, 0.0175, 0.14), brass)
 	add_box(pivot, "LidBandRight", Vector3(0.02, 0.038, 0.304), Vector3(0.15, 0.0175, 0.14), brass)
 	add_box(pivot, "Hasp", Vector3(0.03, 0.006, 0.05), Vector3(0.0, 0.038, 0.275), brass)
 
-	var padlock: Node3D = Node3D.new()
-	padlock.name = "Padlock"
-	padlock.position = Vector3(0.0, 0.172, 0.152)
-	root.add_child(padlock)
-	add_box(padlock, "Case", Vector3(0.07, 0.055, 0.022), Vector3.ZERO, brass)
-	var shackle: MeshInstance3D = add_ring(
-		padlock, "Shackle", 0.013, 0.018, Vector3(0.0, 0.0275, 0.0), brass
-	)
-	shackle.scale = Vector3(1.0, 1.0, 1.0)
-
-	for i: int in 3:
-		var x: float = (i - 1) * 0.021
-		add_box(
-			padlock, "Wheel%d" % i, Vector3(0.018, 0.026, 0.002), Vector3(x, 0.0, 0.0115),
-			material(Color(0.1, 0.09, 0.07), 0.6, 0.3)
-		)
-		add_text(
-			padlock, "Digit%d" % i, "0", Vector3(x, 0.0, 0.0127), 40, 0.00036,
-			Color(0.9, 0.8, 0.5), 0.0, true
-		)
+	# An iron clasp over the hasp: it swings up and out when the capsule unlatches (`TimeCapsule.unlatch`).
+	var iron: StandardMaterial3D = material(Color(0.16, 0.16, 0.17), 0.45, 0.9)
+	var latch: Node3D = Node3D.new()
+	latch.name = "Latch"
+	latch.position = Vector3(0.0, 0.105, 0.146)
+	root.add_child(latch)
+	add_box(latch, "Strap", Vector3(0.05, 0.085, 0.01), Vector3(0.0, 0.0425, 0.0), iron)
+	add_box(latch, "Eye", Vector3(0.022, 0.02, 0.016), Vector3(0.0, 0.092, -0.005), iron)
+	add_box(root, "LatchPlate", Vector3(0.06, 0.03, 0.008), Vector3(0.0, 0.098, 0.1435), iron)
 
 
 # ============================================================
@@ -734,31 +709,49 @@ static func _build_pantry_shelves(root: Node3D) -> void:
 # SCARES
 # ============================================================
 
-## Just a head and one shoulder, in flat black, leaning to the side and peering
-## forward like someone lurking just below a window. Only its outline shows
-## against the glow behind it. Origin at the base of the neck, facing -Z.
-static func _build_lurking_head(root: Node3D) -> void:
+## Something standing still in the dark, in flat black. It is meant NOT to read as a man: too tall,
+## too thin, arms that hang past its knees, a small head on a long neck, no face. Only an outline
+## shows against whatever the flashlight lights behind it, and the less light the less sure the eye is
+## of what it sees. Origin at the feet, about 2.1 m tall, facing -Z. The sequence poses it through the
+## pivots `Lean` (the body above the hips), `Lean/HeadPivot`, `Lean/ArmL` and `Lean/ArmR`.
+static func _build_standing_silhouette(root: Node3D) -> void:
 	var black: StandardMaterial3D = black_material()
+
+	for x: float in [-0.075, 0.075]:
+		_add_capsule(root, "Leg%s" % ("L" if x < 0.0 else "R"), 0.05, 1.02, Vector3(x, 0.51, 0.0), black)
 
 	var lean: Node3D = Node3D.new()
 	lean.name = "Lean"
-	lean.rotation_degrees = Vector3(14.0, 0.0, 24.0)
-	lean.scale = Vector3.ONE * 1.15
+	lean.position = Vector3(0.0, 1.0, 0.0)
 	root.add_child(lean)
 
-	add_cylinder(lean, "Neck", 0.055, 0.15, Vector3(0.0, 0.075, 0.0), black)
+	var torso: MeshInstance3D = _add_capsule(lean, "Torso", 0.11, 0.66, Vector3(0.0, 0.33, 0.0), black)
+	torso.scale = Vector3(1.0, 1.0, 0.62)
+	_add_capsule(lean, "Neck", 0.03, 0.34, Vector3(0.0, 0.76, -0.01), black)
+
+	# The head: small, a little long, with a chin so a turn of it can be read, and nothing else.
+	var head_pivot: Node3D = Node3D.new()
+	head_pivot.name = "HeadPivot"
+	head_pivot.position = Vector3(0.0, 0.92, -0.01)
+	lean.add_child(head_pivot)
 	var skull: SphereMesh = SphereMesh.new()
-	skull.radius = 0.115
-	skull.height = 0.29
-	_add_mesh(lean, "Head", skull, Vector3(0.0, 0.26, -0.03), black, Vector3(8.0, 0.0, 0.0))
-	# Sloping shoulders (a flattened ellipsoid), one side dropping away.
-	var shoulders: SphereMesh = SphereMesh.new()
-	shoulders.radius = 0.2
-	shoulders.height = 0.4
-	var body: MeshInstance3D = _add_mesh(
-		lean, "Shoulders", shoulders, Vector3(0.1, -0.02, 0.02), black, Vector3(0.0, 0.0, 12.0)
-	)
-	body.scale = Vector3(1.7, 0.6, 0.8)
+	skull.radius = 0.075
+	skull.height = 0.19
+	_add_mesh(head_pivot, "Head", skull, Vector3(0.0, 0.05, 0.0), black, Vector3.ZERO)
+	var chin: SphereMesh = SphereMesh.new()
+	chin.radius = 0.028
+	chin.height = 0.06
+	_add_mesh(head_pivot, "Chin", chin, Vector3(0.0, -0.03, -0.06), black, Vector3.ZERO)
+
+	# Arms from the shoulders, thin and far too long.
+	for x: float in [-0.17, 0.17]:
+		var arm: Node3D = Node3D.new()
+		arm.name = "Arm%s" % ("L" if x < 0.0 else "R")
+		arm.position = Vector3(x, 0.62, 0.0)
+		lean.add_child(arm)
+		_add_capsule(arm, "Limb", 0.026, 1.05, Vector3(0.0, -0.52, 0.0), black)
+		# Long fingers hanging open.
+		_add_capsule(arm, "Hand", 0.02, 0.22, Vector3(0.0, -1.1, 0.0), black)
 
 
 static func _add_capsule(
@@ -774,19 +767,6 @@ static func _add_capsule(
 	mesh.radius = radius
 	mesh.height = height
 	return _add_mesh(parent, node_name, mesh, pos, mat, rot)
-
-
-
-
-## A glow standing in for moonlit fog outside a window, so a figure in front of
-## it reads as a silhouette. Faces +Z.
-static func _build_window_mist(root: Node3D) -> void:
-	var glow: StandardMaterial3D = StandardMaterial3D.new()
-	glow.albedo_color = Color(0.5, 0.64, 0.7)
-	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var quad: QuadMesh = QuadMesh.new()
-	quad.size = Vector2(1.9, 1.8)
-	_add_mesh(root, "Mist", quad, Vector3.ZERO, glow, Vector3.ZERO)
 
 
 

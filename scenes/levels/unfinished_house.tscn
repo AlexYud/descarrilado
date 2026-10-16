@@ -12,14 +12,19 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/master_key.tscn" id="10_key"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/nightstand_drawer.tscn" id="15_drawer"]
 
-[node name="UnfinishedHouse" type="Node3D" node_paths=PackedStringArray("doors_root", "pantry_door", "hall_glow", "hall_light", "figure", "run_steps")]
+[sub_resource type="BoxShape3D" id="BoxShape3D_trap"]
+size = Vector3(3.4, 2.0, 2.0)
+
+[node name="UnfinishedHouse" type="Node3D" node_paths=PackedStringArray("doors_root", "pantry_door", "capsule", "argument_voices", "run_steps", "bedroom_light", "silhouette", "hallway_trap")]
 script = ExtResource("1_sequence")
 doors_root = NodePath("Doors")
 pantry_door = NodePath("Doors/PantryDoor")
-hall_glow = NodePath("Scares/HallGlow")
-hall_light = NodePath("Scares/HallLight")
-figure = NodePath("Scares/Figure")
+capsule = NodePath("Furniture/TimeCapsule")
+argument_voices = NodePath("Scares/ArguingVoices")
 run_steps = NodePath("Scares/RunSteps")
+bedroom_light = NodePath("Scares/BedroomRed")
+silhouette = NodePath("Scares/Silhouette")
+hallway_trap = NodePath("Scares/HallwayTrap")
 
 [node name="Shell" type="Node3D" parent="." unique_id=1898375199]
 script = ExtResource("2_builder")
@@ -37,7 +42,7 @@ persistent_id = &"house_front_door"
 
 [node name="PantryDoor" parent="Doors" unique_id=981741055 instance=ExtResource("5_door")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 9.3, 0, 6.9025)
-starts_open = true
+starts_locked = true
 persistent_id = &"house_pantry_door"
 
 [node name="BedroomDoor" parent="Doors" unique_id=9984893 instance=ExtResource("5_door")]
@@ -124,31 +129,37 @@ kind = &"alarm_clock"
 
 [node name="Scares" type="Node3D" parent="." unique_id=1510714190]
 
+[node name="ArguingVoices" type="AudioStreamPlayer3D" parent="Scares"]
+position = Vector3(8.2, 1.4, 7.36)
+volume_db = -9.0
+unit_size = 4.0
+max_distance = 16.0
+
 [node name="RunSteps" type="AudioStreamPlayer3D" parent="Scares"]
-position = Vector3(4.65, 0.1, 13.5)
+position = Vector3(6.0, 0.1, 3.0)
 unit_size = 5.0
 max_distance = 30.0
 
-[node name="Figure" type="Node3D" parent="Scares"]
-position = Vector3(-0.45, 0.2, 7.6)
-script = ExtResource("3_prop")
-kind = &"lurking_head"
-
-[node name="HallLight" type="SpotLight3D" parent="Scares"]
-position = Vector3(-0.35, 1.4, 7.3625)
-rotation_degrees = Vector3(0, -90, 0)
+[node name="BedroomRed" type="OmniLight3D" parent="Scares"]
+position = Vector3(8.0, 2.0, 3.0)
 visible = false
-light_color = Color(0.6, 0.8, 0.9, 1)
-light_energy = 0.9
+light_color = Color(1, 0.04, 0.03, 1)
+light_energy = 0.0
 shadow_enabled = true
-spot_range = 8.0
-spot_angle = 38.0
+omni_range = 9.0
 
-[node name="HallGlow" type="Node3D" parent="Scares"]
-position = Vector3(-1.9, 1.4, 7.3625)
-rotation_degrees = Vector3(0, 90, 0)
+[node name="Silhouette" type="Node3D" parent="Scares"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8.3, 0, 12.19)
+visible = false
 script = ExtResource("3_prop")
-kind = &"window_mist"
+kind = &"standing_silhouette"
+
+[node name="HallwayTrap" type="Area3D" parent="Scares"]
+position = Vector3(2.0, 1.0, 7.35)
+collision_layer = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Scares/HallwayTrap"]
+shape = SubResource("BoxShape3D_trap")
 
 [node name="RecipeReaction" type="Node" parent="." unique_id=1136011188]
 script = ExtResource("4_reaction")

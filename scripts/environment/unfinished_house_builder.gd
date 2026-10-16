@@ -3,7 +3,7 @@ extends Node3D
 class_name UnfinishedHouseBuilder
 
 ## Builds the shell of the unfinished house: floors, walls with door and window
-## openings, ceiling, roof and window glass. Everything is a plain box so the
+## openings, ceiling and roof. The windows are unfinished: a frame and a bar, no glass. Everything is a plain box so the
 ## house is cheap to change; the plan lives in `_walls()`.
 ##
 ## Plan (drawn in metres at 1:1 and stretched by PLAN_SCALE; X east, Z south, the origin the north-west corner, the
@@ -80,10 +80,10 @@ func _walls() -> Array[Dictionary]:
 		{
 			"from": Vector2(0.0, 10.0), "to": Vector2(6.0, 10.0),
 			"openings": [
-				# Two empty, glassless windows flank the front door.
-				{"center": 1.0, "width": 0.9, "height": 1.2, "sill": 0.9, "frame": true, "glass": false},
+				# Two empty windows flank the front door.
+				{"center": 1.0, "width": 0.9, "height": 1.2, "sill": 0.9, "frame": true},
 				_door(3.0),
-				{"center": 5.0, "width": 0.9, "height": 1.2, "sill": 0.9, "frame": true, "glass": false},
+				{"center": 5.0, "width": 0.9, "height": 1.2, "sill": 0.9, "frame": true},
 			],
 		},
 		# West wall: a window at the end of the hallway, facing the pantry door.
@@ -240,7 +240,7 @@ func _add_wall_piece(
 
 
 
-## Casing around a door, or around the window together with its glass and sill.
+## Casing around a door, or around the window together with its sill and bar (never a pane).
 func _add_frame(
 	index: int,
 	piece: int,
@@ -281,7 +281,7 @@ func _add_frame(
 	)
 
 	if sill > 0.0:
-		_add_window_parts(holder, width, height, sill, depth, strip, bool(opening.get("glass", true)))
+		_add_window_parts(holder, width, height, sill, depth, strip)
 
 
 func _add_window_parts(
@@ -290,8 +290,7 @@ func _add_window_parts(
 	height: float,
 	sill: float,
 	depth: float,
-	strip: float,
-	glass: bool = true
+	strip: float
 ) -> void:
 	HouseProps.add_box(
 		holder, "Sill", Vector3(width + strip * 2.0, 0.04, depth + 0.08),
@@ -302,16 +301,6 @@ func _add_window_parts(
 		Vector3(0.0, sill + height * 0.5, 0.0), _frame_material
 	)
 
-	if not glass:
-		return
-
-	# The glass lets light through (the pane casts no shadow) and cannot be touched.
-	var pane: MeshInstance3D = HouseProps.add_box(
-		holder, "Glass", Vector3(width, height, 0.006),
-		Vector3(0.0, sill + height * 0.5, 0.0),
-		HouseProps.glass_material(Color(0.6, 0.72, 0.8, 0.16))
-	)
-	pane.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _build_roof() -> void:

@@ -1,25 +1,21 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/puzzles/combination_lock.gd" id="1_lock"]
+[ext_resource type="Script" path="res://scripts/puzzles/time_capsule.gd" id="1_lock"]
 [ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/house_advertisement.tscn" id="3_ad"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/bus_ticket_sophia.tscn" id="4_ticket_sophia"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/bus_ticket_unclaimed.tscn" id="5_ticket_unclaimed"]
 [ext_resource type="PackedScene" path="res://scenes/objects/overlook/lucas_ficha.tscn" id="6_lucas_ficha"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_padlock"]
-size = Vector3(0.14, 0.11, 0.1)
-
 [node name="TimeCapsule" type="Node3D"]
 script = ExtResource("1_lock")
-prompt_text = "PROMPT_ENTER_CODE"
 
 [node name="Model" type="Node3D" parent="."]
 script = ExtResource("2_prop")
 kind = &"time_capsule"
 
 [node name="Contents" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0308, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.098, 0)
 
 [node name="HouseAdvertisement" parent="Contents" instance=ExtResource("3_ad")]
 rotation_degrees = Vector3(-90, 90, 0)
@@ -33,10 +29,5 @@ position = Vector3(0.08, 0.0062, 0)
 rotation_degrees = Vector3(-90, -12, 0)
 
 [node name="LucasFicha" parent="Contents" instance=ExtResource("6_lucas_ficha")]
-transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.016, 0.065)
+transform = Transform3D(1, 0, 0, 0, 0.342, -0.94, 0, 0.94, 0.342, 0, 0.022, 0.07)
 
-[node name="InteractArea" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0.16)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
-shape = SubResource("BoxShape3D_padlock")

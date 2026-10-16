@@ -40,6 +40,7 @@ func _ready() -> void:
 	await _check_readable_overlay()
 	await _check_readable_spots()
 	await _check_action_row()
+	await _check_zoom_limits()
 	await _check_inventory_list()
 	GameSettings.set_text_locale("en", false)
 
@@ -258,7 +259,7 @@ func _check_readable_overlay() -> void:
 	inspect.handle_input(_press(KEY_E))
 	await _wait(0.6)
 	_expect(inspect.is_reading_text(), "the key opens the text")
-	_expect(inspect.readables._body.text.contains("3 whole kilos"), "in English")
+	_expect(inspect.readables._body.text.contains("potato soup"), "in English")
 	_expect(not inspect.readables._body.get_parsed_text().contains("[u]"), "(the markup is drawn, not shown)")
 	_expect(inspect.readables._veil.visible and inspect.readables._veil.modulate.a > 0.9, "over a dark veil")
 	var column: float = inspect.get_column_width()
@@ -469,3 +470,34 @@ func _check_inventory_list() -> void:
 	player.inventory_ui_controller.close()
 	for i: int in 9:
 		player.consume_inventory_item("test_item_%d" % i)
+
+
+## How much of the screen's height the item's largest side fills at the current distance.
+func _height_fraction() -> float:
+	var half: float = tan(deg_to_rad(inspect.camera.fov * 0.5))
+	return inspect._largest / (2.0 * inspect.current_inspect_distance * half)
+
+
+## No item can be zoomed in until it covers the screen, and the key and the train ticket come up smaller
+## than other items of their kind.
+func _check_zoom_limits() -> void:
+	var whistle: Inspectable = await _spawn(KEY, Vector3(0.0, 1.0, -3.0))
+	await _open(whistle)
+	await _wait(0.4)
+	var first: float = _height_fraction()
+	inspect._set_inspect_distance(0.0)
+	var closest: float = _height_fraction()
+	_expect(closest < 0.75, "an object zoomed all the way in still fits the screen (%.2f of its height)" % closest)
+	_expect(closest > first * 1.2, "but it does come closer (%.2f from %.2f)" % [closest, first])
+	await _close()
+	whistle.queue_free()
+
+	var ticket: Inspectable = await _spawn("res://scenes/objects/train_ticket.tscn", Vector3(0.0, 1.0, -3.0))
+	await _open(ticket)
+	await _wait(0.4)
+	var ticket_first: float = _height_fraction()
+	_expect(ticket_first < 0.5, "the train ticket comes up at a modest size (%.2f)" % ticket_first)
+	inspect._set_inspect_distance(0.0)
+	_expect(_height_fraction() < 0.8, "and zoomed in it does not cover the screen (%.2f)" % _height_fraction())
+	await _close()
+	ticket.queue_free()

@@ -3,6 +3,15 @@ extends CanvasLayer
 const QUALITY_LOW: int = 0
 const QUALITY_MEDIUM: int = 1
 
+## The values `pulse_unease` pushes the picture towards at full strength.
+const UNEASE_PEAK: Dictionary = {
+	&"chroma_separation_pixels": 5.0,
+	&"chroma_noise_strength": 0.07,
+	&"grain_strength": 0.1,
+	&"lens_distortion": 0.05,
+	&"vignette_strength": 0.6,
+}
+
 @onready var horror_rect: ColorRect = $HorrorRect
 
 
@@ -59,3 +68,43 @@ func _apply_quality_preset(preset: int) -> void:
 				"screen_sample_quality",
 				1.0
 			)
+
+
+## A brief spike of unease: the picture smears (colour fringes, a little lens warp, heavier grain, a
+## tighter vignette) as the beam finds something it should not, then settles. `amount` is 0..1,
+## `seconds` how long it lasts. The fringes shake while it lasts instead of rising smoothly.
+func pulse_unease(amount: float, seconds: float) -> void:
+	var filter_material: ShaderMaterial = horror_rect.material as ShaderMaterial
+	if filter_material == null:
+		return
+
+	var base: Dictionary = {}
+	for parameter: StringName in UNEASE_PEAK:
+		base[parameter] = _read_parameter(filter_material, parameter)
+
+	var tween: Tween = create_tween()
+	tween.tween_method(
+		func(progress: float) -> void:
+			# Up fast, down slowly, with a shake riding on it.
+			var envelope: float = clampf(progress / 0.15, 0.0, 1.0) * (1.0 - smoothstep(0.55, 1.0, progress))
+			var shake: float = 0.75 + 0.25 * sin(progress * 90.0)
+			for parameter: StringName in UNEASE_PEAK:
+				var peak: float = UNEASE_PEAK[parameter]
+				filter_material.set_shader_parameter(
+					parameter,
+					lerpf(base[parameter], peak, envelope * amount * shake)
+				),
+		0.0, 1.0, seconds
+	)
+	await tween.finished
+	for parameter: StringName in UNEASE_PEAK:
+		filter_material.set_shader_parameter(parameter, base[parameter])
+
+
+## What a shader parameter is now (its own default when the material never set it).
+func _read_parameter(filter_material: ShaderMaterial, parameter: StringName) -> float:
+	var value: Variant = filter_material.get_shader_parameter(parameter)
+	if value == null and filter_material.shader != null:
+		value = RenderingServer.shader_get_parameter_default(filter_material.shader.get_rid(), parameter)
+
+	return float(value) if value != null else 0.0

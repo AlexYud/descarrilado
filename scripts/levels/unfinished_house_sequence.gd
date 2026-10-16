@@ -1,100 +1,167 @@
 extends Node3D
 class_name UnfinishedHouseSequence
 
-## Orchestrates the unfinished house (the second dream puzzle): two scares and
-## the time capsule at the end. The pieces (doors, items, the lock) only raise
-## signals; every decision lives here. Sounds are generated placeholders.
+## Orchestrates the unfinished house (the second dream puzzle): the rooms open one after another as
+## the story is read, and the climax is a trap in the dark. The pieces (doors, items, the capsule) only
+## raise signals; every decision lives here. Sounds are generated placeholders.
 ##
-## Reading the kitchen recipe only gives Juliana's comment: nothing happens.
+## The progression, room by room:
+##  1. Kitchen: the pantry door starts LOCKED. Reading the recipe in the sink (closing its inspect view)
+##     unlocks it with an audible click (the pantry is out of sight from the kitchen, so the sound is
+##     how the player knows) and it swings gently open.
+##  2. Pantry: the folded note and the Rusty Key. The first time the note is inspected, muffled arguing
+##     fades in from the hallway (the family shouting, as the letter says) and the pantry door quietly
+##     closes by itself; the arguing goes on after the note is put away and fades out when the player
+##     opens the closed pantry door.
+##  3. Master bedroom: the key unlocks the bedroom door; the notebook is in the nightstand drawer.
+##  4. Closing the notebook starts the climax: the bedroom light turns a vivid red, someone runs from
+##     the bedroom down the hallway to the living room, and the time capsule's iron latch is thrown
+##     open there (a loud clack).
+##  5. The trap: as the player walks down the hallway towards the living room the flashlight dies. The
+##     player can switch it back on as often as they like (nothing happens in the hallway). A still
+##     figure stands over the capsule in the pitch dark; the moment the beam finds it, the light drops
+##     to a weak glow that stutters for half a second and every time it comes back the figure has
+##     moved (it turns its head, rises, is nearer): the eye never gets a clear look, a flickering view
+##     of something wrong and unknown instead of a monster. Then the light dies, every door slams
+##     shut and locks. The next time the player switches the flashlight on, everything is back to
+##     normal: the figure is gone, the red light is gone, and the capsule stands open on its crate.
+##  6. Lucas's Ficha lies on top of the capsule's contents: taking it (closing its view) ends the
+##     scene and silently unlocks every door, the front one included.
 ##
-## Scares (each plays once and is remembered across saves):
-## - the master key (closing its view): every open door in the house slams shut at
-##   once (a bang at each, a jolt of the camera) and the flashlight dies; the
-##   player can switch it back on. The next time the player opens the pantry door
-##   a black head and one shoulder are at the window at the end of the corridor,
-##   outside, tilted and peering in, backlit by the glow behind it, with a weak
-##   light from the window casting its shadow into the corridor. Total silence.
-##   A second and a half later it ducks out of sight;
-## - Lucas's diary (the moment its view opens): someone runs through the house
-##   and down the corridor towards the master bedroom, the footsteps getting
-##   louder and closer while the player reads.
-##
-## Everything in the capsule is read in place (the advertisement and both bus tickets)
-## except Lucas's Ficha, lying on top where it is easy to take: it is the only thing the
-## player takes from the house, and taking it (closing its view) raises
-## `sequence_completed`. The house stays as it is; nothing else happens.
+## Everything in the capsule is read in place (the advertisement and both bus tickets) except the
+## Ficha: the only thing the player takes from the house.
 
 signal sequence_completed
 
+enum Stage {
+	START,
+	PANTRY_OPEN,
+	CLIMAX,
+	TRAP_ARMED,
+	TRAP_CUT,
+	SLAMMING,
+	SLAMMED,
+	RESOLVED,
+}
+
 const STATE_SECTION: StringName = &"puzzles"
-const KEY_KEY_DONE: StringName = &"house_key_scare_done"
-const KEY_SILHOUETTE_DONE: StringName = &"house_silhouette_done"
-const KEY_DIARY_DONE: StringName = &"house_diary_scare_done"
+const KEY_STAGE: StringName = &"house_stage"
 const KEY_FICHA_TAKEN: StringName = &"house_ficha_taken"
+## The reveal (about half a second): the light's state at each beat (on or off, at this fraction of its
+## strength), the pose the figure is in while it is lit, and how long the beat lasts. The figure
+## changes only while the light is OFF, so it has always moved when the light comes back.
+const REVEAL_STEPS: Array[Dictionary] = [
+	{"on": true, "energy": 0.06, "seconds": 0.08, "pose": &"bowed"},
+	{"on": false, "energy": 0.0, "seconds": 0.05, "pose": &"turned"},
+	{"on": true, "energy": 0.08, "seconds": 0.07},
+	{"on": false, "energy": 0.0, "seconds": 0.04, "pose": &"risen"},
+	{"on": true, "energy": 0.10, "seconds": 0.08},
+	{"on": false, "energy": 0.0, "seconds": 0.03, "pose": &"near"},
+	{"on": true, "energy": 0.13, "seconds": 0.10},
+	{"on": false, "energy": 0.0, "seconds": 0.05},
+]
+const REVEAL_SECONDS: float = 0.5
+
+## The figure's poses: the lean of the body, the head's pitch, yaw and roll, how far the arms swing
+## out, how far the body is turned from facing the capsule, and how much of the approach it has made.
+const FIGURE_POSES: Dictionary = {
+	&"bowed": {"lean": -26.0, "head_pitch": -24.0, "head_yaw": 0.0, "head_roll": 0.0, "arms": 2.0, "body_yaw": 0.0, "near": 0.0},
+	&"turned": {"lean": -26.0, "head_pitch": 0.0, "head_yaw": 180.0, "head_roll": 12.0, "arms": 3.0, "body_yaw": 0.0, "near": 0.0},
+	&"risen": {"lean": -4.0, "head_pitch": 4.0, "head_yaw": 180.0, "head_roll": 24.0, "arms": 4.0, "body_yaw": 180.0, "near": 0.35},
+	&"near": {"lean": 6.0, "head_pitch": -6.0, "head_yaw": 0.0, "head_roll": 38.0, "arms": 13.0, "body_yaw": 180.0, "near": 1.0},
+}
+
+## 0: not heard yet, 1: the arguing is going on (the pantry door is closed), 2: over.
+const KEY_PANTRY_BEAT: StringName = &"house_pantry_beat"
 
 @export_category("Clues")
 ## `inspect_id` metadata of the Visual of each clue.
-@export var key_id: StringName = &"master_key"
+@export var recipe_id: StringName = &"kitchen_recipe"
+@export var pantry_note_id: StringName = &"pantry_note"
 @export var diary_id: StringName = &"lucas_diary"
 @export var ficha_id: StringName = &"lucas_ficha"
 
-@export_category("Key: every door slams shut")
-## Parent of the house's doors (every DoorController child slams shut).
+@export_category("Kitchen: the pantry opens")
+## Every door of the house (a DoorController child each).
 @export var doors_root: Node3D
-@export var scare_delay_seconds: float = 1.2
-
-@export_category("Pantry door: the silhouette")
 @export var pantry_door: DoorController
-## The glow outside the corridor window that backlights the silhouette.
-@export var hall_glow: Node3D
-## The weak light from the window into the corridor (casts the head's shadow).
-@export var hall_light: Light3D
-@export var figure: Node3D
-## Where the head is (outside the west wall, just above the sill of the
-## corridor window) and how far below that it ducks, hidden by the wall.
-@export var figure_position: Vector3 = Vector3(-0.45, 0.85, 7.6)
-@export var figure_hidden_offset: Vector3 = Vector3(0.0, -0.65, 0.0)
-## How long the head stays at the window after the pantry door opens.
-@export var figure_wait_seconds: float = 1.5
+## How long after the recipe is put away the pantry door unlocks and swings open.
+@export var pantry_open_delay_seconds: float = 0.8
+## The unlock click comes this long before the door starts to swing open.
+@export var unlock_to_open_seconds: float = 0.8
 
-@export_category("Diary: running footsteps")
+@export_category("Pantry: reading the past")
+## Muffled arguing from the hallway: from the first time the pantry note is inspected until the player
+## opens the pantry door again.
+@export var argument_voices: AudioStreamPlayer3D
+## The arguing is this loud, and fades in and out over this long.
+@export var voices_db: float = -9.0
+@export var voices_fade_seconds: float = 2.0
+## The pantry door closes this long after the note is first opened.
+@export var pantry_close_delay_seconds: float = 1.0
+
+@export_category("Bedroom: the climax")
+## The bedroom's red light.
+@export var bedroom_light: OmniLight3D
+@export var red_energy: float = 3.2
+@export var red_fade_in_seconds: float = 0.4
+@export var red_fade_out_seconds: float = 1.6
 @export var run_steps: AudioStreamPlayer3D
-## Where the runner comes from (the living room) and where it ends (the master
-## bedroom door), through the hallway.
+## From inside the bedroom, through the hallway, to the living room by the capsule.
 @export var run_path: Array[Vector3] = [
-	Vector3(4.65, 0.1, 13.5), Vector3(2.325, 0.1, 9.6), Vector3(2.325, 0.1, 7.3625),
-	Vector3(7.44, 0.1, 7.3625), Vector3(7.44, 0.1, 6.4),
+	Vector3(6.0, 0.1, 3.0), Vector3(7.0, 0.1, 5.2), Vector3(7.0, 0.1, 7.3625),
+	Vector3(2.325, 0.1, 7.3625), Vector3(2.325, 0.1, 9.6), Vector3(7.2, 0.1, 12.2),
 ]
 @export var run_stride: float = 1.3
 @export var run_step_seconds: float = 0.27
+## The red light and the first steps come this long after the notebook is put away.
+@export var climax_delay_seconds: float = 0.7
+## The latch is thrown this long after the last footstep.
+@export var clack_delay_seconds: float = 0.4
+@export var capsule: TimeCapsule
+
+@export_category("Hallway trap")
+## The part of the hallway next to the living room: entering it with the climax under way cuts the light.
+@export var hallway_trap: Area3D
+## The figure standing over the capsule (see `HouseProps` kind `standing_silhouette`).
+@export var silhouette: Node3D
+## The beam has found the figure when it points within this many degrees of it, closer than this
+## far, with nothing in between.
+@export var beam_hit_degrees: float = 11.0
+@export var beam_reach: float = 14.0
+## Where the figure stands, and how far towards the player it is by the end of the reveal.
+@export var figure_approach_metres: float = 1.1
 
 ## Set when the player is not the node found by group "player".
 @export var player: Node3D
 
-var _key_done: bool = false
-var _silhouette_done: bool = false
-var _diary_done: bool = false
+var _stage: Stage = Stage.START
 var _ficha_taken: bool = false
-var _silhouette_armed: bool = false
-
+var _flashlight: Node = null
 var _run_step: AudioStreamWAV = null
+var _pantry_beat: int = 0
+var _figure_base_position: Vector3 = Vector3.ZERO
+var _figure_base_yaw: float = 0.0
+var _figure_pose: StringName = &"bowed"
+## What the last reveal did, beat by beat: {pose, on, energy, seconds} (for tests).
+var reveal_log: Array[Dictionary] = []
+var _voices_tween: Tween = null
 
 
 func _ready() -> void:
-	_key_done = _read_flag(KEY_KEY_DONE)
-	_silhouette_done = _read_flag(KEY_SILHOUETTE_DONE)
-	_diary_done = _read_flag(KEY_DIARY_DONE)
-	_ficha_taken = _read_flag(KEY_FICHA_TAKEN)
-
-	# Loaded after the doors slammed but before the silhouette was seen.
-	_silhouette_armed = _key_done and not _silhouette_done
+	_stage = int(SaveManager.get_state_value(STATE_SECTION, KEY_STAGE, 0)) as Stage
+	_ficha_taken = bool(SaveManager.get_state_value(STATE_SECTION, KEY_FICHA_TAKEN, false))
+	_pantry_beat = int(SaveManager.get_state_value(STATE_SECTION, KEY_PANTRY_BEAT, 0))
 
 	_run_step = PlaceholderAudio.make_run_step()
-	figure.visible = false
-	hall_glow.visible = false
-	hall_light.visible = false
+	argument_voices.stream = PlaceholderAudio.make_muffled_argument()
+	bedroom_light.visible = false
+	bedroom_light.light_energy = 0.0
+	silhouette.visible = false
+	hallway_trap.body_entered.connect(_on_trap_entered)
 	pantry_door.opened_by_player.connect(_on_pantry_door_opened)
 	_connect_to_player.call_deferred()
+	_restore_stage.call_deferred()
 
 
 func _connect_to_player() -> void:
@@ -112,61 +179,315 @@ func _connect_to_player() -> void:
 		inspect.inspect_opened.connect(_on_inspect_opened)
 		inspect.inspect_closed.connect(_on_inspect_closed)
 
+	_flashlight = target.get("flashlight_controller") as Node
+	if _flashlight != null and _flashlight.has_signal("toggled_by_player"):
+		_flashlight.connect("toggled_by_player", _on_flashlight_toggled)
 
-## The diary's scare starts the moment the player starts reading.
+
+## Picks the story up where a loaded game left it. The climax is never resumed half way (saving is
+## blocked during it): a game loaded in the middle of it starts the trap over.
+func _restore_stage() -> void:
+	# A game loaded while the arguing was going on (the pantry door is still closed): it carries on.
+	if _pantry_beat == 1:
+		_fade_voices(true)
+
+	if _ficha_taken:
+		_unlock_all_doors()
+		return
+
+	match _stage:
+		Stage.CLIMAX, Stage.TRAP_ARMED, Stage.TRAP_CUT, Stage.SLAMMING, Stage.SLAMMED:
+			_unlock_all_doors()
+			_enter_trap_armed(false)
+		Stage.RESOLVED:
+			# The doors stay locked until the Ficha is taken.
+			for door: DoorController in _doors():
+				if not door.is_locked:
+					door.lock()
+
+
+# ============================================================
+# INSPECT: THE CLUES
+# ============================================================
+
 func _on_inspect_opened(opened_id: String) -> void:
-	if StringName(opened_id) == diary_id and not _diary_done:
-		_diary_done = true
-		_write_flag(KEY_DIARY_DONE)
-		_run_diary_footsteps()
+	# The pantry note, the first time: the arguing fades in and the pantry door quietly closes.
+	if StringName(opened_id) == pantry_note_id and _pantry_beat == 0 and _stage >= Stage.PANTRY_OPEN:
+		_run_pantry_beat()
 
 
 func _on_inspect_closed(closed_id: String) -> void:
 	var id: StringName = StringName(closed_id)
 
-	if id == key_id and not _key_done:
-		_key_done = true
-		_write_flag(KEY_KEY_DONE)
-		_run_door_scare()
+	if id == recipe_id:
+		if _stage == Stage.START:
+			_open_pantry()
+	elif id == diary_id:
+		if _stage < Stage.CLIMAX:
+			_run_climax()
 	elif id == ficha_id and not _ficha_taken:
-		_ficha_taken = true
-		_write_flag(KEY_FICHA_TAKEN)
-		sequence_completed.emit()
+		_take_ficha()
 
 
 # ============================================================
-# THE KEY: EVERY DOOR SLAMS SHUT, THE LIGHT DIES
+# THE KITCHEN: THE PANTRY OPENS
 # ============================================================
 
-func _run_door_scare() -> void:
-	await _wait(scare_delay_seconds)
+func _open_pantry() -> void:
+	_set_stage(Stage.PANTRY_OPEN)
+	await _wait(pantry_open_delay_seconds)
+	pantry_door.unlock()
+	# The pantry is out of sight from the kitchen: a loud click at the door says it can be opened now.
+	_unlock_click_at(pantry_door.global_position + Vector3(0.0, 1.0, 0.0))
+	await _wait(unlock_to_open_seconds)
+	pantry_door.force_open()
 
-	var slammed: bool = false
-	var slam_positions: Array[Vector3] = []
-	if doors_root != null:
-		for child: Node in doors_root.get_children():
-			var door: DoorController = child as DoorController
-			if door == null or not door.is_open:
-				continue
 
-			door.slam_shut()
-			slammed = true
-			slam_positions.append(door.global_position + Vector3(0.0, 1.0, 0.0))
+## The click of a lock giving way, loud enough to be heard from the next rooms.
+func _unlock_click_at(world_position: Vector3) -> void:
+	var click: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+	click.stream = PlaceholderAudio.make_bolt_throw()
+	click.volume_db = 4.0
+	click.unit_size = 10.0
+	click.max_distance = 50.0
+	add_child(click)
+	click.global_position = world_position
+	click.finished.connect(click.queue_free)
+	click.play()
 
-	await _wait(0.12)
 
-	# Even if every door was already shut, something still hits them all.
+# ============================================================
+# THE PANTRY: THE ARGUING
+# ============================================================
+
+## The first time the pantry note is inspected: muffled arguing fades in from the hallway and, a moment
+## later, the pantry door quietly closes by itself. It goes on until the player opens the door.
+func _run_pantry_beat() -> void:
+	_set_pantry_beat(1)
+	_fade_voices(true)
+	await _wait(pantry_close_delay_seconds)
+	if pantry_door.is_open:
+		# Slowly and with no sound (door sounds are off): the door closes behind the player.
+		pantry_door.slam_shut(1.6)
+
+
+## The player opens the closed pantry door: the arguing fades out and is over.
+func _on_pantry_door_opened() -> void:
+	if _pantry_beat == 1:
+		_set_pantry_beat(2)
+		_fade_voices(false)
+
+
+func _set_pantry_beat(beat: int) -> void:
+	_pantry_beat = beat
+	SaveManager.set_state_value(STATE_SECTION, KEY_PANTRY_BEAT, beat)
+
+
+## Fades the arguing in (starting it) or out (stopping it).
+func _fade_voices(fade_in: bool) -> void:
+	if _voices_tween != null and _voices_tween.is_valid():
+		_voices_tween.kill()
+
+	_voices_tween = create_tween()
+	if fade_in:
+		argument_voices.volume_db = -60.0
+		argument_voices.play()
+		_voices_tween.tween_property(argument_voices, "volume_db", voices_db, voices_fade_seconds)
+	else:
+		_voices_tween.tween_property(argument_voices, "volume_db", -60.0, voices_fade_seconds)
+		_voices_tween.tween_callback(argument_voices.stop)
+
+
+# ============================================================
+# THE CLIMAX: RED LIGHT, RUNNING FOOTSTEPS, THE CLACK
+# ============================================================
+
+func _run_climax() -> void:
+	_set_stage(Stage.CLIMAX)
+	_set_saving_blocked(true)
+	_set_red(true)
+	await _wait(climax_delay_seconds)
+	await _run_footsteps()
+	await _wait(clack_delay_seconds)
+	capsule.unlatch()
+	_enter_trap_armed(true)
+
+
+## The red light, on or off (a quick fade in, a slow one out).
+func _set_red(on: bool) -> void:
+	var tween: Tween = create_tween()
+	if on:
+		bedroom_light.visible = true
+		tween.tween_property(bedroom_light, "light_energy", red_energy, red_fade_in_seconds)
+	else:
+		tween.tween_property(bedroom_light, "light_energy", 0.0, red_fade_out_seconds)
+		tween.tween_callback(func() -> void: bedroom_light.visible = false)
+
+
+func _enter_trap_armed(from_climax: bool) -> void:
+	if not from_climax:
+		_set_saving_blocked(true)
+		bedroom_light.visible = true
+		bedroom_light.light_energy = red_energy
+		capsule.unlatch(false)
+
+	_set_stage(Stage.TRAP_ARMED)
+
+
+## Running footsteps from inside the bedroom, down the hallway, into the living room: close and loud
+## at first, fading away.
+func _run_footsteps() -> void:
+	var total: float = _path_length(run_path)
+	var steps: int = int(ceilf(total / run_stride))
+	for i: int in steps + 1:
+		var distance: float = minf(float(i) * run_stride, total)
+		run_steps.position = _point_at(run_path, distance)
+		run_steps.stream = _run_step
+		run_steps.volume_db = lerpf(2.0, -8.0, distance / total)
+		run_steps.pitch_scale = randf_range(1.05, 1.25)
+		run_steps.play()
+		await _wait(run_step_seconds)
+
+
+# ============================================================
+# THE HALLWAY TRAP
+# ============================================================
+
+## Walking towards the living room: the flashlight dies and a still figure stands over the capsule.
+func _on_trap_entered(body: Node3D) -> void:
+	if _stage != Stage.TRAP_ARMED or not body.is_in_group(&"player"):
+		return
+
+	_set_stage(Stage.TRAP_CUT)
+	_cut_flashlight()
+	_figure_base_position = silhouette.position
+	_figure_base_yaw = silhouette.rotation_degrees.y
+	_pose_figure(&"bowed")
+	silhouette.visible = true
+
+
+func _physics_process(_delta: float) -> void:
+	# The light can be switched on freely; the trap springs when the beam finds the figure.
+	if _stage == Stage.TRAP_CUT and _figure_in_beam():
+		_run_reveal()
+
+
+func _on_flashlight_toggled(is_on: bool) -> void:
+	# Only after the doors have slammed: the next light puts the house right.
+	if is_on and _stage == Stage.SLAMMED:
+		_resolve()
+
+
+## True when the flashlight is on and its beam points at the figure, near enough and in plain view.
+func _figure_in_beam() -> bool:
+	var light: SpotLight3D = _flashlight as SpotLight3D
+	if light == null or not silhouette.visible or not bool(_flashlight.get("flashlight_on")) or not light.visible:
+		return false
+
+	var aim: Vector3 = silhouette.global_position + Vector3(0.0, 1.0, 0.0)
+	var origin: Vector3 = light.global_position
+	var to_figure: Vector3 = aim - origin
+	if to_figure.length() > minf(light.spot_range, beam_reach):
+		return false
+
+	if rad_to_deg((-light.global_basis.z).angle_to(to_figure)) > beam_hit_degrees:
+		return false
+
+	# Nothing solid in between (a wall or a door); the crate and the capsule around it do not count.
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(origin, aim)
 	var target: Node3D = _get_player()
-	if not slammed and target != null:
-		slam_positions.append(target.global_position)
+	if target is CollisionObject3D:
+		query.exclude = [(target as CollisionObject3D).get_rid()]
 
-	for position_to_slam: Vector3 in slam_positions:
-		_bang_at(position_to_slam)
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.is_empty() or (hit["position"] as Vector3).distance_to(aim) < 1.2
+
+
+## The beam found it. For half a second the light is a weak, stuttering glow and each time it comes
+## back the figure has changed: head bowed over the capsule, head turned right round to look back,
+## standing, then nearer. Nothing is ever shown for long enough to be understood. The screen smears,
+## then the light dies and every door slams shut and locks.
+func _run_reveal() -> void:
+	_set_stage(Stage.SLAMMING)
+	if _flashlight == null or not _flashlight.has_method("begin_scripted_light"):
+		_slam_and_lock()
+		return
+
+	var horror: Node = get_node_or_null("/root/HorrorFilter")
+	if horror != null and horror.has_method("pulse_unease"):
+		horror.call("pulse_unease", 1.0, REVEAL_SECONDS)
+
+	reveal_log.clear()
+	_flashlight.call("begin_scripted_light")
+	for step: Dictionary in REVEAL_STEPS:
+		if step.has("pose"):
+			_pose_figure(step["pose"] as StringName)
+		_flashlight.call("set_scripted_light", bool(step["on"]), float(step["energy"]))
+		reveal_log.append({"pose": _figure_pose, "on": bool(step["on"]), "energy": (_flashlight as SpotLight3D).light_energy, "seconds": float(step["seconds"])})
+		await _wait(float(step["seconds"]))
+
+	_flashlight.call("end_scripted_light")
+	_cut_flashlight()
+	_slam_and_lock()
+
+
+## Poses the figure by name (it keeps the pose it ends on until the house is put right).
+func _pose_figure(pose: StringName) -> void:
+	var settings: Dictionary = FIGURE_POSES[pose]
+	var lean: Node3D = silhouette.get_node("Lean") as Node3D
+	var head: Node3D = silhouette.get_node("Lean/HeadPivot") as Node3D
+	lean.rotation_degrees = Vector3(float(settings["lean"]), 0.0, 0.0)
+	head.rotation_degrees = Vector3(float(settings["head_pitch"]), float(settings["head_yaw"]), float(settings["head_roll"]))
+	(silhouette.get_node("Lean/ArmL") as Node3D).rotation_degrees = Vector3(0.0, 0.0, float(settings["arms"]))
+	(silhouette.get_node("Lean/ArmR") as Node3D).rotation_degrees = Vector3(0.0, 0.0, -float(settings["arms"]))
+	silhouette.rotation_degrees.y = _figure_base_yaw + float(settings["body_yaw"])
+	# "Nearer" is towards the player (west, where the hallway is).
+	silhouette.position = _figure_base_position + Vector3(-figure_approach_metres * float(settings["near"]), 0.0, 0.0)
+	_figure_pose = pose
+
+
+func _slam_and_lock() -> void:
+	for door: DoorController in _doors():
+		_bang_at(door.global_position + Vector3(0.0, 1.0, 0.0))
+		# An open door is slammed (fast); every door ends shut and locked.
+		if door.is_open:
+			door.slam_shut()
+		door.lock()
 
 	_jolt_camera(1.3)
 	_cut_flashlight()
-	_silhouette_armed = not _silhouette_done
+	_set_stage(Stage.SLAMMED)
 
+
+func _resolve() -> void:
+	_set_stage(Stage.RESOLVED)
+	silhouette.visible = false
+	_pose_figure(&"bowed")
+	_set_red(false)
+	capsule.open_lid(false)
+	_set_saving_blocked(false)
+
+
+# ============================================================
+# THE EXIT
+# ============================================================
+
+## Lucas's Ficha is taken (its view closes): the doors unlock without a sound.
+func _take_ficha() -> void:
+	_ficha_taken = true
+	SaveManager.set_state_value(STATE_SECTION, KEY_FICHA_TAKEN, true)
+	_unlock_all_doors()
+	sequence_completed.emit()
+
+
+func _unlock_all_doors() -> void:
+	for door: DoorController in _doors():
+		door.unlock()
+
+
+# ============================================================
+# EFFECTS
+# ============================================================
 
 ## One loud bang at a point; the sound player removes itself when done.
 func _bang_at(world_position: Vector3) -> void:
@@ -203,70 +524,34 @@ func _jolt_camera(strength: float) -> void:
 
 ## Puts the flashlight out. The player can switch it back on.
 func _cut_flashlight() -> void:
-	var target: Node = _get_player()
-	var flashlight: Node = target.get("flashlight_controller") as Node if target != null else null
-	if flashlight != null and flashlight.has_method("turn_off"):
-		flashlight.call("turn_off")
-
-
-# ============================================================
-# THE PANTRY DOOR: THE SILHOUETTE AT THE WINDOW
-# ============================================================
-
-func _on_pantry_door_opened() -> void:
-	if not _silhouette_armed or _silhouette_done:
-		return
-
-	_silhouette_armed = false
-	_silhouette_done = true
-	_write_flag(KEY_SILHOUETTE_DONE)
-	_run_silhouette()
-
-
-func _run_silhouette() -> void:
-	# Someone is crouched outside the window. A head and one shoulder are there,
-	# tilted, black against the glow, the moment the door opens. No sound at all.
-	var rest: Vector3 = figure_position
-	figure.position = rest
-	figure.rotation_degrees = Vector3(0.0, -90.0, 0.0)
-	hall_glow.visible = true
-	hall_light.visible = true
-	figure.visible = true
-
-	await _wait(figure_wait_seconds)
-
-	# Then it ducks out of sight.
-	var sink: Tween = create_tween()
-	sink.tween_property(figure, "position", rest + figure_hidden_offset, 0.2)
-	await sink.finished
-
-	figure.visible = false
-	hall_glow.visible = false
-	hall_light.visible = false
-
-# ============================================================
-# THE DIARY: SOMEONE RUNS TOWARDS THE MASTER BEDROOM
-# ============================================================
-
-func _run_diary_footsteps() -> void:
-	await _wait(1.0)
-
-	var total: float = _path_length(run_path)
-	var steps: int = int(ceilf(total / run_stride))
-	for i: int in steps + 1:
-		var distance: float = minf(float(i) * run_stride, total)
-		run_steps.position = _point_at(run_path, distance)
-		run_steps.stream = _run_step
-		# Quiet and far at first, loud and close at the end.
-		run_steps.volume_db = lerpf(-18.0, 2.0, distance / total)
-		run_steps.pitch_scale = randf_range(1.05, 1.25)
-		run_steps.play()
-		await _wait(run_step_seconds)
+	if _flashlight != null and _flashlight.has_method("turn_off"):
+		_flashlight.call("turn_off")
 
 
 # ============================================================
 # HELPERS
 # ============================================================
+
+func _set_stage(stage: Stage) -> void:
+	_stage = stage
+	SaveManager.set_state_value(STATE_SECTION, KEY_STAGE, int(stage))
+
+
+func _doors() -> Array[DoorController]:
+	var doors: Array[DoorController] = []
+	if doors_root != null:
+		for child: Node in doors_root.get_children():
+			if child is DoorController:
+				doors.append(child as DoorController)
+
+	return doors
+
+
+func _set_saving_blocked(blocked: bool) -> void:
+	var target: Node = _get_player()
+	if target != null and target.has_method("set_manual_save_blocked"):
+		target.call("set_manual_save_blocked", blocked)
+
 
 func _path_length(path: Array[Vector3]) -> float:
 	var length: float = 0.0
@@ -299,11 +584,3 @@ func _get_player() -> Node3D:
 func _wait(seconds: float) -> void:
 	# Not "process always": the pause menu also pauses the sequence.
 	await get_tree().create_timer(seconds, false).timeout
-
-
-func _read_flag(key: StringName) -> bool:
-	return bool(SaveManager.get_state_value(STATE_SECTION, key, false))
-
-
-func _write_flag(key: StringName) -> void:
-	SaveManager.set_state_value(STATE_SECTION, key, true)

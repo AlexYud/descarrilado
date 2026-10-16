@@ -30,6 +30,7 @@ prompt_text = "PROMPT_INSPECT"
 [node name="Visual" type="Node3D" parent="."]
 metadata/inspect_mode = "read"
 metadata/inspect_id = "train_ticket"
+metadata/inspect_fit_scale = 0.75
 metadata/inspect_back_normal = Vector3(0, 0, -1)
 
 [node name="Paper" type="MeshInstance3D" parent="Visual"]

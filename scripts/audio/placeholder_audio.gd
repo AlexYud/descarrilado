@@ -308,6 +308,87 @@ static func make_metal_clink() -> AudioStreamWAV:
 	return _to_wav(samples, false)
 
 
+## Muffled arguing in another room: low, rounded syllables in two alternating voices, some of them
+## raised, heard through a wall. Loops (it starts and ends in near silence).
+static func make_muffled_argument(seconds: float = 9.0) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 808
+
+	# The syllables: start, length, which voice (pitch), how loud.
+	var syllables: Array[Dictionary] = []
+	var at: float = 0.25
+	var voice: int = 0
+	while at < seconds - 0.7:
+		var turn_end: float = minf(at + rng.randf_range(1.0, 1.9), seconds - 0.5)
+		var raised: float = rng.randf_range(0.7, 1.0) if rng.randf() < 0.4 else rng.randf_range(0.35, 0.6)
+		while at < turn_end:
+			var length: float = rng.randf_range(0.07, 0.2)
+			syllables.append({"at": at, "len": length, "voice": voice, "level": raised * rng.randf_range(0.7, 1.0)})
+			at += length + rng.randf_range(0.02, 0.09)
+		at += rng.randf_range(0.12, 0.4)
+		voice = 1 - voice
+
+	var buzz_phase: Array[float] = [0.0, 0.0]
+	var pitches: Array[float] = [118.0, 176.0]
+	var low_a: float = 0.0
+	var low_b: float = 0.0
+	var rumble: float = 0.0
+	var index: int = 0
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		while index < syllables.size() - 1 and t > float(syllables[index]["at"]) + float(syllables[index]["len"]):
+			index += 1
+
+		var level: float = 0.0
+		var which: int = 0
+		var s: Dictionary = syllables[index]
+		var local: float = t - float(s["at"])
+		if local >= 0.0 and local <= float(s["len"]):
+			var q: float = local / float(s["len"])
+			level = sin(PI * q) * float(s["level"])
+			which = int(s["voice"])
+
+		# A buzzing voice whose pitch wanders a little; a sawtooth, then rounded off by the wall.
+		var pitch: float = pitches[which] * (1.0 + 0.12 * sin(TAU * 3.1 * t + float(which)))
+		buzz_phase[which] = fmod(buzz_phase[which] + pitch / MIX_RATE, 1.0)
+		var saw: float = buzz_phase[which] * 2.0 - 1.0
+		low_a = lerpf(low_a, saw, 0.07)
+		low_b = lerpf(low_b, low_a, 0.12)
+		rumble = lerpf(rumble, rng.randf_range(-1.0, 1.0), 0.02)
+		samples[i] = clampf(low_b * level * 3.0 + rumble * 0.25 * (0.4 + level), -1.0, 1.0)
+
+	# Near silence at both ends so the loop has no click.
+	var fade: int = int(0.05 * MIX_RATE)
+	for i: int in fade:
+		var k: float = float(i) / float(fade)
+		samples[i] *= k
+		samples[samples.size() - 1 - i] *= k
+
+	return _to_wav(samples, true)
+
+
+## A heavy iron latch thrown open: a hard metallic clack on a deep knock, with a short ring.
+static func make_iron_clack() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.8 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 2310
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var knock: float = sin(TAU * 74.0 * t) * exp(-t * 9.0)
+		var body: float = sin(TAU * 190.0 * t) * exp(-t * 20.0) * 0.6
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.8)
+		var crack: float = smoothed * exp(-t * 90.0) * 1.0
+		var ring: float = (sin(TAU * 1180.0 * t) * 0.35 + sin(TAU * 2310.0 * t) * 0.22 + sin(TAU * 3720.0 * t) * 0.12) * exp(-t * 14.0)
+		samples[i] = clampf((knock + body + crack + ring) * 0.9, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
 static func _to_wav(samples: PackedFloat32Array, loop: bool) -> AudioStreamWAV:
 	var bytes: PackedByteArray = PackedByteArray()
 	bytes.resize(samples.size() * 2)

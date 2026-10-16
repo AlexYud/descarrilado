@@ -1,5 +1,8 @@
 extends SpotLight3D
 
+## The player pressed the flashlight key and it is now `is_on`. (Scripted changes do not raise it.)
+signal toggled_by_player(is_on: bool)
+
 @export var required_item_id: String = "flashlight"
 @export var flashlight_starts_on: bool = false
 @export var flashlight_input_enabled: bool = true
@@ -75,6 +78,14 @@ var ray_exclude_rids: Array[RID] = []
 var probed_target_point: Vector3 = Vector3.ZERO
 var probed_distance: float = 0.0
 
+## A script has taken over the light (see `begin_scripted_light`).
+var _scripted: bool = false
+var _scripted_on: bool = true
+var _scripted_energy: float = 1.0
+var _base_energy: float = 0.0
+var _fill: SpotLight3D = null
+var _fill_base_energy: float = 0.0
+
 
 func _ready() -> void:
 	rng.randomize()
@@ -96,15 +107,14 @@ func _process(delta: float) -> void:
 		original_camera_local_position = camera.to_local(global_position)
 		has_camera_local_position = true
 
-	if _can_toggle_flashlight() and Input.is_action_just_pressed("flashlight"):
-		flashlight_on = not flashlight_on
-
-		if flashlight_on:
-			_begin_startup_flicker()
-		else:
-			_reset_light_effects()
+	if _can_toggle_flashlight() and not _scripted and Input.is_action_just_pressed("flashlight"):
+		player_toggle()
 
 	_update_dynamic_flashlight(delta)
+
+	if _scripted:
+		_apply_scripted_light()
+		return
 
 	if _should_emit_light():
 		if startup_flicker_active:
@@ -114,6 +124,58 @@ func _process(delta: float) -> void:
 	else:
 		_reset_light_effects()
 		visible = false
+
+
+## A script takes over the light for a moment (a scare): it is on or off, at a fraction of its strength,
+## as `set_scripted_light` says, the key does nothing, and the beam still follows the view. End it
+## with `end_scripted_light`.
+func begin_scripted_light() -> void:
+	if _scripted:
+		return
+
+	_scripted = true
+	_reset_light_effects()
+	_base_energy = light_energy
+	_fill = get_node_or_null("FlashlightFill") as SpotLight3D
+	_fill_base_energy = _fill.light_energy if _fill != null else 0.0
+	_scripted_on = flashlight_on
+	_scripted_energy = 1.0
+
+
+func set_scripted_light(on: bool, energy_fraction: float = 1.0) -> void:
+	_scripted_on = on
+	_scripted_energy = energy_fraction
+	_apply_scripted_light()
+
+
+## Gives the light back at full strength (the caller then switches it on or off).
+func end_scripted_light() -> void:
+	if not _scripted:
+		return
+
+	_scripted = false
+	light_energy = _base_energy
+	if _fill != null:
+		_fill.light_energy = _fill_base_energy
+
+
+func _apply_scripted_light() -> void:
+	visible = _scripted_on
+	light_energy = _base_energy * _scripted_energy
+	if _fill != null:
+		_fill.light_energy = _fill_base_energy * _scripted_energy
+
+
+## What the flashlight key does: switches the light on or off (on with the usual start-up flicker).
+func player_toggle() -> void:
+	flashlight_on = not flashlight_on
+
+	if flashlight_on:
+		_begin_startup_flicker()
+	else:
+		_reset_light_effects()
+
+	toggled_by_player.emit(flashlight_on)
 
 
 func set_flashlight_input_enabled(enabled: bool) -> void:

@@ -36,6 +36,8 @@ const INSPECT_RENDER_LAYER_MASK: int = 1 << 19
 ## facing the viewer, only tilts a little and can be turned over; anything else is
 ## `examine`d: turned freely in every direction (also the default).
 const META_INSPECT_MODE: StringName = &"inspect_mode"
+## `inspect_fit_scale` metadata of a Visual: a multiplier on the size the item first comes up at (below 1: smaller).
+const META_FIT_SCALE: StringName = &"inspect_fit_scale"
 
 ## `readable_text` (a localization key, with BBCode) is the writing on a document or
 ## an inscription on an object; `art_language` the language the art itself is in
@@ -75,8 +77,10 @@ const MODE_READ: StringName = &"read"
 ## The reading size as a fraction of the screen's height (at the default caption
 ## size).
 @export var body_font_ratio: float = 0.0172
-## The player can zoom from this to this many times the first distance.
-@export var zoom_in_limit: float = 0.35
+## The player can zoom in to this fraction of the first distance (an object can never be zoomed to
+## fill the whole screen) and out to `zoom_out_limit` times it. A paper is read, so it may come closer.
+@export var zoom_in_limit_examine: float = 0.65
+@export var zoom_in_limit_read: float = 0.8
 @export var zoom_out_limit: float = 1.6
 ## How quickly a released object stops turning (higher is stiffer).
 @export var inertia_damping: float = 3.5
@@ -151,6 +155,7 @@ var back_facing_time: float = 0.0
 var current_inspect_distance: float = 0.28
 
 var inspect_mode: StringName = MODE_EXAMINE
+var _fit_scale: float = 1.0
 var _caption_name_key: String = ""
 
 # A document's writing: the art is made once, in `_art_language`, and its words
@@ -1123,6 +1128,7 @@ func _configure_for_item(item: Node3D) -> void:
 	var mode: String = str(item.get_meta(META_INSPECT_MODE, "examine"))
 	inspect_mode = MODE_READ if mode == "read" else MODE_EXAMINE
 	_item_scale = item.global_basis.get_scale()
+	_fit_scale = clampf(float(item.get_meta(META_FIT_SCALE, 1.0)), 0.2, 1.5)
 
 	var bounds: AABB = _local_bounds(item)
 	_center_local = bounds.get_center()
@@ -1342,6 +1348,9 @@ func _reframe(immediately: bool) -> void:
 		height_fraction = fit_height_read
 
 	var width_fraction: float = _column_width() * 0.96 / screen.x
+	# A few items are shown smaller than the rule gives them (`inspect_fit_scale` metadata on the Visual).
+	height_fraction *= _fit_scale
+	width_fraction *= _fit_scale
 
 	_fit_distance = inspect_distance
 	if _largest > 0.001:
@@ -1350,6 +1359,7 @@ func _reframe(immediately: bool) -> void:
 		_fit_distance = maxf(for_height, for_width)
 
 	_fit_distance = clampf(_fit_distance, min_inspect_distance, max_inspect_distance)
+	var zoom_in_limit: float = zoom_in_limit_read if inspect_mode == MODE_READ else zoom_in_limit_examine
 	_zoom_min = maxf(min_inspect_distance, _fit_distance * zoom_in_limit)
 	_zoom_max = minf(max_inspect_distance, _fit_distance * zoom_out_limit)
 	_set_inspect_distance(_fit_distance)

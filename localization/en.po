@@ -380,6 +380,12 @@ msgstr "[Placeholder photo: Sophia at the Bus Stop. She is about 28.]"
 msgid "FICHA_SCRATCH_JULIANA"
 msgstr "CALL HER"
 
+msgid "FICHA_STAMP_LUCAS"
+msgstr "LUCAS"
+
+msgid "FICHA_SCRATCH_LUCAS"
+msgstr "NEVER LEFT"
+
 msgid "ITEM_PHOTO_CLOCK_DESCRIPTION"
 msgstr "A girl stands alone in a cramped signal tower under a big station clock. There is handwriting on the back."
 
@@ -532,19 +538,19 @@ msgid "ITEM_KITCHEN_RECIPE_NAME"
 msgstr "Market Wrapper and Recipe"
 
 msgid "ITEM_KITCHEN_RECIPE_DESCRIPTION"
-msgstr "A grease-stained market paper wrapper with handwritten notes on the back. The quantity '3 kilos of coarse salt' is circled twice in blue ink."
+msgstr "A grease-stained market paper wrapper with handwritten notes on the back."
 
 msgid "RECIPE_TEXT"
-msgstr "The very first time we tried to cook a real meal together.\n\nYou insisted on making your mother’s potato soup to impress me, but when you went down to the market, you bought 3 whole kilos of coarse rock salt instead of three small spoons. The kitchen smelled like the sea, and the broth was completely ruined.\n\nInstead of admitting you made a mistake, you sat at the table and swallowed two overflowing bowls in total silence just to prove you were 'fine.' I laughed until my ribs hurt, and you finally cracked a smile.\n\n— S."
+msgstr "The very first time we tried to cook a real meal together. You insisted on making your mother's potato soup to impress me, but you spilled water and oil all over the floorboards.\n\nBefore I could grab a rag, you slipped hard and cracked your head against the counter. You sat on the floor bleeding from your temple, staring past me at the concrete sink right where someone would stand to wash the dishes.\n\nYou swore Juliana was standing there in the dark, holding a note in her hands and reading it in silence. I turned around, but the space was empty. I told you that you were just delirious from the knock on your head. Pff... You only saw her because you hated how close we were.\n\nS."
 
 msgid "ITEM_PANTRY_NOTE_NAME"
 msgstr "Folded Note"
 
 msgid "ITEM_PANTRY_NOTE_DESCRIPTION"
-msgstr "A note left on the pantry shelf. The number '6' is underlined."
+msgstr "A note left on the pantry shelf."
 
 msgid "JAR_NOTE_TEXT"
-msgstr "6 minutes trapped inside this tiny, dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\n— S."
+msgstr "Trapped inside this tiny dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\nS."
 
 msgid "ITEM_MASTER_KEY_NAME"
 msgstr "Rusty Key"
@@ -556,10 +562,10 @@ msgid "ITEM_LUCAS_DIARY_NAME"
 msgstr "Lucas's Notebook"
 
 msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
-msgstr "An entry in a leather-bound diary. The timestamp '6:00 AM' is underlined heavily in black ink."
+msgstr "An entry in a leather-bound diary."
 
 msgid "DIARY_TEXT"
-msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute, just lying on the floorboards listening to the quiet.\n\nSophia lay beside me, staring up at the unfinished ceiling without saying a word. She didn't mention leaving for the city. She didn't say a word about the train or her bus stubs.\n\nWhen 6:00 AM hit and the sun finally broke through the trees, she was still here next to me. That was the exact moment I knew she would never leave. She is mine forever."
+msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute.\n\nSophia was lying beside me on the floorboards, staring up at the unfinished rafters. She suddenly grabbed my arm, shaking, and whispered that the red stain on the ceiling wood was dripping onto her chest. I looked up. There was no water, no blood, no stain, just dry pine.\n\nBut when I touched her face, her skin was burning hot, and her eyes were reflecting a crimson light that wasn't in the room. She scrambled backward in total panic, her boots scratching the floorboards as she sprinted out into the hallway toward the front door. She kept screaming that the room was bleeding.\n\nBut when the sun finally broke through the trees at 06:00 AM, she was still here in town. That was the exact moment I knew she would never leave. She is mine forever."
 
 
 msgid "ITEM_HOUSE_AD_NAME"
@@ -614,7 +620,7 @@ msgid "BUS_TICKET_IF_YOU_WANT"
 msgstr "If you want."
 
 msgid "DIARY_HEADING"
-msgstr "May 14th — 6:00 AM."
+msgstr "May 14th, 6:00 AM."
 
 # Waiting shed and signal box
 msgid "LEVER_UP"
@@ -905,13 +911,13 @@ msgstr "Drag: tilt    Wheel: zoom    {inspect_flip}: turn over"
 
 # Readable documents: the writing shown as an overlay when the art is in another language
 msgid "READABLE_RECIPE"
-msgstr "The very first time we tried to cook a real meal together.\n\nYou insisted on making your mother’s potato soup to impress me, but when you went down to the market, you bought [color=#8fa8ff][u]3 whole kilos[/u][/color] of coarse rock salt instead of three small spoons. The kitchen smelled like the sea, and the broth was completely ruined.\n\nInstead of admitting you made a mistake, you sat at the table and swallowed two overflowing bowls in total silence just to prove you were 'fine.' I laughed until my ribs hurt, and you finally cracked a smile.\n\n— S."
+msgstr "The very first time we tried to cook a real meal together. You insisted on making your mother's potato soup to impress me, but you spilled water and oil all over the floorboards.\n\nBefore I could grab a rag, you slipped hard and cracked your head against the counter. You sat on the floor bleeding from your temple, staring past me at the concrete sink right where someone would stand to wash the dishes.\n\nYou swore Juliana was standing there in the dark, holding a note in her hands and reading it in silence. I turned around, but the space was empty. I told you that you were just delirious from the knock on your head. Pff... You only saw her because you hated how close we were.\n\nS."
 
 msgid "READABLE_PANTRY_NOTE"
-msgstr "[color=#8fa8ff][u]6[/u][/color] minutes trapped inside this tiny, dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\n— S."
+msgstr "Trapped inside this tiny dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\nS."
 
 msgid "READABLE_DIARY"
-msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute, just lying on the floorboards listening to the quiet.\n\nSophia lay beside me, staring up at the unfinished ceiling without saying a word. She didn't mention leaving for the city. She didn't say a word about the train or her bus stubs.\n\nWhen [color=#8fa8ff][u]6:00 AM[/u][/color] hit and the sun finally broke through the trees, she was still here next to me. That was the exact moment I knew she would never leave. She is mine forever."
+msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute.\n\nSophia was lying beside me on the floorboards, staring up at the unfinished rafters. She suddenly grabbed my arm, shaking, and whispered that the red stain on the ceiling wood was dripping onto her chest. I looked up. There was no water, no blood, no stain, just dry pine.\n\nBut when I touched her face, her skin was burning hot, and her eyes were reflecting a crimson light that wasn't in the room. She scrambled backward in total panic, her boots scratching the floorboards as she sprinted out into the hallway toward the front door. She kept screaming that the room was bleeding.\n\nBut when the sun finally broke through the trees at 06:00 AM, she was still here in town. That was the exact moment I knew she would never leave. She is mine forever."
 
 msgid "READABLE_NOTE_CAPSULE"
 msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— L."

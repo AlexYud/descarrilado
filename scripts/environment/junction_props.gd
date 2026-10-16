@@ -402,6 +402,10 @@ static func _build_ficha(root: Node3D, number_key: String = "FICHA_NUMBER", vari
 				)
 			HouseProps.add_box(coin_root, "Dent", Vector3(0.012, 0.007, 0.0075), Vector3(-0.0215, 0.012, 0.0), dark, Vector3(0.0, 0.0, -28.0))
 			HouseProps.add_box(coin_root, "Flat", Vector3(0.016, 0.003, 0.007), Vector3(0.0, -0.0262, 0.0), dark)
+			# His name stamped on the front and "never left" scratched roughly on the back: both hidden details,
+			# found only by turning the token until the face is toward you; each is read as an overlay.
+			_engraving(coin_root, "StampSpot", "FICHA_STAMP_LUCAS", &"ficha_stamp", Vector3(0.0, 0.0, 0.0031), Vector3.ZERO, 0.034)
+			_engraving(coin_root, "ScratchSpot", "FICHA_SCRATCH_LUCAS", &"ficha_scratch", Vector3(0.0, 0.0, -0.0031), Vector3(0.0, 180.0, 0.0), 0.034)
 
 
 ## The note that came with the Ficha: a small card, folded once.
