@@ -45,13 +45,15 @@ const TRACKS: Dictionary = {
 		# Silent tail: the bus engine turns into the cassette mechanism.
 		{"start": 29.5, "end": 33.0, "key": ""},
 	],
+	# Two voices on the one line, both captioned as Sophia: the warm one (lines 1 and 3, slow and soft)
+	# and the desperate one (2 and 4, high and fast). `voice` says which one the placeholder audio plays.
 	OVERLOOK_CALL: [
-		{"start": 1.0, "end": 8.6, "key": "CAPTION_PHONE_01", "speaker": SPEAKER_SOPHIA_PHONE},
-		{"start": 9.8, "end": 13.8, "key": "CAPTION_PHONE_02", "speaker": SPEAKER_SOPHIA_PHONE},
-		{"start": 15.2, "end": 21.2, "key": "CAPTION_PHONE_03", "speaker": SPEAKER_SOPHIA_PHONE},
-		{"start": 22.6, "end": 36.4, "key": "CAPTION_PHONE_04", "speaker": SPEAKER_SOPHIA_PHONE},
+		{"start": 1.0, "end": 13.0, "key": "CAPTION_PHONE_01", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"warm"},
+		{"start": 14.2, "end": 20.0, "key": "CAPTION_PHONE_02", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"desperate"},
+		{"start": 21.4, "end": 28.6, "key": "CAPTION_PHONE_03", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"warm"},
+		{"start": 30.0, "end": 36.2, "key": "CAPTION_PHONE_04", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"desperate"},
 		# The line goes on hissing for a moment after she stops.
-		{"start": 36.4, "end": 38.0, "key": ""},
+		{"start": 36.2, "end": 37.6, "key": ""},
 	],
 }
 

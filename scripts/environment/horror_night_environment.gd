@@ -153,6 +153,30 @@ var low_altitude_height_density_multiplier: float = 0.0
 @export var fog_height_follows_descent: bool = true
 
 
+## Takes the light out of the world: 0 leaves the atmosphere as it is, 1 is pitch black (no ambient
+## light, no moon, no sky, no glow, no mist light). Used by the finale; the only lights left are the
+## ones a scene turns on itself. Applied after the atmosphere every frame.
+@export_range(0.0, 1.0, 0.01) var blackout: float = 0.0
+
+
+func _apply_blackout() -> void:
+	if blackout <= 0.0 or Engine.is_editor_hint() or environment == null or not _runtime_values_ready:
+		return
+
+	var keep: float = 1.0 - blackout
+	environment.ambient_light_energy *= keep
+	environment.background_energy_multiplier *= keep
+	environment.fog_light_energy *= keep
+	if blackout >= 0.99 and environment.glow_enabled:
+		environment.glow_enabled = false
+
+	if _runtime_moon == null or not is_instance_valid(_runtime_moon):
+		_runtime_moon = _find_moon_light()
+
+	if _runtime_moon != null:
+		_runtime_moon.light_energy *= keep
+
+
 # ============================================================
 # OVERLOOK VISTA
 # ============================================================
@@ -360,6 +384,12 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_atmosphere()
+	_apply_blackout()
+
+
+## The atmosphere for this frame (the forest's, or the overlook's near the vista focus).
+func _update_atmosphere() -> void:
 	if Engine.is_editor_hint():
 		return
 

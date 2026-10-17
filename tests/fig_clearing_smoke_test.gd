@@ -18,6 +18,7 @@ var player: CharacterBody3D = null
 
 
 func _ready() -> void:
+	GameSettings.set_text_locale("en", false)
 	SaveManager.save_directory = TEST_SAVE_DIRECTORY
 	SaveManager.delete_slot(1)
 	SaveManager.create_new_game(

@@ -58,6 +58,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	GameSettings.set_text_locale("en", false)
 	await _check_layout()
 	await _check_kitchen_opens_the_pantry()
 	await _check_pantry_voices_and_key()
@@ -304,6 +305,29 @@ func _check_hallway_trap() -> void:
 	await _wait(1.0)
 	_expect(bool(flashlight.get("flashlight_on")) and house._stage == UnfinishedHouseSequence.Stage.TRAP_CUT, "pointing the light elsewhere does nothing")
 	_expect(not house._figure_in_beam(), "the beam is not on the figure")
+
+	# The detection is generous (it must never leave the player stuck): any part of the figure counts,
+	# the lamp's flicker does not matter, and lingering nearby with the light on springs it anyway.
+	# (Probing with the stage frozen, or finding it would spring the real trap.)
+	var base_dwell: float = house.figure_dwell_seconds
+	house._stage = UnfinishedHouseSequence.Stage.RESOLVED
+	house.figure_dwell_seconds = 999.0
+	var figure_feet: Vector3 = house.silhouette.global_position
+	await _aim_player_at(figure_feet + Vector3(0.0, 0.2, 0.0))
+	_expect(house._figure_in_beam(), "looking at its feet finds it")
+	await _aim_player_at(figure_feet + Vector3(0.0, 1.6, 0.0))
+	_expect(house._figure_in_beam(), "looking at its head finds it")
+	(flashlight as SpotLight3D).visible = false
+	_expect(house._figure_in_beam(), "a blink of the lamp does not hide it")
+	(flashlight as SpotLight3D).visible = true
+	var camera_pos: Vector3 = player.get_node("Head/Camera3D").global_position
+	var off_axis: Vector3 = figure_feet + Vector3(0.0, 1.0, 0.0) + Vector3(0.0, 0.0, 0.0)
+	var lateral: Vector3 = (off_axis - camera_pos).cross(Vector3.UP).normalized() * (off_axis - camera_pos).length() * 0.3
+	await _aim_player_at(off_axis + lateral)
+	_expect(not house._figure_in_beam() and house._figure_near_and_visible(), "loosely looking its way is caught by the fallback")
+	house._stage = UnfinishedHouseSequence.Stage.TRAP_CUT
+	house.figure_dwell_seconds = base_dwell
+	house._figure_dwell = 0.0
 
 	# The beam finds the figure: for half a second the light is weak and stutters, and each time it
 	# comes back the figure is different. Then it dies and every door slams and locks.

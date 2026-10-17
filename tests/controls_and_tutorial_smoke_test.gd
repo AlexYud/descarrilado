@@ -18,6 +18,7 @@ func _ready() -> void:
 	DirAccess.remove_absolute(TEST_SETTINGS_PATH)
 	InputBindings.settings_path = TEST_SETTINGS_PATH
 	InputBindings.reset_all()
+	GameSettings.set_text_locale("en", false)
 
 	await _check_controls_tab()
 	await _check_tutorial()

@@ -11,9 +11,7 @@ signal ui_size_changed(size_index: int)
 signal text_language_changed(locale: String)
 signal voice_language_changed(locale: String)
 signal captions_enabled_changed(enabled: bool)
-signal caption_language_changed(locale: String)
 signal caption_size_changed(size_index: int)
-signal readable_text_mode_changed(mode: int)
 signal mouse_sensitivity_changed(percent: float)
 signal invert_y_changed(enabled: bool)
 signal sprint_toggle_changed(enabled: bool)
@@ -55,16 +53,13 @@ const LANGUAGE_SECTION: String = "language"
 const TEXT_LOCALE_KEY: String = "text_locale"
 const VOICE_LOCALE_KEY: String = "voice_locale"
 const CAPTIONS_ENABLED_KEY: String = "captions_enabled"
-const CAPTION_LOCALE_KEY: String = "caption_locale"
 const CAPTION_SIZE_KEY: String = "caption_size"
-const READABLE_TEXT_KEY: String = "readable_text_mode"
 
 const LOCALE_ENGLISH: String = "en"
 const LOCALE_BRAZILIAN_PORTUGUESE: String = "pt_BR"
 const DEFAULT_TEXT_LOCALE: String = LOCALE_ENGLISH
 const DEFAULT_VOICE_LOCALE: String = LOCALE_ENGLISH
 const DEFAULT_CAPTIONS_ENABLED: bool = true
-const DEFAULT_CAPTION_LOCALE: String = LOCALE_ENGLISH
 
 ## Caption text sizes (Small, Medium, Large, Extra Large), in pixels.
 const CAPTION_FONT_SIZES: Array[int] = [20, 26, 34, 44]
@@ -72,16 +67,6 @@ const CAPTION_FONT_SIZES: Array[int] = [20, 26, 34, 44]
 const UI_SIZE_COUNT: int = 3
 const DEFAULT_UI_SIZE_INDEX: int = 1
 const DEFAULT_CAPTION_SIZE: int = 1
-
-## When a document's text is shown as an easy-to-read overlay: only when its art is
-## in another language than the player's (the default), always, or never.
-enum ReadableText {
-	AUTO,
-	ALWAYS,
-	NEVER,
-}
-
-const DEFAULT_READABLE_TEXT: int = ReadableText.AUTO
 
 const SUPPORTED_VOICE_LOCALES: Array[String] = [
 	LOCALE_ENGLISH,
@@ -165,10 +150,8 @@ var motion_blur_enabled: bool = DEFAULT_MOTION_BLUR
 var text_locale: String = DEFAULT_TEXT_LOCALE
 var voice_locale: String = DEFAULT_VOICE_LOCALE
 var captions_enabled: bool = DEFAULT_CAPTIONS_ENABLED
-var caption_locale: String = DEFAULT_CAPTION_LOCALE
 var caption_size: int = DEFAULT_CAPTION_SIZE
 var ui_size_index: int = DEFAULT_UI_SIZE_INDEX
-var readable_text_mode: int = DEFAULT_READABLE_TEXT
 
 var mouse_sensitivity_percent: float = (
 	DEFAULT_MOUSE_SENSITIVITY_PERCENT
@@ -299,18 +282,8 @@ func save_settings() -> void:
 	)
 	config.set_value(
 		LANGUAGE_SECTION,
-		CAPTION_LOCALE_KEY,
-		caption_locale
-	)
-	config.set_value(
-		LANGUAGE_SECTION,
 		CAPTION_SIZE_KEY,
 		caption_size
-	)
-	config.set_value(
-		LANGUAGE_SECTION,
-		READABLE_TEXT_KEY,
-		readable_text_mode
 	)
 
 	config.set_value(
@@ -635,26 +608,9 @@ func get_captions_enabled() -> bool:
 	return captions_enabled
 
 
-## Captions have their own language, independent of the interface text and the
-## voice, so a player can hear one language and read another.
-func set_caption_locale(
-	value: String,
-	save_after_change: bool = true
-) -> void:
-	var new_locale: String = _sanitize_caption_locale(value)
-
-	if caption_locale == new_locale:
-		return
-
-	caption_locale = new_locale
-	caption_language_changed.emit(caption_locale)
-
-	if save_after_change:
-		save_settings()
-
-
+## Captions are always in the language of the interface text (as in other games, one option for both).
 func get_caption_locale() -> String:
-	return caption_locale
+	return text_locale
 
 
 func set_caption_size(
@@ -697,32 +653,8 @@ func get_ui_size_index() -> int:
 	return ui_size_index
 
 
-func set_readable_text_mode(
-	value: int,
-	save_after_change: bool = true
-) -> void:
-	var new_mode: int = clampi(value, ReadableText.AUTO, ReadableText.NEVER)
-
-	if readable_text_mode == new_mode:
-		return
-
-	readable_text_mode = new_mode
-	readable_text_mode_changed.emit(readable_text_mode)
-
-	if save_after_change:
-		save_settings()
-
-
-func get_readable_text_mode() -> int:
-	return readable_text_mode
-
-
 func get_caption_font_size() -> int:
 	return CAPTION_FONT_SIZES[caption_size]
-
-
-func get_supported_caption_locales() -> PackedStringArray:
-	return get_supported_text_locales()
 
 
 func set_mouse_sensitivity_percent(
@@ -873,7 +805,6 @@ func reset_controls_to_default() -> void:
 	sprint_toggle = DEFAULT_SPRINT_TOGGLE
 	tutorial_hints = DEFAULT_TUTORIAL_HINTS
 	head_bob_enabled = DEFAULT_HEAD_BOB
-	readable_text_mode = DEFAULT_READABLE_TEXT
 
 	mouse_sensitivity_changed.emit(
 		mouse_sensitivity_percent
@@ -882,7 +813,6 @@ func reset_controls_to_default() -> void:
 	sprint_toggle_changed.emit(sprint_toggle)
 	tutorial_hints_changed.emit(tutorial_hints)
 	head_bob_changed.emit(head_bob_enabled)
-	readable_text_mode_changed.emit(readable_text_mode)
 
 	save_settings()
 
@@ -901,9 +831,7 @@ func _set_default_values() -> void:
 	text_locale = DEFAULT_TEXT_LOCALE
 	voice_locale = DEFAULT_VOICE_LOCALE
 	captions_enabled = DEFAULT_CAPTIONS_ENABLED
-	caption_locale = DEFAULT_CAPTION_LOCALE
 	caption_size = DEFAULT_CAPTION_SIZE
-	readable_text_mode = DEFAULT_READABLE_TEXT
 	ui_size_index = DEFAULT_UI_SIZE_INDEX
 
 	mouse_sensitivity_percent = (
@@ -1014,25 +942,11 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			DEFAULT_CAPTIONS_ENABLED
 		)
 	)
-	caption_locale = str(
-		config.get_value(
-			LANGUAGE_SECTION,
-			CAPTION_LOCALE_KEY,
-			DEFAULT_CAPTION_LOCALE
-		)
-	)
 	caption_size = int(
 		config.get_value(
 			LANGUAGE_SECTION,
 			CAPTION_SIZE_KEY,
 			DEFAULT_CAPTION_SIZE
-		)
-	)
-	readable_text_mode = int(
-		config.get_value(
-			LANGUAGE_SECTION,
-			READABLE_TEXT_KEY,
-			DEFAULT_READABLE_TEXT
 		)
 	)
 
@@ -1101,10 +1015,8 @@ func _sanitize_values() -> void:
 	)
 	text_locale = _sanitize_text_locale(text_locale)
 	voice_locale = _sanitize_voice_locale(voice_locale)
-	caption_locale = _sanitize_caption_locale(caption_locale)
 	caption_size = clampi(caption_size, 0, CAPTION_FONT_SIZES.size() - 1)
 	ui_size_index = clampi(ui_size_index, 0, UI_SIZE_COUNT - 1)
-	readable_text_mode = clampi(readable_text_mode, ReadableText.AUTO, ReadableText.NEVER)
 
 	mouse_sensitivity_percent = clampf(
 		mouse_sensitivity_percent,
@@ -1129,13 +1041,6 @@ func _sanitize_text_locale(value: String) -> String:
 		return value
 
 	return DEFAULT_TEXT_LOCALE
-
-
-func _sanitize_caption_locale(value: String) -> String:
-	if get_supported_caption_locales().has(value):
-		return value
-
-	return DEFAULT_CAPTION_LOCALE
 
 
 func _sanitize_voice_locale(value: String) -> String:

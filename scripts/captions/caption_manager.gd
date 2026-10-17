@@ -42,7 +42,7 @@ func _ready() -> void:
 	panel.visible = false
 
 	GameSettings.captions_enabled_changed.connect(_on_settings_changed)
-	GameSettings.caption_language_changed.connect(_on_settings_changed)
+	GameSettings.text_language_changed.connect(_on_settings_changed)
 	GameSettings.caption_size_changed.connect(_on_size_changed)
 	_apply_font_size()
 

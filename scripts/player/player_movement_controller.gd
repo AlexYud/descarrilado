@@ -145,6 +145,13 @@ var is_sprinting: bool = false
 
 var _sprint_toggled: bool = false
 
+# The corridor lock (see `lock_to_corridor`).
+var _corridor_active: bool = false
+var _corridor_origin: Vector3 = Vector3.ZERO
+var _corridor_axis: Vector3 = Vector3.FORWARD
+var _corridor_min: float = 0.0
+var _corridor_max: float = 0.0
+
 # The guided walk: the player is walked to a spot at a slow, natural pace, looking
 # where they will act (used to walk up to a door before pushing it).
 var _guided_active: bool = false
@@ -274,6 +281,52 @@ func physics_update(
 	)
 
 	player.move_and_slide()
+	_clamp_to_corridor()
+
+
+## The corridor lock (the wagon's aisle in the finale): the player can only walk along a line, forward
+## (the move-forward key goes along `axis`) and back, between two limits measured along it, and look
+## around freely; sideways keys do nothing.
+func lock_to_corridor(origin: Vector3, axis: Vector3, min_distance: float, max_distance: float) -> void:
+	_corridor_origin = origin
+	_corridor_axis = Vector3(axis.x, 0.0, axis.z).normalized()
+	_corridor_min = min_distance
+	_corridor_max = max_distance
+	_corridor_active = true
+
+
+func release_corridor() -> void:
+	_corridor_active = false
+
+
+func is_corridor_locked() -> bool:
+	return _corridor_active
+
+
+## How far along the corridor the player is.
+func get_corridor_distance() -> float:
+	return (player.global_position - _corridor_origin).dot(_corridor_axis)
+
+
+func set_corridor_limits(min_distance: float, max_distance: float) -> void:
+	_corridor_min = min_distance
+	_corridor_max = max_distance
+
+
+## Puts the player back inside the corridor's limits (the move-and-slide may have carried them past).
+func _clamp_to_corridor() -> void:
+	if not _corridor_active:
+		return
+
+	var distance: float = get_corridor_distance()
+	var clamped: float = clampf(distance, _corridor_min, _corridor_max)
+	if is_equal_approx(distance, clamped):
+		return
+
+	player.global_position += _corridor_axis * (clamped - distance)
+	var along: float = player.velocity.dot(_corridor_axis)
+	if (distance > clamped and along > 0.0) or (distance < clamped and along < 0.0):
+		player.velocity -= _corridor_axis * along
 
 
 func begin_cutscene_camera_control(
@@ -437,6 +490,11 @@ func _apply_look(delta: float) -> void:
 
 
 func _get_move_direction() -> Vector3:
+	if _corridor_active:
+		# Only forward and back, along the corridor: the sideways keys do nothing.
+		var along_input: float = Input.get_axis("down", "up")
+		return _corridor_axis * along_input if absf(along_input) > 0.01 else Vector3.ZERO
+
 	var input_x: float = Input.get_axis(
 		"left",
 		"right"

@@ -24,6 +24,7 @@ func _same(a: Color, b: Color) -> bool:
 
 func _ready() -> void:
 	await get_tree().process_frame
+	GameSettings.set_text_locale("en", false)
 
 	# The palette of the brief.
 	_expect(UIConfig.color_panel.to_html(false).to_lower() == "050505", "panel background #050505")

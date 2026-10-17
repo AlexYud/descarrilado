@@ -190,14 +190,15 @@ const COMMON_WINDOW_RESOLUTIONS: Array[Vector2i] = [
 	/CaptionsCheckButton
 )
 
-@onready var caption_language_option: OptionButton = (
+@onready var caption_preview_label: Label = (
 	$OptionsMargin
 	/OptionsVBox
 	/OptionsTabs
 	/Language
 	/LanguageVBox
-	/CaptionLanguageRow
-	/CaptionLanguageOption
+	/CaptionPreviewRow
+	/CaptionPreviewPanel
+	/CaptionPreviewLabel
 )
 
 @onready var caption_size_option: OptionButton = (
@@ -214,7 +215,6 @@ var syncing_controls: bool = false
 var available_resolutions: Array[Vector2i] = []
 var available_text_locales: PackedStringArray = []
 var available_voice_locales: PackedStringArray = []
-var available_caption_locales: PackedStringArray = []
 
 
 func _ready() -> void:
@@ -347,14 +347,6 @@ func _populate_language_options() -> void:
 			_get_language_display_name(locale)
 		)
 
-	available_caption_locales = (
-		GameSettings.get_supported_caption_locales()
-	)
-	caption_language_option.clear()
-	for locale: String in available_caption_locales:
-		caption_language_option.add_item(
-			_get_language_display_name(locale)
-		)
 	caption_size_option.clear()
 	caption_size_option.add_item(tr("OPTIONS_CAPTION_SIZE_SMALL"))
 	caption_size_option.add_item(tr("OPTIONS_CAPTION_SIZE_MEDIUM"))
@@ -530,13 +522,6 @@ func _connect_control_signals() -> void:
 			_on_captions_toggled
 		)
 
-	if not caption_language_option.item_selected.is_connected(
-		_on_caption_language_option_selected
-	):
-		caption_language_option.item_selected.connect(
-			_on_caption_language_option_selected
-		)
-
 	if not caption_size_option.item_selected.is_connected(
 		_on_caption_size_option_selected
 	):
@@ -639,18 +624,11 @@ func _sync_controls_from_settings() -> void:
 	captions_check_button.set_pressed_no_signal(
 		GameSettings.get_captions_enabled()
 	)
-	_select_locale(
-		caption_language_option,
-		available_caption_locales,
-		GameSettings.get_caption_locale()
-	)
-	caption_language_option.disabled = (
-		not GameSettings.get_captions_enabled()
-	)
 	caption_size_option.select(GameSettings.get_caption_size())
 	caption_size_option.disabled = (
 		not GameSettings.get_captions_enabled()
 	)
+	_update_caption_preview()
 
 	syncing_controls = false
 
@@ -853,20 +831,8 @@ func _on_captions_toggled(enabled: bool) -> void:
 		return
 
 	GameSettings.set_captions_enabled(enabled)
-	caption_language_option.disabled = not enabled
 	caption_size_option.disabled = not enabled
-
-
-func _on_caption_language_option_selected(index: int) -> void:
-	if syncing_controls:
-		return
-
-	if index < 0 or index >= available_caption_locales.size():
-		return
-
-	GameSettings.set_caption_locale(
-		available_caption_locales[index]
-	)
+	_update_caption_preview()
 
 
 func _on_caption_size_option_selected(index: int) -> void:
@@ -874,6 +840,18 @@ func _on_caption_size_option_selected(index: int) -> void:
 		return
 
 	GameSettings.set_caption_size(index)
+	_update_caption_preview()
+
+
+## The sample line shows the chosen size (dimmed while captions are off), so it can be judged here.
+func _update_caption_preview() -> void:
+	caption_preview_label.add_theme_font_size_override(
+		&"font_size",
+		GameSettings.get_caption_font_size()
+	)
+	caption_preview_label.modulate.a = (
+		1.0 if GameSettings.get_captions_enabled() else 0.35
+	)
 
 
 func _on_tab_changed(_tab: int) -> void:

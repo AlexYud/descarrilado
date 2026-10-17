@@ -50,6 +50,7 @@
 [ext_resource type="PackedScene" path="res://scenes/environment/forest_boundaries.tscn" id="99_boundaries"]
 [ext_resource type="PackedScene" path="res://scenes/environment/overlook.tscn" id="99_overlook"]
 [ext_resource type="PackedScene" path="res://scenes/levels/overlook_phone.tscn" id="op_phone"]
+[ext_resource type="Script" path="res://scripts/levels/dream_finale.gd" id="dream_finale"]
 [ext_resource type="PackedScene" uid="uid://wulvhnk43k1y" path="res://scenes/levels/fig_clearing.tscn" id="fc_clearing"]
 [ext_resource type="PackedScene" uid="uid://htjuwv6bri4o" path="res://scenes/levels/unfinished_house.tscn" id="uh_house"]
 [ext_resource type="PackedScene" path="res://scenes/levels/waiting_shed.tscn" id="ws_shed"]
@@ -1028,6 +1029,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, -12.45167, -16)
 
 [node name="OverlookPhone" parent="Scenery" instance=ExtResource("op_phone")]
 transform = Transform3D(0.727, 0, -0.686, 0, 1, 0, 0.686, 0, 0.727, 174.459, -18.7419, 25.399)
+release_player_after_call_seconds = 0.0
 
 [node name="Dressing" parent="Scenery/OverlookPhone" index="1"]
 build_ledge = false
@@ -1063,3 +1065,10 @@ directional_shadow_split_1 = 0.25
 directional_shadow_split_2 = 0.25
 directional_shadow_max_distance = 32.0
 directional_shadow_pancake_size = 12.0
+
+[node name="Finale" type="Node" parent="." node_paths=PackedStringArray("phone", "night", "town", "wagon")]
+script = ExtResource("dream_finale")
+phone = NodePath("../Scenery/OverlookPhone")
+night = NodePath("../WorldEnvironment")
+town = NodePath("../TownVista")
+wagon = NodePath("../Train/Wagons/TrainWagon")

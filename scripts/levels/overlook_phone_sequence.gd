@@ -616,19 +616,19 @@ func pick_up_receiver() -> void:
 
 	# The voice begins: the lamp sputters and dies for a long moment, then burns on.
 	_start_hiss()
+	_play_voices()
 	if lamp != null:
 		lamp.play_flicker(&"start")
 
 	await CaptionManager.play_scripted_and_wait(call_track)
 	_stop_hiss()
 
-	# The voice ends: the lamp stutters again, and goes dark once more, before it settles.
-	if lamp != null:
-		lamp.play_flicker(&"end")
+	# The line is cut at the other end: a soft, hollow click. (The lamp does not react: it burns on until
+	# the night goes out, see `DreamFinale`.)
+	_play(&"disconnect", -8.0)
+	await get_tree().create_timer(0.35).timeout
 
-	await get_tree().create_timer(0.7).timeout
-
-	# Her head turns back to the booth as the receiver is lowered and let go.
+	# Her head turns back to the booth as the receiver is dropped to dangle on its cord.
 	_in_call_view = false
 	_set_far_blur(true)
 	var back: Tween = create_tween().set_parallel(true)
@@ -640,9 +640,9 @@ func pick_up_receiver() -> void:
 			var eased: float = ease(t, -2.0)
 			_view_camera.global_transform = from_camera.interpolate_with(close_up, eased)
 			_view_camera.fov = lerpf(from_fov, close_up_fov, eased),
-		0.0, 1.0, 2.0
+		0.0, 1.0, 1.0
 	)
-	back.tween_method(_return_receiver.bind(ear), 0.0, 1.0, 2.0)
+	back.tween_method(_return_receiver.bind(ear), 0.0, 1.0, 1.0)
 	await back.finished
 
 	_receiver_held = false
@@ -755,6 +755,7 @@ func _build_audio() -> void:
 		&"clunk": PlaceholderAudio.make_clunk(),
 		&"coin": PlaceholderAudio.make_coin_clatter(),
 		&"knock": PlaceholderAudio.make_receiver_knock(),
+		&"disconnect": PlaceholderAudio.make_disconnect_click(),
 	}
 
 	_hiss = AudioStreamPlayer.new()
@@ -775,6 +776,30 @@ func _play(sound: StringName, volume_db: float = -6.0) -> void:
 	add_child(voice)
 	voice.finished.connect(voice.queue_free)
 	voice.play()
+
+
+## The two voices on the line, as placeholder audio: each caption of the call track that names a `voice`
+## (warm or desperate) gets that voice played over it. They say nothing yet; real recordings replace this.
+func _play_voices() -> void:
+	var elapsed: float = 0.0
+	for cue: Dictionary in CaptionTracks.get_cues(call_track):
+		if not cue.has("voice"):
+			continue
+
+		var start: float = float(cue["start"])
+		await get_tree().create_timer(maxf(start - elapsed, 0.0), false).timeout
+		elapsed = start
+		if stage != Stage.CALL:
+			return
+
+		var warm: bool = cue["voice"] == &"warm"
+		var voice: AudioStreamPlayer = AudioStreamPlayer.new()
+		voice.name = "PhoneVoice"
+		voice.stream = PlaceholderAudio.make_phone_voice(warm, float(cue["end"]) - start)
+		voice.volume_db = -11.0 if warm else -6.0
+		add_child(voice)
+		voice.finished.connect(voice.queue_free)
+		voice.play()
 
 
 func _start_hiss() -> void:

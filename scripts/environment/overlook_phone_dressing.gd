@@ -37,7 +37,8 @@ const POST_SPACING_DEGREES: float = 5.5
 ## The lamp burns steadily. It only flickers when the scene asks it to (`play_flicker`), in
 ## scripted patterns made to be unsettling: segments of [level, seconds, ramp], where the
 ## lamp holds `level` (0 dark, 1 full) for `seconds`, or, with `ramp`, slides to it over
-## that time. Every pattern ends with the lamp at full power.
+## that time. Every pattern ends with the lamp at full power, except `&"die"`: it flickers once and
+## the lamp is dead for good (and silent).
 const FLICKERS: Dictionary = {
 	# When the voice on the line begins: the light sags, catches, sputters and dies for
 	# a long moment, twitches in the dark, and comes back as if nothing had happened.
@@ -55,6 +56,10 @@ const FLICKERS: Dictionary = {
 		[0.0, 0.9, false], [0.25, 0.07, false], [0.0, 1.3, false], [0.12, 0.05, false],
 		[0.0, 0.45, false], [1.0, 0.08, false],
 	],
+	# The end of the night: the lamp sags, catches once, stutters and dies, in silence, for good.
+	&"die": [
+		[0.7, 0.55, true], [1.0, 0.09, false], [0.12, 0.06, false], [0.85, 0.05, false], [0.0, 0.05, false],
+	],
 }
 
 signal flicker_started(kind: StringName)
@@ -71,6 +76,8 @@ var _script_kind: StringName = &""
 var _script_index: int = 0
 var _script_time: float = 0.0
 var _script_from: float = 1.0
+## The lamp has died for good (the `&"die"` flicker has played).
+var _dead: bool = false
 var _hum: AudioStreamPlayer = null
 var _spot_colour: Color = Color.WHITE
 
@@ -393,7 +400,7 @@ func _process(delta: float) -> void:
 	if _spot == null or Engine.is_editor_hint():
 		return
 
-	var level: float = 1.0
+	var level: float = 0.0 if _dead else 1.0
 	if not _script.is_empty():
 		var segment: Array = _script[_script_index]
 		var length: float = maxf(float(segment[1]), 0.001)
@@ -410,15 +417,16 @@ func _process(delta: float) -> void:
 			if _script_index >= _script.size():
 				var kind: StringName = _script_kind
 				_script = []
-				level = 1.0
+				_dead = kind == &"die"
+				level = 0.0 if _dead else 1.0
 				flicker_finished.emit(kind)
 
 	_set_lamp_level(level)
 
 
 func _set_lamp_level(level: float) -> void:
-	# A strike after darkness: a hard electric pop.
-	if _level < 0.15 and level > 0.5 and _hum != null:
+	# A strike after darkness: a hard electric pop (never in the silent dying of the lamp).
+	if _level < 0.15 and level > 0.5 and _hum != null and _script_kind != &"die":
 		_play_pop()
 
 	_level = level
@@ -439,7 +447,8 @@ func _set_lamp_level(level: float) -> void:
 
 	# The electrical hum is only there while the lamp is misbehaving, and dies with it.
 	if _hum != null:
-		_hum.volume_db = lerpf(-60.0, -24.0, level) if is_flickering() else -80.0
+		var hum_on: bool = is_flickering() and _script_kind != &"die"
+		_hum.volume_db = lerpf(-60.0, -24.0, level) if hum_on else -80.0
 
 
 func _build_hum() -> void:

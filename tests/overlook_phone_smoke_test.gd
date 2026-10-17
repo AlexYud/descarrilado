@@ -30,7 +30,6 @@ func _ready() -> void:
 	)
 	GameSettings.set_captions_enabled(true, false)
 	GameSettings.set_text_locale("en", false)
-	GameSettings.set_caption_locale("en", false)
 
 	level = (load(TEST_SCENE_PATH) as PackedScene).instantiate()
 	add_child(level)
@@ -354,14 +353,26 @@ func _check_call() -> void:
 	for index: int in mini(lines.size(), expected.size()):
 		_expect(lines[index] == "%s: %s" % [tr("CAPTION_SPEAKER_SOPHIA_PHONE"), tr(expected[index])], "subtitle %d is Sophia's line" % (index + 1))
 
-	_expect(lines.size() > 0 and lines[0].begins_with("Sophia: Juli? Hey!"), "the first line is Sophia's greeting")
-	_expect(lines.size() == 4 and lines[3].contains("HANG UP!"), "and the last tells her to hang up")
+	_expect(lines.size() > 0 and lines[0].begins_with("Sophia: Juli... Oh, thank God you called."), "the first line is the warm voice's greeting")
+	_expect(lines.size() == 4 and lines[3].contains("Don't go near the wagon!"), "and the last (the desperate voice) warns her off the wagon")
+	_expect(lines.size() == 4 and lines[1].contains("Hang up right now!"), "the second is the desperate voice too")
+	_expect(lines.size() == 4 and lines[2].contains("I miss you"), "and the third the warm one again")
+	var voices: Array = []
+	for cue: Dictionary in CaptionTracks.get_cues(phone.call_track):
+		if cue.has("voice"):
+			voices.append(String(cue["voice"]))
+	_expect(voices == ["warm", "desperate", "warm", "desperate"], "the voices alternate warm, desperate, warm, desperate (%s)" % str(voices))
+	var speakers: Dictionary = {}
+	for cue: Dictionary in CaptionTracks.get_cues(phone.call_track):
+		if cue.has("voice"):
+			speakers[cue["speaker"]] = true
+	_expect(speakers.size() == 1, "both voices are captioned as the same speaker, Sophia")
+	_expect(phone._sounds.has(&"disconnect"), "the line has a soft disconnect click ready")
 
-	_expect(flickers == ["start", "end"], "the lamp flickered twice: when the voice began and when it ended (%s)" % str(flickers))
+	_expect(flickers == ["start"], "the lamp flickered once, when the voice began, and not when it ended (%s)" % str(flickers))
 	_expect(int(lines_when.get("start", 9)) <= 1, "the first as the voice begins (%s subtitles so far)" % str(lines_when.get("start")))
-	_expect(int(lines_when.get("end", 0)) == 4, "the second after the last subtitle")
-	_expect(float(lowest_in.get("start", 1.0)) < 0.05 and float(lowest_in.get("end", 1.0)) < 0.05, "both go completely dark at some point")
-	_expect(steady_lowest[0] == 1.0, "and between them, and before and after, the lamp is steady at full power (%.2f)" % steady_lowest[0])
+	_expect(float(lowest_in.get("start", 1.0)) < 0.05, "it goes completely dark at some point")
+	_expect(steady_lowest[0] == 1.0, "and before and after it, the lamp is steady at full power (%.2f)" % steady_lowest[0])
 	_expect(not lamp.is_flickering() and lamp.get_lamp_level() == 1.0, "it ends at full power")
 
 	var player_camera: Camera3D = player.get_node("Head/Camera3D")

@@ -26,7 +26,6 @@ var _invert_check: CheckButton = null
 var _sprint_option: OptionButton = null
 var _hints_check: CheckButton = null
 var _head_bob_check: CheckButton = null
-var _readable_option: OptionButton = null
 var _reset_all_button: Button = null
 
 var _confirm_dialog: ConfirmationDialog = null
@@ -205,12 +204,6 @@ func _build_gameplay_section() -> void:
 	_hints_check.toggled.connect(_on_hints_toggled)
 	row.add_child(_hints_check)
 
-	row = _add_row("READABLE_OVERLAY_SETTING")
-	_readable_option = OptionButton.new()
-	_readable_option.custom_minimum_size = Vector2(300.0, 0.0)
-	_readable_option.item_selected.connect(_on_readable_selected)
-	row.add_child(_readable_option)
-
 
 func _add_section(title_key: String) -> void:
 	var title: Label = Label.new()
@@ -333,12 +326,6 @@ func _refresh() -> void:
 	_sprint_option.add_item(tr("CONTROLS_SPRINT_HOLD"), 0)
 	_sprint_option.add_item(tr("CONTROLS_SPRINT_TOGGLE"), 1)
 	_sprint_option.select(1 if GameSettings.get_sprint_toggle() else 0)
-
-	_readable_option.clear()
-	_readable_option.add_item(tr("READABLE_OVERLAY_AUTO"), GameSettings.ReadableText.AUTO)
-	_readable_option.add_item(tr("READABLE_OVERLAY_ALWAYS"), GameSettings.ReadableText.ALWAYS)
-	_readable_option.add_item(tr("READABLE_OVERLAY_NEVER"), GameSettings.ReadableText.NEVER)
-	_readable_option.select(GameSettings.get_readable_text_mode())
 
 	_syncing = false
 
@@ -540,11 +527,6 @@ func _on_sprint_mode_selected(index: int) -> void:
 func _on_hints_toggled(enabled: bool) -> void:
 	if not _syncing:
 		GameSettings.set_tutorial_hints(enabled)
-
-
-func _on_readable_selected(index: int) -> void:
-	if not _syncing:
-		GameSettings.set_readable_text_mode(index)
 
 
 func _on_visibility_changed() -> void:

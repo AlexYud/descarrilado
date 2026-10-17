@@ -235,7 +235,6 @@ func _expect(condition: bool, message: String) -> void:
 ## player of Portuguese sees the art as it is.
 func _check_readable_overlay() -> void:
 	GameSettings.set_text_locale("en", false)
-	GameSettings.set_readable_text_mode(GameSettings.ReadableText.AUTO, false)
 
 	var recipe: Inspectable = await _spawn(RECIPE, Vector3(0.0, 1.0, -3.0))
 	await _wait(0.6)
@@ -275,19 +274,15 @@ func _check_readable_overlay() -> void:
 	# Changing the language while looking changes what is offered, not the art.
 	GameSettings.set_text_locale("pt_BR", false)
 	await _wait(1.0)
-	_expect(not inspect._readable_on, "in Portuguese the art is shown as it is")
-	_expect(not inspect.readables._prompt.visible and not inspect.readables.is_document_offered(), "with nothing to read")
-	_expect(not (stacks[0] as Node3D).visible == false, "and its writing back on the paper")
-
-	# The player can ask for the text always, or never.
-	GameSettings.set_readable_text_mode(GameSettings.ReadableText.ALWAYS, false)
-	await _wait(0.8)
-	_expect(inspect._readable_on and inspect.get_document_text_key() == "READABLE_RECIPE", "always: the text is offered, easy to read")
+	_expect(inspect._readable_on and inspect.get_document_text_key() == "READABLE_RECIPE", "in Portuguese reading is offered just the same (a feature of the game, not of the language)")
+	_expect(inspect.readables.is_document_offered() and inspect.read_hint.visible, "with the same [E] Read button")
+	_expect((stacks[0] as Node3D).visible, "while the art shows its own writing on the paper")
+	inspect.handle_input(_press(KEY_E))
+	await _wait(0.6)
+	_expect(inspect.is_reading_text() and inspect.readables._body.text.contains("sopa de batata"), "and the text opens in Portuguese")
+	inspect.handle_input(_press(KEY_E))
+	await _wait(0.6)
 	GameSettings.set_text_locale("en", false)
-	GameSettings.set_readable_text_mode(GameSettings.ReadableText.NEVER, false)
-	await _wait(0.8)
-	_expect(not inspect._readable_on, "never: no overlay in any language")
-	GameSettings.set_readable_text_mode(GameSettings.ReadableText.AUTO, false)
 	await _close()
 	recipe.queue_free()
 

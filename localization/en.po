@@ -176,7 +176,7 @@ msgid "OPTIONS_BACK"
 msgstr "Back"
 
 msgid "OPTIONS_TEXT_LANGUAGE"
-msgstr "Text Language"
+msgstr "Text and Captions Language"
 
 msgid "OPTIONS_VOICE_LANGUAGE"
 msgstr "Voice Language"
@@ -313,9 +313,6 @@ msgstr "A small amber-glass bottle with a white cap, the threads already somewha
 msgid "OPTIONS_CAPTIONS"
 msgstr "Captions"
 
-msgid "OPTIONS_CAPTION_LANGUAGE"
-msgstr "Caption Language"
-
 msgid "OPTIONS_CAPTION_SIZE"
 msgstr "Caption Size"
 
@@ -330,6 +327,9 @@ msgstr "Large"
 
 msgid "OPTIONS_CAPTION_SIZE_EXTRA_LARGE"
 msgstr "Extra Large"
+
+msgid "OPTIONS_CAPTION_PREVIEW"
+msgstr "This is how captions will look."
 
 msgid "CAPTION_INTRO_01"
 msgstr "I'm sure my mom was just trying to protect me."
@@ -937,18 +937,6 @@ msgstr "[b]BUS TICKET[/b]\nRailway village / São Paulo\nOne way\n\nPassenger: [
 msgid "READABLE_BUS_TICKET_UNCLAIMED"
 msgstr "[b]BUS TICKET[/b]\nRailway village / São Paulo\nOne way\n\nPassenger: [i]If you want.[/i]"
 
-msgid "READABLE_OVERLAY_SETTING"
-msgstr "Document text overlay"
-
-msgid "READABLE_OVERLAY_AUTO"
-msgstr "Auto (translate when needed)"
-
-msgid "READABLE_OVERLAY_ALWAYS"
-msgstr "Always"
-
-msgid "READABLE_OVERLAY_NEVER"
-msgstr "Never"
-
 # Readable spots on inspected items
 msgid "INSPECT_PROMPT_READ"
 msgstr "[{interact}] Read"
@@ -1016,16 +1004,25 @@ msgid "CAPTION_SPEAKER_SOPHIA_PHONE"
 msgstr "Sophia"
 
 msgid "CAPTION_PHONE_01"
-msgstr "Juli? Hey! God, you took forever to call. I've been sitting on my bed for an hour waiting for you."
+msgstr "Juli... Oh, thank God you called. I was starting to think you forgot about me... I've been sitting here in the dark waiting for you to pick up, listening to the rain on the roof... but the train hasn't moved all night."
 
 msgid "CAPTION_PHONE_02"
-msgstr "Juli? Juli, don't listen to her! Don't go to my house!"
+msgstr "Juli? Juli, listen to me! I don't know who that is, but don't listen to her! Hang up right now!"
 
 msgid "CAPTION_PHONE_03"
-msgstr "I left the front door unlocked for you. Just walk upstairs, I'm waiting in my room..."
+msgstr "It's so cold here... Please... just come back and be with me... I miss you..."
 
 msgid "CAPTION_PHONE_04"
-msgstr "Juli, I'm not at home! I've been calling you from the station! The thing on that line... she's sitting in my room, but she ISN'T ME. Hang up the phone, Juli! HANG UP!"
+msgstr "Juli, she's trying to trick you! Stay away from her! Don't go near the wagon!"
+
+msgid "CAPTION_WAGON_WHISPER"
+msgstr "You're not supposed to be here."
+
+msgid "PROMPT_TAKE_TICKET"
+msgstr "[{interact}] Take Ticket"
+
+msgid "TITLE_CARD_TEXT"
+msgstr "UNRAILED"
 
 # The overlook payphone
 

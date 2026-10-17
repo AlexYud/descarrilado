@@ -62,6 +62,9 @@ const REVEAL_STEPS: Array[Dictionary] = [
 ]
 const REVEAL_SECONDS: float = 0.5
 
+## Heights above the figure's feet the beam is judged against: feet, knees, chest, head.
+const FIGURE_AIM_HEIGHTS: Array[float] = [0.2, 0.7, 1.1, 1.6]
+
 ## The figure's poses: the lean of the body, the head's pitch, yaw and roll, how far the arms swing
 ## out, how far the body is turned from facing the capsule, and how much of the approach it has made.
 const FIGURE_POSES: Dictionary = {
@@ -129,6 +132,11 @@ const KEY_PANTRY_BEAT: StringName = &"house_pantry_beat"
 ## far, with nothing in between.
 @export var beam_hit_degrees: float = 11.0
 @export var beam_reach: float = 14.0
+## Fallback so the reveal can never be missed: with the light on, within this far of the figure and
+## looking within this many degrees of it for this long, it springs anyway.
+@export var figure_dwell_distance: float = 6.0
+@export var figure_dwell_degrees: float = 40.0
+@export var figure_dwell_seconds: float = 1.5
 ## Where the figure stands, and how far towards the player it is by the end of the reveal.
 @export var figure_approach_metres: float = 1.1
 
@@ -140,6 +148,7 @@ var _ficha_taken: bool = false
 var _flashlight: Node = null
 var _run_step: AudioStreamWAV = null
 var _pantry_beat: int = 0
+var _figure_dwell: float = 0.0
 var _figure_base_position: Vector3 = Vector3.ZERO
 var _figure_base_yaw: float = 0.0
 var _figure_pose: StringName = &"bowed"
@@ -359,6 +368,7 @@ func _on_trap_entered(body: Node3D) -> void:
 		return
 
 	_set_stage(Stage.TRAP_CUT)
+	_figure_dwell = 0.0
 	_cut_flashlight()
 	_figure_base_position = silhouette.position
 	_figure_base_yaw = silhouette.rotation_degrees.y
@@ -366,10 +376,22 @@ func _on_trap_entered(body: Node3D) -> void:
 	silhouette.visible = true
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	# The light can be switched on freely; the trap springs when the beam finds the figure.
-	if _stage == Stage.TRAP_CUT and _figure_in_beam():
+	if _stage != Stage.TRAP_CUT:
+		return
+
+	if _figure_in_beam():
 		_run_reveal()
+		return
+
+	# Never a soft-lock: lingering near the figure with the light on springs it anyway.
+	if _light_is_on() and _figure_near_and_visible():
+		_figure_dwell += delta
+		if _figure_dwell >= figure_dwell_seconds:
+			_run_reveal()
+	else:
+		_figure_dwell = 0.0
 
 
 func _on_flashlight_toggled(is_on: bool) -> void:
@@ -378,22 +400,38 @@ func _on_flashlight_toggled(is_on: bool) -> void:
 		_resolve()
 
 
+## The player's switch is on (the flicker that makes the lamp blink does not matter here).
+func _light_is_on() -> bool:
+	return _flashlight != null and bool(_flashlight.get("flashlight_on"))
+
+
 ## True when the flashlight is on and its beam points at the figure, near enough and in plain view.
+## The beam is judged against the feet, the chest and the head, so a player standing close, looking
+## at any part of it, finds it.
 func _figure_in_beam() -> bool:
 	var light: SpotLight3D = _flashlight as SpotLight3D
-	if light == null or not silhouette.visible or not bool(_flashlight.get("flashlight_on")) or not light.visible:
+	if light == null or not silhouette.visible or not _light_is_on():
 		return false
 
-	var aim: Vector3 = silhouette.global_position + Vector3(0.0, 1.0, 0.0)
 	var origin: Vector3 = light.global_position
-	var to_figure: Vector3 = aim - origin
-	if to_figure.length() > minf(light.spot_range, beam_reach):
-		return false
+	var forward: Vector3 = -light.global_basis.z
+	for height: float in FIGURE_AIM_HEIGHTS:
+		var aim: Vector3 = silhouette.global_position + Vector3(0.0, height, 0.0)
+		var to_figure: Vector3 = aim - origin
+		if to_figure.length() > beam_reach:
+			continue
 
-	if rad_to_deg((-light.global_basis.z).angle_to(to_figure)) > beam_hit_degrees:
-		return false
+		if rad_to_deg(forward.angle_to(to_figure)) > beam_hit_degrees:
+			continue
 
-	# Nothing solid in between (a wall or a door); the crate and the capsule around it do not count.
+		if _clear_view_to(origin, aim):
+			return true
+
+	return false
+
+
+## Nothing solid in between (a wall or a door); the crate and the capsule around it do not count.
+func _clear_view_to(origin: Vector3, aim: Vector3) -> bool:
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(origin, aim)
 	var target: Node3D = _get_player()
 	if target is CollisionObject3D:
@@ -401,6 +439,21 @@ func _figure_in_beam() -> bool:
 
 	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
 	return hit.is_empty() or (hit["position"] as Vector3).distance_to(aim) < 1.2
+
+
+## The fallback: the player is close to the figure, looking its way within a wide cone, in plain view.
+func _figure_near_and_visible() -> bool:
+	var light: SpotLight3D = _flashlight as SpotLight3D
+	if light == null or not silhouette.visible:
+		return false
+
+	var origin: Vector3 = light.global_position
+	var aim: Vector3 = silhouette.global_position + Vector3(0.0, 1.0, 0.0)
+	var to_figure: Vector3 = aim - origin
+	if to_figure.length() > figure_dwell_distance:
+		return false
+
+	return rad_to_deg((-light.global_basis.z).angle_to(to_figure)) <= figure_dwell_degrees and _clear_view_to(origin, aim)
 
 
 ## The beam found it. For half a second the light is a weak, stuttering glow and each time it comes

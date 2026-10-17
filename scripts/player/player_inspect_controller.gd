@@ -164,6 +164,7 @@ var _caption_name_key: String = ""
 var _readable_key: String = ""
 var _art_language: String = ""
 var _readable_on: bool = false
+var _art_text_hidden: bool = false
 var _shift_current: Vector2 = Vector2.ZERO
 var _shift_target: Vector2 = Vector2.ZERO
 var _largest: float = 0.1
@@ -1069,8 +1070,6 @@ func _on_reading_changed(_is_reading: bool) -> void:
 
 
 func _connect_language_settings() -> void:
-	if not GameSettings.readable_text_mode_changed.is_connected(_on_reading_setting_changed):
-		GameSettings.readable_text_mode_changed.connect(_on_reading_setting_changed)
 	if not GameSettings.caption_size_changed.is_connected(_on_reading_setting_changed):
 		GameSettings.caption_size_changed.connect(_on_reading_setting_changed)
 
@@ -1150,6 +1149,7 @@ func _configure_for_item(item: Node3D) -> void:
 	_readable_key = str(item.get_meta(META_READABLE_TEXT, ""))
 	_art_language = str(item.get_meta(META_ART_LANGUAGE, ""))
 	_readable_on = false
+	_art_text_hidden = false
 	_update_readable_state(true)
 	_refresh_overlay_text()
 
@@ -1299,38 +1299,33 @@ func _steady_basis() -> Basis:
 # THE WRITING ON A DOCUMENT
 # ============================================================
 #
-# A document's art is made once, in one language, with its words on it. A player of
-# that language sees it as it is. A player of another language sees the same art
-# (the handwriting, the stains, the marks) and, next to it, the writing as an overlay
-# in their own language, big and easy to read, as modern games do. An object with an
-# inscription works the same way; an object without writing needs nothing (its name
-# and description are the caption, and they always follow the language).
+# Reading is a feature of the game, not of the language: every item with a writing offers it
+# (the interact key), in any language, as an easy-to-read overlay in the player's own language.
+# A document's art is made once, in one language, with its words on it; a player of that
+# language sees the art as it is, a player of another sees the same art (the handwriting, the
+# stains, the marks) with the writing only in the overlay. An object without writing needs
+# nothing (its name and description are the caption, and they always follow the language).
 
-## Whether the overlay is shown for this item: the item has a text and, by the
-## player's choice, always; never; or (the default) when the art is in another
-## language than the player's.
+## Whether the item has a writing to read: always offered when it has (in every language).
 func _readable_is_active() -> bool:
-	if _readable_key.is_empty() or current_visual_copy == null:
-		return false
+	return not _readable_key.is_empty() and current_visual_copy != null
 
-	match GameSettings.get_readable_text_mode():
-		GameSettings.ReadableText.NEVER:
-			return false
-		GameSettings.ReadableText.ALWAYS:
-			return true
 
-	return not _art_language.is_empty() and _art_language != GameSettings.get_text_locale()
+## Whether the words made in the world as stand-in art must step aside: the art is in another
+## language than the player's, so only the overlay shows the writing (final art has none of these).
+func _art_text_must_hide() -> bool:
+	return _readable_is_active() and not _art_language.is_empty() and _art_language != GameSettings.get_text_locale()
 
 
 func _update_readable_state(immediately: bool) -> void:
 	var active: bool = _readable_is_active()
-	var changed: bool = active != _readable_on
+	var hide_art_text: bool = _art_text_must_hide()
+	var changed: bool = active != _readable_on or hide_art_text != _art_text_hidden
 
 	if changed or immediately:
 		_readable_on = active
-		# With the overlay on, the words made in the world as stand-in art step aside
-		# (final art has none of these).
-		_set_model_text_visible(not active)
+		_art_text_hidden = hide_art_text
+		_set_model_text_visible(not hide_art_text)
 		_reframe(immediately)
 
 
