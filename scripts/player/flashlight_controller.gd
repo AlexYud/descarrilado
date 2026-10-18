@@ -48,6 +48,13 @@ signal toggled_by_player(is_on: bool)
 @export var beam_end_tolerance: float = 0.06
 
 var flashlight_on: bool = true
+## While true the key does nothing (a scene that has the flashlight in its own hands).
+var toggle_locked: bool = false
+## A scene aims the beam itself (a scared hand): while on, the beam points along `scripted_aim_direction` (a world
+## direction) instead of where the view points, following it `scripted_aim_speed` times as fast as usual.
+var scripted_aim_on: bool = false
+var scripted_aim_direction: Vector3 = Vector3.FORWARD
+var scripted_aim_speed: float = 1.0
 var flicker_timer: float = 0.0
 var flicker_forced_off: bool = false
 var rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -107,7 +114,7 @@ func _process(delta: float) -> void:
 		original_camera_local_position = camera.to_local(global_position)
 		has_camera_local_position = true
 
-	if _can_toggle_flashlight() and not _scripted and Input.is_action_just_pressed("flashlight"):
+	if _can_toggle_flashlight() and not _scripted and not toggle_locked and Input.is_action_just_pressed("flashlight"):
 		player_toggle()
 
 	_update_dynamic_flashlight(delta)
@@ -293,12 +300,14 @@ func _update_dynamic_flashlight(delta: float) -> void:
 	var far_aim_target: Vector3 = global_position + (camera_forward * max(probed_distance, 0.25))
 	var near_aim_target: Vector3 = probed_target_point
 	var desired_aim_target: Vector3 = far_aim_target.lerp(near_aim_target, current_shift_t)
+	if scripted_aim_on:
+		desired_aim_target = global_position + scripted_aim_direction.normalized() * 6.0
 
 	if not has_smoothed_aim_target:
 		smoothed_aim_target = desired_aim_target
 		has_smoothed_aim_target = true
 	else:
-		var aim_weight: float = clamp(delta * aim_follow_speed, 0.0, 1.0)
+		var aim_weight: float = clamp(delta * aim_follow_speed * (scripted_aim_speed if scripted_aim_on else 1.0), 0.0, 1.0)
 		smoothed_aim_target = smoothed_aim_target.lerp(desired_aim_target, aim_weight)
 
 	if global_position.distance_squared_to(smoothed_aim_target) > 0.0001:

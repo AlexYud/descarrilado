@@ -147,10 +147,17 @@ var _sprint_toggled: bool = false
 
 # The corridor lock (see `lock_to_corridor`).
 var _corridor_active: bool = false
+## Which way along the corridor the player is facing (1 along its axis, -1 back), kept while they look across it.
+var _corridor_facing: float = 1.0
 var _corridor_origin: Vector3 = Vector3.ZERO
 var _corridor_axis: Vector3 = Vector3.FORWARD
 var _corridor_min: float = 0.0
 var _corridor_max: float = 0.0
+## How fast the player walks while the corridor lock holds, as a fraction of the usual pace (and no
+## sprinting): a slow walk builds tension.
+var corridor_speed_scale: float = 1.0
+## A developer multiplier on the walking speed (the dev console's `speed`); 1 in normal play.
+var speed_multiplier: float = 1.0
 
 # The guided walk: the player is walked to a spot at a slow, natural pace, looking
 # where they will act (used to walk up to a door before pushing it).
@@ -293,10 +300,12 @@ func lock_to_corridor(origin: Vector3, axis: Vector3, min_distance: float, max_d
 	_corridor_min = min_distance
 	_corridor_max = max_distance
 	_corridor_active = true
+	_corridor_facing = 1.0
 
 
 func release_corridor() -> void:
 	_corridor_active = false
+	corridor_speed_scale = 1.0
 
 
 func is_corridor_locked() -> bool:
@@ -492,8 +501,13 @@ func _apply_look(delta: float) -> void:
 func _get_move_direction() -> Vector3:
 	if _corridor_active:
 		# Only forward and back, along the corridor: the sideways keys do nothing.
+		# The forward key walks the way the player is looking (along the aisle one way or the other).
 		var along_input: float = Input.get_axis("down", "up")
-		return _corridor_axis * along_input if absf(along_input) > 0.01 else Vector3.ZERO
+		var looking: float = (-head.basis.z).dot(_corridor_axis)
+		if absf(looking) > 0.25:
+			_corridor_facing = 1.0 if looking > 0.0 else -1.0
+
+		return _corridor_axis * (along_input * _corridor_facing) if absf(along_input) > 0.01 else Vector3.ZERO
 
 	var input_x: float = Input.get_axis(
 		"left",
@@ -518,10 +532,13 @@ func _get_move_direction() -> Vector3:
 
 
 func _get_current_speed(wants_sprint: bool) -> float:
-	if wants_sprint:
-		return SPRINT_SPEED
+	if _corridor_active:
+		return WALK_SPEED * corridor_speed_scale * speed_multiplier
 
-	return WALK_SPEED
+	if wants_sprint:
+		return SPRINT_SPEED * speed_multiplier
+
+	return WALK_SPEED * speed_multiplier
 
 
 ## Backwards steps are slower than forward ones, sideways ones in between.

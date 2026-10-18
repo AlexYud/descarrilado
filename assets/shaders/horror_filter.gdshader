@@ -152,6 +152,15 @@ uniform float video_black_lift
 uniform float brightness_compensation
 	: hint_range(0.0, 0.20) = 0.06;
 
+
+/*
+Takes the camcorder look out of the picture (grain, colour noise, lifted blacks, washed contrast) as it goes to
+1, so that a black picture is truly black and a scene can fade to the black of a plain black screen without a
+jump. Only the finale drives it.
+*/
+uniform float darkness
+	: hint_range(0.0, 1.0) = 0.0;
+
 /*
 0.0 = one screen sample, 0.5 = chroma separation, 1.0 = full soft focus.
 The filter controller selects this from the graphics quality preset.
@@ -191,7 +200,7 @@ vec3 sample_screen(vec2 uv) {
 
 void fragment() {
 	vec2 screen_uv = SCREEN_UV;
-	float video_strength = camcorder_strength;
+	float video_strength = camcorder_strength * (1.0 - darkness);
 	float video_frame = floor(
 		TIME * max(capture_frame_rate, 1.0)
 	);

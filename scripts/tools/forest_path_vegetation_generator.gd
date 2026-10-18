@@ -91,6 +91,12 @@ var clear_existing: bool = true
 
 var seed_value: int = 20261003
 
+## Additive passes (see `densify_forest.gd`): when not empty these layers replace the built-in ones, and the
+## trees already standing (the mesh ids below) count as neighbours for the tree spacing, so a pass that
+## adds trees never crowds the ones that are there.
+var layer_override: Array[Dictionary] = []
+var existing_tree_ids: Array[int] = []
+
 var _terrain: Terrain3D = null
 var _data: Terrain3DData = null
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -108,6 +114,8 @@ var _pending_transforms: Dictionary = {}
 var _pending_colors: Dictionary = {}
 var _tree_points: Array[Vector2] = []
 var _placed_count: Dictionary = {}
+## Why candidate plants were turned down, by reason (for diagnostics).
+var rejected: Dictionary = {}
 
 
 func generate(terrain: Terrain3D) -> Dictionary:
@@ -122,6 +130,8 @@ func generate(terrain: Terrain3D) -> Dictionary:
 	_pending_colors.clear()
 	_tree_points.clear()
 	_placed_count.clear()
+	if not existing_tree_ids.is_empty():
+		_collect_existing_trees()
 
 	var path_cells: int = _build_distance_field()
 	if path_cells == 0:
@@ -176,6 +186,9 @@ func generate(terrain: Terrain3D) -> Dictionary:
 ##   cover the walking line.
 ## - spacing: minimum distance between trees (only for tree layers).
 func _get_layers() -> Array[Dictionary]:
+	if not layer_override.is_empty():
+		return layer_override
+
 	return [
 		{
 			"name": "leaf litter",
@@ -579,34 +592,45 @@ func _band_weight(d: float, d_min: float, d_max: float, taper: float) -> float:
 	return clampf(1.0 - (d - fade_start) / maxf(d_max - fade_start, 0.001), 0.0, 1.0)
 
 
+func _reject(reason: String) -> void:
+	rejected[reason] = int(rejected.get(reason, 0)) + 1
+
+
 func _try_place(layer: Dictionary, mesh_id: int, point: Vector2) -> void:
 	if not zone.has_point(point):
+		_reject("r1")
 		return
 
 	for blocked: Rect2 in exclusions:
 		if blocked.has_point(point):
+			_reject("r2")
 			return
 
 	if layer.get("tall", false) and (_in_view_corridor(point) or _in_rects(low_zones, point)):
+		_reject("r3")
 		return
 
 	if float(layer.get("spacing", 0.0)) > 0.0 and _in_rects(no_tree_zones, point):
+		_reject("r4")
 		return
 
 	var spacing: float = layer.get("spacing", 0.0)
 	if spacing > 0.0:
 		for other: Vector2 in _tree_points:
 			if other.distance_squared_to(point) < spacing * spacing:
+				_reject("r5")
 				return
 
 	var world: Vector3 = Vector3(point.x, 0.0, point.y)
 	var height: float = _data.get_height(world)
 	if is_nan(height):
+		_reject("r6")
 		return
 
 	var normal: Vector3 = _data.get_normal(world)
 	var max_slope: float = layer.get("max_slope", 55.0)
 	if normal.y < cos(deg_to_rad(max_slope)):
+		_reject("r7")
 		return
 
 	var scale_range: Vector2 = layer["scale"]
@@ -642,6 +666,7 @@ func _try_place(layer: Dictionary, mesh_id: int, point: Vector2) -> void:
 	if layer.get("tall", false) or float(layer.get("radius", 0.0)) >= 0.5:
 		edge_distance -= 1.0
 	if edge_distance < clearance:
+		_reject("r8")
 		return
 
 	var up: Vector3 = Vector3.UP.lerp(normal, layer.get("align", 0.0)).normalized()
@@ -1017,6 +1042,22 @@ func add_ground_relief(terrain: Terrain3D, amplitude: float = 1.0) -> int:
 
 	_data.calc_height_range(true)
 	return changed
+
+
+## The world positions of the trees already placed (`existing_tree_ids`), so new trees keep their spacing.
+func _collect_existing_trees() -> void:
+	var region_size: float = float(_terrain.region_size) * _terrain.vertex_spacing
+	for region: Terrain3DRegion in _data.get_regions_active():
+		var offset: Vector2 = Vector2(region.location) * region_size
+		var instances: Dictionary = region.get_instances()
+		for mesh_id: int in existing_tree_ids:
+			if not instances.has(mesh_id):
+				continue
+
+			var cells: Dictionary = instances[mesh_id]
+			for cell: Variant in cells:
+				for transform: Transform3D in (cells[cell][0] as Array):
+					_tree_points.append(Vector2(transform.origin.x + offset.x, transform.origin.z + offset.y))
 
 
 func _commit() -> int:

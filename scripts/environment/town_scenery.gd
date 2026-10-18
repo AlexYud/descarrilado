@@ -50,6 +50,9 @@ const LAMP: Color = Color(1.0, 0.78, 0.48)
 const GLOW_SCALE: float = 2.2
 ## The valley floor (town-local height) in front of the town, in vista mode.
 const VISTA_PLAIN: float = -8.0
+## Vista mode lights: this fraction of the windows are lit, and one lane lamp in this many.
+const VISTA_LIT_SCALE: float = 0.4
+const VISTA_LAMP_EVERY: int = 2
 
 ## What the painted ground is (for the Terrain3D textures and the forest).
 const KIND_NONE: int = 0
@@ -89,6 +92,7 @@ var _builders: Dictionary = {}
 var _lit: TownMeshBuilder = TownMeshBuilder.new()
 ## The glow of every lit window and lamp, seen from far away (vista mode): {"p": Vector3, "s": size (m), "a": strength}.
 var _halos: Array[Dictionary] = []
+var _lane_lamp_count: int = 0
 var _horizon_noise: FastNoiseLite = FastNoiseLite.new()
 var _eucalyptus_spots: Array[Transform3D] = []
 
@@ -854,8 +858,11 @@ func _build_roads(root: Node3D) -> void:
 			var base: Vector3 = lane.point_at(s) + Vector3(normal.x, 0.0, normal.y) * (half + 0.5)
 			poles.add_box(base + Vector3(0.0, 3.4, 0.0), Vector3(0.22, 6.8, 0.22), Color(0.22, 0.16, 0.1))
 			var lamp: Vector3 = base + Vector3(0.0, 6.2, 0.0) - Vector3(normal.x, 0.0, normal.y) * 0.7
-			_lit.add_box(lamp, Vector3(0.6, 0.35, 0.6), LAMP)
-			_halo(lamp, 26.0, 1.0)
+			# In vista mode only every other lane lamp is lit.
+			_lane_lamp_count += 1
+			if not town.vista_mode or _lane_lamp_count % VISTA_LAMP_EVERY == 0:
+				_lit.add_box(lamp, Vector3(0.6, 0.35, 0.6), LAMP)
+				_halo(lamp, 26.0, 1.0)
 			_lamps.append(lamp)
 			side_sign = -side_sign
 			s += rng.randf_range(16.0, 22.0)
@@ -1305,6 +1312,10 @@ func _house_mesh(district: String, base: Vector3, yaw: float, width: float, dept
 	var door_x: float = width * 0.25 * (1.0 if rng.randf() < 0.5 else -1.0)
 	b.add_box(base + basis * Vector3(door_x, 1.05, face), Vector3(0.95, 2.1, 0.06), Color(0.3, 0.2, 0.12), yaw)
 	var lit_chance: float = 0.4 if district != "chacara" else 0.55
+	# Seen from the overlook the town should have fewer lights (the dark is the point), so in vista
+	# mode far fewer windows are lit. The random draws are the same, so nothing else moves.
+	if town.vista_mode:
+		lit_chance *= VISTA_LIT_SCALE
 	var count: int = maxi(int((width - 1.0) / 2.2), 1)
 	for f: int in floors:
 		for k: int in count:

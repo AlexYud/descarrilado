@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/models/foliage/ground_leaves_01/ground_leaves_01_foliage_90.png" id="1_bksbg"]
+
+[resource]
+resource_name = "Material.009"
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+cull_mode = 2
+albedo_color = Color(0.38, 0.3, 0.22, 1)
+albedo_texture = ExtResource("1_bksbg")
+roughness = 0.5
+metadata/_gltf_primary_texture_coord = 0

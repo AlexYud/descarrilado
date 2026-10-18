@@ -45,15 +45,25 @@ const TRACKS: Dictionary = {
 		# Silent tail: the bus engine turns into the cassette mechanism.
 		{"start": 29.5, "end": 33.0, "key": ""},
 	],
-	# Two voices on the one line, both captioned as Sophia: the warm one (lines 1 and 3, slow and soft)
-	# and the desperate one (2 and 4, high and fast). `voice` says which one the placeholder audio plays.
+	# Two voices on the one line, both captioned as Sophia: the warm one (turns 1 and 3, slow and soft) and the
+	# desperate one (2 and 4, high and fast). `voice` says which one the placeholder audio plays. Each turn is
+	# split into short blocks that appear as it goes (like film subtitles); the speaker is named on the first
+	# block of a turn only.
 	OVERLOOK_CALL: [
-		{"start": 1.0, "end": 13.0, "key": "CAPTION_PHONE_01", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"warm"},
-		{"start": 14.2, "end": 20.0, "key": "CAPTION_PHONE_02", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"desperate"},
-		{"start": 21.4, "end": 28.6, "key": "CAPTION_PHONE_03", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"warm"},
-		{"start": 30.0, "end": 36.2, "key": "CAPTION_PHONE_04", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"desperate"},
+		{"start": 1.0, "end": 3.8, "key": "CAPTION_PHONE_01", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"warm"},
+		{"start": 4.2, "end": 7.2, "key": "CAPTION_PHONE_02", "voice": &"warm"},
+		{"start": 7.6, "end": 10.6, "key": "CAPTION_PHONE_03", "voice": &"warm"},
+		{"start": 10.9, "end": 14.0, "key": "CAPTION_PHONE_04", "voice": &"warm"},
+		{"start": 15.2, "end": 17.2, "key": "CAPTION_PHONE_05", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"desperate"},
+		{"start": 17.4, "end": 19.8, "key": "CAPTION_PHONE_06", "voice": &"desperate"},
+		{"start": 20.0, "end": 21.6, "key": "CAPTION_PHONE_07", "voice": &"desperate"},
+		{"start": 22.8, "end": 25.4, "key": "CAPTION_PHONE_08", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"warm"},
+		{"start": 25.8, "end": 29.2, "key": "CAPTION_PHONE_09", "voice": &"warm"},
+		{"start": 30.4, "end": 32.8, "key": "CAPTION_PHONE_10", "speaker": SPEAKER_SOPHIA_PHONE, "voice": &"desperate"},
+		{"start": 33.0, "end": 34.6, "key": "CAPTION_PHONE_11", "voice": &"desperate"},
+		{"start": 34.8, "end": 36.8, "key": "CAPTION_PHONE_12", "voice": &"desperate"},
 		# The line goes on hissing for a moment after she stops.
-		{"start": 36.2, "end": 37.6, "key": ""},
+		{"start": 36.8, "end": 38.2, "key": ""},
 	],
 }
 

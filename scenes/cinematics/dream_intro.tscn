@@ -51,6 +51,11 @@
 [ext_resource type="PackedScene" path="res://scenes/environment/overlook.tscn" id="99_overlook"]
 [ext_resource type="PackedScene" path="res://scenes/levels/overlook_phone.tscn" id="op_phone"]
 [ext_resource type="Script" path="res://scripts/levels/dream_finale.gd" id="dream_finale"]
+[ext_resource type="Material" path="res://assets/materials/forest/fallen_leaves_tinted.tres" id="tint_leaves"]
+[ext_resource type="Material" path="res://assets/materials/forest/rock_001_tinted.tres" id="tint_rock1"]
+[ext_resource type="Material" path="res://assets/materials/forest/rock_002_tinted.tres" id="tint_rock2"]
+[ext_resource type="Material" path="res://assets/materials/forest/tufts_small_01_tinted.tres" id="tint_tufts1"]
+[ext_resource type="Material" path="res://assets/materials/forest/tufts_small_02_tinted.tres" id="tint_tufts2"]
 [ext_resource type="PackedScene" uid="uid://wulvhnk43k1y" path="res://scenes/levels/fig_clearing.tscn" id="fc_clearing"]
 [ext_resource type="PackedScene" uid="uid://htjuwv6bri4o" path="res://scenes/levels/unfinished_house.tscn" id="uh_house"]
 [ext_resource type="PackedScene" path="res://scenes/levels/waiting_shed.tscn" id="ws_shed"]
@@ -106,8 +111,8 @@ _shader_parameters = {
 &"enable_macro_variation": true,
 &"enable_projection": true,
 &"flat_terrain_normals": false,
-&"macro_variation1": Color(1, 1, 1, 1),
-&"macro_variation2": Color(1, 1, 1, 1),
+&"macro_variation1": Color(0.64, 0.74, 0.6, 1),
+&"macro_variation2": Color(0.82, 0.7, 0.58, 1),
 &"macro_variation_slope": 0.333,
 &"mipmap_bias": 1.0,
 &"noise1_angle": 0.0,
@@ -169,6 +174,7 @@ lod0_range = 96.0
 name = "ground_leaves_01"
 id = 5
 scene_file = ExtResource("13_j607m")
+material_override = ExtResource("tint_leaves")
 density = 0.5
 cast_shadows = 0
 last_lod = 0
@@ -229,6 +235,7 @@ lod0_range = 64.0
 name = "small_foliage_01"
 id = 11
 scene_file = ExtResource("19_tky3d")
+material_override = ExtResource("tint_tufts1")
 cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
@@ -238,6 +245,7 @@ lod0_range = 48.0
 name = "small_foliage_02"
 id = 12
 scene_file = ExtResource("20_hxwua")
+material_override = ExtResource("tint_tufts2")
 cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
@@ -283,6 +291,7 @@ lod0_range = 128.0
 name = "rock_001"
 id = 17
 scene_file = ExtResource("25_07f30")
+material_override = ExtResource("tint_rock1")
 density = 1.0
 last_lod = 0
 last_shadow_lod = 0
@@ -292,6 +301,7 @@ lod0_range = 128.0
 name = "rock_002"
 id = 18
 scene_file = ExtResource("26_8gc8m")
+material_override = ExtResource("tint_rock2")
 density = 2.0
 last_lod = 0
 last_shadow_lod = 0
@@ -329,12 +339,12 @@ detiling_rotation = 0.25
 detiling_shift = 0.25
 
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_uas77"]
-name = "GroundDirtWeedsPatchy004_COL_2K"
+name = "forest_floor_leaves_paths"
 id = 1
-albedo_color = Color(0.68, 0.63, 0.58, 1)
-albedo_texture = ExtResource("11_svmu2")
-normal_texture = ExtResource("12_p1vbp")
-uv_scale = 0.5
+albedo_color = Color(0.62, 0.54, 0.44, 1)
+albedo_texture = ExtResource("gt_forest_floor_leaves_c")
+normal_texture = ExtResource("gt_forest_floor_leaves_n")
+uv_scale = 0.7
 detiling_rotation = 0.25
 detiling_shift = 0.25
 
@@ -1034,8 +1044,8 @@ release_player_after_call_seconds = 0.0
 [node name="Dressing" parent="Scenery/OverlookPhone" index="1"]
 build_ledge = false
 build_fence = false
-lamp_energy = 14.0
-glow_strength = 0.55
+lamp_energy = 6.0
+glow_strength = 0.3
 
 [node name="HouseForestColliders" parent="Scenery" instance=ExtResource("uh_colliders")]
 

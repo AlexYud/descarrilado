@@ -1,0 +1,66 @@
+extends Node
+
+## Nothing planted with the Terrain3D instancer floats: every plant, rock and leaf of the dream intro's terrain stands on
+## the ground (within a hand's breadth) where it is. The far-tree stands (mesh ids from `FIRST_STAND_ID`, huge merged
+## meshes whose origin is not on the ground) are not plants and are left out. After sculpting the ground (the overlook
+## plaza was levelled after its foliage was planted), run `scripts/tools/snap_vegetation.tscn -- --apply`.
+
+const SCENE_PATH: String = "res://scenes/cinematics/dream_intro.tscn"
+const FIRST_STAND_ID: int = 25
+const MAX_FLOAT: float = 0.1
+
+var test_failed: bool = false
+
+
+func _expect(condition: bool, message: String) -> void:
+	if condition:
+		print("ok   - ", message)
+		return
+
+	test_failed = true
+	push_error("FAIL - " + message)
+	print("FAIL - ", message)
+
+
+func _ready() -> void:
+	var scene: Node = (load(SCENE_PATH) as PackedScene).instantiate()
+	add_child(scene)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var terrain: Terrain3D = scene.get_node_or_null("Terrain3D") as Terrain3D
+	_expect(terrain != null, "the dream intro has its terrain")
+	if terrain == null:
+		get_tree().quit(1)
+		return
+
+	var region_size: float = float(terrain.region_size) * terrain.vertex_spacing
+	var checked: int = 0
+	var floating: int = 0
+	var worst: float = 0.0
+	var worst_at: Vector3 = Vector3.ZERO
+	for region: Terrain3DRegion in terrain.data.get_regions_active():
+		var offset: Vector2 = Vector2(region.location) * region_size
+		var instances: Dictionary = region.get_instances()
+		for mesh_id: int in instances.keys():
+			if mesh_id >= FIRST_STAND_ID:
+				continue
+
+			var cells: Dictionary = instances[mesh_id]
+			for cell: Variant in cells:
+				for transform: Transform3D in cells[cell][0]:
+					var world: Vector3 = Vector3(transform.origin.x + offset.x, 0.0, transform.origin.z + offset.y)
+					var gap: float = transform.origin.y - terrain.data.get_height(world)
+					if is_nan(gap):
+						continue
+
+					checked += 1
+					if gap > MAX_FLOAT:
+						floating += 1
+						if gap > worst:
+							worst = gap
+							worst_at = world
+
+	_expect(checked > 50000, "plants were checked (%d)" % checked)
+	_expect(floating == 0, "none of them floats above the ground (%d do, the worst %.2f m at %s)" % [floating, worst, str(worst_at)])
+	print("VEGETATION_GROUNDED_SMOKE_TEST: ", "FAILED" if test_failed else "PASSED")
+	get_tree().quit(1 if test_failed else 0)

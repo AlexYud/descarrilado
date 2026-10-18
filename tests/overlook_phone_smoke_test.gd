@@ -263,20 +263,34 @@ func _check_the_rest() -> void:
 	_expect(_prompt() == "Pick up Receiver", "from outside the prompt is 'Pick up Receiver' too (%s)" % _prompt())
 
 
-## The call: the receiver leaves its hook, she turns her head to the left in place,
-## Sophia speaks, the receiver ends up hanging, the view returns to the player.
+## The call: nothing is shown of the receiver being picked up, the picture cuts to the cinematic shot of the
+## town, Sophia speaks, the lamp does not move, the receiver ends up hanging, the view returns to the player.
 func _check_call() -> void:
 	var model: OrelhaoModel = phone.model
 	var lines: Array[String] = []
 	var saw_roll: Array[bool] = [false]
-	var saw_lifted: Array[bool] = [false]
+	var narrowest_fov: Array[float] = [999.0]
+	var cut_at: Array[float] = [-1.0]
+	var ending_left: Array[float] = [-1.0]
+	var ending_at: Array[float] = [-1.0]
+	var call_ended_at: Array[float] = [-1.0]
+	var picked_at: Array[float] = [-1.0]
 	var saw_listening: Array[bool] = [false]
 	var worst_move: Array[float] = [0.0]
 	var picked: Array[bool] = [false]
-	phone.receiver_picked_up.connect(func() -> void: picked[0] = true)
+	phone.call_ending.connect(func(left: float) -> void:
+		ending_left[0] = left
+		ending_at[0] = Time.get_ticks_msec() / 1000.0
+	)
+	phone.call_finished.connect(func() -> void: call_ended_at[0] = Time.get_ticks_msec() / 1000.0)
+	phone.receiver_picked_up.connect(func() -> void:
+		picked[0] = true
+		picked_at[0] = Time.get_ticks_msec() / 1000.0
+	)
 	var finished: Array[bool] = [false]
 	phone.sequence_completed.connect(func() -> void: finished[0] = true)
-	var hang_height: float = model.to_global(model.get_receiver_home().origin).y
+	var on_hook_pose: Transform3D = model.receiver.global_transform
+	var receiver_moved: Array[bool] = [false]
 	var eye: Vector3 = model.close_up_camera.global_position
 
 	# The lamp: steady until the voice starts, a scripted flicker then, steady through
@@ -307,6 +321,8 @@ func _check_call() -> void:
 				if absf(camera.rotation_degrees.z + 5.0) < 1.0:
 					saw_roll[0] = true
 
+				narrowest_fov[0] = minf(narrowest_fov[0], camera.fov)
+
 				# A head turn: the eyes stay where they were, only the view swings left.
 				worst_move[0] = maxf(worst_move[0], camera.global_position.distance_to(eye))
 				var facing: Vector3 = -model.close_up_camera.global_basis.z
@@ -319,14 +335,15 @@ func _check_call() -> void:
 				var to_the_left: bool = facing.cross(view).y > 0.0
 				var hood: Vector3 = model.to_global(Vector3(-0.3, 1.3, 0.1))
 				if (
-					to_the_left and turned > 50.0 and turned < 70.0
-					and camera.is_position_in_frustum(hood)
-					and camera.is_position_in_frustum(model.receiver.global_position)
+					to_the_left and turned > 33.0 and turned < 50.0
 				):
 					saw_listening[0] = true
 
-			if phone.stage == OverlookPhoneSequence.Stage.CALL and model.receiver.global_position.y > hang_height + 0.15 and not model.on_hook:
-				saw_lifted[0] = true
+			if phone._in_call_view and cut_at[0] < 0.0:
+				cut_at[0] = Time.get_ticks_msec() / 1000.0
+
+			if phone._in_call_view and not model.receiver.global_transform.is_equal_approx(on_hook_pose):
+				receiver_moved[0] = true
 
 			var level: float = lamp.get_lamp_level()
 			if active_kind[0] != "":
@@ -344,35 +361,45 @@ func _check_call() -> void:
 
 	_expect(picked[0], "the receiver was picked up")
 	_expect(finished[0], "the call ends")
-	_expect(saw_lifted[0], "the receiver left its hook and floated up")
-	_expect(saw_listening[0], "she turned her head about 60 degrees to the left, the booth still at the right edge")
-	_expect(worst_move[0] < 0.02, "without moving from where she stands (%.3f m)" % worst_move[0])
-	_expect(saw_roll[0], "the view leaned 5 degrees towards the phone (the right ear)")
-	_expect(lines.size() == 4, "four subtitles played (%d)" % lines.size())
-	var expected: Array[String] = ["CAPTION_PHONE_01", "CAPTION_PHONE_02", "CAPTION_PHONE_03", "CAPTION_PHONE_04"]
+	_expect(cut_at[0] >= 0.0 and cut_at[0] - picked_at[0] < 0.3, "the picture cuts to the shot at once, no handset animation (%.2f s)" % (cut_at[0] - picked_at[0]))
+	_expect(ending_left[0] > 5.0 and (call_ended_at[0] - ending_at[0]) * Engine.time_scale > 5.0 and (call_ended_at[0] - ending_at[0]) * Engine.time_scale < 12.0, "the end of the call is announced ahead of time, for the town's lights (%.1f s left, %.1f game seconds before it finished)" % [ending_left[0], (call_ended_at[0] - ending_at[0]) * Engine.time_scale])
+	_expect(not receiver_moved[0], "the receiver is not shown being picked up")
+	_expect(saw_listening[0], "the picture became a cutscene of the town (about 40 degrees to the left of the booth, centred on the town), without letterbox bars")
+	_expect(worst_move[0] > 0.5 and worst_move[0] < 4.0, "from a camera a little behind and above where she stands (%.2f m away)" % worst_move[0])
+	_expect(narrowest_fov[0] < phone.shot_fov - 4.0 and narrowest_fov[0] >= phone.call_zoom_fov - 0.5, "the view slowly pushes in on the city while she listens (field of view down to %.1f from %.1f)" % [narrowest_fov[0], phone.shot_fov])
+	_expect(lines.size() == 12, "the call is split into twelve short blocks that appear as it goes (%d)" % lines.size())
+	var longest: int = 0
+	for line: String in lines:
+		longest = maxi(longest, line.length())
+	_expect(longest <= 90, "none longer than a line or two of film subtitles (longest %d characters)" % longest)
+	var expected: Array[String] = []
+	for number: int in 12:
+		expected.append("CAPTION_PHONE_%02d" % (number + 1))
+	var turn_starts: Array[int] = [0, 4, 7, 9]
 	for index: int in mini(lines.size(), expected.size()):
-		_expect(lines[index] == "%s: %s" % [tr("CAPTION_SPEAKER_SOPHIA_PHONE"), tr(expected[index])], "subtitle %d is Sophia's line" % (index + 1))
+		var prefix: String = "%s: " % tr("CAPTION_SPEAKER_SOPHIA_PHONE") if index in turn_starts else ""
+		_expect(lines[index] == prefix + tr(expected[index]), "block %d is %s" % [index + 1, "Sophia's, naming her" if index in turn_starts else "the same turn, no name again"])
 
 	_expect(lines.size() > 0 and lines[0].begins_with("Sophia: Juli... Oh, thank God you called."), "the first line is the warm voice's greeting")
-	_expect(lines.size() == 4 and lines[3].contains("Don't go near the wagon!"), "and the last (the desperate voice) warns her off the wagon")
-	_expect(lines.size() == 4 and lines[1].contains("Hang up right now!"), "the second is the desperate voice too")
-	_expect(lines.size() == 4 and lines[2].contains("I miss you"), "and the third the warm one again")
+	_expect(lines.size() == 12 and lines[11].contains("Don't go near the wagon!"), "and the last (the desperate voice) warns her off the wagon")
+	_expect(lines.size() == 12 and lines[6].contains("Hang up right now!"), "the second turn is the desperate voice too")
+	_expect(lines.size() == 12 and lines[8].contains("I miss you"), "and the third the warm one again")
 	var voices: Array = []
+	var last_voice: String = ""
 	for cue: Dictionary in CaptionTracks.get_cues(phone.call_track):
-		if cue.has("voice"):
-			voices.append(String(cue["voice"]))
+		if cue.has("voice") and String(cue["voice"]) != last_voice:
+			last_voice = String(cue["voice"])
+			voices.append(last_voice)
 	_expect(voices == ["warm", "desperate", "warm", "desperate"], "the voices alternate warm, desperate, warm, desperate (%s)" % str(voices))
 	var speakers: Dictionary = {}
 	for cue: Dictionary in CaptionTracks.get_cues(phone.call_track):
-		if cue.has("voice"):
+		if cue.has("speaker"):
 			speakers[cue["speaker"]] = true
 	_expect(speakers.size() == 1, "both voices are captioned as the same speaker, Sophia")
 	_expect(phone._sounds.has(&"disconnect"), "the line has a soft disconnect click ready")
 
-	_expect(flickers == ["start"], "the lamp flickered once, when the voice began, and not when it ended (%s)" % str(flickers))
-	_expect(int(lines_when.get("start", 9)) <= 1, "the first as the voice begins (%s subtitles so far)" % str(lines_when.get("start")))
-	_expect(float(lowest_in.get("start", 1.0)) < 0.05, "it goes completely dark at some point")
-	_expect(steady_lowest[0] == 1.0, "and before and after it, the lamp is steady at full power (%.2f)" % steady_lowest[0])
+	_expect(flickers.is_empty(), "the street lamp does not move during the call (%s)" % str(flickers))
+	_expect(steady_lowest[0] == 1.0, "it burns steadily at full power through it (%.2f)" % steady_lowest[0])
 	_expect(not lamp.is_flickering() and lamp.get_lamp_level() == 1.0, "it ends at full power")
 
 	var player_camera: Camera3D = player.get_node("Head/Camera3D")

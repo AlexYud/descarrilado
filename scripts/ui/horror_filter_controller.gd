@@ -70,6 +70,13 @@ func _apply_quality_preset(preset: int) -> void:
 			)
 
 
+## 0 is the usual look; 1 takes the grain, noise and lifted blacks out, so black is truly black (see the shader's `darkness`).
+func set_darkness(amount: float) -> void:
+	var filter_material: ShaderMaterial = horror_rect.material as ShaderMaterial
+	if filter_material != null:
+		filter_material.set_shader_parameter("darkness", clampf(amount, 0.0, 1.0))
+
+
 ## A brief spike of unease: the picture smears (colour fringes, a little lens warp, heavier grain, a
 ## tighter vignette) as the beam finds something it should not, then settles. `amount` is 0..1,
 ## `seconds` how long it lasts. The fringes shake while it lasts instead of rising smoothly.

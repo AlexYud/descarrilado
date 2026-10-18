@@ -287,9 +287,6 @@ msgstr ""
 msgid "OPTIONS_CAPTIONS"
 msgstr ""
 
-msgid "OPTIONS_CAPTION_LANGUAGE"
-msgstr ""
-
 msgid "OPTIONS_CAPTION_SIZE"
 msgstr ""
 
@@ -862,18 +859,6 @@ msgstr ""
 msgid "READABLE_BUS_TICKET_UNCLAIMED"
 msgstr ""
 
-msgid "READABLE_OVERLAY_SETTING"
-msgstr ""
-
-msgid "READABLE_OVERLAY_AUTO"
-msgstr ""
-
-msgid "READABLE_OVERLAY_ALWAYS"
-msgstr ""
-
-msgid "READABLE_OVERLAY_NEVER"
-msgstr ""
-
 # Readable spots on inspected items
 msgid "INSPECT_PROMPT_READ"
 msgstr ""
@@ -946,6 +931,30 @@ msgstr ""
 msgid "CAPTION_PHONE_04"
 msgstr ""
 
+msgid "CAPTION_PHONE_05"
+msgstr ""
+
+msgid "CAPTION_PHONE_06"
+msgstr ""
+
+msgid "CAPTION_PHONE_07"
+msgstr ""
+
+msgid "CAPTION_PHONE_08"
+msgstr ""
+
+msgid "CAPTION_PHONE_09"
+msgstr ""
+
+msgid "CAPTION_PHONE_10"
+msgstr ""
+
+msgid "CAPTION_PHONE_11"
+msgstr ""
+
+msgid "CAPTION_PHONE_12"
+msgstr ""
+
 # The overlook payphone
 
 # Overlook payphone: inserting fichas, the note
@@ -975,3 +984,6 @@ msgstr ""
 msgid "CONTROLS_HEAD_BOB"
 msgstr ""
 
+
+msgid "OPTIONS_CAPTION_PREVIEW"
+msgstr ""

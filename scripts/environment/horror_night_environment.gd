@@ -159,7 +159,15 @@ var low_altitude_height_density_multiplier: float = 0.0
 @export_range(0.0, 1.0, 0.01) var blackout: float = 0.0
 
 
+## The mist's own glow before the blackout took it (the atmosphere never sets it, so it is kept and given back here).
+var _blackout_mist_glow: float = -1.0
+
+
 func _apply_blackout() -> void:
+	if blackout <= 0.0 and _blackout_mist_glow >= 0.0 and environment != null:
+		environment.volumetric_fog_emission_energy = _blackout_mist_glow
+		_blackout_mist_glow = -1.0
+
 	if blackout <= 0.0 or Engine.is_editor_hint() or environment == null or not _runtime_values_ready:
 		return
 
@@ -167,6 +175,11 @@ func _apply_blackout() -> void:
 	environment.ambient_light_energy *= keep
 	environment.background_energy_multiplier *= keep
 	environment.fog_light_energy *= keep
+	if _blackout_mist_glow < 0.0:
+		_blackout_mist_glow = environment.volumetric_fog_emission_energy
+
+	# The mist glows by itself too: with the rest taken out it is what is left of the picture, so it goes as well.
+	environment.volumetric_fog_emission_energy = _blackout_mist_glow * keep
 	if blackout >= 0.99 and environment.glow_enabled:
 		environment.glow_enabled = false
 
@@ -194,7 +207,15 @@ var vista_full_distance: float = 14.0
 
 ## The vista starts to appear this far from the focus.
 @export_range(2.0, 400.0, 1.0)
-var vista_start_distance: float = 60.0
+var vista_start_distance: float = 150.0
+
+## 1 changes the view evenly over the walk; above 1 it changes even less at first and most near the end.
+@export_range(1.0, 4.0, 0.1)
+var vista_ease_power: float = 1.8
+
+## The view never changes faster than this per second (1 is the whole change), however fast the walk.
+@export_range(0.005, 1.0, 0.005)
+var vista_max_rate: float = 0.03
 
 ## Moonlight and ambient light at the full vista (the forest has almost none): enough to
 ## read the mountains and the town's walls from far away.
@@ -343,6 +364,9 @@ var menu_fog_curve: float = 1.35
 
 var _fog_altitude_target: Node3D = null
 var _vista_focus: Node3D = null
+## The vista blend as the player has been shown it (it creeps towards the walked-to value).
+var _vista_smoothed: float = 0.0
+var _vista_creep_ready: bool = false
 var _runtime_moon: DirectionalLight3D = null
 
 var _base_fog_density: float = 0.0
@@ -470,7 +494,24 @@ func _get_vista_blend() -> float:
 		return 0.0
 
 	var distance: float = _fog_altitude_target.global_position.distance_to(_vista_focus.global_position)
-	return 1.0 - smoothstep(vista_full_distance, maxf(vista_start_distance, vista_full_distance + 1.0), distance)
+	# The view opens up over a very long walk (vista_start_distance to vista_full_distance), eased so the
+	# first stretch changes almost nothing, and the value only ever creeps (see `_vista_creep`): the
+	# player never sees the fog thin or the far trees and lights appear, there is only a sense that the
+	# air has gradually cleared by the time they reach the overlook.
+	var linear: float = 1.0 - smoothstep(vista_full_distance, maxf(vista_start_distance, vista_full_distance + 1.0), distance)
+	return _vista_creep(pow(linear, vista_ease_power))
+
+
+## Moves the vista blend towards `target` no faster than `vista_max_rate` per second (a jump of more than a
+## quarter, a teleport or a loaded game, is taken at once).
+func _vista_creep(target: float) -> float:
+	if not _vista_creep_ready or absf(target - _vista_smoothed) > 0.25:
+		_vista_smoothed = target
+		_vista_creep_ready = true
+		return target
+
+	_vista_smoothed = move_toward(_vista_smoothed, target, vista_max_rate * get_process_delta_time())
+	return _vista_smoothed
 
 
 ## The fog and the camera distance follow the low altitude values (with their curve, so the

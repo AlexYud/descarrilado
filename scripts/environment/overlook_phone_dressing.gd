@@ -28,6 +28,10 @@ class_name OverlookPhoneDressing
 @export var lamp_position: Vector3 = Vector3(-2.3, 0.0, 1.5)
 @export var lamp_height: float = 3.9
 @export var lamp_energy: float = 9.0
+## A soft, wide, dim fill round the lamp (no shadows) so it lights its surroundings a little, the ground, the
+## fence, the bench and the nearest bushes, not only the booth: still dark and creepy, but believable.
+@export var surround_energy: float = 0.9
+@export var surround_range: float = 16.0
 ## How strong the halo, the haze and the light shaft round the lamp are, as a fraction of
 ## the test scene's (1). The dream intro, already dark and misty, wants them subtler.
 @export_range(0.0, 1.5, 0.05) var glow_strength: float = 1.0
@@ -66,6 +70,7 @@ signal flicker_started(kind: StringName)
 signal flicker_finished(kind: StringName)
 
 var _spot: SpotLight3D = null
+var _surround: OmniLight3D = null
 var _lens_material: StandardMaterial3D = null
 var _glow_material: ShaderMaterial = null
 var _shaft_material: ShaderMaterial = null
@@ -277,6 +282,17 @@ func _build_lamp() -> void:
 	spot.basis = Basis.looking_at(target.normalized(), Vector3.UP)
 	_spot = spot
 	_spot_colour = spot.light_color
+
+	_surround = OmniLight3D.new()
+	_surround.name = "Surround"
+	_surround.light_color = Color(1.0, 0.82, 0.58)
+	_surround.light_energy = surround_energy
+	_surround.omni_range = surround_range
+	_surround.omni_attenuation = 1.6
+	_surround.shadow_enabled = false
+	_surround.light_specular = 0.0
+	_surround.position = spot.position + Vector3(0.0, -0.4, 0.0)
+	lamp.add_child(_surround)
 	_add_glow_and_shaft(lamp, head, spot, target)
 	_build_hum()
 
@@ -434,6 +450,9 @@ func _set_lamp_level(level: float) -> void:
 	_spot.light_volumetric_fog_energy = 1.6 * level * glow_strength
 	# A failing lamp goes cold and sickly as it dims.
 	_spot.light_color = _spot_colour.lerp(Color(0.7, 0.85, 1.0), clampf(1.0 - level, 0.0, 1.0) * 0.8)
+	if _surround != null:
+		_surround.light_energy = surround_energy * level
+		_surround.light_color = Color(1.0, 0.82, 0.58).lerp(Color(0.7, 0.85, 1.0), clampf(1.0 - level, 0.0, 1.0) * 0.8)
 	if _lens_material != null:
 		_lens_material.emission_energy_multiplier = 2.4 * level
 

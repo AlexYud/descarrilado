@@ -30,6 +30,11 @@ signal receiver_picked_up
 signal call_finished
 ## The call is over and the view is back with the player.
 signal sequence_completed
+## The voice has stopped and the line is cut. With `finale_takes_over` the view stays on the city (still
+## pushing in) and `DreamFinale` goes on from here; see `end_view_in_the_dark`.
+signal line_cut
+## The call is about to end (`seconds_left` before its last caption does): the town's lights start going out.
+signal call_ending(seconds_left: float)
 
 enum Stage {
 	IDLE,
@@ -53,15 +58,6 @@ const FICHA_SCENES: Dictionary = {
 	"sophia_ficha": "res://scenes/objects/waiting_shed/sophia_ficha.tscn",
 }
 
-## Where the receiver floats at her right ear, in the camera's space (x right, y up,
-## -z ahead): the right edge of the picture.
-const EAR_POSITION: Vector3 = Vector3(0.35, 0.0, -0.34)
-## Which way the handset's own axes point in that space: +Y runs from the earpiece to
-## the cord end (down and towards the middle, the earpiece up at the right ear), +Z is
-## its inner face (away from the viewer: the viewer sees its back).
-const EAR_Y_AXIS: Vector3 = Vector3(-0.42, -0.9, 0.0)
-const EAR_Z_AXIS: Vector3 = Vector3(0.55, 0.0, -0.85)
-
 ## How far behind the close-up camera she stands (so she does not walk into the booth).
 const STAND_BACK: float = 0.12
 ## Moving away is ignored for this long after the view comes up.
@@ -82,8 +78,6 @@ const STEP_AWAY_GRACE_SECONDS: float = 0.7
 @export_category("Timing")
 @export var camera_seconds: float = 1.1
 @export var close_up_fov: float = 70.0
-## How far the view leans towards the phone (to the right: the right ear).
-@export var call_roll_degrees: float = 5.0
 ## The caption track of the call (an unknown id plays nothing, for tests).
 @export var call_track: StringName = CaptionTracks.OVERLOOK_CALL
 ## After the call the player may look but not walk. This many seconds later they are
@@ -96,7 +90,25 @@ const STEP_AWAY_GRACE_SECONDS: float = 0.7
 @export var call_look_yaw_degrees: float = 60.0
 @export var call_look_pitch_degrees: float = 1.0
 @export var call_fov: float = 68.0
-@export var call_head_turn_seconds: float = 1.8
+## The slow push-in on the city that starts with the voice and goes on until the lights go out: the view ends
+## this narrow, `call_zoom_extra_seconds` after the last caption of the call (still far from the city).
+@export var call_zoom_fov: float = 31.0
+
+@export_category("Cinematic shot")
+## While Sophia speaks the picture is a cutscene, not the player's eyes: a camera behind and above where she
+## stands, looking out over the fence at the whole town (the way she looked at it), wide at first, with
+## letterbox bars, then pushing in slowly.
+@export var shot_height: float = 1.6
+@export var shot_back: float = 1.6
+@export var shot_pitch_degrees: float = -5.0
+## The view is turned this many degrees from where she looked at the town (negative: back towards the booth)
+## so that the middle of the town is the middle of the picture.
+@export var shot_yaw_offset_degrees: float = -26.0
+@export var shot_fov: float = 58.0
+@export var call_zoom_extra_seconds: float = 0.4
+## The call is near its end this many seconds before its last caption ends: `call_ending` tells the finale, which
+## then puts the town's lights out one by one.
+@export var call_ending_lead_seconds: float = 7.0
 
 var stage: int = Stage.IDLE
 
@@ -107,16 +119,20 @@ var _inserted: Array[String] = []
 var _camera_tween: Tween = null
 var _grace_left: float = 0.0
 
-var _receiver_held: bool = false
-var _held_pose: Transform3D = Transform3D.IDENTITY
 ## While she listens the view breathes a little round this pose.
 var _call_base: Transform3D = Transform3D.IDENTITY
 var _in_call_view: bool = false
+## Set by the finale: the call does not turn back to the booth and give the view back; the view stays on the
+## city, zooming, until the finale ends it in the dark.
+var finale_takes_over: bool = false
+var _zoom_on: bool = false
+var _zoom_elapsed: float = 0.0
+var _zoom_total: float = 1.0
+var _zoom_start_fov: float = 58.0
 
 var _ui_layer: CanvasLayer = null
 var _prompt: KeyHint = null
 var _away_hint: KeyHint = null
-var _hiss: AudioStreamPlayer = null
 var _sounds: Dictionary = {}
 
 
@@ -579,73 +595,52 @@ func _take_ficha_visual(item_id: String) -> Node3D:
 	return visual
 
 
-# ============================================================
-# THE CALL
-# ============================================================
-
-## The receiver comes off its hook and floats to her right ear (the arm is for the real
-## model to supply); she turns her head to the left, in place, and listens to the call;
-## her head turns back, the receiver goes back down, hanging on its cord. The close-up
-## camera is up. Await it.
+## Picking up the receiver is not shown: the picture simply cuts to a cinematic shot of the town at night,
+## its centre in the middle of the frame, with letterbox bars, and the slow push-in starts with the voice (no
+## handset animation, no lamp flicker). When the voice has stopped the line is cut; with `finale_takes_over`
+## the shot stays and the finale goes on from here, otherwise the view goes back to the booth and the
+## receiver is left hanging on its cord. Await it.
 func pick_up_receiver() -> void:
 	stage = Stage.CALL
 	_hide_hints()
 	receiver_picked_up.emit()
 
-	var receiver: Node3D = model.receiver
-	model.take_off_hook()
-	_play(&"knock", -8.0)
-
-	# Off the hook and up, with her eyes on it.
-	var start: Transform3D = _view_camera.global_transform.affine_inverse() * receiver.global_transform
-	var ear: Transform3D = _ear_pose()
-	_receiver_held = true
-	var lift: Tween = create_tween()
-	lift.tween_method(_move_receiver.bind(start, ear), 0.0, 1.0, 1.5)
-	await lift.finished
-	_held_pose = ear
-	await get_tree().create_timer(0.3).timeout
-
-	# She turns her head to the left and looks at the horizon, still where she stands,
-	# the phone at her right ear and the booth at the right edge of the picture.
+	# The cut: the shot, the bars sliding in, and the far view sharp.
 	_set_far_blur(false)
-	_call_base = _call_view_transform()
-	await _fly_camera(_call_base, call_fov, call_head_turn_seconds, -call_roll_degrees)
-	_call_base = Transform3D(_call_base.basis * Basis(Vector3.BACK, deg_to_rad(-call_roll_degrees)), _call_base.origin)
-	_in_call_view = true
+	_call_base = _cinematic_shot()
+	if _camera_tween != null and _camera_tween.is_valid():
+		_camera_tween.kill()
 
-	# The voice begins: the lamp sputters and dies for a long moment, then burns on.
-	_start_hiss()
-	_play_voices()
-	if lamp != null:
-		lamp.play_flicker(&"start")
+	_view_camera.global_transform = _call_base
+	_view_camera.fov = shot_fov
+	_in_call_view = true
+	_start_zoom()
+	_announce_the_end()
 
 	await CaptionManager.play_scripted_and_wait(call_track)
-	_stop_hiss()
 
-	# The line is cut at the other end: a soft, hollow click. (The lamp does not react: it burns on until
-	# the night goes out, see `DreamFinale`.)
-	_play(&"disconnect", -8.0)
+	# The line is cut at the other end: a soft, hollow click (not when the finale takes over: the last light
+	# going out is silent).
+	if not finale_takes_over:
+		_play(&"disconnect", -8.0)
+
 	await get_tree().create_timer(0.35).timeout
 
-	# Her head turns back to the booth as the receiver is dropped to dangle on its cord.
+	if finale_takes_over:
+		# The shot stays, still pushing in, while the lights go out: the finale takes it from here.
+		SaveManager.set_state_value(STATE_SECTION, KEY_CALL_DONE, true)
+		if interactable != null:
+			interactable.enabled = false
+
+		call_finished.emit()
+		line_cut.emit()
+		return
+
+	_zoom_on = false
 	_in_call_view = false
 	_set_far_blur(true)
-	var back: Tween = create_tween().set_parallel(true)
-	var close_up: Transform3D = model.close_up_camera.global_transform
-	var from_camera: Transform3D = _view_camera.global_transform
-	var from_fov: float = _view_camera.fov
-	back.tween_method(
-		func(t: float) -> void:
-			var eased: float = ease(t, -2.0)
-			_view_camera.global_transform = from_camera.interpolate_with(close_up, eased)
-			_view_camera.fov = lerpf(from_fov, close_up_fov, eased),
-		0.0, 1.0, 1.0
-	)
-	back.tween_method(_return_receiver.bind(ear), 0.0, 1.0, 1.0)
-	await back.finished
+	await _fly_camera(model.close_up_camera.global_transform, close_up_fov, 1.0)
 
-	_receiver_held = false
 	model.let_hang()
 	_play(&"knock", -10.0)
 	model.swing_receiver()
@@ -665,6 +660,62 @@ func pick_up_receiver() -> void:
 		release_player()
 
 
+## Waits until the call is near its end and says so (`call_ending`).
+func _announce_the_end() -> void:
+	var last_end: float = 0.0
+	for cue: Dictionary in CaptionTracks.get_cues(call_track):
+		last_end = maxf(last_end, float(cue["end"]))
+
+	var lead: float = minf(call_ending_lead_seconds, last_end)
+	await get_tree().create_timer(maxf(last_end - lead, 0.0), false).timeout
+	if stage == Stage.CALL and _in_call_view:
+		call_ending.emit(lead)
+
+
+## Starts the slow push-in on the city (it goes on to the end of the call and past it).
+func _start_zoom() -> void:
+	var last_end: float = 0.0
+	for cue: Dictionary in CaptionTracks.get_cues(call_track):
+		last_end = maxf(last_end, float(cue["end"]))
+
+	_zoom_total = maxf(last_end + call_zoom_extra_seconds, 1.0)
+	_zoom_start_fov = _view_camera.fov
+	_zoom_elapsed = 0.0
+	_zoom_on = true
+
+
+## The finale calls this once everything is dark: the view goes back to the player at once, and the
+## receiver is left hanging on its cord.
+func end_view_in_the_dark() -> void:
+	if _view_camera == null:
+		return
+
+	_zoom_on = false
+	_in_call_view = false
+	model.receiver.visible = true
+	model.let_hang()
+	_player_camera.make_current()
+	_view_camera.queue_free()
+	_view_camera = null
+	_player.call("set_view_locked", false)
+	_player.call("hold_movement", 3600.0)
+	stage = Stage.DONE
+	sequence_completed.emit()
+
+
+
+## The cutscene camera: behind and above where she stands, looking the way she looked at the town.
+func _cinematic_shot() -> Transform3D:
+	var base: Transform3D = _call_view_transform()
+	var forward: Vector3 = -base.basis.z
+	forward.y = 0.0
+	forward = forward.normalized()
+	var origin: Vector3 = base.origin + Vector3.UP * shot_height - forward * shot_back
+	var look: Vector3 = Basis(Vector3.UP, deg_to_rad(shot_yaw_offset_degrees)) * forward
+	look.y = tan(deg_to_rad(shot_pitch_degrees))
+	return Transform3D(Basis.looking_at(look.normalized(), Vector3.UP), origin)
+
+
 ## Where the camera is while she listens: the very same place as when she looked at the
 ## unit, the head turned to the left (and level, looking far away).
 func _call_view_transform() -> Transform3D:
@@ -678,47 +729,16 @@ func _call_view_transform() -> Transform3D:
 	return Transform3D(Basis.looking_at(look.normalized(), Vector3.UP), marker.origin)
 
 
-## Where the receiver floats at her right ear, in the camera's space, at the size it
-## has in the booth.
-func _ear_pose() -> Transform3D:
-	var y_axis: Vector3 = EAR_Y_AXIS.normalized()
-	var z_axis: Vector3 = (EAR_Z_AXIS - y_axis * EAR_Z_AXIS.dot(y_axis)).normalized()
-	var x_axis: Vector3 = y_axis.cross(z_axis)
-	var size: float = model.global_basis.get_scale().x
-	return Transform3D(Basis(x_axis, y_axis, z_axis).scaled(Vector3.ONE * size), EAR_POSITION)
-
-
-## Moves the floating receiver along a gentle arc from `from` to `to` (both in the view
-## camera's space); it comes off the hook with a small lift.
-func _move_receiver(t: float, from: Transform3D, to: Transform3D) -> void:
-	if _view_camera == null:
-		return
-
-	var eased: float = ease(t, -2.0)
-	var local: Transform3D = from.interpolate_with(to, eased)
-	local.origin += Vector3(0.0, sin(eased * PI) * 0.05, 0.0)
-	model.receiver.global_transform = _view_camera.global_transform * local
-
-
-## The way back: towards the hanging pose (followed as the camera moves).
-func _return_receiver(t: float, from: Transform3D) -> void:
-	if _view_camera == null:
-		return
-
-	var hang_world: Transform3D = model.global_transform * model.get_receiver_home()
-	var hang_local: Transform3D = _view_camera.global_transform.affine_inverse() * hang_world
-	var eased: float = ease(t, -2.0)
-	var local: Transform3D = from.interpolate_with(hang_local, eased)
-	local.origin += Vector3(0.0, sin(eased * PI) * 0.03, 0.0)
-	model.receiver.global_transform = _view_camera.global_transform * local
-
-
 func _process(delta: float) -> void:
 	_grace_left = maxf(_grace_left - delta, 0.0)
 
 	# The light on the unit goes out with the street lamp.
 	if lamp != null and model != null:
 		model.set_fill_scale(lamp.get_lamp_level())
+
+	if _zoom_on and _view_camera != null:
+		_zoom_elapsed += delta
+		_view_camera.fov = lerpf(_zoom_start_fov, call_zoom_fov, clampf(_zoom_elapsed / _zoom_total, 0.0, 1.0))
 
 	if stage != Stage.CALL or _view_camera == null or not _in_call_view:
 		return
@@ -730,13 +750,6 @@ func _process(delta: float) -> void:
 	_view_camera.global_transform = Transform3D(
 		_call_base.basis * drift, _call_base.origin + Vector3(0.0, sin(now * 0.9) * 0.004, 0.0)
 	)
-
-	# The receiver trembles a little, as a hand holds it.
-	if _receiver_held and _held_pose != Transform3D.IDENTITY:
-		var tremble: Vector3 = Vector3(sin(now * 1.7), sin(now * 2.3 + 1.0), sin(now * 1.1 + 2.0)) * 0.0025
-		var tilt: Basis = Basis.from_euler(Vector3(sin(now * 1.3), sin(now * 0.9), sin(now * 1.9)) * 0.012)
-		var pose: Transform3D = Transform3D(tilt * _held_pose.basis, _held_pose.origin + tremble)
-		model.receiver.global_transform = _view_camera.global_transform * pose
 
 
 ## Lets the player walk again (the event that follows the call has finished).
@@ -758,12 +771,6 @@ func _build_audio() -> void:
 		&"disconnect": PlaceholderAudio.make_disconnect_click(),
 	}
 
-	_hiss = AudioStreamPlayer.new()
-	_hiss.name = "LineHiss"
-	_hiss.stream = PlaceholderAudio.make_line_hiss()
-	_hiss.volume_db = -22.0
-	add_child(_hiss)
-
 
 func _play(sound: StringName, volume_db: float = -6.0) -> void:
 	var stream: AudioStream = _sounds.get(sound) as AudioStream
@@ -776,37 +783,3 @@ func _play(sound: StringName, volume_db: float = -6.0) -> void:
 	add_child(voice)
 	voice.finished.connect(voice.queue_free)
 	voice.play()
-
-
-## The two voices on the line, as placeholder audio: each caption of the call track that names a `voice`
-## (warm or desperate) gets that voice played over it. They say nothing yet; real recordings replace this.
-func _play_voices() -> void:
-	var elapsed: float = 0.0
-	for cue: Dictionary in CaptionTracks.get_cues(call_track):
-		if not cue.has("voice"):
-			continue
-
-		var start: float = float(cue["start"])
-		await get_tree().create_timer(maxf(start - elapsed, 0.0), false).timeout
-		elapsed = start
-		if stage != Stage.CALL:
-			return
-
-		var warm: bool = cue["voice"] == &"warm"
-		var voice: AudioStreamPlayer = AudioStreamPlayer.new()
-		voice.name = "PhoneVoice"
-		voice.stream = PlaceholderAudio.make_phone_voice(warm, float(cue["end"]) - start)
-		voice.volume_db = -11.0 if warm else -6.0
-		add_child(voice)
-		voice.finished.connect(voice.queue_free)
-		voice.play()
-
-
-func _start_hiss() -> void:
-	if _hiss != null:
-		_hiss.play()
-
-
-func _stop_hiss() -> void:
-	if _hiss != null:
-		_hiss.stop()

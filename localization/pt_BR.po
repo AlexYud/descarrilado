@@ -1004,22 +1004,43 @@ msgid "CAPTION_SPEAKER_SOPHIA_PHONE"
 msgstr "Sophia"
 
 msgid "CAPTION_PHONE_01"
-msgstr "Juli... Ah, graças a Deus você ligou. Eu estava começando a achar que tinha se esquecido de mim... Estou aqui sentada no escuro, esperando você atender, ouvindo a chuva no telhado... mas o trem não se mexeu a noite toda."
+msgstr "Juli... Ah, graças a Deus você ligou."
 
 msgid "CAPTION_PHONE_02"
-msgstr "Juli? Juli, me escuta! Eu não sei quem é essa, mas não dê ouvidos a ela! Desliga agora mesmo!"
+msgstr "Eu estava começando a achar que tinha se esquecido de mim..."
 
 msgid "CAPTION_PHONE_03"
-msgstr "Está tão frio aqui... Por favor... só volte e fique comigo... Sinto sua falta..."
+msgstr "Estou aqui sentada no escuro, esperando você atender..."
 
 msgid "CAPTION_PHONE_04"
-msgstr "Juli, ela está tentando te enganar! Fique longe dela! Não chegue perto do vagão!"
+msgstr "ouvindo a chuva no telhado... mas o trem não se mexeu a noite toda."
+
+msgid "CAPTION_PHONE_05"
+msgstr "Juli? Juli, me escuta!"
+
+msgid "CAPTION_PHONE_06"
+msgstr "Eu não sei quem é essa, mas não dê ouvidos a ela!"
+
+msgid "CAPTION_PHONE_07"
+msgstr "Desliga agora mesmo!"
+
+msgid "CAPTION_PHONE_08"
+msgstr "Está tão frio aqui... Por favor..."
+
+msgid "CAPTION_PHONE_09"
+msgstr "só volte e fique comigo... Sinto sua falta..."
+
+msgid "CAPTION_PHONE_10"
+msgstr "Juli, ela está tentando te enganar!"
+
+msgid "CAPTION_PHONE_11"
+msgstr "Fique longe dela!"
+
+msgid "CAPTION_PHONE_12"
+msgstr "Não chegue perto do vagão!"
 
 msgid "CAPTION_WAGON_WHISPER"
 msgstr "Você não deveria estar aqui."
-
-msgid "PROMPT_TAKE_TICKET"
-msgstr "[{interact}] Pegar a passagem"
 
 msgid "TITLE_CARD_TEXT"
 msgstr "UNRAILED"

@@ -1004,22 +1004,43 @@ msgid "CAPTION_SPEAKER_SOPHIA_PHONE"
 msgstr "Sophia"
 
 msgid "CAPTION_PHONE_01"
-msgstr "Juli... Oh, thank God you called. I was starting to think you forgot about me... I've been sitting here in the dark waiting for you to pick up, listening to the rain on the roof... but the train hasn't moved all night."
+msgstr "Juli... Oh, thank God you called."
 
 msgid "CAPTION_PHONE_02"
-msgstr "Juli? Juli, listen to me! I don't know who that is, but don't listen to her! Hang up right now!"
+msgstr "I was starting to think you forgot about me..."
 
 msgid "CAPTION_PHONE_03"
-msgstr "It's so cold here... Please... just come back and be with me... I miss you..."
+msgstr "I've been sitting here in the dark, waiting for you to pick up..."
 
 msgid "CAPTION_PHONE_04"
-msgstr "Juli, she's trying to trick you! Stay away from her! Don't go near the wagon!"
+msgstr "listening to the rain on the roof... but the train hasn't moved all night."
+
+msgid "CAPTION_PHONE_05"
+msgstr "Juli? Juli, listen to me!"
+
+msgid "CAPTION_PHONE_06"
+msgstr "I don't know who that is, but don't listen to her!"
+
+msgid "CAPTION_PHONE_07"
+msgstr "Hang up right now!"
+
+msgid "CAPTION_PHONE_08"
+msgstr "It's so cold here... Please..."
+
+msgid "CAPTION_PHONE_09"
+msgstr "just come back and be with me... I miss you..."
+
+msgid "CAPTION_PHONE_10"
+msgstr "Juli, she's trying to trick you!"
+
+msgid "CAPTION_PHONE_11"
+msgstr "Stay away from her!"
+
+msgid "CAPTION_PHONE_12"
+msgstr "Don't go near the wagon!"
 
 msgid "CAPTION_WAGON_WHISPER"
 msgstr "You're not supposed to be here."
-
-msgid "PROMPT_TAKE_TICKET"
-msgstr "[{interact}] Take Ticket"
 
 msgid "TITLE_CARD_TEXT"
 msgstr "UNRAILED"

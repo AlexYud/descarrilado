@@ -20,6 +20,9 @@ var modal_ui_open: bool = false
 ## payphone): no walking, looking, interacting or flashlight, but the inventory
 ## still opens. See `set_view_locked`.
 var view_locked: bool = false
+## A scripted scene that holds the view (`view_locked`) but keeps the flashlight working (the scene itself
+## switches it on and moves it).
+var scripted_flashlight: bool = false
 var cutscene_frozen: bool = false
 var manual_save_blocked: bool = false
 
@@ -509,7 +512,7 @@ func is_flashlight_blocked() -> bool:
 	if cutscene_frozen:
 		return true
 
-	if dialogue_frozen or modal_ui_open or view_locked:
+	if dialogue_frozen or modal_ui_open or (view_locked and not scripted_flashlight):
 		return true
 
 	if (

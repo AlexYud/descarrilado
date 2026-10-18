@@ -144,6 +144,9 @@ var tutorial_prompt_tween: Tween = null
 var tutorial_prompt_visible: bool = false
 
 var head_raise_finished: bool = true
+## Set by `skip_opening`: the opening cinematic was cut short (the finale or a developer jump began before it
+## was over), so its remaining steps must not run.
+var opening_cancelled: bool = false
 
 var continuity_light_tween: Tween = null
 var continuity_light_sequence_finished: bool = true
@@ -257,6 +260,9 @@ func _finish_scene_setup() -> void:
 	# let the opening animation advance invisibly behind that transition.
 	if SceneTransition.is_cover_visible():
 		await SceneTransition.transition_finished
+
+	if opening_cancelled:
+		return
 
 	await _begin_playable_scene()
 
@@ -634,11 +640,37 @@ func _wait_for_head_raise_animation() -> void:
 # PLAYABLE SCENE SEQUENCE
 # ============================================================
 
+## Cuts the opening cinematic short, wherever it is: the black cover, the head raise, the wagon's malfunction
+## flicker and the flashlight hint all stop, the wagon is dark and the player is free. Called when something
+## takes over the scene before the opening has finished (the finale started from the developer console).
+func skip_opening() -> void:
+	opening_cancelled = true
+	if continuity_light_tween != null and continuity_light_tween.is_valid():
+		continuity_light_tween.kill()
+
+	head_raise_finished = true
+	continuity_light_sequence_finished = true
+	if head_raise_animation_player != null:
+		head_raise_animation_player.stop()
+
+	if blackout_rect != null:
+		blackout_rect.modulate.a = 0.0
+		blackout_rect.hide()
+
+	_hide_flashlight_tutorial_prompt()
+	_force_train_dark()
+	_set_player_enabled(true)
+	_set_flashlight_input_enabled(true)
+
+
 func _begin_playable_scene() -> void:
 	if initial_black_hold_duration > 0.0:
 		await get_tree().create_timer(
 			initial_black_hold_duration
 		).timeout
+
+	if opening_cancelled:
+		return
 
 	# All three begin together:
 	# wagon malfunction, head raise, and fast black reveal.
@@ -646,15 +678,21 @@ func _begin_playable_scene() -> void:
 	_start_head_raise_animation()
 
 	await _fade_from_black()
+	if opening_cancelled:
+		return
 
 	# Input remains disabled until the real animation completion.
 	await _wait_for_head_raise_animation()
+	if opening_cancelled:
+		return
 
 	_set_player_enabled(true)
 	_set_flashlight_input_enabled(true)
 
 	# This normally completed during the longer head raise.
 	await _wait_for_continuity_light_sequence()
+	if opening_cancelled:
+		return
 
 	_force_train_dark()
 
@@ -666,6 +704,9 @@ func _begin_playable_scene() -> void:
 			await get_tree().create_timer(
 				tutorial_prompt_delay
 			).timeout
+
+		if opening_cancelled:
+			return
 
 		_show_flashlight_tutorial_prompt()
 
@@ -907,6 +948,11 @@ func _create_tutorial_prompt() -> void:
 	tutorial_prompt_label.theme_type_variation = &"HintLabel"
 
 	ui_layer.add_child(tutorial_prompt_label)
+
+
+## The "Press F to turn on the flashlight" hint, for when the player has to switch it on again (the finale).
+func show_flashlight_hint() -> void:
+	_show_flashlight_tutorial_prompt()
 
 
 func _show_flashlight_tutorial_prompt() -> void:

@@ -27,6 +27,7 @@ SceneTransition="*res://scripts/ui/scene_transition_manager.gd"
 DialogueManager="*res://scripts/dialogue/dialogue_manager.gd"
 CaptionManager="*res://scenes/ui/captions/caption_display.tscn"
 PersistentAudio="*res://scenes/autoload/persistent_audio.tscn"
+DevConsole="*res://scripts/dev/dev_console.gd"
 
 [display]
 
