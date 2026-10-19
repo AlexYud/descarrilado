@@ -203,7 +203,7 @@ func _build_plate(steel: Material, unit_paint: Material, dark_steel: Material) -
 	var legends: Array[String] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]
 	for index: int in 12:
 		var column: int = index % 3
-		var row: int = index / 3
+		var row: int = floori(float(index) / 3.0)
 		var key_pos: Vector3 = Vector3(-0.042 + column * 0.042, 0.083 - row * 0.043, 0.0185)
 		HouseProps.add_box(plate, "Key%d" % index, Vector3(0.034, 0.032, 0.01), key_pos, grey_plastic)
 		HouseProps.add_text(

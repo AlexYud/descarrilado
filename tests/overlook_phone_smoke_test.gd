@@ -240,6 +240,10 @@ func _check_the_rest() -> void:
 
 	await _walk_up_and_look()
 	_expect(_hint_text() == "Insert ficha 2", "she looks at the unit and 'Insert ficha 2' is on offer")
+	await _check_hint_fades()
+	# Hammering [E]: the ficha goes in once, and the second press while it is going in does nothing.
+	phone._input(_action("interact"))
+	phone._input(_action("interact"))
 	phone._input(_action("interact"))
 	await _until(func() -> bool: return phone.get_inserted_count() == 2, 6.0)
 	await _until(func() -> bool: return _stage(OverlookPhoneSequence.Stage.VIEWING), 6.0)
@@ -263,6 +267,55 @@ func _check_the_rest() -> void:
 	_expect(_prompt() == "Pick up Receiver", "from outside the prompt is 'Pick up Receiver' too (%s)" % _prompt())
 
 
+## The hints' fades must never fight: when the player presses [E] while the hints are still fading in (the call, or the next ficha, begins
+## and hides them), they must end hidden. They used to end on screen for ever (the fade-in, 0.25 s, was still going after the fade-out, 0.2 s,
+## had finished, and set the alpha back to 1), over the call, and stayed until the scene was left.
+func _check_hint_fades() -> void:
+	# (At the game's own speed: the old bug depended on frames, and at the test's faster time it did not always show.)
+	var scale_before: float = Engine.time_scale
+	Engine.time_scale = 1.0
+	# (The old bug showed for some gaps and not for others, depending on how many frames the show had run: all of them are tried.)
+	var worst_hidden: float = 0.0
+	for gap: int in 10:
+		phone._prompt.modulate.a = 0.0
+		phone._away_hint.modulate.a = 0.0
+		phone._refresh_hints()
+		for frame: int in gap:
+			await get_tree().process_frame
+
+		phone._hide_hints()
+		await _wait(0.8)
+		worst_hidden = maxf(worst_hidden, maxf(phone._prompt.modulate.a, phone._away_hint.modulate.a))
+
+	_expect(worst_hidden < 0.01, "hiding the hints at any moment while they fade in leaves them hidden (the worst left %.2f)" % worst_hidden)
+	# And showing them again while they fade out leaves them shown.
+	var worst_shown: float = 1.0
+	for gap: int in 10:
+		phone._refresh_hints()
+		await _wait(0.8)
+		phone._hide_hints()
+		for frame: int in gap:
+			await get_tree().process_frame
+
+		phone._refresh_hints()
+		await _wait(0.8)
+		worst_shown = minf(worst_shown, phone._away_hint.modulate.a)
+
+	_expect(worst_shown > 0.99, "and showing them while they fade out leaves them shown (the worst left %.2f)" % worst_shown)
+
+	# Outside the view nothing may be left on screen, whatever happened to the fades: the safety net puts it out.
+	var stage_before: int = phone.stage
+	phone.stage = OverlookPhoneSequence.Stage.CALL
+	phone._prompt.modulate.a = 1.0
+	phone._away_hint.modulate.a = 1.0
+	await _wait(0.3)
+	_expect(phone._prompt.modulate.a < 0.01 and phone._away_hint.modulate.a < 0.01, "and a hint left showing outside the view is put out (%.2f)" % phone._prompt.modulate.a)
+	phone.stage = stage_before
+	phone._refresh_hints()
+	await _wait(0.5)
+	Engine.time_scale = scale_before
+
+
 ## The call: nothing is shown of the receiver being picked up, the picture cuts to the cinematic shot of the
 ## town, Sophia speaks, the lamp does not move, the receiver ends up hanging, the view returns to the player.
 func _check_call() -> void:
@@ -283,7 +336,11 @@ func _check_call() -> void:
 		ending_at[0] = Time.get_ticks_msec() / 1000.0
 	)
 	phone.call_finished.connect(func() -> void: call_ended_at[0] = Time.get_ticks_msec() / 1000.0)
+	var pick_count: Array[int] = [0]
+	var hint_alpha_in_call: Array[float] = [0.0]
+	var in_call_time: Array[float] = [0.0]
 	phone.receiver_picked_up.connect(func() -> void:
+		pick_count[0] += 1
 		picked[0] = true
 		picked_at[0] = Time.get_ticks_msec() / 1000.0
 	)
@@ -309,7 +366,11 @@ func _check_call() -> void:
 	)
 	lamp.flicker_finished.connect(func(_kind: StringName) -> void: active_kind[0] = "")
 
-	phone.interactable.interact(player)
+	# [E] hammered at the booth: the call starts once.
+	for press: int in 6:
+		phone.interactable.interact(player)
+		await _wait(0.03)
+
 	await _wait(0.3)
 	_expect(_stage(OverlookPhoneSequence.Stage.WALKING) or _stage(OverlookPhoneSequence.Stage.BUSY) or _stage(OverlookPhoneSequence.Stage.CALL), "interacting starts the call (stage %d)" % phone.stage)
 
@@ -317,6 +378,11 @@ func _check_call() -> void:
 		while not finished[0]:
 			await get_tree().process_frame
 			var camera: Camera3D = get_viewport().get_camera_3d()
+			if phone._in_call_view:
+				in_call_time[0] += get_process_delta_time()
+				if in_call_time[0] > 0.6:
+					hint_alpha_in_call[0] = maxf(hint_alpha_in_call[0], maxf(phone._prompt.modulate.a, phone._away_hint.modulate.a))
+
 			if phone._in_call_view and camera != null:
 				if absf(camera.rotation_degrees.z + 5.0) < 1.0:
 					saw_roll[0] = true
@@ -361,6 +427,8 @@ func _check_call() -> void:
 
 	_expect(picked[0], "the receiver was picked up")
 	_expect(finished[0], "the call ends")
+	_expect(pick_count[0] == 1, "the receiver was picked up once, however often [E] was pressed (%d)" % pick_count[0])
+	_expect(hint_alpha_in_call[0] < 0.01, "and no hint stayed on screen over the call (%.2f)" % hint_alpha_in_call[0])
 	_expect(cut_at[0] >= 0.0 and cut_at[0] - picked_at[0] < 0.3, "the picture cuts to the shot at once, no handset animation (%.2f s)" % (cut_at[0] - picked_at[0]))
 	_expect(ending_left[0] > 5.0 and (call_ended_at[0] - ending_at[0]) * Engine.time_scale > 5.0 and (call_ended_at[0] - ending_at[0]) * Engine.time_scale < 12.0, "the end of the call is announced ahead of time, for the town's lights (%.1f s left, %.1f game seconds before it finished)" % [ending_left[0], (call_ended_at[0] - ending_at[0]) * Engine.time_scale])
 	_expect(not receiver_moved[0], "the receiver is not shown being picked up")

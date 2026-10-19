@@ -570,7 +570,6 @@ static func make_whisper() -> AudioStreamWAV:
 	]
 	var low: float = 0.0
 	var band: float = 0.0
-	var index: int = 0
 	for i: int in samples.size():
 		var t: float = float(i) / MIX_RATE
 		var level: float = 0.0

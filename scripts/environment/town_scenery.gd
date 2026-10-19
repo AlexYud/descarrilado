@@ -740,7 +740,7 @@ func _build_water(root: Node3D) -> void:
 
 
 ## The line going on east from the yard: ballast, rails, the station siding, the iron bridge.
-func _build_line(root: Node3D) -> void:
+func _build_line(_root: Node3D) -> void:
 	var b: TownMeshBuilder = _builder("Railway")
 	for line: TownLane in [rail, siding]:
 		var path: PackedVector3Array = PackedVector3Array()
@@ -808,7 +808,7 @@ func _distance_to_river(p: Vector2) -> float:
 
 ## Roads as ribbons on the ground (bridges where they cross the river), with street lamps
 ## (lit points, warm) and wooden poles along the lit ones.
-func _build_roads(root: Node3D) -> void:
+func _build_roads(_root: Node3D) -> void:
 	var b: TownMeshBuilder = _builder("Roads")
 	var poles: TownMeshBuilder = _builder("Poles")
 	for road: Dictionary in roads:

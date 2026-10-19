@@ -334,8 +334,6 @@ static func build_theme() -> Theme:
 	theme.default_font_size = font_size_body
 
 	var text_dim: Color = color_text.darkened(0.4)
-	var hover_fill: Color = Color(color_accent, 0.2)
-	var press_fill: Color = Color(color_accent, 0.38)
 	var clear: Color = Color(0, 0, 0, 0)
 
 	# ---- Labels ----

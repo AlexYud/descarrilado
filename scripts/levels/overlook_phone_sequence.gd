@@ -316,7 +316,9 @@ func _use_interaction() -> void:
 	if stage != Stage.VIEWING:
 		return
 
+	# The press is taken at once (the stage changes before anything is awaited): a second press, a frame later, must find the booth busy.
 	if is_payment_complete():
+		stage = Stage.BUSY
 		_hide_hints()
 		await pick_up_receiver()
 		return
@@ -325,6 +327,7 @@ func _use_interaction() -> void:
 	if id.is_empty():
 		return
 
+	stage = Stage.BUSY
 	_hide_hints()
 	await insert_ficha(id)
 
@@ -494,9 +497,10 @@ func _hide_hints() -> void:
 	if _prompt == null:
 		return
 
-	var fade: Tween = create_tween().set_parallel(true)
-	fade.tween_property(_prompt, "modulate:a", 0.0, 0.2)
-	fade.tween_property(_away_hint, "modulate:a", 0.0, 0.2)
+	# (Through `UiFade`: a hide a few frames after a show must replace the show, not run beside it: the longer fade-in used to finish
+	# last and put the hints back on screen over the call.)
+	UiFade.to(_prompt, 0.0, 0.2)
+	UiFade.to(_away_hint, 0.0, 0.2)
 
 
 ## "[E] Insert ficha 2" (or "Pick up Receiver") when there is something to do, and
@@ -532,9 +536,8 @@ func _refresh_hints() -> void:
 	_away_hint.set_hint(keys, tr("OVERLOOK_PHONE_STEP_AWAY"), font_size, font)
 	_away_hint.position = Vector2(screen.x - _away_hint.size.x - screen.x * 0.04, screen.y * 0.93)
 
-	var fade: Tween = create_tween().set_parallel(true)
-	fade.tween_property(_prompt, "modulate:a", 1.0, 0.25)
-	fade.tween_property(_away_hint, "modulate:a", 1.0, 0.25)
+	UiFade.to(_prompt, 1.0, 0.25)
+	UiFade.to(_away_hint, 1.0, 0.25)
 
 
 # ============================================================
@@ -731,6 +734,13 @@ func _call_view_transform() -> Transform3D:
 
 func _process(delta: float) -> void:
 	_grace_left = maxf(_grace_left - delta, 0.0)
+
+	# A safety net: the hints are only ever on screen while the view is up and waiting for the player; whatever else may have left them
+	# showing, they are put out as soon as nothing is fading them.
+	if stage != Stage.VIEWING:
+		for hint: KeyHint in [_prompt, _away_hint]:
+			if hint != null and hint.modulate.a > 0.0 and not UiFade.is_fading(hint):
+				hint.modulate.a = 0.0
 
 	# The light on the unit goes out with the street lamp.
 	if lamp != null and model != null:

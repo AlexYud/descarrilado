@@ -221,8 +221,8 @@ static func stone_texture(seed_value: int, tile: int, course_pixels: int, min_wi
 	var moss_color: Color = Color(0.22, 0.34, 0.16)
 	for course: int in courses:
 		# The courses add up to the whole tile (no empty strip at its edge).
-		var y0: int = course * tile / courses
-		var y1: int = (course + 1) * tile / courses
+		var y0: int = floori(float(course * tile) / float(courses))
+		var y1: int = floori(float((course + 1) * tile) / float(courses))
 		var widths: Array[int] = []
 		var total: int = 0
 		while total < tile:

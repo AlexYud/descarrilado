@@ -261,8 +261,8 @@ func _build_arm(side: float) -> Dictionary:
 		base.name = "Finger%d" % index
 		base.position = Vector3(x, 0.0, -PALM_LENGTH)
 		hand.add_child(base)
-		var scale: float = FINGER_SCALE[index]
-		fingers.append({"base": base, "joints": _add_finger(base, FINGER_BONES, scale, 0.0088 - 0.0007 * float(index == 3)), "spread": (float(index) - 1.5) * 7.0 * -side, "phase": float(index) * 1.9 + side, "thumb": false})
+		var finger_scale: float = FINGER_SCALE[index]
+		fingers.append({"base": base, "joints": _add_finger(base, FINGER_BONES, finger_scale, 0.0088 - 0.0007 * float(index == 3)), "spread": (float(index) - 1.5) * 7.0 * -side, "phase": float(index) * 1.9 + side, "thumb": false})
 
 	var thumb: Node3D = Node3D.new()
 	thumb.name = "Thumb"
@@ -273,7 +273,7 @@ func _build_arm(side: float) -> Dictionary:
 
 
 ## A finger: bones in a chain along -Z, each a joint that can curl; returns the joints (a node per bone).
-func _add_finger(base: Node3D, bones: Array[float], scale: float, radius: float) -> Array[Node3D]:
+func _add_finger(base: Node3D, bones: Array[float], bone_scale: float, radius: float) -> Array[Node3D]:
 	var joints: Array[Node3D] = []
 	var parent: Node3D = base
 	var at: float = 0.0
@@ -282,7 +282,7 @@ func _add_finger(base: Node3D, bones: Array[float], scale: float, radius: float)
 		var joint: Node3D = Node3D.new()
 		joint.position = Vector3(0.0, 0.0, -at)
 		parent.add_child(joint)
-		var bone: float = length * scale
+		var bone: float = length * bone_scale
 		_node_with_mesh("Bone", _tube(bone, [
 			Vector3(0.0, thickness, thickness * 0.95), Vector3(0.12, thickness * 1.08, thickness), Vector3(1.0, thickness * 0.82, thickness * 0.78),
 		], 8), _skin, joint)

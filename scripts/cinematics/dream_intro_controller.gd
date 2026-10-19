@@ -531,9 +531,12 @@ func _snap_player_to_floor_before_intro() -> void:
 		return
 
 	if floor_collision.get_normal().dot(Vector3.UP) < 0.4:
-		push_warning(
+		# Expected in the wagon: the player starts lying on a seat, and what is below them is the side of the bench (a steep surface, not a
+		# floor), so there is nothing to snap to and the player stays where the scene put them. Not a warning, just a note for a developer.
+		print_verbose(
 			"DreamIntroController: The collision found below Player "
-			+ "does not look like a floor. The pre-intro snap was skipped."
+			+ "does not look like a floor (%s, normal %s). The pre-intro snap was skipped."
+			% [str(floor_collision.get_collider()), str(floor_collision.get_normal())]
 		)
 		return
 

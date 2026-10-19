@@ -421,7 +421,7 @@ func _ranked_lit_material(mesh_instance: MeshInstance3D, surface: int, standard:
 		return null
 
 	# Sanity: each group of vertices must be one small box.
-	var boxes: int = vertices.size() / VERTICES_PER_BOX
+	var boxes: int = floori(float(vertices.size()) / float(VERTICES_PER_BOX))
 	var transform: Transform3D = mesh_instance.global_transform
 	for check: int in mini(boxes, 40):
 		var low: Vector3 = vertices[check * VERTICES_PER_BOX]
@@ -511,7 +511,7 @@ func _prepare_glow(viewer: Vector3) -> void:
 	_glow.multimesh = copy
 	var count: int = copy.instance_count
 	var base: PackedFloat32Array = copy.buffer.duplicate()
-	_glow_stride = base.size() / maxi(count, 1)
+	_glow_stride = floori(float(base.size()) / float(maxi(count, 1)))
 	if _glow_stride < 16:
 		return
 

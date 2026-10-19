@@ -936,8 +936,8 @@ func _build_railway() -> void:
 		var s: float = 0.4 + 0.8 * float(i)
 		var index: int = track.sample_index(s)
 		var tangent: Vector2 = track.tangents[index]
-		var basis: Basis = Basis(Vector3.UP, atan2(-tangent.y, tangent.x))
-		sleepers.set_instance_transform(i, Transform3D(basis, track.point_at(s) + Vector3(0.0, 0.1, 0.0)))
+		var sleeper_basis: Basis = Basis(Vector3.UP, atan2(-tangent.y, tangent.x))
+		sleepers.set_instance_transform(i, Transform3D(sleeper_basis, track.point_at(s) + Vector3(0.0, 0.1, 0.0)))
 
 	var instance: MultiMeshInstance3D = MultiMeshInstance3D.new()
 	instance.name = "MainLineSleepers"
@@ -1482,8 +1482,8 @@ func _place_key_house(lane: TownLane, side: int, s: float, size: Vector2, floors
 
 func _remember_landmark(landmark: String, house: Node3D, base: Vector3, theta: float, size: Vector2) -> void:
 	var door_x: float = house.get_meta("door_x", 0.0)
-	var basis: Basis = Basis(Vector3.UP, theta)
-	var door: Vector3 = base + basis * Vector3(door_x, 0.0, size.y * 0.5 + 0.6)
+	var house_basis: Basis = Basis(Vector3.UP, theta)
+	var door: Vector3 = base + house_basis * Vector3(door_x, 0.0, size.y * 0.5 + 0.6)
 	landmarks[landmark] = {"base": base, "theta": theta, "size": size, "door": door, "node": house}
 
 
@@ -2332,9 +2332,9 @@ func _build_hill_trees(parent: Node3D) -> void:
 	canopies.instance_count = spots.size()
 	for i: int in spots.size():
 		var tree_scale: float = _rng.randf_range(0.8, 1.5)
-		var basis: Basis = Basis(Vector3.UP, _rng.randf_range(0.0, TAU)).scaled(Vector3(tree_scale, tree_scale, tree_scale))
-		trunks.set_instance_transform(i, Transform3D(basis, spots[i] + Vector3(0.0, 1.5 * tree_scale, 0.0)))
-		canopies.set_instance_transform(i, Transform3D(basis, spots[i] + Vector3(0.0, 4.6 * tree_scale, 0.0)))
+		var tree_basis: Basis = Basis(Vector3.UP, _rng.randf_range(0.0, TAU)).scaled(Vector3(tree_scale, tree_scale, tree_scale))
+		trunks.set_instance_transform(i, Transform3D(tree_basis, spots[i] + Vector3(0.0, 1.5 * tree_scale, 0.0)))
+		canopies.set_instance_transform(i, Transform3D(tree_basis, spots[i] + Vector3(0.0, 4.6 * tree_scale, 0.0)))
 
 	_tree_count += spots.size()
 
