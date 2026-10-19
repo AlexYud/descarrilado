@@ -9,21 +9,25 @@ class_name DreamFinale
 ##    pushing in, and the screen is black. In complete silence, `dark_hold_seconds` of nothing.
 ## 2. **The wagon.** The picture fades in slowly with heavy lids, as if Juliana were waking up: she wakes on the bench
 ##    where the dream began (the dream intro's own head-raise animation, nothing can be done) and gets to her
-##    feet in the aisle. Heavy rain on the roof, the ceiling lights only stutter, the flashlight is weak, the way
+##    feet in the aisle. The ceiling lights only stutter, the flashlight is weak, the way
 ##    out behind is locked, and at the far end of the aisle, against the north wall, a girl (Sophia) sits on the
-##    floor hugging her knees, sobbing, her back to the aisle, a little lit so she can be seen from where
+##    floor hugging her knees, crying, her back to the aisle, a little lit so she can be seen from where
 ##    Juliana wakes. The player can only walk, slowly, forward and back along the aisle, and look around.
 ## 3. **The cutscene.** About `cutscene_distance` from her the player loses control: Juliana walks on by herself
-##    for a second, a whisper comes from right behind her head (a 3D sound at her ear: "You're not supposed to be
-##    here."), the crying stops, she flinches and turns round, scared, to see who it was: the wagon behind is
+##    for a second, a whisper comes from right behind her head (a caption: "You're not supposed to be
+##    here."), she flinches and turns round, scared, to see who it was: the wagon behind is
 ##    empty. She turns back: the girl is gone (nothing is left in her place). She searches the spot with the
 ##    flashlight, and turns towards the exit, where the player gets the controls back.
-## 4. **The grab.** After `leave_distance` metres towards the exit, black hands claw in from behind: a loud impact,
-##    the view thrown back and cut to black. Pitch black for `black_hold` seconds, then the UNRAILED title card in
-##    the palette, plain like the menu's, and back to the main menu. The save is marked `demo_complete` and keeps
-##    the player at the overlook with the three fichas in the slot, so Continue lets them make the call again.
+## 4. **The door** (`FinaleDoorScene`). The player walks the aisle themselves, slowly, to the wagon's black
+##    corridor door. When they are near and looking at it a pale head swings in over it (the only sound of the scene is its sting,
+##    besides their footsteps), Juliana jumps and falls twisting away onto all fours, crawls, something takes her foot, and she
+##    fights it by pressing the interact key (she cannot win); then two hands close on her face.
+## 5. **The end.** The picture goes black, in silence, for `black_hold_seconds`, then the UNRAILED title card in the palette,
+##    plain like the menu's, and back to the main menu. The save is marked `demo_complete` and keeps the player at the overlook
+##    with the three fichas in the slot, so Continue lets them make the call again.
 ##
-## Everything is placeholder art and sound (the girl, the hands and every sound are made in code).
+## Everything is placeholder art (the girl, the head and the hands are made in code). The wagon has no sound of its own: the
+## rain, the crying and the whisper are text only, and the only sounds are the player's footsteps and the sting of the head.
 
 ## The title card has been shown and the game is about to return to the menu.
 signal finished
@@ -127,13 +131,6 @@ void fragment() {
 ## The cutscene begins when the player is this near her (then Juliana walks on for `cutscene_walk_seconds`).
 @export var cutscene_distance: float = 2.9
 @export var cutscene_walk_seconds: float = 1.0
-## After the cutscene the aisle is open back to the exit end (wagon-local z), and the scene at the door (the arms)
-## starts after the player has walked `leave_distance` metres towards it (or after `leave_timeout_seconds`).
-@export var exit_limit_local_z: float = 5.6
-## Where the end wall with the exit door is (wagon-local z): the black doorway of the arms is put on it.
-@export var wagon_end_wall_z: float = 6.07
-@export var leave_distance: float = 2.0
-@export var leave_timeout_seconds: float = 60.0
 ## The ceiling lights are dim, cold and always stuttering (the wagon is dark and the girl is not lit by anything
 ## of her own). The flashlight is a fraction of its usual strength.
 @export var wagon_light_color: Color = Color(0.72, 0.82, 1.0)
@@ -142,19 +139,12 @@ void fragment() {
 @export var flashlight_range: float = 7.0
 ## How fast the player walks in the aisle, as a fraction of the usual pace (and no sprinting): slowly, to build the tension.
 @export_range(0.2, 1.0, 0.05) var wagon_walk_scale: float = 0.45
-@export var rain_db: float = -7.0
 ## The player is wider than the aisle between the benches (the capsule is 1 m across, the aisle about 1 m with
 ## seats that stick out), so it pushed them off the middle. In the wagon the capsule is this thin, and put back after.
 @export var wagon_player_radius: float = 0.12
 
-@export_category("The door")
-## How long the arms take to come out of the black doorway, and how long the lunge at the player takes.
-@export var arms_emerge_seconds: float = 8.0
-@export var arms_lunge_seconds: float = 0.24
-
-@export_category("The grab")
-## The picture goes black this long after the impact.
-@export var grab_black_after_seconds: float = 0.5
+@export_category("The end")
+## The picture is black, and silent, this long before the title card.
 @export var black_hold_seconds: float = 1.5
 @export var title_fade_in_seconds: float = 1.4
 @export var title_hold_seconds: float = 3.2
@@ -166,8 +156,6 @@ var _player: Node3D = null
 var _snapshot: Dictionary = {}
 var _master_db: float = 0.0
 var _master_saved: bool = false
-var _rain: AudioStreamPlayer = null
-var _sobbing: AudioStreamPlayer3D = null
 var _sophia: Node3D = null
 var _rock: Node3D = null
 var _wagon_lights: Array[OmniLight3D] = []
@@ -179,8 +167,6 @@ var _player_radius_before: float = -1.0
 var _corridor_length: float = 0.0
 var _corridor_start: Vector3 = Vector3.ZERO
 var _corridor_axis: Vector3 = Vector3.FORWARD
-var _leave_time: float = 0.0
-var _leave_start_distance: float = 0.0
 var _auto_walking: bool = false
 var _beam_shaking: bool = false
 var _beam_fear: float = 0.4
@@ -194,8 +180,7 @@ var _beam_track_point: Vector3 = Vector3.ZERO
 var _beam_tween: Tween = null
 ## How fast the beam follows its goal, as a multiple of the usual.
 var _beam_speed: float = 2.0
-var _door_arms: FinaleDoorArms = null
-var _lights_forced_out: bool = false
+var _door_scene: FinaleDoorScene = null
 var _exit_light_dead: bool = false
 var _step_clock: float = 0.0
 var _black_layer: CanvasLayer = null
@@ -581,7 +566,6 @@ func _enter_wagon() -> void:
 	_restore_master()
 	# The picture is black now: the camcorder look comes back under it.
 	_set_filter_darkness(0.0)
-	_start_rain()
 	_prepare_wagon()
 
 	var start_world: Vector3 = wagon.to_global(wagon_start_local)
@@ -670,8 +654,15 @@ func _wake_up(yaw_degrees: float) -> void:
 			(_player as CharacterBody3D).velocity = Vector3.ZERO
 
 	if movement != null:
+		# The view must not move at the hand-over: the animation ends looking level along the aisle (the body turned to it), and the
+		# player's own view (the head's yaw and the camera's pitch) takes it over exactly there. The head's yaw is set here and now,
+		# not left to the movement controller's next physics step: in between, the picture is drawn with the body turned back to 0 and
+		# the head not yet turned, a jump of the wagon's own angle.
 		movement.set("look_yaw", yaw_degrees)
-		movement.set("look_pitch", -4.0)
+		movement.set("look_pitch", 0.0 if animated else -4.0)
+		var head: Node3D = _player.get_node_or_null("Head") as Node3D
+		if head != null:
+			head.rotation.y = -deg_to_rad(yaw_degrees)
 
 	# The flashlight is for the player to switch on (the hint says how).
 	_allow_torch()
@@ -728,17 +719,7 @@ func _fade_in_from_black() -> void:
 	lids.tween_property(_black_rect, "modulate:a", 0.0, 1.5 * scale).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
 
 
-func _start_rain() -> void:
-	_rain = AudioStreamPlayer.new()
-	_rain.name = "RoofRain"
-	_rain.stream = PlaceholderAudio.make_roof_rain()
-	_rain.volume_db = -50.0
-	add_child(_rain)
-	_rain.play()
-	create_tween().tween_property(_rain, "volume_db", rain_db, 2.0)
-
-
-## The wagon is nearly black (the ceiling lights only stutter), and a girl sits sobbing at the far end, lit by the
+## The wagon is nearly black (the ceiling lights only stutter), and a girl sits crying at the far end, lit by the
 ## nearest ceiling light and a pale glow of her own so that she can be seen from the far end of the aisle.
 func _prepare_wagon() -> void:
 	_wagon_lights.clear()
@@ -759,24 +740,26 @@ func _prepare_wagon() -> void:
 				_light_timers.append(0.0)
 				_light_levels.append(0.0)
 
-	_door_arms = FinaleDoorArms.new()
-	_door_arms.wall_z = wagon_end_wall_z
-	wagon.add_child(_door_arms)
+	# The scene at the corridor door (the head and the hands are in the wagon, the rest is its own node).
+	if _door_scene != null and is_instance_valid(_door_scene):
+		_door_scene.cleanup()
+		if _door_scene.creature != null:
+			_door_scene.creature.queue_free()
+
+		_door_scene.queue_free()
+
+	_door_scene = FinaleDoorScene.new()
+	_door_scene.name = "DoorScene"
+	add_child(_door_scene)
+	_door_scene.setup(wagon, _player)
+	_door_scene.scare_started.connect(func() -> void: stage = Stage.DOOR)
+	_door_scene.captured.connect(_on_captured)
 
 	_sophia = _build_sophia()
 	_sophia.position = sophia_local
 	# She faces the wall at the end of the wagon, her back to the aisle.
 	_sophia.rotation_degrees.y = 180.0
 	wagon.add_child(_sophia)
-
-	_sobbing = AudioStreamPlayer3D.new()
-	_sobbing.name = "Sobbing"
-	_sobbing.stream = PlaceholderAudio.make_sobbing()
-	_sobbing.volume_db = -3.0
-	_sobbing.unit_size = 3.0
-	_sobbing.position = Vector3(0.0, 0.5, 0.0)
-	_sophia.add_child(_sobbing)
-	_sobbing.play()
 
 
 ## A girl sitting on the floor with her arms round her knees and her head down, built from primitives.
@@ -939,11 +922,6 @@ func _pulse_unease(amount: float, seconds: float) -> void:
 ## weak flash, dark again) before settling. They are never in step with each other. The one nearest the girl
 ## (the last) is the strongest, and her own glow follows it.
 func _flicker_lights(delta: float) -> void:
-	if _lights_forced_out:
-		for light: OmniLight3D in _wagon_lights:
-			light.light_energy = 0.0
-		return
-
 	for i: int in _wagon_lights.size():
 		_light_timers[i] -= delta
 		if _light_timers[i] <= 0.0:
@@ -1038,8 +1016,6 @@ func _physics_process(delta: float) -> void:
 				_run_cutscene()
 		Stage.CUTSCENE:
 			_auto_walk(delta)
-		Stage.LEAVING:
-			_watch_the_way_out(delta)
 
 
 func _distance_to_sophia() -> float:
@@ -1118,9 +1094,8 @@ func _run_cutscene() -> void:
 	_auto_walking = false
 	movement.set("gesture_offset", Vector3.ZERO)
 
-	# The whisper at her ear; the crying stops; she flinches: the light sputters and jumps back over her shoulder.
+	# The whisper at her ear (a caption); she flinches: the light sputters and jumps back over her shoulder.
 	_whisper()
-	_sobbing.stop()
 	_flicker_torch(0.55)
 	_beam_fear = 1.4
 	_aim_beam(facing + 132.0, 4.0, 0.22, Tween.TRANS_CUBIC, Tween.EASE_OUT)
@@ -1220,32 +1195,14 @@ func _vanish_sophia() -> void:
 	_sophia.visible = false
 	_exit_light_dead = true
 	# The lamp over the exit is dead: the door is a black hole, and there is something in it.
-	if _door_arms != null:
-		_door_arms.show_doorway(true)
+	if _door_scene != null:
+		_door_scene.show_doorway(true)
 	for index: int in _wagon_lights.size():
 		_wagon_lights[index].visible = index != 0
 
 
-## A whisper from right behind the player's head.
+## A whisper from right behind the player's head: its words only (a caption), there is no sound.
 func _whisper() -> void:
-	var camera: Camera3D = _camera()
-	var whisper: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
-	whisper.name = "Whisper"
-	whisper.stream = PlaceholderAudio.make_whisper()
-	whisper.volume_db = 6.0
-	# A true 3D sound close to the head: strong panning, loud only when this near.
-	whisper.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
-	whisper.unit_size = 0.5
-	whisper.max_distance = 4.0
-	whisper.panning_strength = 1.8
-	# On the head itself (so it stays behind them however they turn): at one ear, just behind it,
-	# then drifting across to the other as if someone leaned in and breathed the words.
-	camera.add_child(whisper)
-	var side: float = 1.0 if randf() < 0.5 else -1.0
-	whisper.position = Vector3(0.22 * side, -0.05, 0.2)
-	create_tween().tween_property(whisper, "position:x", -0.1 * side, 1.9)
-	whisper.finished.connect(whisper.queue_free)
-	whisper.play()
 	CaptionManager.say(LINE_WHISPER)
 
 
@@ -1263,11 +1220,11 @@ func _stop_beam_script() -> void:
 		_beam_tween.kill()
 
 
-## The controls come back, facing the exit: the aisle is open back to the exit end, but not towards the wall
-## she sat at. The grab comes after `leave_distance` metres.
+## The controls come back, facing the exit, and the scene at the corridor door begins (`FinaleDoorScene`): the player walks the aisle to
+## it themselves, and the rest happens when they are near it and looking at it. The only sounds are their footsteps and the sting of
+## the head.
 func _end_cutscene(yaw: float) -> void:
 	stage = Stage.LEAVING
-	_leave_time = 0.0
 	var movement: Node = _player.get("movement_controller") as Node
 	_player.call("set_view_locked", false)
 	_stop_beam_script()
@@ -1277,151 +1234,20 @@ func _end_cutscene(yaw: float) -> void:
 		torch.set("toggle_locked", false)
 
 	if movement != null:
+		# The view is left exactly where the cutscene's last turn put it (its yaw is `yaw`, its pitch a degree down): the controls take over
+		# there, with no jump. (It used to be set to a 4 degree upward look here, a jump of about five degrees at the hand-over.)
 		movement.set("look_yaw", yaw)
-		movement.set("look_pitch", -4.0)
 		movement.set("gesture_offset", Vector3.ZERO)
 		movement.set("gesture_roll_degrees", 0.0)
 		movement.set("gesture_pitch_degrees", 0.0)
-		var here: float = float(movement.call("get_corridor_distance"))
-		_leave_start_distance = here
-		var exit_world: Vector3 = wagon.to_global(Vector3(aisle_x, wagon_start_local.y, exit_limit_local_z))
-		var exit_distance: float = (exit_world - _corridor_start).dot(_corridor_axis)
-		movement.call("set_corridor_limits", exit_distance, here + 0.3)
 
 	cutscene_ended.emit()
+	if _door_scene != null:
+		_door_scene.begin()
 
 
-## Walking out: after `leave_distance` metres towards the exit (or after a long time) the scene at the door starts.
-func _watch_the_way_out(delta: float) -> void:
-	_leave_time += delta
-	var movement: Node = _player.get("movement_controller") as Node
-	var walked: float = 0.0
-	if movement != null:
-		walked = _leave_start_distance - float(movement.call("get_corridor_distance"))
-
-	if walked >= leave_distance or _leave_time > leave_timeout_seconds:
-		_run_door_scene()
-
-
-# ============================================================
-# 4. THE DOOR, THE GRAB AND THE TITLE
-# ============================================================
-
-## The controls go again. Juliana stops, the black hole of the exit door in front of her, and two pale arms slowly
-## come out of it, hands first, in fits (each time the lights stutter they are nearer), and then they come for her.
-func _run_door_scene() -> void:
-	stage = Stage.DOOR
-	var movement: Node = _player.get("movement_controller") as Node
-	_player.call("set_view_locked", true)
-	_player.call("release_movement_hold")
-	_player.set("scripted_flashlight", true)
-	var torch: Node = _player.get("flashlight_controller") as Node
-	if torch != null:
-		torch.set("toggle_locked", true)
-
-	var arms: FinaleDoorArms = _door_arms
-	var door_centre: Vector3 = wagon.to_global(Vector3(aisle_x, 1.3, wagon_end_wall_z - 0.1))
-	if movement != null:
-		_beam_speed = 1.6
-		movement.set("gesture_offset", Vector3.ZERO)
-		_beam_goal = Vector2(float(movement.get("look_yaw")), float(movement.get("look_pitch")))
-		_beam_goal_on = true
-
-	_beam_fear = 0.9
-	_beam_shaking = true
-	_track_beam(door_centre)
-	if arms == null:
-		_spring_the_trap()
-		return
-
-	arms.show_doorway(true)
-	arms.set_arms_visible(true)
-	arms.emerge = 0.0
-	arms.reach = 0.0
-	arms.lunge = 0.0
-	arms.twitch = 0.5
-	var door_sound_at: Vector3 = wagon.to_global(Vector3(aisle_x, 1.2, wagon_end_wall_z - 0.3))
-
-	# A long creak in the dark, and nothing yet.
-	_play_at(door_sound_at, PlaceholderAudio.make_creak(2.4), -2.0, 0.8)
-	await _wait(1.6)
-
-	# The fingers first: the left hand's tips come out of the black, slowly, twitching.
-	await _arm_step(0.26, 2.6, 1.3)
-	_play_at(door_sound_at, PlaceholderAudio.make_rustle(2.4), -6.0, 0.7)
-	await _wait(0.8)
-
-	# The lights stutter out, and when they come back the arms are further out.
-	await _blackout_beat(0.5)
-	await _arm_step(0.55, 0.12, 1.6)
-	_play_at(door_sound_at, PlaceholderAudio.make_whisper(), -5.0, 0.8)
-	await _arm_step(0.62, 2.4, 1.8)
-	await _wait(0.5)
-
-	# Again: dark, and nearer, the elbows out in the aisle.
-	await _blackout_beat(0.4)
-	await _arm_step(0.86, 0.12, 2.1)
-	await _arm_step(1.0, 2.4, 2.4)
-	arms.twitch = 1.0
-	await _wait(0.9)
-
-	# Dark one last time, and they come: the hands open, straight at her face.
-	var camera_local: Vector3 = wagon.to_local(_camera().global_position)
-	arms.target_local = camera_local
-	_set_wagon_lights_out(true)
-	var travel: float = (wagon_end_wall_z + FinaleDoorArms.OUT_OFFSET - FinaleDoorArms.REACH_LENGTH) - (camera_local.z + 0.4)
-	var lunge: Tween = create_tween().set_parallel(true)
-	lunge.tween_property(arms, "reach", 1.0, arms_lunge_seconds * 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	lunge.tween_property(arms, "lunge", travel, arms_lunge_seconds).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
-	await _wait(arms_lunge_seconds)
-	_spring_the_trap()
-
-
-## The arms come out to `amount` over `seconds`, while the beam trembles `fear` times as much.
-func _arm_step(amount: float, seconds: float, fear: float) -> void:
-	var step: Tween = create_tween().set_parallel(true)
-	step.tween_property(_door_arms, "emerge", amount, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	step.tween_property(self, "_beam_fear", fear, seconds)
-	var movement: Node = _player.get("movement_controller") as Node
-	if movement != null:
-		# She leans away from it, a little more each time.
-		step.tween_property(movement, "gesture_offset", Vector3(0.0, -0.02 * fear, 0.05 * fear), seconds)
-
-	await _wait(seconds)
-
-
-## The lights and the flashlight go out together for `seconds` (the picture is pitch black but for the glow of the
-## arms themselves) and come back stuttering.
-func _blackout_beat(seconds: float) -> void:
-	_set_wagon_lights_out(true)
-	_flicker_torch(seconds)
-	await _wait(seconds)
-	_set_wagon_lights_out(false)
-
-
-func _set_wagon_lights_out(out: bool) -> void:
-	_lights_forced_out = out
-	if out:
-		for light: OmniLight3D in _wagon_lights:
-			light.light_energy = 0.0
-
-
-## A one-shot 3D sound at a point of the world.
-func _play_at(point: Vector3, stream: AudioStream, volume_db: float, unit_size: float) -> void:
-	var sound: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
-	sound.stream = stream
-	sound.volume_db = volume_db
-	sound.unit_size = unit_size
-	sound.max_distance = 30.0
-	add_child(sound)
-	sound.global_position = point
-	sound.finished.connect(sound.queue_free)
-	sound.play()
-
-
-## The impact: as loud as it gets, the view thrown back as if dragged by the shoulders, the arms closing on her face;
-## then black, the title and the end.
-func _spring_the_trap() -> void:
+## The hands are on her face: the picture snaps to black, in silence, and after a moment the title and the end.
+func _on_captured() -> void:
 	stage = Stage.GRABBED
 	var movement: Node = _player.get("movement_controller") as Node
 	if movement != null:
@@ -1430,34 +1256,8 @@ func _spring_the_trap() -> void:
 	if _player.has_method("hold_movement"):
 		_player.call("hold_movement", 600.0)
 
-	var impact: AudioStreamPlayer = AudioStreamPlayer.new()
-	impact.stream = PlaceholderAudio.make_grab_impact()
-	impact.volume_db = 6.0
-	add_child(impact)
-	impact.play()
-
 	_stop_beam_script()
-	var camera: Camera3D = _camera()
-	var fov_before: float = camera.fov
-	var snap: Tween = create_tween().set_parallel(true)
-	if movement != null:
-		# Recoiling, the hands on her face: the view jerks back and tilts, but stays on them.
-		snap.tween_property(movement, "gesture_offset", Vector3(0.0, 0.04, 0.45), 0.12)
-		snap.tween_property(movement, "gesture_pitch_degrees", 9.0, 0.12)
-		snap.tween_property(movement, "gesture_roll_degrees", 16.0, 0.12)
-	snap.tween_property(camera, "fov", fov_before + 16.0, 0.12)
-	if _door_arms != null:
-		# The hands keep closing on her as she is dragged back.
-		snap.tween_property(_door_arms, "lunge", _door_arms.lunge + 0.5, grab_black_after_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-	await _wait(grab_black_after_seconds)
-
-	# Black, and not a sound.
 	_make_black(1.0)
-	if _rain != null:
-		_rain.stop()
-	if _sobbing != null:
-		_sobbing.stop()
 	await _wait(black_hold_seconds)
 	await _show_title()
 	_finish()
@@ -1520,6 +1320,9 @@ func _show_title() -> void:
 ## slot and the call still to make; then the main menu.
 func _finish() -> void:
 	stage = Stage.DONE
+	if _door_scene != null and is_instance_valid(_door_scene):
+		_door_scene.cleanup()
+
 	SaveManager.set_state_value(STATE_SECTION, KEY_DEMO_COMPLETE, true)
 	# So that Continue lets the player make the call again.
 	SaveManager.set_state_value(STATE_SECTION, KEY_CALL_DONE, false)

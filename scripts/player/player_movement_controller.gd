@@ -70,6 +70,8 @@ const FOV_FAST_WALK: float = 1.5
 @export var camera_sensitivity: float = 0.15
 @export var gravity_force: float = 10.0
 @export var flashlight_lerp_speed: float = 6.0
+## A scripted scene sets the field of view it wants (degrees); 0 leaves the usual one.
+var scripted_fov: float = 0.0
 @export var camera_lerp_speed: float = 10.0
 
 @export var stair_snap_length: float = 0.35
@@ -98,6 +100,9 @@ var step_phase: float = 0.0
 var gesture_offset: Vector3 = Vector3.ZERO
 var gesture_pitch_degrees: float = 0.0
 var gesture_roll_degrees: float = 0.0
+## True when a scene animates the view frame by frame itself (a fall, a crawl): the gesture values are then applied as they are,
+## not eased towards.
+var gesture_direct: bool = false
 
 var _gesture_offset_applied: Vector3 = Vector3.ZERO
 var _gesture_pitch_applied: float = 0.0
@@ -636,7 +641,7 @@ func _update_view_effects(
 
 	camera.fov = lerpf(
 		camera.fov,
-		BASE_FOV + FOV_FAST_WALK * fast_walk,
+		(scripted_fov if scripted_fov > 0.0 else BASE_FOV) + FOV_FAST_WALK * fast_walk,
 		delta * 4.0
 	)
 
@@ -649,7 +654,7 @@ func _update_frozen_view(delta: float) -> void:
 
 	camera.fov = lerpf(
 		camera.fov,
-		BASE_FOV,
+		scripted_fov if scripted_fov > 0.0 else BASE_FOV,
 		delta * 8.0
 	)
 
@@ -799,7 +804,7 @@ func _apply_view_motion(
 
 	var event: PackedFloat32Array = _update_event(delta, walking)
 
-	var gesture_weight: float = 1.0 - exp(-GESTURE_SMOOTHING * delta)
+	var gesture_weight: float = 1.0 if gesture_direct else 1.0 - exp(-GESTURE_SMOOTHING * delta)
 	_gesture_offset_applied = _gesture_offset_applied.lerp(gesture_offset, gesture_weight)
 	_gesture_pitch_applied = lerpf(_gesture_pitch_applied, gesture_pitch_degrees, gesture_weight)
 	_gesture_roll_applied = lerpf(_gesture_roll_applied, gesture_roll_degrees, gesture_weight)

@@ -1042,6 +1042,12 @@ msgstr "Don't go near the wagon!"
 msgid "CAPTION_WAGON_WHISPER"
 msgstr "You're not supposed to be here."
 
+msgid "CAPTION_WAGON_SWEAR"
+msgstr "What the fuck?"
+
+msgid "STRUGGLE_PROMPT"
+msgstr "Press %s again and again to break free!"
+
 msgid "TITLE_CARD_TEXT"
 msgstr "UNRAILED"
 

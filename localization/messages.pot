@@ -955,6 +955,12 @@ msgstr ""
 msgid "CAPTION_PHONE_12"
 msgstr ""
 
+msgid "CAPTION_WAGON_SWEAR"
+msgstr ""
+
+msgid "STRUGGLE_PROMPT"
+msgstr ""
+
 # The overlook payphone
 
 # Overlook payphone: inserting fichas, the note

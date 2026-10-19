@@ -1,12 +1,12 @@
 extends Node
 
 ## The end of the dream intro (`DreamFinale`): the town's lights going out one by one (each stuttering and then
-## gone for good), the black and silent cut, the slow fade-in with heavy lids and the wake-up in the wagon (rain,
-## flickering dim lights, a weak flashlight, the girl sobbing at the far end of the aisle with her back to it,
+## gone for good), the black and silent cut, the slow fade-in with heavy lids and the wake-up in the wagon (no sound
+## but the footsteps; flickering dim lights, a weak flashlight, the girl crying (silently) at the far end of the aisle with her back to it,
 ## both in the middle of the aisle), the cutscene near her (the player loses control, walks on a second, the
 ## whisper behind the head, the crying stops, Juliana turns round scared, the girl is gone when she turns
-## back, she searches with the flashlight and turns to the exit), the walk out, the arms that come out of the black door after two metres and the grab,
-## the title card and the save. Run it as a scene; it quits by itself with a non-zero exit code on failure.
+## back, she searches with the flashlight and turns to the exit), the walk to the black corridor door (the player's own), the head that swings in, the fall, the crawl, the struggle that cannot
+## be won, the hands and the title card and the save. Run it as a scene; it quits by itself with a non-zero exit code on failure.
 ## Then it checks the finale is wired into the real dream intro scene.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_dream_finale_smoke"
@@ -88,7 +88,6 @@ func _scenario() -> void:
 	finale.town = town
 	finale.wagon = wagon
 	finale.dark_hold_seconds = 1.0
-	finale.grab_black_after_seconds = 0.4
 	finale.black_hold_seconds = 0.5
 	finale.title_fade_in_seconds = 0.3
 	finale.title_hold_seconds = 0.4
@@ -190,19 +189,37 @@ func _scenario() -> void:
 	var lowest_y: float = 99.0
 	var fastest_fall: float = 0.0
 	var guard: float = 0.0
-	while player.cutscene_frozen and guard < 14.0:
-		await get_tree().physics_frame
-		guard += get_physics_process_delta_time()
+	# (Watched frame by frame as it is drawn: when the animation hands the view to the player's own, the picture must not jump.)
+	var wake_camera: Camera3D = player.get_node("Head/Camera3D") as Camera3D
+	var previous_forward: Vector3 = -wake_camera.global_basis.z
+	var previous_eye: Vector3 = wake_camera.global_position
+	var frames_after: int = -1
+	var handover_turn: float = 0.0
+	var handover_move: float = 0.0
+	while (player.cutscene_frozen or frames_after < 6) and guard < 20.0:
+		await get_tree().process_frame
+		guard += get_process_delta_time()
+		if not player.cutscene_frozen:
+			frames_after += 1
+
+		var forward_now: Vector3 = -wake_camera.global_basis.z
+		if frames_after >= 0:
+			handover_turn = maxf(handover_turn, rad_to_deg(forward_now.angle_to(previous_forward)))
+			handover_move = maxf(handover_move, wake_camera.global_position.distance_to(previous_eye))
+
+		previous_forward = forward_now
+		previous_eye = wake_camera.global_position
 		lowest_y = minf(lowest_y, wagon.to_local(player.global_position).y)
 		fastest_fall = minf(fastest_fall, player.velocity.y)
+
+	_expect(handover_turn < 1.0 and handover_move < 0.02, "the view does not jump when the player takes over from the wake-up (%.2f degrees, %.3f m)" % [handover_turn, handover_move])
 	_expect(not player.cutscene_frozen, "getting up (the animation ending)")
 	_expect(lowest_y > 0.0 and fastest_fall > -3.0, "standing on the floor the whole wake-up, never falling (lowest %.2f, fastest fall %.1f m/s)" % [lowest_y, fastest_fall])
 	_expect(not head_animation.is_playing() and absf(player.rotation.y) < 0.001, "on their feet, the controls are theirs")
 	await _wait(0.3)
 
 	_expect(AudioServer.get_bus_volume_db(0) > -10.0 or is_equal_approx(AudioServer.get_bus_volume_db(0), volume_before), "the sound is back (%.0f dB)" % AudioServer.get_bus_volume_db(0))
-	var rain: AudioStreamPlayer = finale.get_node_or_null("RoofRain") as AudioStreamPlayer
-	_expect(rain != null and rain.playing, "heavy rain pounds the roof")
+	_expect(not _any_sound(finale) and not _any_sound(wagon), "the wagon makes no sound of its own: no rain")
 	_expect(absf(wagon.to_local(player.global_position).x - finale.aisle_x) < 0.05, "the player is in the middle of the aisle (x %.2f)" % wagon.to_local(player.global_position).x)
 	var lights: Node = wagon.get_node("Lights")
 	var not_red: bool = true
@@ -241,8 +258,7 @@ func _scenario() -> void:
 	_expect(absf(sophia_at.x - finale.aisle_x) < 0.1, "in the middle of it (x %.2f)" % sophia_at.x)
 	_expect(sophia_at.z < -5.0 and sophia_at.z > -6.1, "right against the far (north) wall, so the whole wagon has to be walked (z %.2f)" % sophia_at.z)
 	_facing_check(sophia.global_basis.z, player, sophia)
-	var sobbing: AudioStreamPlayer3D = sophia.get_node_or_null("Sobbing") as AudioStreamPlayer3D
-	_expect(sobbing != null and sobbing.playing, "sobbing quietly")
+	_expect(sophia.find_children("*", "AudioStreamPlayer3D", true, false).is_empty(), "and no crying that can be heard")
 	var movement: PlayerMovementController = player.movement_controller
 	_expect(movement.is_corridor_locked(), "the player can only walk along the aisle")
 	_expect(bool(flashlight.get("flashlight_input_enabled")), "the flashlight can be used again")
@@ -287,14 +303,8 @@ func _scenario() -> void:
 	Input.action_release("down")
 	_expect(_distance(player, sophia) < before_walk - 0.2, "Juliana walks on towards her by herself, whatever keys are pressed (%.2f m closer)" % (before_walk - _distance(player, sophia)))
 	var camera: Camera3D = player.get_node("Head/Camera3D")
-	await _until(func() -> bool: return camera.get_node_or_null("Whisper") != null, "the whisper", 4.0)
-	var whisper: AudioStreamPlayer3D = camera.get_node_or_null("Whisper") as AudioStreamPlayer3D
-	_expect(whisper != null and whisper.playing, "a whisper plays")
-	_expect(whisper.get_parent() == camera and whisper.panning_strength > 1.0 and whisper.max_distance <= 5.0, "as a true 3D sound on her head, with strong panning")
-	_expect(absf(camera.to_local(whisper.global_position).x) > 0.1, "at one ear, not in the middle of the head (%.2f m to the side)" % camera.to_local(whisper.global_position).x)
-	var offset: Vector3 = whisper.global_position - camera.global_position
-	_expect(offset.length() < 0.5 and offset.dot(-camera.global_basis.z) < -0.15, "right behind her head (%.2f m, %.2f along the view)" % [offset.length(), offset.dot(-camera.global_basis.z)])
-	_expect(not sobbing.playing, "the crying stops with the whisper")
+	await _until(func() -> bool: return CaptionManager.label.text.contains("You're not supposed to be here."), "the whisper (as a caption)", 4.0)
+	_expect(camera.get_node_or_null("Whisper") == null and not _any_sound(finale), "which is words only: nothing is heard")
 	_expect(bool(flashlight.get("flashlight_on")), "her flashlight is on for the search")
 	await _wait(0.3)
 	_expect(CaptionManager.label.text.contains("You're not supposed to be here."), "'You're not supposed to be here.' (%s)" % CaptionManager.label.text)
@@ -309,9 +319,19 @@ func _scenario() -> void:
 	var turned_round: bool = false
 	var waited: float = 0.0
 	var max_beam_lead: float = 0.0
-	while finale.stage == DreamFinale.Stage.CUTSCENE and waited < 60.0:
+	# (Watched frame by frame as it is drawn, through to a few frames after the controls come back: the view must not jump when the
+	# cutscene hands it to the player.)
+	var cut_prev_forward: Vector3 = -camera.global_basis.z
+	var cut_frames_after: int = -1
+	var cut_handover_turn: float = 0.0
+	while (finale.stage == DreamFinale.Stage.CUTSCENE or cut_frames_after < 6) and waited < 80.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
+		if finale.stage != DreamFinale.Stage.CUTSCENE:
+			cut_frames_after += 1
+			cut_handover_turn = maxf(cut_handover_turn, rad_to_deg((-camera.global_basis.z).angle_to(cut_prev_forward)))
+
+		cut_prev_forward = -camera.global_basis.z
 		max_beam_lead = maxf(max_beam_lead, rad_to_deg((-torch.global_basis.z).angle_to(-camera.global_basis.z)))
 		var turn: float = _yaw_of(movement) - facing_yaw
 		max_turn = maxf(max_turn, turn)
@@ -324,6 +344,7 @@ func _scenario() -> void:
 			back_facing_after = true
 			sophia_visible_when_facing_again = sophia.visible
 
+	_expect(cut_handover_turn < 1.0, "the view does not jump when the cutscene gives the controls back (%.2f degrees)" % cut_handover_turn)
 	_expect(max_beam_lead > 30.0, "the flashlight is pointed first and the head follows (the beam got %.0f degrees ahead of the view)" % max_beam_lead)
 	_expect(max_turn > 175.0, "Juliana turns all the way round to look behind her (%.0f degrees)" % max_turn)
 	_expect(gone_while_looking_back, "the girl is gone while she looks at the empty wagon")
@@ -337,67 +358,53 @@ func _scenario() -> void:
 	exit_look.y = 0.0
 	_expect(exit_look.normalized().dot(finale._corridor_axis) < -0.9, "facing the wagon exit")
 
-	# ---- Walking out: after two metres the black door gets its arms.
+	# ---- The walk to the corridor door is the player's own; the scene at the door starts when they are near it and looking at it.
+	var door_scene: FinaleDoorScene = finale._door_scene
+	_expect(door_scene != null and wagon.get_node_or_null("Creature") != null, "the wagon has the head and the hands of the corridor door")
+	_expect(movement.is_corridor_locked() and is_equal_approx(float(movement.get("corridor_speed_scale")), FinaleDoorScene.WALK_SCALE), "she is held to the aisle and walks slowly (%.2f of the usual pace)" % float(movement.get("corridor_speed_scale")))
+	var doorway: Node3D = wagon.get_node("Creature").get_node("Doorway") as Node3D
+	_expect(doorway.visible, "the corridor door is a black opening")
 	_expect(finale.stage != DreamFinale.Stage.GRABBED and finale.stage != DreamFinale.Stage.DOOR, "nothing happens as she stands there")
+	await _wait(1.8)
 	var start_z: float = wagon.to_local(player.global_position).z
 	Input.action_press("up")
 	await _wait(1.5)
-	_expect(finale.stage == DreamFinale.Stage.LEAVING and wagon.to_local(player.global_position).z > start_z + 0.3, "the forward key walks her towards the exit")
-	await _until(func() -> bool: return finale.stage == DreamFinale.Stage.DOOR, "the scene at the door after two metres", 25.0)
+	_expect(finale.stage == DreamFinale.Stage.LEAVING and wagon.to_local(player.global_position).z > start_z + 0.3, "the forward key walks her towards the door")
+	await _until(func() -> bool: return finale.stage == DreamFinale.Stage.DOOR, "the scene at the door when she is near it", 25.0)
+	var stopped_at: float = FinaleDoorScene.DOOR_Z - wagon.to_local(player.global_position).z
+	_expect(stopped_at > FinaleDoorScene.TRIGGER_DISTANCE - 1.3 and stopped_at < FinaleDoorScene.TRIGGER_DISTANCE + 0.4, "about three and a half metres from the door (%.2f m)" % stopped_at)
 	Input.action_release("up")
-	var walked_out: float = wagon.to_local(player.global_position).z - start_z
-	_expect(walked_out > finale.leave_distance - 0.4 and walked_out < finale.leave_distance + 1.0, "about two metres from where she turned (%.2f m)" % walked_out)
-	_expect(player.view_locked, "the controls go again")
-	var arms: FinaleDoorArms = wagon.get_node_or_null("DoorArms") as FinaleDoorArms
-	_expect(arms != null, "the wagon has the arms of the door")
-	var doorway: Node3D = arms.get_node("Doorway") as Node3D
-	_expect(doorway.visible, "the exit door is a black opening")
-	_expect(arms.emerge < 0.1, "nothing has come out of it yet")
+	var creature: FinaleCreature = door_scene.creature
 	Engine.time_scale = 3.0
-	var lights_went_out: bool = false
-	var peak_emerge: float = 0.0
-	var nearest_hand: float = 99.0
-	var arms_never_backwards: bool = true
-	var last_emerge: float = 0.0
-	var beam_on_door: float = 0.0
-	var door_world: Vector3 = wagon.to_global(Vector3(finale.aisle_x, 1.3, finale.wagon_end_wall_z - 0.1))
-	var guard_door: float = 0.0
-	while finale.stage == DreamFinale.Stage.DOOR and guard_door < 60.0:
+	var sting_seen: bool = false
+	var view_locked_at: float = -1.0
+	var waited_door: float = 0.0
+	var peak_press_progress: float = 0.0
+	while finale.stage == DreamFinale.Stage.DOOR and waited_door < 60.0:
 		await get_tree().process_frame
-		guard_door += get_process_delta_time()
-		lights_went_out = lights_went_out or finale._lights_forced_out
-		peak_emerge = maxf(peak_emerge, arms.emerge)
-		if arms.emerge < last_emerge - 0.001:
-			arms_never_backwards = false
+		waited_door += get_process_delta_time()
+		for child: Node in door_scene.get_children():
+			if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing:
+				sting_seen = true
 
-		last_emerge = arms.emerge
-		if arms.emerge > 0.3 and bool(flashlight.get("flashlight_on")):
-			beam_on_door = maxf(beam_on_door, 1.0 - rad_to_deg((-torch.global_basis.z).angle_to((door_world - torch.global_position).normalized())) / 30.0)
+		if player.view_locked and view_locked_at < 0.0:
+			view_locked_at = waited_door
+			_expect(creature.face_angle > -1.7 and creature._face.visible, "the head is there when she jumps (%.2f)" % creature.face_angle)
+
+		if door_scene.struggle.active:
+			peak_press_progress = maxf(peak_press_progress, door_scene.struggle.progress)
 
 	Engine.time_scale = 1.0
-	_expect(finale.stage == DreamFinale.Stage.GRABBED, "then the arms get her")
-	_expect(lights_went_out, "the lights went out while they came")
-	_expect(peak_emerge > 0.99, "the arms came all the way out of the door (%.2f)" % peak_emerge)
-	_expect(arms_never_backwards, "slowly, never going back")
-	_expect(beam_on_door > 0.0, "with her flashlight shaking on the door")
-	for rig: Dictionary in arms._rigs:
-		var hand: Node3D = (rig["wrist"] as Node3D)
-		nearest_hand = minf(nearest_hand, hand.global_position.distance_to(camera.global_position))
-	_expect(nearest_hand < 1.2, "the hands are at her face (%.2f m)" % nearest_hand)
-	_expect(arms.reach > 0.9 and arms.lunge > 3.0, "after the lunge (reach %.2f, %.1f m travelled)" % [arms.reach, arms.lunge])
-	var impact_seen: Array[bool] = [false]
-	await _wait(0.2)
-	_expect(finale.get_node_or_null("GrabLayer") == null, "(the old black-hands overlay is gone)")
-	for child: Node in finale.get_children():
-		if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing and (child as AudioStreamPlayer).volume_db > 0.0:
-			impact_seen[0] = true
-	_expect(impact_seen[0], "with a loud impact")
-	_expect(movement.gesture_offset.z > 0.1 or movement.gesture_pitch_degrees > 3.0, "and the view thrown back (z %.2f, pitch %.1f)" % [movement.gesture_offset.z, movement.gesture_pitch_degrees])
+	_expect(sting_seen, "the head has its sting")
+	_expect(view_locked_at > 0.0, "she falls and the view is the scene's own")
+	_expect(peak_press_progress > 0.3, "the struggle bar was up (%.2f) and, not pressed, it drained: she is taken" % peak_press_progress)
+	_expect(finale.stage == DreamFinale.Stage.GRABBED, "then the hands get her")
+	_expect(not door_scene.struggle.active, "(the struggle is over)")
 	_expect(not movement.is_corridor_locked(), "(the corridor lock is let go)")
-	await _wait(0.5)
+	await _wait(0.4)
 	var black: ColorRect = finale._black_rect
 	_expect(black != null and black.modulate.a > 0.99, "the picture snaps to black")
-	_expect(rain == null or not rain.playing, "in silence")
+	_expect(not _any_sound(finale) and not _any_sound(wagon), "in silence")
 	_expect(not titled[0], "and stays black for a moment before the title")
 	await _until(func() -> bool: return titled[0], "the title card", 6.0)
 	var title: Label = finale.get_node("TitleCard").find_child("Title", true, false) as Label
@@ -422,6 +429,16 @@ func _scenario() -> void:
 	Input.action_release("up")
 	root.queue_free()
 	await get_tree().process_frame
+
+
+## Whether any sound is playing under `node`.
+func _any_sound(node: Node) -> bool:
+	for kind: String in ["AudioStreamPlayer", "AudioStreamPlayer3D"]:
+		for child: Node in node.find_children("*", kind, true, false):
+			if bool(child.get("playing")):
+				return true
+
+	return false
 
 
 func _distance(player: Node3D, sophia: Node3D) -> float:
