@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/puzzles/signal_lantern.gd" id="1_lantern"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+[ext_resource type="PackedScene" path="res://scenes/objects/signal_tower/brass_signal_key.tscn" id="3_key"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_adolescence.tscn" id="4_photo"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lens"]
+size = Vector3(0.2, 0.18, 0.2)
+
+[node name="SignalLantern" type="Node3D"]
+script = ExtResource("1_lantern")
+key_scene = ExtResource("3_key")
+photo_scene = ExtResource("4_photo")
+prompt_text = "PROMPT_ROTATE_FILTER"
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("2_prop")
+kind = &"signal_lantern"
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
+shape = SubResource("BoxShape3D_lens")

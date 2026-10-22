@@ -386,17 +386,17 @@ msgstr "LUCAS"
 msgid "FICHA_SCRATCH_LUCAS"
 msgstr "NEVER LEFT"
 
-msgid "ITEM_PHOTO_CLOCK_DESCRIPTION"
-msgstr "A girl stands alone in a cramped signal tower under a big station clock. There is handwriting on the back."
+msgid "ITEM_PHOTO_BROKEN_LEVER_DESCRIPTION"
+msgstr "A heavy iron lever bent out of true, its handle snapped halfway down. A boot print is pressed into the oil beside it. There is handwriting on the back."
 
-msgid "ITEM_PHOTO_CLOCK_NAME"
-msgstr "Old Photograph: Station Clock"
+msgid "ITEM_PHOTO_BROKEN_LEVER_NAME"
+msgstr "Old Photograph: The Broken Lever"
 
-msgid "ITEM_PHOTO_TRACK_DESCRIPTION"
-msgstr "A railway line vanishes into fog. Nobody is in the frame. A date stamp is printed in the corner, and there is handwriting on the back."
+msgid "ITEM_PHOTO_FOGGY_PLATFORM_DESCRIPTION"
+msgstr "An empty station platform lost in fog, one lamp burning somewhere behind it. Nobody is in the frame. A date stamp is printed in the corner, and there is handwriting on the back."
 
-msgid "ITEM_PHOTO_TRACK_NAME"
-msgstr "Old Photograph: The Empty Track"
+msgid "ITEM_PHOTO_FOGGY_PLATFORM_NAME"
+msgstr "Old Photograph: The Foggy Platform"
 
 msgid "ITEM_PHOTO_WORKSHOP_DESCRIPTION"
 msgstr "A young man in greasy overalls holds a wrench almost as long as his arm, squinting into the flash. There is handwriting on the back."
@@ -404,11 +404,11 @@ msgstr "A young man in greasy overalls holds a wrench almost as long as his arm,
 msgid "ITEM_PHOTO_WORKSHOP_NAME"
 msgstr "Old Photograph: Lucas at the Workshop"
 
-msgid "PHOTO_FRONT_CLOCK"
-msgstr "[Placeholder photo: Juliana Alone in the Tower]"
+msgid "PHOTO_FRONT_BROKEN_LEVER"
+msgstr "[Placeholder photo: Broken Signal Lever]"
 
-msgid "PHOTO_FRONT_TRACK"
-msgstr "[Placeholder photo: Foggy Railway Line]"
+msgid "PHOTO_FRONT_FOGGY_PLATFORM"
+msgstr "[Placeholder photo: Foggy Station Platform]"
 
 msgid "PHOTO_FRONT_WORKSHOP"
 msgstr "[Placeholder photo: Young Man with Wrench]"
@@ -419,13 +419,13 @@ msgstr "1995. It poured for three hours. Sophia insisted on giving me the drier 
 msgid "PHOTO_NOTE_CHILDHOOD"
 msgstr "July 1988. She fell on the gravel behind the signal tower. She swore something under the floorboards grabbed her ankle. I told her it was just a loose wire. I lied. I saw it too."
 
-msgid "PHOTO_NOTE_CLOCK"
-msgstr "First night on duty alone. October 1999."
+msgid "PHOTO_NOTE_BROKEN_LEVER"
+msgstr "1994. Lucas tried to fix the tracks himself after the station closed. He always thought he owned this place."
 
 msgid "PHOTO_NOTE_RECENT"
 msgstr "The day she said she was leaving for the capital. She kept looking over my shoulder at the trees behind me, like she was waiting for someone to stop her."
 
-msgid "PHOTO_NOTE_TRACK"
+msgid "PHOTO_NOTE_FOGGY_PLATFORM"
 msgstr "I don't remember taking this. The date stamp says 1988, but I was never at the tracks alone at night back then."
 
 msgid "PHOTO_NOTE_WORKSHOP"
@@ -532,7 +532,7 @@ msgid "ITEM_NOTE_CAPSULE_DESCRIPTION"
 msgstr "A hasty letter pinned under the brass padlock."
 
 msgid "NOTE_CAPSULE_TEXT"
-msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— L."
+msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— Lucas"
 
 msgid "ITEM_KITCHEN_RECIPE_NAME"
 msgstr "Market Wrapper and Recipe"
@@ -920,7 +920,7 @@ msgid "READABLE_DIARY"
 msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute.\n\nSophia was lying beside me on the floorboards, staring up at the unfinished rafters. She suddenly grabbed my arm, shaking, and whispered that the red stain on the ceiling wood was dripping onto her chest. I looked up. There was no water, no blood, no stain, just dry pine.\n\nBut when I touched her face, her skin was burning hot, and her eyes were reflecting a crimson light that wasn't in the room. She scrambled backward in total panic, her boots scratching the floorboards as she sprinted out into the hallway toward the front door. She kept screaming that the room was bleeding.\n\nBut when the sun finally broke through the trees at 06:00 AM, she was still here in town. That was the exact moment I knew she would never leave. She is mine forever."
 
 msgid "READABLE_NOTE_CAPSULE"
-msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— L."
+msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— Lucas"
 
 msgid "READABLE_FICHA_NOTE"
 msgstr "I knew you'd find it, Juli. You're the only one who actually pays attention.\n\nTake the token to the top of the hill — let's make that call."
@@ -1080,3 +1080,122 @@ msgstr "Step away"
 msgid "CONTROLS_HEAD_BOB"
 msgstr "Head bobbing"
 
+# Fig tree camp and signal tower
+
+msgid "ITEM_BRASS_SIGNAL_KEY_NAME"
+msgstr "Brass Signal Key"
+
+msgid "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION"
+msgstr "A heavy brass key, its bow rubbed bright by small thumbs. Stamped along the shaft: SIGNAL TOWER."
+
+msgid "ITEM_CAMP_NOTE_NAME"
+msgstr "Note on the Clothesline"
+
+msgid "ITEM_CAMP_NOTE_DESCRIPTION"
+msgstr "A page held to the clothesline by a wooden peg, soft and wavy with damp. The handwriting is Juliana's."
+
+msgid "READABLE_CAMP_NOTE"
+msgstr "Sophia left her jacket out in the rain again. I told her the damp air off the ridge never dries out. I took the key to our signal tower HQ and tucked it away near the campsite so Lucas wouldn't find it if he comes poking around the clearing tonight. — Juliana"
+
+msgid "ITEM_TOWER_DOOR_NOTE_NAME"
+msgstr "Note Pinned to the Door"
+
+msgid "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"
+msgstr "A page torn from a school notebook, held to the wood by a rusty nail. The rain has not reached it under the lintel."
+
+msgid "READABLE_TOWER_DOOR_NOTE"
+msgstr "We can't let anyone find this place, Sophia, or we lose our HQ forever. I'm keeping the key with me at the fig tree camp until the rain stops. — Juliana"
+
+msgid "CAPTION_TOWER_DOOR_LOCKED"
+msgstr "Locked. Someone pinned a note to the door."
+
+msgid "TOWER_HQ_CARVED_TEXT"
+msgstr "SOPHIA & JULI - HQ NO. 1 - KEEP OUT"
+
+msgid "ITEM_TOWER_CHALKBOARD_NAME"
+msgstr "Chalkboard"
+
+msgid "ITEM_TOWER_CHALKBOARD_DESCRIPTION"
+msgstr "A small slate, scrubbed grey. Chalk trails wind between scribbled trees: one ends at a square marked HQ, another at a big tree with an X beside it. Someone has drawn a tiny key next to the X."
+
+# Signal tower: the town's history, on the control floor
+
+msgid "ITEM_TOWER_NEWS_NAME"
+msgstr "Newspaper Clipping"
+
+msgid "ITEM_TOWER_NEWS_DESCRIPTION"
+msgstr "A yellowed clipping from a local paper, folded in four and left on the desk. The corners have gone soft from handling."
+
+msgid "READABLE_TOWER_NEWS"
+msgstr "LOCAL POLICE BRIEF (MAY 1984): Search efforts along the northern rail cutting have been suspended. Maintenance worker E. Silva reported hearing his missing seven year old daughter calling his name from inside the drainage culvert near Mile Marker 4. Search teams examined the pipe and confirmed it has been completely filled with solid granite since 1962. Mr. Silva remains under psychiatric observation following his refusal to stop digging into the stone with his bare hands."
+
+msgid "ITEM_TOWER_MEMO_NAME"
+msgstr "Internal Memo"
+
+msgid "ITEM_TOWER_MEMO_DESCRIPTION"
+msgstr "A typed memorandum pinned to a board on the lever frame, a red stamp smudged across the bottom."
+
+msgid "READABLE_TOWER_MEMO"
+msgstr "INTERNAL MEMORANDUM (1989): To all signal tower operators: Effective immediately, do not record fog shadows in the official station logbook. Operator M. Santos was relieved of duty last night after stopping three freight trains for non existent obstructions. He insists a woman in a black dress was standing in the center of the tracks holding her head in her hands. Medical officers attribute his vision to severe sleep deprivation and carbon monoxide fumes from the coal heater."
+
+msgid "ITEM_TOWER_JOURNAL_NAME"
+msgstr "Operator's Journal Page"
+
+msgid "ITEM_TOWER_JOURNAL_DESCRIPTION"
+msgstr "A ruled page torn from a journal, written in a shaky hand. It rests on the very edge of the bench, as if it might fall."
+
+msgid "READABLE_TOWER_JOURNAL"
+msgstr "November 12. My wife says I am losing my mind because I keep measuring the floorboards with a ruler every morning. She does not understand. The distance between the door and the window was four meters on Monday. Today it is four meters and twelve centimeters. The house is stretching. Or maybe my eyes are failing me just like my father told me they would. I cannot sleep when the wood creaks because it sounds like the walls are catching their breath."
+
+msgid "ITEM_TOWER_NOTICE_NAME"
+msgstr "Public Health Notice"
+
+msgid "ITEM_TOWER_NOTICE_DESCRIPTION"
+msgstr "A printed municipal notice, taped to the window frame by its top corners. The tape has dried and curled."
+
+msgid "READABLE_TOWER_NOTICE"
+msgstr "MUNICIPAL HEALTH ANNOUNCEMENT (1991): Residents living near the forest line are advised that severe valley acoustic resonance during heavy fog can cause auditory illusions including knocking sounds, whispered names, and perceived footsteps. Doctors confirm these sensations are harmless neurological responses to prolonged atmospheric isolation. Please keep your doors locked and remain inside after dusk."
+
+# Signal tower: the children's headquarters
+
+msgid "ITEM_JULIANA_SKETCH_NAME"
+msgstr "Juliana's Notebook"
+
+msgid "ITEM_JULIANA_SKETCH_DESCRIPTION"
+msgstr "A worn leather notebook with a cord strap, lying flat on the desk. A small face with a fringe is pressed into the cover."
+
+msgid "READABLE_JULIANA_SKETCH"
+msgstr "October 1989. The butcher's wife told Sophia at the market that I have dead eyes like the birds that drown in the reservoir during heavy rain. Sophia didn't get angry or shout. She just smiled, took a long bite of her apple, and said, 'Juliana sees the things you're too afraid to look at.' Then she handed me the core and told me to plant it right behind the signal tower so we could watch it grow out of the gravel. She is the only person who doesn't lower her voice when I walk into a room."
+
+msgid "ITEM_SOPHIA_NOTE_NAME"
+msgstr "Sophia's Folded Letter"
+
+msgid "ITEM_SOPHIA_NOTE_DESCRIPTION"
+msgstr "A sheet of graph paper folded in four, left on the bench cushion with one corner turned back."
+
+msgid "READABLE_SOPHIA_NOTE"
+msgstr "To the Chief Operator of HQ No. 1: I overheard my father talking to the station master last night. They think the town is going to close the northern line before winter because the ground keeps shifting under the ties. My father said this place is built on a hollow crust that is slowly caving in. I told him he was being paranoid. But if the tracks do collapse and the trains stop coming, we are keeping this tower, Juli. We will lock the bottom door, pull up the stairs, and let the fog swallow the rest of the valley. — Sophia"
+
+msgid "TOWER_WALKIE_TALKIE"
+msgstr "She never came back to the tower, Juli..."
+
+msgid "ITEM_POCKET_WATCH_NAME"
+msgstr "Brass Pocket Watch"
+
+msgid "ITEM_POCKET_WATCH_DESCRIPTION"
+msgstr "A stopped brass pocket watch, its hands frozen a few minutes before midnight. The lid is open, and something is engraved inside it."
+
+msgid "READABLE_POCKET_WATCH"
+msgstr "For Juli. So you always know when to meet me."
+
+msgid "ITEM_THERMOS_NAME"
+msgstr "Weathered Thermos"
+
+msgid "ITEM_THERMOS_DESCRIPTION"
+msgstr "A dented green steel thermos, long gone cold. A strip of paper is tied round its middle with twine and held by a brass pin."
+
+msgid "READABLE_THERMOS"
+msgstr "Hot coffee for the best night watch on the tracks. The key to the tower is kept in the lantern's signal box. If the latch won't open in the dark, turn the filter to the red light, which is the railway's emergency signal. Don't drink it all at once. — Sophia"
+
+msgid "PROMPT_ROTATE_FILTER"
+msgstr "Rotate Filter"

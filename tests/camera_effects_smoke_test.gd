@@ -58,19 +58,11 @@ func _check_focus(player: CharacterBody3D) -> void:
 	player.start_world_inspect(whistle)
 	await _wait(1.5)
 
-	_expect(blur.get_weight() > 0.99, "an item held up is in focus (%.2f)" % blur.get_weight())
-	var far_start: float = camera.attributes.dof_blur_far_distance
-	_expect(
-		camera.attributes.dof_blur_far_enabled and far_start > player.inspect_controller.get_focus_distance(),
-		"what is behind it blurs, from just behind it (%.2f)" % far_start
-	)
-
-	GameSettings.set_depth_of_field_enabled(false, false)
-	await _wait(1.2)
-	_expect(not camera.attributes.dof_blur_far_enabled, "the option turns it off, even with an item held")
-	GameSettings.set_depth_of_field_enabled(true, false)
-	await _wait(0.8)
-	_expect(camera.attributes.dof_blur_far_enabled, "and on again")
+	# An item held up is drawn with no depth of field: the engine's blur smeared the dark behind it into the item's
+	# edge (a jagged dark halo round every item), and the world behind is veiled anyway.
+	_expect(player.inspect_controller.is_open(), "the item is held up")
+	_expect(blur.get_weight() == 0.0 and not camera.attributes.dof_blur_far_enabled, "and nothing is blurred round it (%.2f)" % blur.get_weight())
+	_expect(blur.inspect_amount == 0.0, "(the inspect blur is off by default)")
 
 	player.inspect_controller.close(false)
 	await _wait(1.5)

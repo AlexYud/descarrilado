@@ -8,8 +8,11 @@ class_name FocusBlurController
 ## can turn it off in the options (`GameSettings.depth_of_field_enabled`).
 
 ## How strongly the world behind an inspected item is blurred, and from how far
-## behind the item it starts to blur.
-@export_range(0.0, 1.0, 0.01) var inspect_amount: float = 0.5
+## behind the item it starts to blur. **Off (0) by default:** the inspect view sits on a dark veil, so the blur
+## showed nothing of the world, but the engine's depth of field smeared the far black into the item's edge and
+## drew a jagged dark halo round every item held up. Raise it only with a background worth blurring (and
+## check the edges).
+@export_range(0.0, 1.0, 0.01) var inspect_amount: float = 0.0
 @export var inspect_gap: float = 0.25
 @export var inspect_transition: float = 1.2
 ## The same for something the player looks at in the world (far gentler: it is a
@@ -73,6 +76,11 @@ func _process(delta: float) -> void:
 ## What is in focus right now: sets the profile and returns how much (0 if nothing).
 func _read_focus() -> float:
 	if inspect_controller != null and inspect_controller.is_open():
+		# An item held up: nothing behind it is blurred unless `inspect_amount` says so (see above), and the
+		# world focus below does not apply while the view is up.
+		if inspect_amount <= 0.0:
+			return 0.0
+
 		var depth: float = inspect_controller.get_focus_distance()
 		_far_distance = depth + inspect_controller.get_item_radius() + inspect_gap
 		_transition = inspect_transition

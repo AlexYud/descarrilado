@@ -2,6 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://dechhjfthr7jj" path="res://scenes/environment/world_environment_store.tscn" id="1_environment"]
 [ext_resource type="PackedScene" path="res://scenes/levels/fig_clearing.tscn" id="2_clearing"]
+[ext_resource type="PackedScene" path="res://scenes/levels/signal_tower.tscn" id="30_tower"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="4_dirt_color"]
 [ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="5_dirt_normal"]
@@ -45,6 +46,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_ground")
 
 [node name="FigClearing" parent="." unique_id=502660674 instance=ExtResource("2_clearing")]
+
+[node name="SignalTower" parent="." instance=ExtResource("30_tower")]
+transform = Transform3D(0.8660254, 0, -0.5, 0, 1, 0, 0.5, 0, 0.8660254, -33, 0, 8)
 
 [node name="Player" parent="." unique_id=1783646634 instance=ExtResource("3_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.0, 1.1, 2.1)

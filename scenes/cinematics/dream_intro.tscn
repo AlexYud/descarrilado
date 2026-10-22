@@ -59,6 +59,7 @@
 [ext_resource type="PackedScene" uid="uid://wulvhnk43k1y" path="res://scenes/levels/fig_clearing.tscn" id="fc_clearing"]
 [ext_resource type="PackedScene" uid="uid://htjuwv6bri4o" path="res://scenes/levels/unfinished_house.tscn" id="uh_house"]
 [ext_resource type="PackedScene" path="res://scenes/levels/waiting_shed.tscn" id="ws_shed"]
+[ext_resource type="PackedScene" path="res://scenes/levels/signal_tower.tscn" id="st_tower"]
 [ext_resource type="PackedScene" path="res://scenes/environment/house_forest_colliders.tscn" id="uh_colliders"]
 [ext_resource type="Texture2D" uid="uid://cjn7aj8lros6a" path="res://assets/textures/dark_humus/dark_humus_Color.jpg" id="gt_dark_humus_c"]
 [ext_resource type="Texture2D" uid="uid://ubkr6sbkuy02" path="res://assets/textures/dark_humus/dark_humus_NormalGL.jpg" id="gt_dark_humus_n"]
@@ -1036,6 +1037,9 @@ transform = Transform3D(-0.7071068, 0, -0.7071068, 0, 1, 0, 0.7071068, 0, -0.707
 
 [node name="WaitingShed" parent="Scenery" instance=ExtResource("ws_shed")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, -12.45167, -16)
+
+[node name="SignalTower" parent="Scenery" instance=ExtResource("st_tower")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 101.5, -18.7893, -36)
 
 [node name="OverlookPhone" parent="Scenery" instance=ExtResource("op_phone")]
 transform = Transform3D(0.727, 0, -0.686, 0, 1, 0, 0.686, 0, 0.727, 174.459, -18.7419, 25.399)

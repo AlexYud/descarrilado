@@ -59,16 +59,13 @@ const FLOOR_PLANTS: Array[Dictionary] = [
 ]
 
 ## Nodes of the clearing scene that keep plants away, with a clearance radius
-## in metres. Photographs and the cup lie on the ground and must stay visible.
+## in metres. The photographs lie on the ground and must stay visible (the cup and the camp dressing, with the lantern and its drawer, are on tables).
 const PROP_CLEARANCE: Dictionary = {
 	"Scenery/Tent": 2.0,
 	"Scenery/Tent2": 2.0,
 	"Scenery/CampTable": 1.3,
 	"Scenery/Campfire": 1.0,
 	"Scenery/FigBase": 1.8,
-	"Scenery/EnamelCup": 0.5,
-	"Props/PhotoChildhood": 0.5,
-	"Props/PhotoAdolescence": 0.5,
 	"Props/PhotoRecent": 0.5,
 }
 

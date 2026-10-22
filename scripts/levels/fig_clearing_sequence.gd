@@ -8,16 +8,26 @@ class_name FigClearingSequence
 ## decision about what the clearing does lives here. Voice lines are captions
 ## until recorded audio exists, and the sounds are generated placeholders.
 ##
-## Six photographs lie about the clearing and only three belong in the album (the others are
-## red herrings). The album is judged when every space is full: right, the finale starts; wrong,
-## a short burst of static says the memory does not line up.
+## Six photographs belong to the album and only three of them are right (the others are red
+## herrings). Half of them are here, in the camp: Rain at the Station, Bus Stop Departure (both right)
+## and Lucas at the Workshop (a red herring). The other half are in the lockbox in the ruined signal tower
+## (`SignalTowerBuilder`): Scraped Knee (right) and The Broken Lever and The Foggy Platform (red herrings).
+## The tower's door is locked and its key, `brass_signal_key`, is hidden here (`CampDressing`, `FigClearingProps`):
+## Juliana's note on the clothesline (`READABLE_CAMP_NOTE`) says it was tucked away near the campsite, Sophia's note
+## on the thermos on the log table (`READABLE_THERMOS`) says it is in the signal box of the lantern, and turning
+## the lantern's filter to red (`SignalLantern`) springs the drawer in its base, which holds the key and Rain at the
+## Station. A note pinned to the tower's door (`READABLE_TOWER_DOOR_NOTE`) says it is kept at the fig tree camp.
+## So the two parts of the puzzle can be met in either order.
+##
+## The album is judged when every space is full: right (Scraped Knee, Rain at the Station, Bus Stop
+## Departure, in that order), the finale starts; wrong, a short burst of static says the memory does not line up.
 ##
 ## The scene ends the moment the recording does: rain, campfire and flashlight cut out together,
 ## into total darkness. After `ficha_delay_seconds` of it a metallic CLINK sounds on the table,
 ## the flashlight comes back, and by its light the fire pit holds cold ash and Juliana's Ficha
 ## (a telephone token scratched with "CALL HER") lies beside the album: the only thing the player
-## takes from the clearing. The photographs are never taken (they are only put in the album; the
-## strays go when it is solved). Nothing else happens.
+## takes from the clearing. The photographs are never taken from the album (they are only put in it; the
+## strays go when it is solved, here and in the tower). Nothing else happens.
 ##
 ## Stages: EXPLORING (the cassette turns in silence, photos to find) > FINALE
 ## (album solved, tape rewinds) > RECORDING (the memory plays) > DONE. Nothing
@@ -279,9 +289,11 @@ func _turn_flashlight_on() -> void:
 		flashlight.call("turn_on")
 
 
-## The photographs that are not in the solved album are gone from the player's hands and from the
-## clearing: the album took them (they would otherwise fill three of the six inventory slots for
-## the rest of the game).
+## The photographs that are not in the solved album are gone from the player's hands, from the
+## clearing and from the tower: the album took them (they would otherwise fill three of the six
+## inventory slots for the rest of the game). The ones still in the tower's lockbox are marked as
+## taken, so they are not there when the tower is next loaded, and any lying about in a scene that is
+## loaded right now go at once.
 func _remove_stray_photos() -> void:
 	var stray: Array[String] = album.get_unplaced_photo_ids()
 	var target: Node = _get_player()
@@ -291,7 +303,10 @@ func _remove_stray_photos() -> void:
 				if not bool(target.call("consume_inventory_item", item_id)):
 					break
 
-	for node: Node in find_children("*", "Collectible", true, false):
+	for item_id: String in stray:
+		SaveManager.set_state_value(&"collectibles", StringName(item_id), true)
+
+	for node: Node in get_tree().root.find_children("*", "Collectible", true, false):
 		var photo: Collectible = node as Collectible
 		if photo != null and stray.has(photo.item_id):
 			photo.queue_free()

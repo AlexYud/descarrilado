@@ -30,16 +30,16 @@ size = Vector3(0.062, 0.0016, 0.0004)
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
 size = Vector3(0.17, 0.12, 0.05)
 
-[node name="PhotoTrack" type="Node3D"]
+[node name="PhotoFoggyPlatform" type="Node3D"]
 script = ExtResource("1_collectible")
-item_id = "photo_track"
-item_name = "ITEM_PHOTO_TRACK_NAME"
-item_description = "ITEM_PHOTO_TRACK_DESCRIPTION"
+item_id = "photo_foggy_platform"
+item_name = "ITEM_PHOTO_FOGGY_PLATFORM_NAME"
+item_description = "ITEM_PHOTO_FOGGY_PLATFORM_DESCRIPTION"
 
 [node name="Visual" type="Node3D" parent="."]
-metadata/inspect_id = "photo_track"
+metadata/inspect_id = "photo_foggy_platform"
 metadata/card_color = Color(0.46, 0.48, 0.5, 1)
-metadata/card_label = "PHOTO_FRONT_TRACK"
+metadata/card_label = "PHOTO_FRONT_FOGGY_PLATFORM"
 metadata/card_size = Vector2(0.15, 0.1)
 metadata/inspect_back_normal = Vector3(0, 0, -1)
 
@@ -58,7 +58,7 @@ pixel_size = 0.0005
 shaded = true
 modulate = Color(0.95, 0.95, 0.9, 1)
 outline_modulate = Color(0, 0, 0, 1)
-text = "PHOTO_FRONT_TRACK"
+text = "PHOTO_FRONT_FOGGY_PLATFORM"
 font_size = 24
 outline_size = 6
 autowrap_mode = 3
@@ -69,7 +69,7 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -0.0026)
 script = ExtResource("2_spot")
 spot_id = &"back_note"
 title_key = ""
-text_key = "PHOTO_NOTE_TRACK"
+text_key = "PHOTO_NOTE_FOGGY_PLATFORM"
 obvious = true
 
 [node name="Line1" type="MeshInstance3D" parent="Visual/BackNote"]

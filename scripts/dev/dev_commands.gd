@@ -12,6 +12,7 @@ const PLACES: Dictionary = {
 	"train": "Train/Wagons/TrainWagon",
 	"shed": "Scenery/WaitingShed",
 	"clearing": "Scenery/FigClearing",
+	"tower": "Scenery/SignalTower",
 	"house": "Scenery/UnfinishedHouse",
 	"overlook": "Scenery/OverlookPhone",
 }

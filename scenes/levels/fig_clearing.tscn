@@ -4,18 +4,15 @@
 [ext_resource type="Script" uid="uid://v4ncxexc1eqp" path="res://scripts/interactions/inspect_reaction.gd" id="3_reaction"]
 [ext_resource type="PackedScene" path="res://scenes/objects/cassette_recorder.tscn" id="5_recorder"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_album.tscn" id="6_album"]
-[ext_resource type="PackedScene" path="res://scenes/objects/photo_childhood.tscn" id="7_childhood"]
-[ext_resource type="PackedScene" path="res://scenes/objects/photo_adolescence.tscn" id="8_adolescence"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_recent.tscn" id="9_recent"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_workshop.tscn" id="30_workshop"]
-[ext_resource type="PackedScene" path="res://scenes/objects/photo_clock.tscn" id="31_clock"]
-[ext_resource type="PackedScene" path="res://scenes/objects/photo_track.tscn" id="32_track"]
 [ext_resource type="PackedScene" uid="uid://cjkk68a68rvy1" path="res://assets/models/trees/custom_tree/tree_test.glb" id="10_tree"]
 [ext_resource type="PackedScene" uid="uid://bcmu0upxtqw7r" path="res://assets/models/camping/tent/tent.glb" id="11_tent"]
 [ext_resource type="PackedScene" uid="uid://cje0ebg64e0a7" path="res://assets/models/camping/campfire/campfire.glb" id="12_campfire"]
 [ext_resource type="Texture2D" uid="uid://bugfipxfi8idh" path="res://assets/models/trees/custom_tree/tree_test_Bark014_1K-JPG_Color.jpg" id="22_bark"]
 [ext_resource type="PackedScene" path="res://scenes/objects/campfire_fire.tscn" id="23_fire"]
 [ext_resource type="PackedScene" path="res://scenes/objects/overlook/juliana_ficha.tscn" id="24_ficha"]
+[ext_resource type="Script" path="res://scripts/environment/fig_clearing_props.gd" id="33_dressing"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_trunk"]
 height = 4.0
@@ -74,11 +71,13 @@ size = Vector3(1.5, 0.78, 0.8)
 top_radius = 0.045
 bottom_radius = 0.04
 height = 0.09
+cap_top = false
 
 [sub_resource type="StandardMaterial3D" id="Mat_enamel"]
 albedo_color = Color(0.7, 0.75, 0.78, 1)
 metallic = 0.2
 roughness = 0.35
+cull_mode = 2
 
 [node name="FigClearing" type="Node3D" unique_id=2095720563 node_paths=PackedStringArray("album", "recorder", "fire", "ficha_spot", "rain_player")]
 script = ExtResource("1_sequence")
@@ -261,7 +260,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39, 0)
 shape = SubResource("BoxShape3D_table")
 
 [node name="EnamelCup" type="MeshInstance3D" parent="Scenery" unique_id=1214750326]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 0.045, -1)
+cast_shadow = 0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.055, 0.825, -0.74)
 mesh = SubResource("CylinderMesh_cup")
 surface_material_override/0 = SubResource("Mat_enamel")
 
@@ -273,12 +273,6 @@ transform = Transform3D(0.84582675, 0, -0.5327072, 0, 0.99999994, 0, 0.5327072, 
 [node name="PhotoAlbum" parent="Props" unique_id=1257153703 instance=ExtResource("6_album")]
 transform = Transform3D(0.6144483, 0, -0.7889571, 0, 1, 0, 0.7889571, 0, 0.6144483, 1.8502966, 0.78, -0.51056355)
 
-[node name="PhotoChildhood" parent="Props" unique_id=1906734437 instance=ExtResource("7_childhood")]
-transform = Transform3D(-0.7797948, -0.6260353, -2.7364868e-08, 0, -4.371139e-08, 1, -0.6260353, 0.7797948, 3.4085915e-08, 4.57, 0.004, -3.27)
-
-[node name="PhotoAdolescence" parent="Props" unique_id=1018994794 instance=ExtResource("8_adolescence")]
-transform = Transform3D(0.9553365, -0.29552022, -1.29175985e-08, 0, -4.371139e-08, 1, -0.29552022, -0.9553365, -4.1759087e-08, -2.61374, 0.004, -1)
-
 [node name="PhotoRecent" parent="Props" unique_id=938142182 instance=ExtResource("9_recent")]
 transform = Transform3D(-0.69922113, 0.71490544, 3.1249513e-08, 0, -4.371139e-08, 1, 0.71490544, 0.69922113, 3.0563925e-08, 0.21402094, 0.004, 2.358548)
 
@@ -286,15 +280,11 @@ transform = Transform3D(-0.69922113, 0.71490544, 3.1249513e-08, 0, -4.371139e-08
 [node name="PhotoWorkshop" parent="Props" instance=ExtResource("30_workshop")]
 transform = Transform3D(0.8525245, 0.5226872, 0, 0, 0, 1, 0.5226872, -0.8525245, 0, 2.209, 0.786, -0.352)
 
-[node name="PhotoClock" parent="Props" instance=ExtResource("31_clock")]
-transform = Transform3D(0.9210610, -0.3894183, 0, 0, 0, 1, -0.3894183, -0.9210610, 0, -0.7, 0.386, 3.9)
-
-[node name="PhotoTrack" parent="Props" instance=ExtResource("32_track")]
-transform = Transform3D(0.4535961, -0.8912074, 0, 0, 0, 1, -0.8912074, -0.4535961, 0, 2.35, 0.004, -3.25)
-
-
 [node name="FichaSpot" type="Marker3D" parent="Props"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.63, 0.784, -0.34)
+
+[node name="CampDressing" type="Node3D" parent="."]
+script = ExtResource("33_dressing")
 
 [node name="Recording" type="Node3D" parent="." unique_id=1607210760]
 

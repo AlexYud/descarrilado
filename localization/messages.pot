@@ -993,3 +993,123 @@ msgstr ""
 
 msgid "OPTIONS_CAPTION_PREVIEW"
 msgstr ""
+
+# Fig tree camp and signal tower
+
+msgid "ITEM_BRASS_SIGNAL_KEY_NAME"
+msgstr ""
+
+msgid "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_CAMP_NOTE_NAME"
+msgstr ""
+
+msgid "ITEM_CAMP_NOTE_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_CAMP_NOTE"
+msgstr ""
+
+msgid "ITEM_TOWER_DOOR_NOTE_NAME"
+msgstr ""
+
+msgid "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_TOWER_DOOR_NOTE"
+msgstr ""
+
+msgid "CAPTION_TOWER_DOOR_LOCKED"
+msgstr ""
+
+msgid "TOWER_HQ_CARVED_TEXT"
+msgstr ""
+
+msgid "ITEM_TOWER_CHALKBOARD_NAME"
+msgstr ""
+
+msgid "ITEM_TOWER_CHALKBOARD_DESCRIPTION"
+msgstr ""
+
+# Signal tower: the town's history, on the control floor
+
+msgid "ITEM_TOWER_NEWS_NAME"
+msgstr ""
+
+msgid "ITEM_TOWER_NEWS_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_TOWER_NEWS"
+msgstr ""
+
+msgid "ITEM_TOWER_MEMO_NAME"
+msgstr ""
+
+msgid "ITEM_TOWER_MEMO_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_TOWER_MEMO"
+msgstr ""
+
+msgid "ITEM_TOWER_JOURNAL_NAME"
+msgstr ""
+
+msgid "ITEM_TOWER_JOURNAL_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_TOWER_JOURNAL"
+msgstr ""
+
+msgid "ITEM_TOWER_NOTICE_NAME"
+msgstr ""
+
+msgid "ITEM_TOWER_NOTICE_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_TOWER_NOTICE"
+msgstr ""
+
+# Signal tower: the children's headquarters
+
+msgid "ITEM_JULIANA_SKETCH_NAME"
+msgstr ""
+
+msgid "ITEM_JULIANA_SKETCH_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_JULIANA_SKETCH"
+msgstr ""
+
+msgid "ITEM_SOPHIA_NOTE_NAME"
+msgstr ""
+
+msgid "ITEM_SOPHIA_NOTE_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_SOPHIA_NOTE"
+msgstr ""
+
+msgid "TOWER_WALKIE_TALKIE"
+msgstr ""
+
+msgid "ITEM_POCKET_WATCH_NAME"
+msgstr ""
+
+msgid "ITEM_POCKET_WATCH_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_POCKET_WATCH"
+msgstr ""
+
+msgid "ITEM_THERMOS_NAME"
+msgstr ""
+
+msgid "ITEM_THERMOS_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_THERMOS"
+msgstr ""
+
+msgid "PROMPT_ROTATE_FILTER"
+msgstr ""

@@ -556,6 +556,28 @@ static func make_sobbing(seconds: float = 6.0) -> AudioStreamWAV:
 	return _to_wav(samples, true)
 
 
+## The soft mechanical ticking of a pocket watch, `seconds` long: a tick and a lower tock every quarter of a second,
+## each a tiny metallic click that rings for a few milliseconds. It does not loop.
+static func make_watch_ticking(seconds: float = 3.0) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7007
+	var beat: float = 0.25
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var phase: float = fmod(t, beat)
+		var frequency: float = 3100.0 if int(t / beat) % 2 == 0 else 2350.0
+		var click: float = 0.0
+		if phase < 0.025:
+			var envelope: float = exp(-phase * 300.0)
+			click = (sin(TAU * frequency * phase) * 0.6 + rng.randf_range(-1.0, 1.0) * 0.3) * envelope
+
+		samples[i] = click * 0.5 * clampf((seconds - t) / 0.05, 0.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
 ## A breathy whisper of seven syllables ("you're not sup-posed to be here"): shaped noise, no pitch.
 static func make_whisper() -> AudioStreamWAV:
 	var seconds: float = 1.9
@@ -903,5 +925,37 @@ static func make_lamp_pop() -> AudioStreamWAV:
 		var zap: float = sin(TAU * 2600.0 * t) * exp(-t * 90.0) * 0.35
 		var thump: float = sin(TAU * 90.0 * t) * exp(-t * 28.0) * 0.5
 		samples[i] = snap + zap + thump
+
+	return _to_wav(samples, false)
+
+
+## A spring latch letting go: a sharp CLICK, then the SHRK of a steel catch scraping back along its slot
+## (filtered noise that brightens as it goes, with a short ring of the spring behind it).
+static func make_spring_latch() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.55 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 1889
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var click: float = (
+			rng.randf_range(-1.0, 1.0) * exp(-t * 300.0) * 0.6
+			+ sin(TAU * 2900.0 * t) * exp(-t * 150.0) * 0.5
+			+ sin(TAU * 240.0 * t) * exp(-t * 80.0) * 0.4
+		)
+		var scrape: float = 0.0
+		var late: float = t - 0.07
+		if late > 0.0 and late < 0.3:
+			var progress: float = late / 0.3
+			smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), lerpf(0.12, 0.85, progress))
+			scrape = smoothed * sin(PI * progress) * 0.75 * (0.7 + 0.3 * sin(TAU * 38.0 * late))
+
+		var spring: float = 0.0
+		if late > 0.0:
+			spring = sin(TAU * (1250.0 + 220.0 * exp(-late * 18.0)) * late) * exp(-late * 16.0) * 0.18
+
+		samples[i] = clampf(click + scrape + spring, -1.0, 1.0)
 
 	return _to_wav(samples, false)

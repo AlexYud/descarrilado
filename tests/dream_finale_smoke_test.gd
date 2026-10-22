@@ -509,7 +509,7 @@ func _check_real_scene() -> void:
 	# The developer console's shortcuts work in the real scene.
 	DevConsole.scene_override = level
 	var spots: Dictionary = {}
-	for place: String in ["house", "shed", "clearing", "overlook", "train"]:
+	for place: String in ["house", "shed", "clearing", "tower", "overlook", "train"]:
 		_expect(DevConsole.execute("tp " + place).contains("Teleported"), "tp " + place + " works")
 		spots[place] = player.global_position
 		_expect(is_finite(player.global_position.y) and player.global_position.y > -60.0, "  on the ground (y %.1f)" % player.global_position.y)

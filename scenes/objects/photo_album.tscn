@@ -6,8 +6,8 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_adolescence.tscn" id="4_adolescence"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_recent.tscn" id="5_recent"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_workshop.tscn" id="6_workshop"]
-[ext_resource type="PackedScene" path="res://scenes/objects/photo_clock.tscn" id="7_clock"]
-[ext_resource type="PackedScene" path="res://scenes/objects/photo_track.tscn" id="8_track"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_broken_lever.tscn" id="7_clock"]
+[ext_resource type="PackedScene" path="res://scenes/objects/photo_foggy_platform.tscn" id="8_track"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_cover"]
 albedo_color = Color(0.16, 0.1, 0.08, 1)
