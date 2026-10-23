@@ -310,8 +310,10 @@ func _check_hallway_trap() -> void:
 	# the lamp's flicker does not matter, and lingering nearby with the light on springs it anyway.
 	# (Probing with the stage frozen, or finding it would spring the real trap.)
 	var base_dwell: float = house.figure_dwell_seconds
+	var base_idle: float = house.figure_idle_seconds
 	house._stage = UnfinishedHouseSequence.Stage.RESOLVED
 	house.figure_dwell_seconds = 999.0
+	house.figure_idle_seconds = 999.0
 	var figure_feet: Vector3 = house.silhouette.global_position
 	await _aim_player_at(figure_feet + Vector3(0.0, 0.2, 0.0))
 	_expect(house._figure_in_beam(), "looking at its feet finds it")
@@ -322,12 +324,50 @@ func _check_hallway_trap() -> void:
 	(flashlight as SpotLight3D).visible = true
 	var camera_pos: Vector3 = player.get_node("Head/Camera3D").global_position
 	var off_axis: Vector3 = figure_feet + Vector3(0.0, 1.0, 0.0) + Vector3(0.0, 0.0, 0.0)
-	var lateral: Vector3 = (off_axis - camera_pos).cross(Vector3.UP).normalized() * (off_axis - camera_pos).length() * 0.3
+	var lateral: Vector3 = (off_axis - camera_pos).cross(Vector3.UP).normalized() * (off_axis - camera_pos).length() * 0.45
 	await _aim_player_at(off_axis + lateral)
 	_expect(not house._figure_in_beam() and house._figure_near_and_visible(), "loosely looking its way is caught by the fallback")
+
+	# The figure lit at the edge of the beam (the bug: the light plainly lit it, a good way off the middle of the
+	# beam, and nothing happened): found, near or far.
+	var spot: SpotLight3D = flashlight as SpotLight3D
+	for stand: Vector3 in [Vector3(3.5, 1.05, 12.2), Vector3(2.6, 1.05, 12.2)]:
+		player.global_position = stand
+		player.velocity = Vector3.ZERO
+		var to_figure: Vector3 = off_axis - stand
+		for share: float in [0.18, 0.24]:
+			var sideways: Vector3 = to_figure.cross(Vector3.UP).normalized() * to_figure.length() * share
+			await _aim_player_at(off_axis + sideways)
+			var axis: Vector3 = -spot.global_basis.z
+			var off_degrees: float = rad_to_deg(axis.angle_to(off_axis - spot.global_position))
+			_expect(off_degrees < spot.spot_angle and house._figure_in_beam(), "the figure lit %.0f degrees off the middle of the beam, %.1f m away, is found" % [off_degrees, stand.distance_to(off_axis)])
+
+	# Even looking away, standing near it with the light on for long enough springs it (nobody can be stuck).
+	house.figure_idle_seconds = base_idle
+	house._figure_idle = base_idle - 0.2
+	await _aim_player_at(Vector3(3.5, 1.2, 15.0))
+	player.global_position = Vector3(5.5, 1.05, 12.2)
 	house._stage = UnfinishedHouseSequence.Stage.TRAP_CUT
-	house.figure_dwell_seconds = base_dwell
+	await _until(func() -> bool: return house._stage != UnfinishedHouseSequence.Stage.TRAP_CUT, "standing near the figure with the light on long enough springs the trap, however the player looks", 4.0)
+	_expect(house._stage == UnfinishedHouseSequence.Stage.SLAMMING or house._stage == UnfinishedHouseSequence.Stage.SLAMMED, "(the reveal runs)")
+	await _until(func() -> bool: return house._stage == UnfinishedHouseSequence.Stage.SLAMMED, "and it ends with the doors shut", 6.0)
+	# Put back as it was for the real run of the trap below (the player away from the figure, looking elsewhere).
+	house.figure_dwell_seconds = 999.0
+	house.figure_idle_seconds = 999.0
+	player.global_position = Vector3(3.5, 1.05, 12.2)
+	player.velocity = Vector3.ZERO
+	await _aim_player_at(Vector3(3.5, 1.2, 15.0))
+	house._stage = UnfinishedHouseSequence.Stage.TRAP_CUT
+	for door: DoorController in house._doors():
+		door.unlock()
+	flashlight.call("restore_save_state", {"is_on": true})
+	house.silhouette.visible = true
+	house._pose_figure(&"bowed")
 	house._figure_dwell = 0.0
+	house._figure_idle = 0.0
+	await _wait(0.3)
+	house.figure_dwell_seconds = base_dwell
+	house.figure_idle_seconds = base_idle
 
 	# The beam finds the figure: for half a second the light is weak and stutters, and each time it
 	# comes back the figure is different. Then it dies and every door slams and locks.

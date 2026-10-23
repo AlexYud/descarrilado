@@ -19,7 +19,7 @@ class_name UnfinishedHouseSequence
 ##     open there (a loud clack).
 ##  5. The trap: as the player walks down the hallway towards the living room the flashlight dies. The
 ##     player can switch it back on as often as they like (nothing happens in the hallway). A still
-##     figure stands over the capsule in the pitch dark; the moment the beam finds it, the light drops
+##     figure stands over the capsule in the pitch dark; the moment the beam finds it (it lights it: anywhere in the lit cone), the light drops
 ##     to a weak glow that stutters for half a second and every time it comes back the figure has
 ##     moved (it turns its head, rises, is nearer): the eye never gets a clear look, a flickering view
 ##     of something wrong and unknown instead of a monster. Then the light dies, every door slams
@@ -129,14 +129,20 @@ const KEY_PANTRY_BEAT: StringName = &"house_pantry_beat"
 ## The figure standing over the capsule (see `HouseProps` kind `standing_silhouette`).
 @export var silhouette: Node3D
 ## The beam has found the figure when it points within this many degrees of it, closer than this
-## far, with nothing in between.
+## far, with nothing in between. Whenever the flashlight LIGHTS the figure (it is inside 90 percent of the
+## light's own cone) it counts as found too, however far off the middle of the beam it stands: a figure the
+## player can plainly see lit must never go unnoticed.
 @export var beam_hit_degrees: float = 11.0
 @export var beam_reach: float = 14.0
 ## Fallback so the reveal can never be missed: with the light on, within this far of the figure and
 ## looking within this many degrees of it for this long, it springs anyway.
-@export var figure_dwell_distance: float = 6.0
-@export var figure_dwell_degrees: float = 40.0
+@export var figure_dwell_distance: float = 10.0
+@export var figure_dwell_degrees: float = 45.0
 @export var figure_dwell_seconds: float = 1.5
+## Last resort, so that the player can never be stuck: with the light on and this near the figure for this long,
+## whatever the view or the beam, it springs. (Looking at it is what the trap is for; this only guarantees it.)
+@export var figure_idle_distance: float = 7.0
+@export var figure_idle_seconds: float = 8.0
 ## Where the figure stands, and how far towards the player it is by the end of the reveal.
 @export var figure_approach_metres: float = 1.1
 
@@ -149,6 +155,7 @@ var _flashlight: Node = null
 var _run_step: AudioStreamWAV = null
 var _pantry_beat: int = 0
 var _figure_dwell: float = 0.0
+var _figure_idle: float = 0.0
 var _figure_base_position: Vector3 = Vector3.ZERO
 var _figure_base_yaw: float = 0.0
 var _figure_pose: StringName = &"bowed"
@@ -369,6 +376,7 @@ func _on_trap_entered(body: Node3D) -> void:
 
 	_set_stage(Stage.TRAP_CUT)
 	_figure_dwell = 0.0
+	_figure_idle = 0.0
 	_cut_flashlight()
 	_figure_base_position = silhouette.position
 	_figure_base_yaw = silhouette.rotation_degrees.y
@@ -390,8 +398,18 @@ func _physics_process(delta: float) -> void:
 		_figure_dwell += delta
 		if _figure_dwell >= figure_dwell_seconds:
 			_run_reveal()
+			return
 	else:
 		_figure_dwell = 0.0
+
+	# And if even that cannot see it (some odd corner of the room), simply being near it with the light on is enough.
+	var target: Node3D = _get_player()
+	if target != null and _light_is_on() and target.global_position.distance_to(silhouette.global_position) <= figure_idle_distance:
+		_figure_idle += delta
+		if _figure_idle >= figure_idle_seconds:
+			_run_reveal()
+	else:
+		_figure_idle = 0.0
 
 
 func _on_flashlight_toggled(is_on: bool) -> void:
@@ -415,19 +433,26 @@ func _figure_in_beam() -> bool:
 
 	var origin: Vector3 = light.global_position
 	var forward: Vector3 = -light.global_basis.z
+	var cone_degrees: float = _beam_cone_degrees(light)
 	for height: float in FIGURE_AIM_HEIGHTS:
 		var aim: Vector3 = silhouette.global_position + Vector3(0.0, height, 0.0)
 		var to_figure: Vector3 = aim - origin
 		if to_figure.length() > beam_reach:
 			continue
 
-		if rad_to_deg(forward.angle_to(to_figure)) > beam_hit_degrees:
+		if rad_to_deg(forward.angle_to(to_figure)) > cone_degrees:
 			continue
 
 		if _clear_view_to(origin, aim):
 			return true
 
 	return false
+
+
+## How far off the middle of the beam the figure may be and still count as found: the set angle, or most of
+## the light's own cone, whichever is wider (so that whatever the light plainly lights is found).
+func _beam_cone_degrees(light: SpotLight3D) -> float:
+	return maxf(beam_hit_degrees, light.spot_angle * 0.9)
 
 
 ## Nothing solid in between (a wall or a door); the crate and the capsule around it do not count.
