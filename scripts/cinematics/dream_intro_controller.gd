@@ -86,6 +86,18 @@ const BLACKOUT_RECT_PATH := NodePath(
 ## Keeps every wagon light permanently off after the sequence.
 @export var force_train_lights_off_after_flicker: bool = true
 
+## The wagon's power fails the way it does in a horror film, all through the head raise
+## (`TrainLightFlicker.play_horror_sequence`): a strobe, a false calm, a cut to dark and a surge, heavy flicker,
+## a long blackout with stray flashes, a weak restart, a stutter that falls apart, and a dying flicker that ends
+## dark just as the player is free. False plays the old short strobe (the two durations above) instead.
+@export var continuity_horror_flicker: bool = true
+
+## How long the failure lasts. 0 uses the head raise's length less half a second.
+@export var continuity_horror_duration: float = 0.0
+
+## The same seed fails every light fitting of the train in the same way, every time.
+@export var continuity_horror_seed: int = 1989
+
 
 # ============================================================
 # FLASHLIGHT TUTORIAL
@@ -775,6 +787,10 @@ func _start_continuity_light_sequence() -> void:
 
 	continuity_light_sequence_finished = false
 
+	if continuity_horror_flicker:
+		_start_horror_continuity()
+		return
+
 	for flicker: TrainLightFlicker in train_light_flickers:
 		if flicker == null or not is_instance_valid(flicker):
 			continue
@@ -815,6 +831,36 @@ func _start_continuity_light_sequence() -> void:
 	)
 
 
+## The scripted failure on every light fitting; then dark.
+func _start_horror_continuity() -> void:
+	var seconds: float = _horror_flicker_seconds()
+	for flicker: TrainLightFlicker in train_light_flickers:
+		if flicker == null or not is_instance_valid(flicker):
+			continue
+
+		flicker.process_mode = Node.PROCESS_MODE_INHERIT
+		flicker.play_horror_sequence(continuity_horror_seed, seconds)
+
+	continuity_light_tween = create_tween()
+	continuity_light_tween.tween_interval(seconds)
+	continuity_light_tween.tween_callback(_complete_continuity_light_sequence)
+
+
+## How long the failure lasts: what was set, or the head raise's length less half a second.
+func _horror_flicker_seconds() -> float:
+	if continuity_horror_duration > 0.0:
+		return continuity_horror_duration
+
+	if (
+		head_raise_animation_player != null
+		and head_raise_animation_player.has_animation(head_raise_animation_name)
+	):
+		var length: float = head_raise_animation_player.get_animation(head_raise_animation_name).length
+		return maxf(length - 0.5, 1.0)
+
+	return 5.8
+
+
 func _begin_continuity_final_flicker() -> void:
 	var final_duration: float = maxf(
 		continuity_final_flicker_duration,
@@ -844,6 +890,7 @@ func _wait_for_continuity_light_sequence() -> void:
 	var maximum_wait: float = (
 		maxf(continuity_panic_flicker_duration, 0.0)
 		+ maxf(continuity_final_flicker_duration, 0.0)
+		+ (_horror_flicker_seconds() if continuity_horror_flicker else 0.0)
 		+ 0.75
 	)
 
