@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/environment/campfire_fire.gd" id="1_fire"]
+[ext_resource type="AudioStream" path="res://assets/audios/campfire_placeholder.wav" id="2_crackle"]
 
 [sub_resource type="Gradient" id="Gradient_soft"]
 offsets = PackedFloat32Array(0, 1)
@@ -82,6 +83,7 @@ size = Vector2(0.045, 0.045)
 
 [node name="CampfireFire" type="Node3D"]
 script = ExtResource("1_fire")
+crackle_stream = ExtResource("2_crackle")
 
 [node name="Light" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)

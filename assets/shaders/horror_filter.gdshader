@@ -13,8 +13,10 @@ Designed to:
 */
 
 
+// With mipmaps: the soft focus and the bloom read the screen at a coarser level (one sample that is already a
+// blur) instead of taking many samples at full size.
 uniform sampler2D screen_texture
-	: hint_screen_texture, repeat_disable, filter_linear;
+	: hint_screen_texture, repeat_disable, filter_linear_mipmap;
 
 
 /*
@@ -154,6 +156,71 @@ uniform float brightness_compensation
 
 
 /*
+Worn VHS tape on top of the camcorder look (all of it scaled by `camcorder_strength` and gone as `darkness`
+goes to 1): colour that bleeds to the right of its edges, and lines that wobble sideways. (There are no dropout
+dashes and no torn band along the bottom: they were tried and taken out.)
+*/
+uniform float vhs_chroma_bleed_pixels
+	: hint_range(0.0, 16.0) = 5.0;
+
+uniform float vhs_line_jitter
+	: hint_range(0.0, 0.01) = 0.0018;
+
+/*
+An unstable picture, like a tape that is worn out or a deck that cannot hold it. `vhs_instability` scales all of
+it. The picture drifts sideways in slow waves down the frame (`vhs_wobble_amount`, in screen widths); now and
+then, every `vhs_tracking_interval` seconds or so, a band the height of a hand wanders through the picture for
+a moment, tearing it sideways and smearing its colour (`vhs_tracking_strength`); and now and then a field jumps
+a hair up or down (`vhs_vertical_twitch`) or a single frame dips in brightness (`vhs_flicker`). None of it adds
+white lines or noise: the picture only moves.
+*/
+uniform float vhs_instability
+	: hint_range(0.0, 2.0) = 1.0;
+
+uniform float vhs_wobble_amount
+	: hint_range(0.0, 0.01) = 0.0022;
+
+uniform float vhs_tracking_strength
+	: hint_range(0.0, 1.0) = 0.7;
+
+uniform float vhs_tracking_interval
+	: hint_range(3.0, 30.0) = 8.0;
+
+uniform float vhs_vertical_twitch
+	: hint_range(0.0, 0.01) = 0.0025;
+
+uniform float vhs_flicker
+	: hint_range(0.0, 0.3) = 0.09;
+
+/*
+A darker, colder tape: the mid tones and shadows are pressed down (`vhs_dark_gamma`, 0 leaves them alone) and
+the picture is darker toward the frame's edges (`vhs_edge_darkening`), along the frame, not in a circle.
+*/
+uniform float vhs_dark_gamma
+	: hint_range(0.0, 0.5) = 0.14;
+
+uniform float vhs_edge_darkening
+	: hint_range(0.0, 1.0) = 0.4;
+
+
+/*
+Overexposed light, like a camera that cannot cope with a torch on a wall: bright parts of the picture
+spill a wide, warm halo (`bloom_*`) and the brightest of them are pushed toward white (`highlight_gain`).
+*/
+uniform float bloom_strength
+	: hint_range(0.0, 2.0) = 0.55;
+
+uniform float bloom_radius_pixels
+	: hint_range(2.0, 80.0) = 26.0;
+
+uniform float bloom_threshold
+	: hint_range(0.0, 1.0) = 0.38;
+
+uniform float highlight_gain
+	: hint_range(0.0, 1.5) = 0.6;
+
+
+/*
 Takes the camcorder look out of the picture (grain, colour noise, lifted blacks, washed contrast) as it goes to
 1, so that a black picture is truly black and a scene can fade to the black of a plain black screen without a
 jump. Only the finale drives it.
@@ -191,9 +258,20 @@ vec2 safe_screen_uv(vec2 uv) {
 
 
 vec3 sample_screen(vec2 uv) {
-	return texture(
+	return textureLod(
 		screen_texture,
-		safe_screen_uv(uv)
+		safe_screen_uv(uv),
+		0.0
+	).rgb;
+}
+
+
+// The screen, already blurred: `lod` 1 averages 2 by 2 pixels, 2 averages 4 by 4, and so on.
+vec3 sample_screen_blurred(vec2 uv, float lod) {
+	return textureLod(
+		screen_texture,
+		safe_screen_uv(uv),
+		lod
 	).rgb;
 }
 
@@ -229,6 +307,53 @@ void fragment() {
 		-lens_frame_softness,
 		lens_frame_softness * 0.35,
 		frame_distance
+	);
+	/*
+	Tape wobble: every picture line is shifted a little sideways, and slow waves of drift run down the frame.
+	*/
+	float tape_line = floor(screen_uv.y * 240.0);
+	float jitter = (random_value(vec2(tape_line, video_frame)) - 0.5) * vhs_line_jitter
+		+ (
+			sin(screen_uv.y * 7.0 + TIME * 0.9) * 0.6
+			+ sin(screen_uv.y * 19.0 - TIME * 1.7) * 0.4
+		) * vhs_wobble_amount * vhs_instability;
+
+	/*
+	Tracking disturbance: once in a while a band wanders through the picture for a fraction of a second. Inside
+	it the lines are torn sideways (more at its middle) and the colour smears. `tracking_disturbance` is how
+	much of it there is at this pixel (0 to 1).
+	*/
+	float tracking_cycle = floor(TIME / vhs_tracking_interval);
+	float tracking_seconds = (TIME - tracking_cycle * vhs_tracking_interval);
+	float tracking_start = 1.0 + random_value(vec2(tracking_cycle, 3.0)) * max(vhs_tracking_interval - 3.0, 0.5);
+	float tracking_length = 0.35 + random_value(vec2(tracking_cycle, 9.0)) * 0.5;
+	float tracking_progress = (tracking_seconds - tracking_start) / tracking_length;
+	float tracking_envelope = (
+		step(0.0, tracking_progress)
+		* (1.0 - step(1.0, tracking_progress))
+		* sin(clamp(tracking_progress, 0.0, 1.0) * 3.14159265)
+	);
+	float tracking_center = fract(random_value(vec2(tracking_cycle, 5.0)) + tracking_progress * 0.3);
+	float tracking_band = 1.0 - smoothstep(0.0, 0.09, abs(screen_uv.y - tracking_center));
+	float tracking_disturbance = tracking_envelope * tracking_band * vhs_tracking_strength * vhs_instability;
+	float tracking_tear = (
+		random_value(vec2(tape_line, video_frame + tracking_cycle)) - 0.5
+		+ sin(screen_uv.y * 90.0 + TIME * 40.0) * 0.5
+	);
+	jitter += tracking_disturbance * tracking_tear * 0.035;
+
+	uv.x += jitter * video_strength;
+
+	/*
+	A field that jumps: now and then, for a frame, the whole picture sits a hair higher or lower.
+	*/
+	float twitch_roll = random_value(vec2(video_frame, 22.0));
+	uv.y += (
+		(random_value(vec2(video_frame, 21.0)) - 0.5)
+		* step(0.965, twitch_roll)
+		* vhs_vertical_twitch
+		* vhs_instability
+		* video_strength
 	);
 	uv = safe_screen_uv(uv);
 
@@ -272,31 +397,40 @@ void fragment() {
 	}
 
 	/*
-	Five-sample soft blur.
+	Colour bleeds to the right of its edges while the brightness stays sharp: the tape stores far less colour
+	than brightness.
+	*/
+	if (
+		screen_sample_quality > 0.25
+		&& vhs_chroma_bleed_pixels > 0.0
+	) {
+		vec2 bleed_step = vec2(
+			SCREEN_PIXEL_SIZE.x * vhs_chroma_bleed_pixels * (1.0 + 5.0 * tracking_disturbance) * 0.33,
+			0.0
+		);
+		vec3 smear = original_color * 0.34
+			+ sample_screen(uv - bleed_step) * 0.30
+			+ sample_screen(uv - bleed_step * 2.0) * 0.22
+			+ sample_screen(uv - bleed_step * 3.0) * 0.14;
+		float sharp_luma = dot(original_color, vec3(0.299, 0.587, 0.114));
+		float smear_luma = dot(smear, vec3(0.299, 0.587, 0.114));
+		original_color = mix(
+			original_color,
+			vec3(sharp_luma) + (smear - vec3(smear_luma)),
+			video_strength
+		);
+	}
 
-	This is intentionally smaller and cheaper than a large
-	blur kernel, making it suitable for lower-end computers.
+	/*
+	Soft focus: one sample of the screen at a coarser level (about the size of the old five-sample blur).
 	*/
 	vec3 blur_color = original_color;
 
 	if (screen_sample_quality > 0.75) {
-		blur_color = original_color * 0.40;
-
-		blur_color += sample_screen(
-			uv + vec2(blur_offset.x, 0.0)
-		) * 0.15;
-
-		blur_color += sample_screen(
-			uv - vec2(blur_offset.x, 0.0)
-		) * 0.15;
-
-		blur_color += sample_screen(
-			uv + vec2(0.0, blur_offset.y)
-		) * 0.15;
-
-		blur_color += sample_screen(
-			uv - vec2(0.0, blur_offset.y)
-		) * 0.15;
+		blur_color = sample_screen_blurred(
+			uv,
+			log2(max(soft_focus_radius, 1.0)) + 0.6
+		);
 	}
 
 	vec3 final_color = mix(
@@ -421,6 +555,52 @@ void fragment() {
 	);
 
 	/*
+	Wide bloom: a ring of samples around the pixel, turned by a different amount at each pixel so that the
+	pattern dissolves into the grain instead of showing as a star, adds the bright parts of the picture back
+	as a warm halo. This is what makes a torch beam on a wall glare.
+	*/
+	if (
+		screen_sample_quality > 0.25
+		&& bloom_strength > 0.0
+	) {
+		// A wide blur of the screen (a coarse level, plus four samples round it at a finer one), kept only where it
+		// is bright. The sample points are turned by a different amount at each pixel, so no pattern shows.
+		float turn = random_value(floor(SCREEN_UV / SCREEN_PIXEL_SIZE)) * 1.5707963;
+		float reach = bloom_radius_pixels * 0.6;
+		float wide_lod = log2(max(bloom_radius_pixels, 2.0)) - 0.5;
+		vec3 wide = sample_screen_blurred(uv, wide_lod) * 0.4;
+		for (int tap = 0; tap < 4; tap++) {
+			float angle = 1.5707963 * float(tap) + turn;
+			vec2 offset = vec2(cos(angle), sin(angle)) * reach * SCREEN_PIXEL_SIZE;
+			wide += sample_screen_blurred(uv + offset, wide_lod - 1.5) * 0.15;
+		}
+		// By brightness, not by channel (a red brick wall must not glow red), and drawn toward white: light is white.
+		float wide_luma = dot(wide, vec3(0.299, 0.587, 0.114));
+		vec3 bloom = mix(wide / max(wide_luma, 0.001), vec3(1.0), 0.65) * max(wide_luma - bloom_threshold, 0.0) * 2.0;
+		final_color += (
+			bloom
+			* vec3(1.0, 0.92, 0.80)
+			* bloom_strength
+			* 3.0
+			* max(intensity, 0.5)
+		);
+	}
+
+	/*
+	The brightest parts are pushed on toward white, like an overexposed frame.
+	*/
+	float bright_luminance = dot(
+		final_color,
+		vec3(0.299, 0.587, 0.114)
+	);
+	final_color *= (
+		1.0
+		+ highlight_gain
+		* smoothstep(0.35, 0.90, bright_luminance)
+		* max(intensity, 0.5)
+	);
+
+	/*
 	Fine animated grain.
 
 	More grain appears in shadows, where it helps disguise
@@ -540,8 +720,11 @@ void fragment() {
 		screen_uv * 2.0 - 1.0
 	);
 
-	float edge_distance = length(
-		centered_uv
+	// A rounded square, not a circle: the corners of the frame, not a ring round the middle.
+	vec2 centered_squared = centered_uv * centered_uv;
+	float edge_distance = pow(
+		centered_squared.x * centered_squared.x + centered_squared.y * centered_squared.y,
+		0.25
 	);
 
 	float vignette = smoothstep(
@@ -557,6 +740,19 @@ void fragment() {
 		* intensity
 	);
 	final_color *= lens_frame;
+
+	/*
+	A colder, darker tape: mid tones and shadows pressed down, the edges of the frame dimmer, and now and then a
+	single frame that dips (a tape that cannot hold its level).
+	*/
+	final_color = pow(
+		max(final_color, vec3(0.0)),
+		vec3(1.0 + vhs_dark_gamma * video_strength)
+	);
+	float frame_edge = smoothstep(0.78, 1.25, edge_distance);
+	final_color *= 1.0 - frame_edge * vhs_edge_darkening * video_strength;
+	float flicker_roll = random_value(vec2(video_frame, 31.0));
+	final_color *= 1.0 - step(0.985, flicker_roll) * vhs_flicker * vhs_instability * video_strength;
 
 	COLOR = vec4(
 		clamp(

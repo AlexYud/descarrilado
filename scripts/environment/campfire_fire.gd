@@ -18,7 +18,8 @@ signal extinguished
 @export_range(0.0, 0.6, 0.01) var flicker_amount: float = 0.22
 @export var flicker_speed: float = 9.0
 
-## Optional recorded crackle; null uses the generated placeholder.
+## The recorded crackle, a looping sound (the fire scene sets `campfire_placeholder.wav`); null uses the generated
+## placeholder.
 @export var crackle_stream: AudioStream
 
 @onready var light: OmniLight3D = $Light

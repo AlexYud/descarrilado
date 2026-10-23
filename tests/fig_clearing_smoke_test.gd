@@ -54,6 +54,11 @@ func _run() -> void:
 	_expect(clearing.fire.is_lit, "the campfire starts lit")
 	var ash: Node3D = clearing.fire.get_node_or_null("ColdAsh") as Node3D
 	_expect(ash != null and not ash.visible, "the cold ash is not shown while the fire burns")
+	var crackle: AudioStreamPlayer3D = clearing.fire.crackle
+	var recording: AudioStreamWAV = crackle.stream as AudioStreamWAV
+	_expect(recording != null and recording.resource_path.ends_with("campfire_placeholder.wav"), "the fire crackles with the recording campfire_placeholder.wav")
+	_expect(recording != null and recording.loop_mode == AudioStreamWAV.LOOP_FORWARD and recording.get_length() > 5.0, "which loops (%.0f s long)" % (recording.get_length() if recording != null else 0.0))
+	_expect(crackle.playing, "and plays while the fire burns")
 
 	var album: PhotoAlbum = clearing.album
 	var flashlight: Node = player.get_node("Hand/SpotLight3D")

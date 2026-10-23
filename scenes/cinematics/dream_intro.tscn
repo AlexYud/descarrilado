@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c72gw0ygio5q1"]
 
 [ext_resource type="Script" uid="uid://cpxvm45e716hd" path="res://scripts/cinematics/dream_intro_controller.gd" id="1_2xo7o"]
+[ext_resource type="Script" path="res://scripts/environment/vegetation_wind.gd" id="vegetation_wind"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="1_rhmqu"]
 [ext_resource type="PackedScene" uid="uid://bepla6bqlsog4" path="res://scenes/objects/train_wagon.tscn" id="2_5acte"]
 [ext_resource type="Shader" uid="uid://d4mctixcah4di" path="res://assets/shaders/screen_border_filter.gdshader" id="5_7koiu"]
@@ -562,6 +563,7 @@ script = ExtResource("1_2xo7o")
 
 [node name="Player" parent="." unique_id=1340821127 instance=ExtResource("1_rhmqu")]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0.5692914, 1.065724, 3.0580819)
+cold_breath_enabled = true
 
 [node name="Train" type="Node3D" parent="." unique_id=1716082974]
 
@@ -630,6 +632,7 @@ transform = Transform3D(-3.628045e-08, 0, 0.83, 0, 0.83, 0, -0.83, 0, -3.628045e
 layer = 10
 
 [node name="ScreenBorderFilter" type="ColorRect" parent="UI" unique_id=2064593270]
+visible = false
 material = SubResource("ShaderMaterial_hnogt")
 anchors_preset = 15
 anchor_right = 1.0
@@ -1086,3 +1089,7 @@ phone = NodePath("../Scenery/OverlookPhone")
 night = NodePath("../WorldEnvironment")
 town = NodePath("../TownVista")
 wagon = NodePath("../Train/Wagons/TrainWagon")
+
+[node name="VegetationWind" type="Node" parent="." node_paths=PackedStringArray("terrain")]
+script = ExtResource("vegetation_wind")
+terrain = NodePath("../Terrain3D")

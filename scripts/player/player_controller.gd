@@ -10,6 +10,15 @@ extends CharacterBody3D
 
 var focus_blur: FocusBlurController = null
 var motion_blur: MotionBlurController = null
+var cold_breath: ColdBreath = null
+
+## Whether the scene is cold enough for the player's breath to smoke (see `ColdBreath`); a scene sets it, and a
+## script can change it at any time (a warm room).
+@export var cold_breath_enabled: bool = false:
+	set(value):
+		cold_breath_enabled = value
+		if cold_breath != null:
+			cold_breath.cold = value
 
 var dialogue_frozen: bool = false
 
@@ -67,6 +76,14 @@ func _ready() -> void:
 	motion_blur.name = "MotionBlur"
 	add_child(motion_blur)
 	motion_blur.setup(self)
+
+	var camera: Node3D = get_node_or_null(^"Head/Camera3D") as Node3D
+	if camera != null:
+		cold_breath = ColdBreath.new()
+		cold_breath.name = "ColdBreath"
+		camera.add_child(cold_breath)
+		cold_breath.setup(self)
+		cold_breath.cold = cold_breath_enabled
 
 	call_deferred("_restore_manual_save_state")
 

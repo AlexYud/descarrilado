@@ -9,10 +9,24 @@ const UNEASE_PEAK: Dictionary = {
 	&"chroma_noise_strength": 0.07,
 	&"grain_strength": 0.1,
 	&"lens_distortion": 0.05,
-	&"vignette_strength": 0.6,
+	&"vhs_wobble_amount": 0.007,
+	&"vhs_vertical_twitch": 0.006,
 }
 
+## While the player looks at an item up close (the inspect view) the glare is faded out: the item is lit by the
+## inspect light a few centimetres away, and the bloom and the push toward white would burn its details out (a
+## label, an engraving). It fades back in when the view closes.
+const GLARE_PARAMETERS: Array[StringName] = [&"bloom_strength", &"highlight_gain"]
+const GLARE_FADE_SECONDS: float = 0.25
+
 @onready var horror_rect: ColorRect = $HorrorRect
+
+## 0 for the usual picture, 1 while an item is inspected (the glare is gone).
+var inspect_amount: float = 0.0
+
+var _glare_base: Dictionary = {}
+var _player: Node = null
+var _applied_amount: float = -1.0
 
 
 func _ready() -> void:
@@ -24,6 +38,38 @@ func _ready() -> void:
 		)
 
 	_apply_quality_preset(GameSettings.get_quality_preset())
+
+	var filter_material: ShaderMaterial = horror_rect.material as ShaderMaterial
+	if filter_material != null:
+		for parameter: StringName in GLARE_PARAMETERS:
+			_glare_base[parameter] = _read_parameter(filter_material, parameter)
+
+
+func _process(delta: float) -> void:
+	var target: float = 1.0 if _is_inspecting() else 0.0
+	inspect_amount = move_toward(inspect_amount, target, delta / GLARE_FADE_SECONDS)
+	if is_equal_approx(inspect_amount, _applied_amount):
+		return
+
+	_applied_amount = inspect_amount
+	var filter_material: ShaderMaterial = horror_rect.material as ShaderMaterial
+	if filter_material == null:
+		return
+
+	for parameter: StringName in GLARE_PARAMETERS:
+		filter_material.set_shader_parameter(parameter, float(_glare_base.get(parameter, 0.0)) * (1.0 - inspect_amount))
+
+
+## True while the player has an item held up.
+func _is_inspecting() -> bool:
+	if not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group(&"player")
+
+	if _player == null:
+		return false
+
+	var inspect: Variant = _player.get("inspect_controller")
+	return inspect != null and bool(inspect.call("is_open"))
 
 
 func _exit_tree() -> void:
