@@ -910,6 +910,39 @@ msgstr ""
 msgid "ITEM_LUCAS_FICHA_DESCRIPTION"
 msgstr ""
 
+msgid "ITEM_FOREST_MAP_NAME"
+msgstr ""
+
+msgid "ITEM_FOREST_MAP_DESCRIPTION"
+msgstr ""
+
+msgid "MAP_TITLE"
+msgstr ""
+
+msgid "MAP_LEGEND_YOU"
+msgstr ""
+
+msgid "MAP_LABEL_DOOR"
+msgstr ""
+
+msgid "MAP_LABEL_RAILWAY"
+msgstr ""
+
+msgid "MAP_LABEL_SHED"
+msgstr ""
+
+msgid "MAP_LABEL_CLEARING"
+msgstr ""
+
+msgid "MAP_LABEL_TOWER"
+msgstr ""
+
+msgid "MAP_LABEL_HOUSE"
+msgstr ""
+
+msgid "MAP_LABEL_OVERLOOK"
+msgstr ""
+
 msgid "PROMPT_EXAMINE_ORELHAO"
 msgstr ""
 

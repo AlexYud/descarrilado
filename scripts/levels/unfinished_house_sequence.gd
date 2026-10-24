@@ -28,6 +28,15 @@ class_name UnfinishedHouseSequence
 ##  6. Lucas's Ficha lies on top of the capsule's contents: taking it (closing its view) ends the
 ##     scene and silently unlocks every door, the front one included.
 ##
+## **It cannot get stuck** (it did, three times): the trap is the one place the story can dead-end (the capsule stays
+## shut until it is resolved), so it does not trust any single step. Every stage has a watchdog in `_process`: the
+## figure's trap springs by the beam, by looking its way, by standing near it, and at the very latest
+## `trap_failsafe_seconds` after it appears; a reveal that does not finish within `reveal_failsafe_seconds` is finished
+## at once; the house is put right as soon as the light is ON again (it is polled, not waited for as a signal); the link
+## to the player's flashlight is retried until it holds; and a player already standing in the hallway when the trap arms
+## is caught too. Each step sets its stage BEFORE its effects, so an effect that fails cannot leave the stage behind.
+## Every change of stage is printed (`[UnfinishedHouse] ...`), and a watchdog that has to act says so as a warning.
+##
 ## Everything in the capsule is read in place (the advertisement and both bus tickets) except the
 ## Ficha: the only thing the player takes from the house.
 
@@ -104,6 +113,10 @@ const KEY_PANTRY_BEAT: StringName = &"house_pantry_beat"
 @export var pantry_close_delay_seconds: float = 1.0
 
 @export_category("Bedroom: the climax")
+## The string tension under the climax: it starts when the notebook is put away, together with the red light and the
+## running footsteps, and plays through (about twelve seconds).
+@export var tension_audio: AudioStream = preload("res://assets/audios/placeholder_string_tension.mp3")
+@export var tension_volume_db: float = 0.0
 ## The bedroom's red light.
 @export var bedroom_light: OmniLight3D
 @export var red_energy: float = 3.2
@@ -142,7 +155,11 @@ const KEY_PANTRY_BEAT: StringName = &"house_pantry_beat"
 ## Last resort, so that the player can never be stuck: with the light on and this near the figure for this long,
 ## whatever the view or the beam, it springs. (Looking at it is what the trap is for; this only guarantees it.)
 @export var figure_idle_distance: float = 7.0
-@export var figure_idle_seconds: float = 8.0
+@export var figure_idle_seconds: float = 6.0
+## The very last resort: this long after the figure appears, the trap springs whatever the player does (or does not).
+@export var trap_failsafe_seconds: float = 30.0
+## The reveal lasts half a second; one that has not finished after this long is finished at once.
+@export var reveal_failsafe_seconds: float = 3.0
 ## Where the figure stands, and how far towards the player it is by the end of the reveal.
 @export var figure_approach_metres: float = 1.1
 
@@ -156,12 +173,19 @@ var _run_step: AudioStreamWAV = null
 var _pantry_beat: int = 0
 var _figure_dwell: float = 0.0
 var _figure_idle: float = 0.0
+var _trap_elapsed: float = 0.0
+var _reveal_elapsed: float = 0.0
+var _connected: bool = false
+var _connecting: bool = false
+var _connect_retry: float = 0.0
 var _figure_base_position: Vector3 = Vector3.ZERO
 var _figure_base_yaw: float = 0.0
 var _figure_pose: StringName = &"bowed"
 ## What the last reveal did, beat by beat: {pose, on, energy, seconds} (for tests).
 var reveal_log: Array[Dictionary] = []
 var _voices_tween: Tween = null
+## The tension sound's player (made when the climax starts; the tests look at it).
+var tension_player: AudioStreamPlayer = null
 
 
 func _ready() -> void:
@@ -181,23 +205,35 @@ func _ready() -> void:
 
 
 func _connect_to_player() -> void:
+	if _connected or _connecting:
+		return
+
+	_connecting = true
 	var target: Node = _get_player()
 	if target == null:
 		await get_tree().process_frame
 		target = _get_player()
 
+	_connecting = false
 	if target == null:
-		push_warning("UnfinishedHouseSequence: no player found.")
+		# Tried again from `_process` until the player is there.
 		return
 
 	var inspect: PlayerInspectController = target.get("inspect_controller") as PlayerInspectController
 	if inspect != null:
-		inspect.inspect_opened.connect(_on_inspect_opened)
-		inspect.inspect_closed.connect(_on_inspect_closed)
+		if not inspect.inspect_opened.is_connected(_on_inspect_opened):
+			inspect.inspect_opened.connect(_on_inspect_opened)
+
+		if not inspect.inspect_closed.is_connected(_on_inspect_closed):
+			inspect.inspect_closed.connect(_on_inspect_closed)
 
 	_flashlight = target.get("flashlight_controller") as Node
 	if _flashlight != null and _flashlight.has_signal("toggled_by_player"):
-		_flashlight.connect("toggled_by_player", _on_flashlight_toggled)
+		if not _flashlight.is_connected("toggled_by_player", _on_flashlight_toggled):
+			_flashlight.connect("toggled_by_player", _on_flashlight_toggled)
+
+	# Without the flashlight there is nothing to watch: try again.
+	_connected = inspect != null and _flashlight != null
 
 
 ## Picks the story up where a loaded game left it. The climax is never resumed half way (saving is
@@ -322,11 +358,27 @@ func _run_climax() -> void:
 	_set_stage(Stage.CLIMAX)
 	_set_saving_blocked(true)
 	_set_red(true)
+	_play_tension()
 	await _wait(climax_delay_seconds)
 	await _run_footsteps()
 	await _wait(clack_delay_seconds)
 	capsule.unlatch()
 	_enter_trap_armed(true)
+
+
+## The string tension, from the moment the notebook is put away.
+func _play_tension() -> void:
+	if tension_audio == null:
+		return
+
+	if tension_player == null:
+		tension_player = AudioStreamPlayer.new()
+		tension_player.name = "TensionSound"
+		add_child(tension_player)
+
+	tension_player.stream = tension_audio
+	tension_player.volume_db = tension_volume_db
+	tension_player.play()
 
 
 ## The red light, on or off (a quick fade in, a slow one out).
@@ -377,11 +429,44 @@ func _on_trap_entered(body: Node3D) -> void:
 	_set_stage(Stage.TRAP_CUT)
 	_figure_dwell = 0.0
 	_figure_idle = 0.0
+	_trap_elapsed = 0.0
 	_cut_flashlight()
 	_figure_base_position = silhouette.position
 	_figure_base_yaw = silhouette.rotation_degrees.y
 	_pose_figure(&"bowed")
 	silhouette.visible = true
+
+
+## The watchdogs, one for each stage, in the idle frame (so they run whatever the physics are doing). They are the
+## reason the trap cannot get stuck: see the header.
+func _process(delta: float) -> void:
+	if not _connected:
+		_connect_retry -= delta
+		if _connect_retry <= 0.0:
+			_connect_retry = 0.5
+			_connect_to_player()
+
+	match _stage:
+		Stage.TRAP_ARMED:
+			# A player already standing in the hallway when the trap armed (they ran ahead of the climax) is caught here:
+			# `body_entered` is only raised for one who comes in.
+			var target: Node3D = _get_player()
+			if target != null and hallway_trap.overlaps_body(target):
+				_on_trap_entered(target)
+		Stage.TRAP_CUT:
+			_trap_elapsed += delta
+			if _trap_elapsed >= trap_failsafe_seconds:
+				push_warning("UnfinishedHouse: the trap sprang by its failsafe timer (%.0f s, flashlight %s, light on %s)." % [_trap_elapsed, str(_flashlight), str(_light_is_on())])
+				_run_reveal()
+		Stage.SLAMMING:
+			_reveal_elapsed += delta
+			if _reveal_elapsed >= reveal_failsafe_seconds:
+				push_warning("UnfinishedHouse: the reveal did not finish in %.1f s; finishing it." % _reveal_elapsed)
+				_finish_reveal_failsafe()
+		Stage.SLAMMED:
+			# Not waited for as a signal: the moment the light is on again, the house is put right.
+			if _light_is_on():
+				_resolve()
 
 
 func _physics_process(delta: float) -> void:
@@ -486,6 +571,10 @@ func _figure_near_and_visible() -> bool:
 ## standing, then nearer. Nothing is ever shown for long enough to be understood. The screen smears,
 ## then the light dies and every door slams shut and locks.
 func _run_reveal() -> void:
+	if _stage == Stage.SLAMMING or _stage == Stage.SLAMMED or _stage == Stage.RESOLVED:
+		return
+
+	_reveal_elapsed = 0.0
 	_set_stage(Stage.SLAMMING)
 	if _flashlight == null or not _flashlight.has_method("begin_scripted_light"):
 		_slam_and_lock()
@@ -503,9 +592,20 @@ func _run_reveal() -> void:
 		_flashlight.call("set_scripted_light", bool(step["on"]), float(step["energy"]))
 		reveal_log.append({"pose": _figure_pose, "on": bool(step["on"]), "energy": (_flashlight as SpotLight3D).light_energy, "seconds": float(step["seconds"])})
 		await _wait(float(step["seconds"]))
+		# The watchdog finished it already (something stalled): leave it be.
+		if _stage != Stage.SLAMMING:
+			return
 
 	_flashlight.call("end_scripted_light")
 	_cut_flashlight()
+	_slam_and_lock()
+
+
+## A reveal that stalled: the light is given back and put out, the doors slam and lock, the stage moves on.
+func _finish_reveal_failsafe() -> void:
+	if _flashlight != null and _flashlight.has_method("end_scripted_light"):
+		_flashlight.call("end_scripted_light")
+
 	_slam_and_lock()
 
 
@@ -525,6 +625,12 @@ func _pose_figure(pose: StringName) -> void:
 
 
 func _slam_and_lock() -> void:
+	if _stage == Stage.SLAMMED or _stage == Stage.RESOLVED:
+		return
+
+	# The state first (the effects below can fail without leaving the house behind).
+	_cut_flashlight()
+	_set_stage(Stage.SLAMMED)
 	for door: DoorController in _doors():
 		_bang_at(door.global_position + Vector3(0.0, 1.0, 0.0))
 		# An open door is slammed (fast); every door ends shut and locked.
@@ -533,17 +639,28 @@ func _slam_and_lock() -> void:
 		door.lock()
 
 	_jolt_camera(1.3)
-	_cut_flashlight()
-	_set_stage(Stage.SLAMMED)
 
 
+## The house is put right: the figure is gone, the red light is gone, the capsule stands open (the Ficha can be taken).
+## The essential steps come first and the decoration last.
 func _resolve() -> void:
+	if _stage == Stage.RESOLVED:
+		return
+
 	_set_stage(Stage.RESOLVED)
 	silhouette.visible = false
-	_pose_figure(&"bowed")
-	_set_red(false)
 	capsule.open_lid(false)
 	_set_saving_blocked(false)
+	_pose_figure(&"bowed")
+	_set_red(false)
+
+
+## For the developer console and the tests: whatever the state of the trap, the house is put right at once.
+func force_resolve() -> void:
+	if _flashlight != null and _flashlight.has_method("end_scripted_light"):
+		_flashlight.call("end_scripted_light")
+
+	_resolve()
 
 
 # ============================================================
@@ -613,6 +730,7 @@ func _cut_flashlight() -> void:
 func _set_stage(stage: Stage) -> void:
 	_stage = stage
 	SaveManager.set_state_value(STATE_SECTION, KEY_STAGE, int(stage))
+	print("[UnfinishedHouse] stage -> ", Stage.keys()[int(stage)])
 
 
 func _doors() -> Array[DoorController]:

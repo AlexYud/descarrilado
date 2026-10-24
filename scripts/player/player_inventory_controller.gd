@@ -126,6 +126,11 @@ func _create_inspect_visual(item_scene_path: String) -> Node3D:
 	) as Node3D
 	var inspect_visual: Node3D = null
 	if source_visual != null:
+		# A model built in code is built here, as this scene was never put in the tree.
+		var prop: ProceduralProp = source_visual as ProceduralProp
+		if prop != null:
+			prop.build_now()
+
 		inspect_visual = source_visual.duplicate() as Node3D
 
 	item_root.free()

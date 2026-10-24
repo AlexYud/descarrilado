@@ -994,6 +994,39 @@ msgstr "Lucas's Ficha"
 msgid "ITEM_LUCAS_FICHA_DESCRIPTION"
 msgstr "A brass telephone token, dented, scratched and a little bent."
 
+msgid "ITEM_FOREST_MAP_NAME"
+msgstr "Forest Map"
+
+msgid "ITEM_FOREST_MAP_DESCRIPTION"
+msgstr "A hand drawn map of the trails past the fence door. A red dot shows where you stand."
+
+msgid "MAP_TITLE"
+msgstr "The Trails"
+
+msgid "MAP_LEGEND_YOU"
+msgstr "You are here"
+
+msgid "MAP_LABEL_DOOR"
+msgstr "Fence Door"
+
+msgid "MAP_LABEL_RAILWAY"
+msgstr "Railway"
+
+msgid "MAP_LABEL_SHED"
+msgstr "Waiting Shed"
+
+msgid "MAP_LABEL_CLEARING"
+msgstr "Fig Tree Clearing"
+
+msgid "MAP_LABEL_TOWER"
+msgstr "Signal Tower"
+
+msgid "MAP_LABEL_HOUSE"
+msgstr "Unfinished House"
+
+msgid "MAP_LABEL_OVERLOOK"
+msgstr "Overlook"
+
 msgid "PROMPT_EXAMINE_ORELHAO"
 msgstr "Examine Orelhão"
 

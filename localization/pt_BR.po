@@ -994,6 +994,39 @@ msgstr "Ficha do Lucas"
 msgid "ITEM_LUCAS_FICHA_DESCRIPTION"
 msgstr "Uma ficha de telefone de latão, amassada, riscada e um pouco torta."
 
+msgid "ITEM_FOREST_MAP_NAME"
+msgstr "Mapa da Floresta"
+
+msgid "ITEM_FOREST_MAP_DESCRIPTION"
+msgstr "Um mapa desenhado à mão das trilhas depois da porta da cerca. Um ponto vermelho mostra onde você está."
+
+msgid "MAP_TITLE"
+msgstr "As Trilhas"
+
+msgid "MAP_LEGEND_YOU"
+msgstr "Você está aqui"
+
+msgid "MAP_LABEL_DOOR"
+msgstr "Porta da Cerca"
+
+msgid "MAP_LABEL_RAILWAY"
+msgstr "Ferrovia"
+
+msgid "MAP_LABEL_SHED"
+msgstr "Abrigo de Espera"
+
+msgid "MAP_LABEL_CLEARING"
+msgstr "Clareira da Figueira"
+
+msgid "MAP_LABEL_TOWER"
+msgstr "Torre de Sinalização"
+
+msgid "MAP_LABEL_HOUSE"
+msgstr "Casa Inacabada"
+
+msgid "MAP_LABEL_OVERLOOK"
+msgstr "Mirante"
+
 msgid "PROMPT_EXAMINE_ORELHAO"
 msgstr "Examinar o orelhão"
 

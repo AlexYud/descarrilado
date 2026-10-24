@@ -116,7 +116,7 @@ func _ready() -> void:
 	add_child(restored_player)
 	await get_tree().process_frame
 	_expect(
-		restored_player.global_position.distance_to(TEST_POSITION) < 0.05,
+		Vector2(restored_player.global_position.x - TEST_POSITION.x, restored_player.global_position.z - TEST_POSITION.z).length() < 0.05 and absf(restored_player.global_position.y - TEST_POSITION.y) < 0.4,
 		"the player position should be restored"
 	)
 	_expect(

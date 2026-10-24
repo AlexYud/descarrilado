@@ -9,6 +9,12 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/carved_whistle.tscn" id="8_whistle"]
 [ext_resource type="PackedScene" uid="uid://dwba3i74cp2x2" path="res://assets/models/trains/train_tracks/train_tracks.tscn" id="9_tracks"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_shed_steps"]
+size = Vector3(15.4, 6, 11)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_track_steps"]
+size = Vector3(4.6, 6, 44)
+
 [node name="WaitingShed" type="Node3D" node_paths=PackedStringArray("platform", "track", "marker_group")]
 script = ExtResource("1_sequence")
 platform = NodePath("Platform")
@@ -16,6 +22,28 @@ track = NodePath("Track")
 marker_group = NodePath("MarkerGroup")
 
 [node name="Platform" type="Node3D" parent="."]
+
+; The ground where the footsteps are the default sound, not the forest's: the shelter's platform and the way to the
+; track (flat terrain with no floor of its own), and the track bed.
+[node name="ShedFootsteps" type="Area3D" parent="." groups=["default_footstep_zone"]]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ShedFootsteps"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -3.5)
+shape = SubResource("BoxShape3D_shed_steps")
+
+[node name="TrackFootsteps" type="Area3D" parent="." groups=["default_footstep_zone"]]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackFootsteps"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+shape = SubResource("BoxShape3D_track_steps")
 
 [node name="Shelter" type="Node3D" parent="Platform"]
 unique_name_in_owner = true

@@ -64,6 +64,7 @@ func _run() -> void:
 	await _check_pantry_voices_and_key()
 	await _check_bedroom_and_climax()
 	await _check_hallway_trap()
+	await _check_the_trap_cannot_stick()
 	await _check_capsule_and_exit()
 
 
@@ -229,11 +230,15 @@ func _check_bedroom_and_climax() -> void:
 	await _wait(2.0)
 	_expect(player.inspect_controller.is_open(), "the player is reading the notebook")
 	_expect(not house.bedroom_light.visible and not house.run_steps.playing, "nothing happens while it is read")
+	_expect(house.tension_player == null or not house.tension_player.playing, "and the string tension has not started")
 	_expect(not capsule.is_unlatched, "the capsule is still latched")
 
 	_close_view()
 	await _wait(0.3)
 	_expect(house.bedroom_light.visible, "the bedroom light turns on")
+	_expect(house.tension_player != null and house.tension_player.playing, "and the string tension starts with it, as the notebook is put away")
+	var tension: AudioStreamMP3 = house.tension_player.stream as AudioStreamMP3 if house.tension_player != null else null
+	_expect(tension != null and tension.resource_path.ends_with("placeholder_string_tension.mp3") and tension.get_length() > 12.0, "it is placeholder_string_tension (%.1f s)" % (tension.get_length() if tension != null else 0.0))
 	_expect(house.bedroom_light.light_color.r > 0.9 and house.bedroom_light.light_color.g < 0.15 and house.bedroom_light.light_color.b < 0.15, "a vivid RED")
 	await _wait(1.0)
 	_expect(house.bedroom_light.light_energy > 1.0, "and it is bright")
@@ -577,6 +582,8 @@ func _ray_finds(item: Node, stand: Vector3, aim: Vector3, what: String) -> void:
 	player.movement_controller.look_pitch = -rad_to_deg(
 		atan2(to_aim.y, Vector2(to_aim.x, to_aim.z).length())
 	)
+	# The view eases towards where it is told to look: give it time to arrive before the ray is read.
+	await _wait(0.6)
 	for i: int in 3:
 		await get_tree().physics_frame
 
@@ -649,3 +656,75 @@ func _check_contents_in_view(ficha: Node3D, others: Array) -> void:
 			worst = minf(worst, height_at_rim - rim_height)
 	_expect(worst > 0.0, "every item in the capsule is in view over the front rim, from any standing distance (clearance %.3f m)" % worst)
 	_expect(ficha.global_position.y > capsule.global_position.y + 0.1, "the Ficha lies near the rim, on top, not at the bottom of a deep box")
+
+
+## The trap cannot get stuck: every stage has a watchdog (see the sequence's header). Each is tried here by making the
+## stage it guards go wrong in the way that would have stuck it.
+func _check_the_trap_cannot_stick() -> void:
+	var spot: SpotLight3D = flashlight as SpotLight3D
+
+	# 1. A reveal that stalled (stage SLAMMING for good): finished by the watchdog, the doors shut, the light out.
+	_reset_trap_for_test()
+	house._stage = UnfinishedHouseSequence.Stage.SLAMMING
+	house._reveal_elapsed = 0.0
+	house.reveal_failsafe_seconds = 0.4
+	await _until(func() -> bool: return house._stage == UnfinishedHouseSequence.Stage.SLAMMED, "a reveal that stalls is finished by its watchdog", 6.0)
+	_expect(front_door.is_locked and back_door.is_locked and not bool(flashlight.get("flashlight_on")), "with every door shut and locked and the light out")
+	house.reveal_failsafe_seconds = 3.0
+
+	# 2. The light comes on again but the signal never reaches the house: the house is put right all the same.
+	flashlight.call("restore_save_state", {"is_on": true})
+	flashlight.set("flashlight_on", true)
+	await _until(func() -> bool: return house._stage == UnfinishedHouseSequence.Stage.RESOLVED, "the house is put right as soon as the light is on again, signal or not", 6.0)
+	_expect(not house.silhouette.visible and capsule.is_open, "the figure is gone and the capsule is open")
+
+	# 3. The very last resort: the figure stands there, the player does nothing at all (the light is out, they are far away).
+	_reset_trap_for_test()
+	house._stage = UnfinishedHouseSequence.Stage.TRAP_CUT
+	house.silhouette.visible = true
+	house._trap_elapsed = 0.0
+	house.trap_failsafe_seconds = 0.6
+	player.global_position = Vector3(2.0, 1.05, 7.35)
+	flashlight.call("turn_off")
+	await _until(func() -> bool: return house._stage == UnfinishedHouseSequence.Stage.SLAMMED, "with the figure out and nobody looking, the trap springs by itself in the end", 8.0)
+	house.trap_failsafe_seconds = 30.0
+
+	# 4. The link to the flashlight is lost (the player was not there in time): retried until it holds.
+	house._flashlight = null
+	house._connected = false
+	await _wait(1.5)
+	_expect(house._connected and house._flashlight == flashlight, "the link to the player's flashlight is made again when it was lost")
+
+	# 5. The player is already standing in the hallway when the trap arms (ran ahead of the climax): the figure is shown.
+	_reset_trap_for_test()
+	player.global_position = Vector3(2.0, 1.05, 7.35)
+	player.velocity = Vector3.ZERO
+	await _wait(0.4)
+	house._stage = UnfinishedHouseSequence.Stage.TRAP_ARMED
+	await _until(func() -> bool: return house._stage == UnfinishedHouseSequence.Stage.TRAP_CUT and house.silhouette.visible, "a player already in the hallway when the trap arms is caught too", 6.0)
+
+	# 6. The developer console's way out, from any state.
+	house.force_resolve()
+	_expect(house._stage == UnfinishedHouseSequence.Stage.RESOLVED and not house.silhouette.visible, "house_unstick puts the house right from any state")
+
+	# Back to the state the rest of the test expects: put right, the doors locked until the Ficha is taken.
+	house.force_resolve()
+	for door: DoorController in house._doors():
+		door.lock()
+	player.global_position = Vector3(3.5, 1.05, 12.2)
+	player.velocity = Vector3.ZERO
+	flashlight.call("restore_save_state", {"is_on": true})
+
+
+## The house as it is just after the climax: the figure hidden, the doors open and unlocked, the capsule shut, the light on.
+func _reset_trap_for_test() -> void:
+	house.silhouette.visible = false
+	house._trap_elapsed = 0.0
+	house._figure_dwell = 0.0
+	house._figure_idle = 0.0
+	player.global_position = Vector3(7.0, 1.05, 7.4)
+	player.velocity = Vector3.ZERO
+	for door: DoorController in house._doors():
+		door.unlock()
+
+	house._stage = UnfinishedHouseSequence.Stage.CLIMAX

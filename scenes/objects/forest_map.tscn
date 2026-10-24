@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/collectible_interactable.gd" id="1_collectible"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.7, 0.56, 0.08)
+
+[node name="ForestMap" type="Node3D"]
+script = ExtResource("1_collectible")
+item_id = "forest_map"
+item_name = "ITEM_FOREST_MAP_NAME"
+item_description = "ITEM_FOREST_MAP_DESCRIPTION"
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("2_prop")
+kind = &"forest_map"
+metadata/inspect_mode = "read"
+metadata/inspect_id = "forest_map"
+metadata/inspect_fit_scale = 1.5
+metadata/inspect_back_normal = Vector3(0, 0, -1)
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

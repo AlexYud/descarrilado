@@ -2,7 +2,7 @@
 extends Node3D
 class_name ProceduralProp
 
-## Fills this node with a stand-in model from HouseProps, JunctionProps, SignalTowerProps or FigClearingProps. Put
+## Fills this node with a stand-in model from HouseProps, JunctionProps, SignalTowerProps, FigClearingProps or ForestMapProps. Put
 ## it on the `Visual` node of an inspectable (so the model is what the inspect
 ## view shows) or on a furniture node.
 ##
@@ -14,6 +14,12 @@ class_name ProceduralProp
 
 
 func _ready() -> void:
+	build_now()
+
+
+## Builds the model if it is not built yet. A prop that was never in the tree (the inventory makes the inspect copy of
+## a saved item from its scene without adding it) is built by this call instead of by `_ready`.
+func build_now() -> void:
 	if get_child_count() > 0 or kind.is_empty():
 		return
 
@@ -23,5 +29,7 @@ func _ready() -> void:
 		SignalTowerProps.build(kind, self)
 	elif FigClearingProps.has_kind(kind):
 		FigClearingProps.build(kind, self)
+	elif ForestMapProps.has_kind(kind):
+		ForestMapProps.build(kind, self)
 	else:
 		HouseProps.build(kind, self)

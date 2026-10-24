@@ -189,6 +189,17 @@ func _make_emitter() -> GPUParticles3D:
 
 ## Seamless cloud noise for the vapour shader, in the red channel.
 static func make_noise_texture() -> ImageTexture:
+	# Made once for the whole game (it takes a few milliseconds, and every player made would pay them).
+	if _noise_cache == null:
+		_noise_cache = _build_noise_texture()
+
+	return _noise_cache
+
+
+static var _noise_cache: ImageTexture = null
+
+
+static func _build_noise_texture() -> ImageTexture:
 	var noise: FastNoiseLite = FastNoiseLite.new()
 	noise.seed = 4711
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH

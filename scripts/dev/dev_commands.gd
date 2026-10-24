@@ -72,6 +72,7 @@ func _build() -> void:
 	_add("flashlight", "flashlight <on|off>", "Switches the flashlight on or off.", _flashlight)
 	_add("state_get", "state_get <section> <key>", "Reads a value of the save state (e.g. puzzles house_stage).", _state_get)
 	_add("state_set", "state_set <section> <key> <value>", "Writes a value of the save state (true, false, a number or text).", _state_set)
+	_add("house_unstick", "house_unstick", "If the unfinished house's scare is stuck (the figure stands there and nothing happens): puts the house right at once (the figure goes, the red light goes, the capsule opens).", _house_unstick)
 	_add("scene", "scene <res://path.tscn>", "Changes to a scene.", _scene)
 	_add("reload", "reload", "Reloads the current scene.", func(_a: PackedStringArray) -> String:
 		_console.call("close")
@@ -294,6 +295,15 @@ func _flashlight(args: PackedStringArray) -> String:
 		flashlight.call("turn_off")
 
 	return "Flashlight %s." % ("on" if on else "off")
+
+
+func _house_unstick(_args: PackedStringArray) -> String:
+	var found: Array[Node] = _console.get_tree().root.find_children("*", "UnfinishedHouseSequence", true, false)
+	if found.is_empty():
+		return "[color=%s]There is no unfinished house in this scene.[/color]" % _bad_colour()
+
+	(found[0] as UnfinishedHouseSequence).force_resolve()
+	return "The house is put right."
 
 
 func _state_get(args: PackedStringArray) -> String:
