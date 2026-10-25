@@ -959,3 +959,92 @@ static func make_spring_latch() -> AudioStreamWAV:
 		samples[i] = clampf(click + scrape + spring, -1.0, 1.0)
 
 	return _to_wav(samples, false)
+
+
+## A radio left on a dead channel, looping: a steady hiss of band limited noise that swells and thins very slowly, a faint whine of a carrier under
+## it, and now and then a soft crackle. The swell and the whine fit the loop exactly (whole cycles), so it has no seam.
+static func make_radio_static(seconds: float = 4.0) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 1408
+	var smoothed: float = 0.0
+	var slow: float = 0.0
+	var crackle: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var cycle: float = t / seconds
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.45)
+		slow = lerpf(slow, smoothed, 0.05)
+		var hiss: float = smoothed - slow
+		var swell: float = 0.8 + 0.2 * sin(TAU * 2.0 * cycle) * sin(TAU * 3.0 * cycle + 0.6)
+		var whine: float = sin(TAU * 1850.0 * t) * 0.02 * (0.5 + 0.5 * sin(TAU * cycle))
+		if rng.randf() < 0.0007:
+			crackle = rng.randf_range(0.25, 0.6) * (1.0 if rng.randf() < 0.5 else -1.0)
+
+		crackle *= 0.9
+		samples[i] = clampf(hiss * swell * 0.55 + whine + crackle * 0.5, -1.0, 1.0)
+
+	return _to_wav(samples, true)
+
+
+## One step of a heavy steel combination dial: TICK TICK, two short hard ticks a hair apart (the second a little lighter) with a dull ring
+## of the housing behind them.
+static func make_dial_tick() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.26 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 40
+	var smoothed: float = 0.0
+	var starts: Array[float] = [0.0, 0.068]
+	var levels: Array[float] = [1.0, 0.72]
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.7)
+		var value: float = 0.0
+		for tick_index: int in starts.size():
+			var local: float = t - starts[tick_index]
+			if local < 0.0:
+				continue
+
+			var tick: float = smoothed * exp(-local * 380.0) * 0.8
+			var knock: float = sin(TAU * (210.0 - 40.0 * float(tick_index)) * local) * exp(-local * 55.0) * 0.5
+			var ring: float = (sin(TAU * 1620.0 * local) * 0.22 + sin(TAU * 2740.0 * local) * 0.12) * exp(-local * 60.0)
+			value += (tick + knock + ring) * levels[tick_index]
+
+		samples[i] = clampf(value, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## The latch of a lockbox letting go: a heavy CLACK of the bolt coming out of its keeper, and a lighter CLICK of the catch behind it.
+static func make_lockbox_latch() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(0.7 * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 1994
+	var smoothed: float = 0.0
+
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.75)
+		var clack: float = (
+			smoothed * exp(-t * 110.0) * 0.9
+			+ sin(TAU * 96.0 * t) * exp(-t * 12.0) * 0.8
+			+ sin(TAU * 240.0 * t) * exp(-t * 26.0) * 0.5
+			+ (sin(TAU * 1480.0 * t) * 0.3 + sin(TAU * 2980.0 * t) * 0.16) * exp(-t * 17.0)
+		)
+		var click: float = 0.0
+		var late: float = t - 0.17
+		if late > 0.0:
+			click = (
+				rng.randf_range(-1.0, 1.0) * exp(-late * 320.0) * 0.55
+				+ sin(TAU * 3100.0 * late) * exp(-late * 140.0) * 0.5
+				+ sin(TAU * 330.0 * late) * exp(-late * 70.0) * 0.3
+			)
+
+		samples[i] = clampf(clack + click, -1.0, 1.0)
+
+	return _to_wav(samples, false)

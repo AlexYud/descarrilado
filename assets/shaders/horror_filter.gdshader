@@ -142,6 +142,14 @@ uniform float lens_distortion
 uniform float lens_frame_softness
 	: hint_range(0.001, 0.04) = 0.012;
 
+/*
+A little fisheye: the picture bulges toward the middle and bends toward the corners, as if it were shot through a wide
+angle lens (a barrel curve that adds to the camcorder's own `lens_distortion`). The middle of each edge of the frame stays
+on the edge; only the corners are drawn in, and they fade out softly. 0 is none, 0.05 to 0.08 is a little.
+*/
+uniform float fisheye_strength
+	: hint_range(0.0, 0.3) = 0.0;
+
 uniform float video_desaturation
 	: hint_range(0.0, 0.50) = 0.12;
 
@@ -292,7 +300,8 @@ void fragment() {
 		lens_position
 	);
 	vec2 distorted_position = lens_position * (
-		1.0 + lens_distortion * lens_radius_squared
+		(1.0 + (lens_distortion + fisheye_strength) * lens_radius_squared)
+		/ (1.0 + fisheye_strength)
 	);
 	vec2 uv = distorted_position * 0.5 + 0.5;
 	vec2 distance_to_frame = min(
@@ -308,6 +317,10 @@ void fragment() {
 		lens_frame_softness * 0.35,
 		frame_distance
 	);
+	// A fisheye draws the corners in past the frame: they fade out softly (along the diagonal) instead of showing
+	// stretched edge pixels. With no fisheye this is 1 everywhere.
+	float fisheye_corner = (abs(distorted_position.x) + abs(distorted_position.y)) * 0.5;
+	float fisheye_fade = 1.0 - smoothstep(0.84, 1.0, fisheye_corner) * step(0.0001, fisheye_strength);
 	/*
 	Tape wobble: every picture line is shifted a little sideways, and slow waves of drift run down the frame.
 	*/
@@ -739,7 +752,7 @@ void fragment() {
 		* vignette_strength
 		* intensity
 	);
-	final_color *= lens_frame;
+	final_color *= lens_frame * fisheye_fade;
 
 	/*
 	A colder, darker tape: mid tones and shadows pressed down, the edges of the frame dimmer, and now and then a

@@ -46,6 +46,7 @@ const ACTIONS: Array[Dictionary] = [
 	{"action": &"interact", "category": &"actions", "label": "BINDING_INTERACT"},
 	{"action": &"flashlight", "category": &"actions", "label": "BINDING_FLASHLIGHT"},
 	{"action": &"inventory", "category": &"actions", "label": "BINDING_INVENTORY"},
+	{"action": &"map", "category": &"actions", "label": "BINDING_MAP"},
 	{"action": &"inspect_flip", "category": &"inspect", "label": "BINDING_INSPECT_FLIP"},
 	{"action": &"inspect_reset", "category": &"inspect", "label": "BINDING_INSPECT_RESET"},
 	{"action": &"skip_cinematic", "category": &"interface", "label": "BINDING_SKIP_CINEMATIC"},

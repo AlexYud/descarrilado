@@ -124,7 +124,7 @@ func _check_opening(level: Node) -> void:
 	_expect(peak >= flicker.base_energy * 1.4, "and a surge above the usual brightness (peak %.1f against %.1f)" % [peak, flicker.base_energy])
 	_expect(levels.size() >= 8, "at many different levels, not just on and off (%d)" % levels.size())
 	var failure_seconds: float = last_lit - first_change
-	_expect(first_change >= 0.0 and failure_seconds > 4.5 and failure_seconds < 6.3, "the failure goes on through the head raise, to its end (the last light %.1f s after the first flicker)" % failure_seconds)
+	_expect(first_change >= 0.0 and failure_seconds > 2.8 and failure_seconds < 4.6, "the failure stops about 2.2 s before the head raise is done (the last light %.1f s after the first flicker)" % failure_seconds)
 	_expect(not light.visible and not flicker.horror_running, "and then the wagon is dark for good")
 	_expect(flicker.process_mode == Node.PROCESS_MODE_DISABLED, "and it stays dark")
 

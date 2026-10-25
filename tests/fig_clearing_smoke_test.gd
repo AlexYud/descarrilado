@@ -99,10 +99,10 @@ func _run() -> void:
 	_expect(no_hyphens, "and none of the six photograph notes has a hyphen, in either language")
 	GameSettings.set_text_locale("en", false)
 
-	# The two halves of the puzzle: the clothesline, the thermos and the lantern in the camp, the note on the tower's door.
+	# The two halves of the puzzle: the clothesline, the thermos and the lockbox in the camp, the note on the tower's door.
 	await _check_two_part_puzzle()
 
-	# Picking up a photograph shows it in the inspect view first. The camp's two lie on the ground (the third, Rain at the Station, is in the lantern's drawer); the
+	# Picking up a photograph shows it in the inspect view first. The camp's two lie on the ground (the third, Rain at the Station, is in the lockbox); the
 	# tower's lie about its relay room, and are taken after the key (see below). One red herring (the foggy
 	# platform, in the tin on the back shelf) is left there: the solved album will take it away.
 	for photo_name: String in ["PhotoRecent", "PhotoWorkshop"]:
@@ -241,6 +241,9 @@ func _run() -> void:
 	_expect(not clearing.fire.is_lit, "the campfire goes out when the recording ends")
 	_expect(not clearing.fire.flames.visible, "no flame lingers")
 	_expect(not clearing.fire.light.visible, "the fire's light is off at once")
+	var camp: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
+	_expect(camp.lights_out and not camp.lantern_light.visible and is_zero_approx(camp.lantern_glass_material.emission_energy_multiplier) and not camp.lantern_flame.visible, "the lantern on the memory table goes out with the fire: total darkness")
+	_expect(not camp.radio_static.playing and is_zero_approx(camp.radio_lamp_material.emission_energy_multiplier), "and so do the railway radio's hiss and lamp")
 	_expect(ash != null and ash.visible, "the fire pit is left with cold ash")
 	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight goes out with it")
 	_expect(clearing.rain_player != null and not clearing.rain_player.playing, "the rain stops")
@@ -315,18 +318,20 @@ func _check_photo_back(photo: Collectible, note_key: String) -> void:
 	_expect(visual.find_child("BackLabel", true, false) == null, "and no text is drawn on the model's back")
 
 
-## The tower's key is in the camp, and it takes some doing to get it: Juliana's note on the clothesline says it was
-## tucked away near the campsite, Sophia's note on the thermos says it is in the lantern's signal box and that the
-## filter turns to red, and turning the lantern's filter twice (yellow, neutral, red) springs the drawer in its base,
-## which holds the key and the photograph "Rain at the Station". A note pinned to the tower's door says the key is at
-## the camp. The tower's door is locked until the key is used.
+## The tower's key is in the camp, and it takes some doing to get it: Sophia's note on the thermos says she locked it (and the station photo) in the
+## J & S lockbox, with the code of their emergency radio channel, and that the radio's panel at the entrance has it. The railway radio on its crate
+## by the western trail entrance has its dial locked on 14.08 MHz (a red needle, a bar bolted over the slider, a strip of masking tape marked HQ
+## above it), and 1 4 0 8 on the lockbox's dial pops its lid open on the key and the photograph "Rain at the Station". The lockbox stands at
+## the southern end of the log table, near its edge, facing out along it. A note pinned to the tower's door says the key is at the camp. The
+## tower's door is locked until the key is used.
 func _check_two_part_puzzle() -> void:
 	var dressing: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
 	_expect(dressing != null, "the camp has its dressing")
 	for gone: String in ["BrassSignalKey", "CampNote", "PhotoAdolescence"]:
 		_expect(clearing.get_node_or_null("Props/" + gone) == null, gone + " no longer lies on the ground or the camp table")
 
-	# The clothesline: a rope between two trees near the western trail entrance, out of the player's head's way.
+	# The clothesline: a rope between two trees near the western trail entrance, out of the player's head's way, with a damp jacket that is only
+	# a dressing now (no pocket to search, no ticket) and no note.
 	_expect(dressing.trees.size() == 2, "a clothesline hangs between two trees")
 	var lowest: float = INF
 	for point: Vector3 in dressing.rope_points:
@@ -335,52 +340,96 @@ func _check_two_part_puzzle() -> void:
 	for tree: Node3D in dressing.trees:
 		_expect(tree.global_position.x < -4.0 and Vector2(tree.global_position.x, tree.global_position.z).length() < 7.5, "tree %s stands by the trail entrance, inside the clearing" % tree.name)
 
-	_expect(dressing.jacket != null and dressing.jacket.global_position.y < lowest + 0.1 and dressing.jacket.global_position.y > 1.7, "a damp jacket hangs from the rope")
-	var note: Inspectable = dressing.note
-	_expect(note != null, "Juliana's note hangs on the clothesline")
-	_expect(note.global_position.y > 1.6 and note.global_position.y < dressing.rope_points[0].y, "pinned to the rope with a wooden peg (%.2f m up)" % note.global_position.y)
-	_expect(note.find_child("PegFront", true, false) != null and note.find_child("PegBack", true, false) != null, "the peg is wood")
-	_expect(str(note.get_visual_node().get_meta("readable_text")) == "READABLE_CAMP_NOTE" and str(note.get_visual_node().get_meta("inspect_mode")) == "read", "reading it shows READABLE_CAMP_NOTE")
-	_expect(tr("READABLE_CAMP_NOTE") == "Sophia left her jacket out in the rain again. I told her the damp air off the ridge never dries out. I took the key to our signal tower HQ and tucked it away near the campsite so Lucas wouldn't find it if he comes poking around the clearing tonight. — Juliana", "Juliana's note says the key is near the campsite (%s)" % tr("READABLE_CAMP_NOTE").left(30))
-	_expect(not tr("READABLE_CAMP_NOTE").contains("-"), "and has no hyphen")
+	var jacket: Node3D = dressing.jacket
+	_expect(jacket != null and jacket.global_position.y < lowest + 0.1 and jacket.global_position.y > 1.7, "a damp jacket hangs from the rope")
+	_expect(not jacket is Interactable and jacket.find_children("*", "Area3D", true, false).is_empty() and jacket.find_children("*", "PhysicsBody3D", true, false).is_empty(), "it is only a dressing: nothing to search, nothing solid")
+	_expect(dressing.find_child("ClotheslineNote", true, false) == null and dressing.find_child("PegFront", true, false) == null, "no note is pegged to the rope")
+	_expect(dressing.find_child("Ticket", true, false) == null and jacket.find_children("*", "Collectible", true, false).is_empty(), "and no ticket is tucked in the jacket")
+	for removed: String in ["READABLE_CAMP_NOTE", "ITEM_CAMP_NOTE_NAME", "READABLE_BUS_TICKET", "ITEM_BUS_TICKET_1994_NAME", "PROMPT_SEARCH_POCKET", "BUS_TICKET_1994_PRINT"]:
+		_expect(tr(removed) == removed, removed + " is gone from the texts")
 
-	# The log table next to the campfire, with a bench and the thermos and the lantern on it.
+	_expect(not FigClearingProps.has_kind(&"clothesline_note") and not FigClearingProps.has_kind(&"bus_ticket_1994") and not FigClearingProps.has_kind(&"signal_lantern"), "and so are the models of the note, the ticket and the old lantern")
+
+	await _check_the_radio(dressing)
+	await _check_the_camp_layout(dressing)
+
+	# The log table next to the campfire, with a bench, the thermos at one end and the lockbox at the other.
 	var table: Node3D = dressing.log_table
 	var fire_spot: Vector3 = clearing.get_node("Scenery/Campfire").global_position
 	_expect(table != null and Vector2(table.global_position.x - fire_spot.x, table.global_position.z - fire_spot.z).length() < 3.0, "a log table stands next to the campfire")
 	_expect(dressing.log_bench != null and dressing.log_bench.global_position.distance_to(table.global_position) < 1.2, "with a log bench beside it")
 	_expect(table.find_child("Solid", false, false) != null and dressing.log_bench.find_child("Solid", false, false) != null, "both are solid")
 	var thermos: Inspectable = dressing.thermos
-	var lantern: SignalLantern = dressing.lantern as SignalLantern
-	_expect(thermos != null and lantern != null and thermos.get_parent() == table and lantern.get_parent() == table, "the thermos and the lantern stand on the table")
-	_expect(absf(lantern.global_position.y - table.global_position.y - FigClearingProps.TABLE_TOP_Y) < 0.01, "the lantern rests on the planks")
-	_expect(thermos.global_position.distance_to(lantern.global_position) < 1.0, "side by side")
+	var lockbox: JSLockbox = dressing.lockbox
+	_expect(thermos != null and lockbox != null and thermos.get_parent() == table and lockbox.get_parent() == table, "the thermos and the lockbox stand on the table")
+	_expect(absf(lockbox.global_position.y - table.global_position.y - FigClearingProps.TABLE_TOP_Y) < 0.01, "the lockbox rests on the planks")
+	_expect(dressing.find_child("SignalLantern", true, false) == null and dressing.find_child("Pane0", true, false) == null and dressing.find_child("Cage", true, false) == null, "the old signal lantern is gone from the table")
+
+	# The lockbox is at the table's southern end, near the edge, with its dial turned out along the table (not toward the bench, and not in the
+	# middle), so that a player at the end of the table stands right in front of it.
+	var in_table: Vector3 = table.to_local(lockbox.global_position)
+	_expect(in_table.x > 0.5 and absf(in_table.z) < 0.2, "the lockbox stands at the southern end of the table, not in the middle (%.2f m along it, %.2f across)" % [in_table.x, in_table.z])
+	var along: Vector3 = table.global_basis.x.normalized()
+	var faces: float = lockbox.global_basis.z.normalized().dot(along)
+	_expect(faces > 0.99, "its dial faces out along the table, toward its end (%.3f)" % faces)
+	var front_edge: float = in_table.x + FigClearingProps.LOCKBOX_SIZE.z * 0.5 + 0.016
+	var margin: float = FigClearingProps.TABLE_LENGTH * 0.5 - front_edge
+	_expect(margin > 0.0 and margin < 0.06, "with its front just short of the table's end (%.1f cm from the edge)" % (margin * 100.0))
+	_expect(table.to_local(thermos.global_position).x < -0.4, "the thermos stands at the other end")
+
 	var thermos_spot: ReadableSpot = thermos.get_visual_node().find_child("NoteSpot", true, false) as ReadableSpot
 	_expect(thermos_spot != null and thermos_spot.text_key == "READABLE_THERMOS" and thermos_spot.obvious, "the thermos has its note as a readable spot, offered from the start")
 	_expect(thermos.get_visual_node().find_child("Pin", true, false) != null, "pinned round its middle")
-	_expect(tr("READABLE_THERMOS") == "Hot coffee for the best night watch on the tracks. The key to the tower is kept in the lantern's signal box. If the latch won't open in the dark, turn the filter to the red light, which is the railway's emergency signal. Don't drink it all at once. — Sophia", "the thermos note in English (%s)" % tr("READABLE_THERMOS").left(30))
-	for piece: Node3D in [note, thermos, lantern]:
+	var thermos_en: String = "Juli, I put the tower key and the station photo in our lockbox. I used the password of our emergency radio channel. I took the other photos to organize the board up at the HQ. See you at the Tower. Don't drink all the coffee at once. — Sophia"
+	_expect(tr("READABLE_THERMOS") == thermos_en, "the thermos note in English (%s)" % tr("READABLE_THERMOS").left(30))
+	_expect(not tr("READABLE_THERMOS").contains("-"), "with no hyphen")
+	for piece: Node3D in [thermos, lockbox, dressing.radio]:
 		_expect(piece.find_children("*", "PhysicsBody3D", true, false).is_empty() and piece.find_children("*", "CSGShape3D", true, false).is_empty(), piece.name + " is nothing solid: it cannot block the player or a ray")
 	GameSettings.set_text_locale("pt_BR", false)
-	_expect(tr("READABLE_THERMOS") == "Café quente para a melhor vigia noturna dos trilhos. A chave da torre tá guardada na caixa de sinal do lampião. Se o trinco não abrir no escuro, gira o filtro pra luz vermelha, que é o sinal de emergência da ferrovia. Não bebe tudo de uma vez. — Sophia", "the thermos note is Sophia's Portuguese, word for word")
-	_expect(tr("READABLE_CAMP_NOTE").begins_with("A Sophia deixou a jaqueta") and tr("READABLE_CAMP_NOTE").ends_with("— Juliana") and not tr("READABLE_CAMP_NOTE").contains("-"), "the clothesline note is translated, with no hyphen")
-	_expect(tr("PROMPT_ROTATE_FILTER") == "Girar Filtro" and tr("ITEM_THERMOS_NAME") != "ITEM_THERMOS_NAME" and tr("ITEM_CAMP_NOTE_NAME") != "ITEM_CAMP_NOTE_NAME", "and the prompts and names too")
+	_expect(tr("READABLE_THERMOS") == "Juli, guardei a chave da torre e a foto da estação na nossa caixa de segurança. Usei a senha do nosso canal de rádio de emergência. Peguei as outras fotos pra organizar o mural lá em cima no QG. Te vejo na Torre. Não bebe o café todo de uma vez. — Sophia", "the thermos note is Sophia's Portuguese, word for word")
+	_expect(not tr("READABLE_THERMOS").contains("-"), "with no hyphen in Portuguese either")
+	_expect(tr("PROMPT_INSPECT_LOCKBOX") == "Examinar a caixa de segurança", "the lockbox prompt in Portuguese")
+	_expect(tr("ITEM_THERMOS_NAME") != "ITEM_THERMOS_NAME" and tr("LOCKBOX_VIEW_HINT") != "LOCKBOX_VIEW_HINT", "and the thermos's name and the texts of the lockbox view too")
 	GameSettings.set_text_locale("en", false)
-	_expect(tr("PROMPT_ROTATE_FILTER") == "Rotate Filter", "[E] Rotate Filter")
+	_expect(tr("PROMPT_INSPECT_LOCKBOX") == "Inspect Lockbox", "[E] Inspect Lockbox")
+
+	# The lockbox, before it is touched: shut, the code 1 4 0 8 on four wheels, the contents inside and out of the scene.
+	_expect(lockbox.code == [1, 4, 0, 8], "the code is 1 4 0 8")
+	var radio_digits: Array[int] = []
+	for letter: String in ("%.2f" % FigClearingProps.RADIO_LOCKED_AT).replace(".", ""):
+		radio_digits.append(int(letter))
+
+	_expect(radio_digits == lockbox.code, "which is the frequency the radio's dial is locked on, 14.08, without the point")
+	_expect(lockbox.digits == [0, 0, 0, 0] and not lockbox.is_unlocked, "the wheels start at 0 0 0 0, the lockbox shut")
+	_expect(lockbox.can_interact(player) and lockbox.get_prompt_text() == "PROMPT_INSPECT_LOCKBOX", "it offers 'Inspect Lockbox'")
+	var wheels: Node = lockbox.get_node("Model/Wheels")
+	_expect(wheels.get_child_count() == 4, "the dial has four wheels")
+	var digits_on_rims: bool = true
+	for wheel: Node in wheels.get_children():
+		digits_on_rims = digits_on_rims and wheel.find_children("Digit*", "Label3D", false, false).size() == 10
+
+	_expect(digits_on_rims, "each with its ten digits round the rim")
+	var initials: Array[Node] = lockbox.find_children("Mark*", "Label3D", true, false)
+	_expect(initials.size() == 6, "'J & S' is painted on the front and on the lid, a mark at a time (%d marks)" % initials.size())
+	_expect(lockbox.find_child("Key", true, false) == null and lockbox.find_child("Photo", true, false) == null, "the key and the photograph are inside, out of reach")
+	var lid: Node3D = lockbox.get_node("Model/LidPivot")
+	_expect(is_zero_approx(lid.rotation_degrees.x), "the lid is shut")
 
 	# An interaction ray, run from where the player would stand, reaches each one: nothing solid hides them.
-	var front: Vector3 = lantern.global_basis.z.normalized()
-	var eye: Vector3 = lantern.global_position + front * 0.9
+	var front: Vector3 = lockbox.global_basis.z.normalized()
+	var eye: Vector3 = lockbox.global_position + front * 0.9
 	eye.y = 1.5
-	await _ray_finds(note, note.global_position + note.global_basis.z * 1.2 + Vector3(0.0, 1.7 - note.global_position.y, 0.0), note.global_position, "Juliana's note on the clothesline")
 	var thermos_eye: Vector3 = thermos.global_position + table.global_basis.z.normalized() * 0.9
 	thermos_eye.y = 1.5
 	await _ray_finds(thermos, thermos_eye, thermos.global_position, "the thermos")
-	await _ray_finds(lantern, eye, lantern.global_position + Vector3(0.0, 0.17, 0.0), "the lantern's lens")
-	await _ray_finds(clearing.album, Vector3(1.25, 1.4, -0.2), clearing.album.to_global(Vector3(-0.2, 0.012, 0.1)), "the album on the old camp table")
+	await _ray_finds(lockbox, eye, lockbox.global_position + Vector3(0.0, 0.05, 0.0), "the lockbox")
+	var memory_table: Node3D = clearing.get_node("Scenery/CampTable") as Node3D
+	var album_eye: Vector3 = clearing.album.global_position + memory_table.global_basis.z.normalized() * 0.9
+	album_eye.y = 1.4
+	await _ray_finds(clearing.album, album_eye, clearing.album.to_global(Vector3(-0.2, 0.012, 0.1)), "the album on the memory table")
+	await _check_standing_at_the_lockbox(table, lockbox)
 
-	# Looking at the thermos opens the inspect view, which offers its note to read straight away; the clothesline note
-	# opens as an overlay.
+	# Looking at the thermos opens the inspect view, which offers its note to read straight away.
 	thermos.interact(player)
 	await _wait(0.8)
 	var inspect_view: PlayerInspectController = player.inspect_controller
@@ -389,42 +438,7 @@ func _check_two_part_puzzle() -> void:
 	player.inventory_ui_controller.close()
 	await _wait(0.6)
 
-	# The lantern: yellow to start, the drawer shut, the contents out of the scene.
-	var drawer: Node3D = lantern.get_node("Model/Drawer")
-	_expect(lantern.filter == SignalLantern.Filter.YELLOW and not lantern.is_open, "the lantern shows its yellow filter")
-	_expect(lantern.can_interact(player) and lantern.get_prompt_text() == "PROMPT_ROTATE_FILTER", "its lens offers 'Rotate Filter'")
-	_expect(lantern.find_child("Key", true, false) == null and lantern.find_child("Photo", true, false) == null, "the key and the photograph are inside, out of reach")
-	_expect(drawer.position.z == 0.0, "the drawer is shut")
-	var drum: Node3D = lantern.get_node("Model/Drum")
-	_expect(drum.find_children("Pane*", "Node3D", false, false).size() == 3, "the filter drum has three panes of glass (yellow, neutral, red)")
-
-	lantern.interact(player)
-	_expect(not lantern.can_interact(player), "while the drum turns it is not used again")
-	await _until(func() -> bool: return lantern.can_interact(player))
-	_expect(lantern.filter == SignalLantern.Filter.NEUTRAL and not lantern.is_open, "one turn gives the neutral filter, and the drawer stays shut")
-	_expect(absf(wrapf(drum.rotation.y + TAU / 3.0, -PI, PI)) < 0.05, "the drum turned a third (%.1f degrees)" % rad_to_deg(drum.rotation.y))
-	_expect(lantern.find_child("Key", true, false) == null, "still nothing to take")
-
-	lantern.interact(player)
-	await _until(func() -> bool: return lantern.is_open and lantern.find_child("Key", true, false) != null and drawer.position.z > FigClearingProps.DRAWER_SLIDE - 0.005)
-	_expect(lantern.filter == SignalLantern.Filter.RED, "the second turn gives the red filter (the emergency signal)")
-	_expect(bool(SaveManager.get_state_value(&"puzzles", &"signal_lantern_open", false)), "the lantern's opening is remembered")
-	_expect(not lantern.can_interact(player), "the open lantern no longer answers its lens")
-	await get_tree().process_frame
-	var lens_disabled: bool = true
-	for shape: Node in lantern.get_node("InteractArea").get_children():
-		lens_disabled = lens_disabled and (shape as CollisionShape3D).disabled
-	_expect(lens_disabled, "and its lens no longer catches the interaction ray over the open drawer")
-
-	var key: Collectible = lantern.find_child("Key", true, false) as Collectible
-	var photo: Collectible = lantern.find_child("Photo", true, false) as Collectible
-	_expect(key != null and key.item_id == "brass_signal_key" and key.can_interact(player), "the brass signal key lies on the drawer's tray")
-	_expect(photo != null and photo.item_id == "photo_adolescence" and photo.can_interact(player), "and the photograph 'Rain at the Station' beside it")
-	_check_photo_back(photo, "PHOTO_NOTE_ADOLESCENCE")
-	_expect(key.global_position.distance_to(drawer.global_position) < 0.2 and key.global_position.y > drawer.global_position.y + 0.012, "both lie on the tray, out in the open")
-	_expect(key.global_basis.z.dot(Vector3.UP) > 0.95 and photo.global_basis.z.dot(Vector3.UP) > 0.95, "lying flat")
-	await _ray_finds(key, eye, key.global_position, "the key in the open drawer")
-	await _ray_finds(photo, eye, photo.global_position, "the photograph in the open drawer")
+	await _open_the_lockbox(lockbox, eye)
 
 	_expect(tower.lower_door.is_locked and tower.lower_door.required_key_id == "brass_signal_key", "the tower's door starts locked, and the brass signal key is what opens it")
 	var door_note: Inspectable = tower.lower_door.get_node("Hinge/DoorRoot/DoorNote") as Inspectable
@@ -442,6 +456,402 @@ func _check_two_part_puzzle() -> void:
 	tower.lower_door.interact(player)
 	_expect(tower.lower_door.is_locked and not tower.lower_door.is_open, "and stays shut when tried")
 	await get_tree().process_frame
+
+
+## The railway radio on its crate by the western trail entrance: it faces the way the player arrives, its dial is locked on 14.08 MHz (a red needle
+## on the scale, a bar bolted over the slider, masking tape marked HQ above it), `[E] Inspect Radio` shows its front panel close up and offers its
+## words, and the words are the ones the brief gives, in both languages.
+func _check_the_radio(dressing: FigClearingProps) -> void:
+	var radio: Inspectable = dressing.radio
+	var crate: Node3D = dressing.radio_crate
+	_expect(radio != null and crate != null and radio.get_parent() == crate, "a railway radio stands on a wooden crate")
+	var spot_in_clearing: Vector3 = clearing.to_local(radio.global_position)
+	_expect(spot_in_clearing.x < -4.5 and Vector2(spot_in_clearing.x, spot_in_clearing.z).length() < 7.5, "by the western trail entrance, inside the clearing (%.1f, %.1f)" % [spot_in_clearing.x, spot_in_clearing.z])
+	_expect(absf(radio.global_position.y - crate.global_position.y - FigClearingProps.RADIO_CRATE_SIZE.y) < 0.01, "on top of the crate")
+	_expect(crate.find_child("Solid", false, false) != null, "the crate is solid")
+	_expect(radio.find_children("*", "PhysicsBody3D", true, false).is_empty(), "and the radio on it is not (its area is what the ray finds)")
+	var arriving: Vector3 = clearing.to_global(Vector3(-9.0, 0.0, 0.5)) - radio.global_position
+	arriving.y = 0.0
+	var faces: float = arriving.normalized().dot(radio.global_basis.z)
+	_expect(faces > 0.8, "the radio faces the way the player arrives along the trail (%.2f)" % faces)
+	_expect(radio.get_prompt_text() == "PROMPT_INSPECT_RADIO" and radio.can_interact(player), "it offers 'Inspect Radio'")
+	_expect(dressing.battery != null and dressing.radio_crate.find_child("Cable", true, false) != null, "a heavy cable runs from its back to a car battery on the ground")
+
+	var visual: Node3D = radio.get_visual_node()
+	var meshes: int = visual.find_children("*", "MeshInstance3D", true, false).size()
+	var crate_meshes: int = crate.find_children("*", "MeshInstance3D", true, false).size() - meshes
+	_expect(meshes < 40 and crate_meshes < 20, "the radio and its crate are a few dozen meshes, not two hundred: their plain parts are folded by material (%d and %d)" % [meshes, crate_meshes])
+	var spot: ReadableSpot = visual.get_node_or_null("PanelSpot") as ReadableSpot
+	_expect(spot != null and spot.text_key == "READABLE_RADIO" and spot.obvious, "its front panel is a readable spot, offered from the start")
+	_expect(spot != null and spot.get_facing_normal().dot(visual.global_basis.z) > 0.99, "facing front")
+
+	# The dial: a scale printed from 14.00 to 14.20 MHz, the red needle on the 14.08 mark, the slider locked there under a bar, tape above.
+	var labels: Array[String] = []
+	var number_x: Array[float] = []
+	for i: int in 6:
+		var number: Label3D = visual.find_child("Freq%d" % i, true, false) as Label3D
+		labels.append(number.text if number != null else "?")
+		number_x.append(number.position.x if number != null else 0.0)
+
+	_expect(labels == ["14.00", "14.04", "14.08", "14.12", "14.16", "14.20"], "the dial's scale is printed from 14.00 to 14.20 MHz (%s)" % str(labels))
+	var needle: MeshInstance3D = visual.get_node_or_null("Needle") as MeshInstance3D
+	_expect(needle != null, "the dial has a needle")
+	var needle_color: Color = (needle.material_override as StandardMaterial3D).albedo_color
+	_expect(needle_color.r > 0.6 and needle_color.g < 0.15 and needle_color.b < 0.15, "a red one")
+	_expect(absf(needle.position.x - number_x[2]) < 0.002 and absf(needle.position.x - FigClearingProps.radio_scale_x(14.08)) < 0.0005, "pointing at 14.08 MHz (the needle is %.1f mm from the 14.08 mark)" % (absf(needle.position.x - number_x[2]) * 1000.0))
+	var number_label: Label3D = visual.find_child("Freq2", true, false) as Label3D
+	_expect(number_label.modulate.r > 0.8 and number_label.modulate.g < 0.5, "and that number is printed red")
+	_expect(needle.position.y + (needle.mesh as BoxMesh).size.y * 0.5 < number_label.position.y, "the needle ends under the number, not over it")
+	var slider: Node3D = visual.get_node_or_null("Slider") as Node3D
+	var lock: Node3D = visual.get_node_or_null("LockBar") as Node3D
+	_expect(slider != null and absf(slider.position.x - needle.position.x) < 0.001, "the needle sits on the slider, under the dial")
+	_expect(lock != null and absf(lock.position.x - slider.position.x) < 0.001 and is_equal_approx(lock.position.y, slider.position.y), "which is locked in place by a steel bar over it")
+	# (Two parts of one name are renamed by the engine, so the bolts are the hexagonal heads.)
+	var bolts: int = 0
+	for part: Node in lock.find_children("*", "MeshInstance3D", false, false):
+		var head: CylinderMesh = (part as MeshInstance3D).mesh as CylinderMesh
+		bolts += 1 if head != null and head.radial_segments == 6 else 0
+
+	_expect(bolts == 2 and lock.get_node_or_null("Seal") != null, "bolted at both ends (%d hex bolts), with a dab of red sealing wax on one" % bolts)
+	var tape: Node3D = visual.get_node_or_null("Tape") as Node3D
+	var bezel: MeshInstance3D = visual.get_node_or_null("DialBezel") as MeshInstance3D
+	_expect(tape != null and bezel != null and tape.position.y > bezel.position.y + (bezel.mesh as BoxMesh).size.y * 0.5 and absf(tape.position.x - needle.position.x) < 0.02, "a strip of masking tape is stuck above the dial, over the needle")
+	var tape_mark: Label3D = tape.get_node_or_null("Mark") as Label3D
+	_expect(tape_mark != null and tape_mark.text == "HQ", "marked HQ")
+
+	# The words, in both languages, exactly as the brief gives them.
+	_expect(tr("READABLE_RADIO") == "Industrial Railway Transmitter — Frequency dial stuck at 14.08 MHz.", "the radio's words in English (%s)" % tr("READABLE_RADIO"))
+	_expect(tr("PROMPT_INSPECT_RADIO") == "Inspect Radio" and tr("ITEM_RADIO_NAME") != "ITEM_RADIO_NAME" and tr("ITEM_RADIO_DESCRIPTION") != "ITEM_RADIO_DESCRIPTION", "[E] Inspect Radio, with a name and a description")
+	GameSettings.set_text_locale("pt_BR", false)
+	_expect(tr("READABLE_RADIO") == "Transmissor Industrial Ferroviário — Seletor de frequência travado em 14,08 MHz.", "and in Portuguese")
+	_expect(tr("PROMPT_INSPECT_RADIO") == "Examinar o rádio" and tr("ITEM_RADIO_NAME") != "ITEM_RADIO_NAME" and tr("ITEM_RADIO_DESCRIPTION") != "ITEM_RADIO_DESCRIPTION", "with the prompt, the name and the description translated")
+	GameSettings.set_text_locale("en", false)
+
+	# A ray from where the player stands in front of it reaches the radio: the crate's solid is below it, nothing is in front.
+	var radio_eye: Vector3 = radio.global_position + radio.global_basis.z.normalized() * 0.9
+	radio_eye.y = 1.5
+	await _ray_finds(radio, radio_eye, radio.global_position + Vector3(0.0, 0.2, 0.0), "the railway radio")
+
+	# Inspecting it: the view comes up on the front panel, squarely, with the writing offered to read; reading shows its words; closing frees the player.
+	radio.interact(player)
+	await _wait(0.9)
+	var inspect_view: PlayerInspectController = player.inspect_controller
+	_expect(inspect_view.is_open() and inspect_view.readables.has_obvious_reading(), "the radio opens in the inspect view with the writing on its panel offered to read")
+	var front_dot: float = inspect_view.current_visual_copy.global_basis.z.dot(inspect_view.camera.global_basis.z)
+	_expect(front_dot > 0.97, "its front panel faces the player squarely (%.2f)" % front_dot)
+	_expect(inspect_view.inspect_mode == PlayerInspectController.MODE_EXAMINE, "and it can be turned in every direction")
+	inspect_view.readables.activate()
+	await _wait(1.6)
+	_expect(inspect_view.readables.is_reading() and inspect_view.readables._body.text == tr("READABLE_RADIO"), "reading it shows what the panel says (%s)" % inspect_view.readables._body.text.left(40))
+	inspect_view.readables.close_text()
+	await _wait(0.6)
+	inspect_view.close(false)
+	player.inventory_ui_controller.close()
+	await _wait(0.8)
+	_expect(not inspect_view.is_open() and not player.modal_ui_open and not player.view_locked, "and the player is free again afterwards")
+
+
+## The camp is laid out like a camp, and the way through it is clear: the tents are pitched apart with their doors toward the fire, the fire has three
+## logs to sit on round it (the side toward the trail left open), the memory table stands clear of the fig tree and of its roots with its front toward
+## the trail and a lit lantern on it, the roots run out from the trunk along the ground (they were four poles all leaning the same way), nothing
+## overlaps anything, a player can walk the trail from one side of the clearing to the other, and the radio hisses on a dead channel.
+func _check_the_camp_layout(dressing: FigClearingProps) -> void:
+	var scenery: Node3D = clearing.get_node("Scenery") as Node3D
+	var fire: Node3D = scenery.get_node("Campfire") as Node3D
+	var tree: Node3D = scenery.get_node("FigTree") as Node3D
+	var table: Node3D = scenery.get_node("CampTable") as Node3D
+	var fire_at: Vector2 = Vector2(fire.global_position.x, fire.global_position.z)
+	var tree_at: Vector2 = Vector2(tree.global_position.x, tree.global_position.z)
+	var table_at: Vector2 = Vector2(table.global_position.x, table.global_position.z)
+
+	# The tents: apart, doors (an open doorway) toward the fire, some gear in front of each.
+	var tents: Array[Node3D] = dressing.tents
+	_expect(tents.size() == 2, "two tents are pitched")
+	if tents.size() == 2:
+		var apart: float = Vector2(tents[0].global_position.x - tents[1].global_position.x, tents[0].global_position.z - tents[1].global_position.z).length()
+		_expect(apart > 6.0, "far enough apart not to stand like two gateposts (%.1f m)" % apart)
+		for tent: Node3D in tents:
+			var to_fire: Vector2 = (fire_at - Vector2(tent.global_position.x, tent.global_position.z)).normalized()
+			var facing: float = Vector2(tent.global_basis.z.x, tent.global_basis.z.z).normalized().dot(to_fire)
+			_expect(facing > 0.8, "%s is pitched with its door toward the fire (%.2f)" % [tent.name, facing])
+			_expect(tent.find_child("Door", false, false) != null and tent.find_child("Gear", false, false) != null, "%s has an open doorway and some gear in front of it" % tent.name)
+
+		_expect(tents[0].find_child("Backpack", true, false) != null and tents[1].find_child("Boot0", true, false) != null, "a backpack at one tent, boots at the other")
+
+	# The fire: three logs on the ring, none on the side toward the trail.
+	_expect(dressing.seats.size() == 3, "three logs to sit on lie round the fire")
+	for seat: Node3D in dressing.seats:
+		var radial: Vector2 = Vector2(seat.global_position.x, seat.global_position.z) - fire_at
+		_expect(radial.length() > 1.2 and radial.length() < 2.1, "%s lies %.1f m from the fire" % [seat.name, radial.length()])
+		var along: Vector2 = Vector2(seat.global_basis.x.x, seat.global_basis.x.z).normalized()
+		_expect(absf(along.dot(radial.normalized())) < 0.55, "and along the ring, not pointing at it")
+		var north: float = absf(rad_to_deg(radial.angle_to(Vector2(0.0, -1.0))))
+		_expect(north > 40.0, "and not on the side toward the trail (%.0f degrees from it)" % north)
+
+	_expect(dressing.find_child("Kettle", true, false) != null, "a kettle stands on a stone by the fire")
+	var yard: Node3D = dressing.find_child("WoodYard", true, false) as Node3D
+	_expect(yard != null and yard.find_child("Axe", true, false) != null, "and a chopping block with an axe in it, where the first tent stood")
+
+	# The memory table: clear of the trunk and the roots, its front to the trail, everything on it, a lantern lit.
+	var trunk_gap: float = (table_at - tree_at).length()
+	_expect(trunk_gap > 2.3, "the memory table stands clear of the fig tree (%.1f m from its middle)" % trunk_gap)
+	_expect(table.global_basis.z.dot(Vector3(0.0, 0.0, 1.0)) > 0.9, "with its front toward the trail")
+	var on_table: Array[Node3D] = [clearing.recorder, clearing.album, clearing.get_node("Props/PhotoWorkshop") as Node3D, clearing.ficha_spot, scenery.get_node("EnamelCup") as Node3D]
+	var all_on: bool = true
+	for item: Node3D in on_table:
+		var local: Vector3 = table.to_local(item.global_position)
+		all_on = all_on and absf(local.x) < 0.72 and absf(local.z) < 0.38 and local.y > 0.77 and local.y < 0.86
+	_expect(all_on, "the recorder, the album, the photograph, the cup and the Ficha's place are all on the table")
+	_expect(dressing.lantern != null and dressing.lantern.get_parent() == table, "a lantern stands on it")
+	_expect(dressing.lantern_light != null and dressing.lantern_light.visible and dressing.lantern_light.light_energy > 0.5 and dressing.lantern_light.global_position.distance_to(clearing.album.global_position) < 1.2, "lit, with a warm light of its own over the album")
+	_expect(dressing.lantern_light.light_color.r > 0.9 and dressing.lantern_light.light_color.b < 0.6 and not dressing.lantern_light.shadow_enabled, "a warm one, with no shadows to pay for")
+	var fire_light: OmniLight3D = fire.find_child("Light", true, false) as OmniLight3D
+	_expect(fire_light != null and fire_light.global_position.distance_to(dressing.thermos.global_position) < fire_light.omni_range * 0.5, "while the thermos and the lockbox are well inside the fire's light")
+
+	# The roots lie along the ground, out from the trunk in every direction, and none runs under the table.
+	var bearings: Array[float] = []
+	for i: int in range(1, 7):
+		var root: Node3D = scenery.get_node_or_null("Root%d" % i) as Node3D
+		_expect(root != null, "root %d is there" % i)
+		if root == null:
+			continue
+
+		var axis: Vector3 = root.global_basis.y
+		var out: Vector2 = Vector2(root.global_position.x, root.global_position.z) - tree_at
+		var runs_out: bool = Vector2(axis.x, axis.z).normalized().dot(out.normalized()) > 0.95
+		_expect(runs_out and axis.normalized().y < -0.05 and root.global_position.y < 0.12, "root %d runs out from the trunk and down into the ground, not up like a pole" % i)
+		bearings.append(rad_to_deg(atan2(out.y, out.x)))
+		var half: Vector3 = axis * 1.6
+		var near: Vector2 = Geometry2D.get_closest_point_to_segment(table_at, Vector2(root.global_position.x - half.x, root.global_position.z - half.z), Vector2(root.global_position.x + half.x, root.global_position.z + half.z))
+		_expect(near.distance_to(table_at) > 1.2, "and root %d keeps clear of the table (%.1f m)" % [i, near.distance_to(table_at)])
+
+	bearings.sort()
+	var widest: float = 0.0
+	for i: int in bearings.size():
+		var next: float = bearings[(i + 1) % bearings.size()] + (360.0 if i == bearings.size() - 1 else 0.0)
+		widest = maxf(widest, next - bearings[i])
+
+	_expect(widest < 130.0, "the roots spread all round the trunk (the widest gap is %.0f degrees)" % widest)
+
+	# Nothing overlaps anything.
+	var overlaps: Array[String] = _solid_overlaps()
+	_expect(overlaps.is_empty(), "none of the camp's solid things overlaps another (%s)" % str(overlaps))
+
+	# The trail runs clear through the clearing, west to east.
+	var blocked: Array[String] = []
+	var space: PhysicsDirectSpaceState3D = clearing.get_world_3d().direct_space_state
+	var walker: CapsuleShape3D = CapsuleShape3D.new()
+	walker.radius = 0.3
+	walker.height = 1.2
+	var probe: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
+	probe.shape = walker
+	var lane_x: float = -6.2
+	while lane_x <= 6.4:
+		probe.transform = Transform3D(Basis.IDENTITY, clearing.to_global(Vector3(lane_x, 0.75, 0.25)))
+		for hit: Dictionary in space.intersect_shape(probe, 8):
+			var other: Node = hit.get("collider") as Node
+			if other != null and not other.name in [&"Ground", &"InvisibleWalls"]:
+				blocked.append("%s/%s at %.1f" % [other.get_parent().name, other.name, lane_x])
+
+		lane_x += 0.4
+
+	_expect(blocked.is_empty(), "a player can walk the trail from the west side to the east side without meeting anything (%s)" % str(blocked))
+
+	# The radio hisses on a dead channel, faintly, so that it is heard before it is seen.
+	var hiss: AudioStreamPlayer3D = dressing.radio_static
+	var hiss_stream: AudioStreamWAV = hiss.stream as AudioStreamWAV if hiss != null else null
+	_expect(hiss != null and hiss.playing and hiss_stream != null and hiss_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "the railway radio hisses (a looping dead channel)")
+	_expect(hiss != null and hiss.volume_db < -12.0 and hiss.max_distance >= 8.0 and hiss.global_position.distance_to(clearing.to_global(Vector3(-7.0, 1.2, 0.5))) < hiss.max_distance, "faintly, and it carries to the trail")
+	_expect(dressing.radio_lamp_material != null and dressing.radio_lamp_material.emission_enabled and dressing.radio_lamp_material.emission_energy_multiplier > 0.3, "and its lamp glows red")
+
+
+## The solid things of the clearing that overlap another one (each pair once). The ground and the invisible walls are left out, and every shape is
+## shrunk a hair and lifted a hair so that things resting on the ground or on each other do not count.
+func _solid_overlaps() -> Array[String]:
+	var found: Array[String] = []
+	var space: PhysicsDirectSpaceState3D = clearing.get_world_3d().direct_space_state
+	for node: Node in clearing.find_children("*", "StaticBody3D", true, false):
+		var body: StaticBody3D = node as StaticBody3D
+		if body.name in [&"InvisibleWalls", &"Ground"]:
+			continue
+
+		for child: Node in body.get_children():
+			var shaped: CollisionShape3D = child as CollisionShape3D
+			if shaped == null or shaped.disabled:
+				continue
+
+			var query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
+			var at: Transform3D = shaped.global_transform
+			if shaped.shape is BoxShape3D:
+				var smaller: BoxShape3D = BoxShape3D.new()
+				smaller.size = (shaped.shape as BoxShape3D).size - Vector3(0.06, 0.06, 0.06)
+				query.shape = smaller
+			elif shaped.shape is CylinderShape3D:
+				var narrower: CylinderShape3D = CylinderShape3D.new()
+				narrower.radius = (shaped.shape as CylinderShape3D).radius - 0.03
+				narrower.height = (shaped.shape as CylinderShape3D).height - 0.06
+				query.shape = narrower
+			else:
+				continue
+
+			at.origin += Vector3(0.0, 0.03, 0.0)
+			query.transform = at
+			for hit: Dictionary in space.intersect_shape(query, 16):
+				var other: Node = hit.get("collider") as Node
+				if other == null or other == body or other.name in [&"Ground", &"InvisibleWalls"]:
+					continue
+
+				var pair: String = "%s + %s" % [body.get_parent().name if body.name in [&"Solid", &"TentBody", &"TrunkBody"] else body.name, other.get_parent().name if other.name in [&"Solid", &"TentBody", &"TrunkBody"] else other.name]
+				var reverse: String = "%s + %s" % [pair.get_slice(" + ", 1), pair.get_slice(" + ", 0)]
+				if not found.has(pair) and not found.has(reverse):
+					found.append(pair)
+
+	return found
+
+
+## A player stands as close as they can to the end of the log table (the closest their capsule gets without overlapping the table's collision,
+## which is right and solid): the lockbox is right in front of them, close, and the interaction ray from their eyes reaches it.
+func _check_standing_at_the_lockbox(table: Node3D, lockbox: JSLockbox) -> void:
+	var home: Vector3 = player.global_position
+	var body_shape: CollisionShape3D = player.get_node("CollisionShape3D") as CollisionShape3D
+	var capsule: CapsuleShape3D = body_shape.shape as CapsuleShape3D
+	var standing: CapsuleShape3D = CapsuleShape3D.new()
+	standing.radius = capsule.radius * body_shape.global_basis.get_scale().x
+	standing.height = capsule.height * body_shape.global_basis.get_scale().y
+	var query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
+	query.shape = standing
+	var space: PhysicsDirectSpaceState3D = clearing.get_world_3d().direct_space_state
+	var in_table: Vector3 = table.to_local(lockbox.global_position)
+	var spot: Vector3 = Vector3.ZERO
+	var gap: float = 0.0
+	var found: bool = false
+	for step: int in 60:
+		gap = 0.005 * float(step)
+		spot = table.to_global(Vector3(FigClearingProps.TABLE_LENGTH * 0.5 + standing.radius - 0.05 + gap, 0.0, in_table.z))
+		spot.y = body_shape.global_position.y
+		query.transform = Transform3D(Basis.IDENTITY, spot)
+		var blocked: bool = false
+		for info: Dictionary in space.intersect_shape(query, 8):
+			var hit: Node = info.get("collider") as Node
+			blocked = blocked or (hit != null and hit.get_parent() == table)
+
+		if not blocked:
+			found = true
+			break
+
+	_expect(found and gap > 0.04, "a player's capsule cannot get nearer the end of the table than %.0f cm from it: it is solid" % ((standing.radius + gap - 0.05) * 100.0))
+	player.velocity = Vector3.ZERO
+	player.global_position = Vector3(spot.x, home.y, spot.z)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var camera: Camera3D = player.get_node("Head/Camera3D") as Camera3D
+	var aim: Vector3 = lockbox.global_position + Vector3(0.0, 0.05, 0.0)
+	var reach: float = camera.global_position.distance_to(aim)
+	_expect(reach < 0.9, "standing there, the player's eyes are close to the lockbox (%.2f m from the dial; the interaction ray reaches %.1f m)" % [reach, player.interaction_controller.interaction_distance])
+	await _ray_finds(lockbox, camera.global_position, aim, "the lockbox, from the player's eyes at the end of the table")
+	player.velocity = Vector3.ZERO
+	player.global_position = home
+	await get_tree().physics_frame
+
+
+## The lockbox's dial: a wrong code does nothing; 1 4 0 8 holds the wheels, lets the latch go (CLACK-CLICK) and pops the lid open on the key and
+## the photograph "Rain at the Station", which are then ordinary pickups.
+func _open_the_lockbox(lockbox: JSLockbox, eye: Vector3) -> void:
+	var view: JSLockboxView = lockbox.view
+	lockbox.interact(player)
+	_expect(view.is_open() and player.modal_ui_open, "interacting opens the close-up and holds the player")
+	await _until(func() -> bool: return not view.is_flying())
+	var close_up: Transform3D = lockbox.get_close_up_transform()
+	var view_camera: Camera3D = lockbox.get_node("LockboxViewCamera") as Camera3D
+	_expect(view_camera != null and view_camera.global_position.distance_to(close_up.origin) < 0.01, "the view camera flew to the front panel")
+	_expect(view_camera.global_basis.z.dot(lockbox.global_basis.z) > 0.8, "and looks straight at it")
+	_expect(view_camera.is_position_behind(lockbox.get_wheel_position(0)) == false and view_camera.unproject_position(lockbox.get_wheel_position(1)).x < view_camera.unproject_position(lockbox.get_wheel_position(2)).x, "the four wheels are in sight, in order")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# (A headless window is tiny, so the arrows are only checked to be there, one above and one below each wheel.)
+	var arrows_there: bool = true
+	for i: int in 4:
+		arrows_there = arrows_there and view._up[i].visible and view._down[i].visible and view._up[i].position.y < view._down[i].position.y
+	_expect(arrows_there, "an arrow sits above and below each wheel, on the box")
+	# They sit over the wheels as the picture filter's lens shows them (it bends the picture under them a little toward its corners).
+	var filter: Node = get_node_or_null("/root/HorrorFilter")
+	var worst_miss: float = 0.0 if filter != null else INF
+	for i: int in 4:
+		var shown: Vector2 = filter.call("lens_position", view_camera.unproject_position(lockbox.get_wheel_position(i)), get_viewport().get_visible_rect().size)
+		worst_miss = maxf(worst_miss, maxf(absf(view._up[i].position.x + view._up[i].size.x * 0.5 - shown.x), absf(view._down[i].position.x + view._down[i].size.x * 0.5 - shown.x)))
+	_expect(worst_miss < 1.0, "each pair is centred on its wheel as the filter's lens shows it (off by at most %.1f px)" % worst_miss)
+
+	# Each wheel turns on its own, with a heavy tick; the wheel itself turns.
+	var ticks: Array[int] = [0]
+	lockbox.digit_changed.connect(func(_index: int, _value: int) -> void: ticks[0] += 1)
+	view.turn(0, 1)
+	_expect(lockbox.digits == [1, 0, 0, 0], "wheel one up once is 1 0 0 0")
+	_expect(lockbox._sound.playing and lockbox._sound.stream != null and lockbox._sound.stream.get_length() > 0.2, "a heavy double tick sounds (%.2f s)" % lockbox._sound.stream.get_length())
+	await _until(func() -> bool: return absf(wrapf(lockbox._wheels[0].rotation_degrees.x - JSLockbox.DEGREES_PER_DIGIT, -180.0, 180.0)) < 1.0, 4.0)
+	_expect(absf(wrapf(lockbox._wheels[0].rotation_degrees.x - JSLockbox.DEGREES_PER_DIGIT, -180.0, 180.0)) < 1.0, "and the wheel turned its 36 degrees")
+	view.turn(3, -1)
+	_expect(lockbox.digits == [1, 0, 0, 9], "wheel four down once is 9, round the other way")
+	for step: int in 10:
+		view.turn(2, 1)
+	_expect(lockbox.digits[2] == 0 and ticks[0] == 12, "ten steps bring a wheel back where it was (%d ticks)" % ticks[0])
+	await _wait(1.2)
+	_expect(not lockbox.is_unlocked and is_zero_approx(lockbox.get_node("Model/LidPivot").rotation_degrees.x), "a wrong code does nothing: the lid stays shut")
+	_expect(lockbox.find_child("Key", true, false) == null, "and the key is out of reach")
+
+	_expect(view._selected == 2, "the wheel last turned is the chosen one, for the keyboard")
+
+	# Esc steps back: the player has their eyes and their hands again, the wheels keep their digits, and the box can be tried again.
+	var cancel: InputEventAction = InputEventAction.new()
+	cancel.action = &"ui_cancel"
+	cancel.pressed = true
+	Input.parse_input_event(cancel)
+	await _until(func() -> bool: return not view.is_open() and not view.is_flying() and not player.modal_ui_open, 8.0)
+	_expect(not view.is_open() and not player.modal_ui_open, "Esc goes back and the player is free")
+	_expect(lockbox.get_viewport().get_camera_3d() == player.get_node("Head/Camera3D") and lockbox.get_node_or_null("LockboxViewCamera") == null, "through their own eyes again")
+	_expect(lockbox.digits == [1, 0, 0, 9] and not get_tree().paused, "the wheels keep their digits, and the game is not paused")
+	lockbox.interact(player)
+	_expect(view.is_open() and player.modal_ui_open, "and the box can be looked at again")
+	await _until(func() -> bool: return not view.is_flying())
+
+	# The right code: 1 4 0 8.
+	view.turn(1, 4)
+	_expect(lockbox.digits == [1, 4, 0, 9] and not lockbox.is_unlocked, "1 4 0 9 is not it")
+	view.turn(3, -1)
+	_expect(lockbox.digits == [1, 4, 0, 8], "1 4 0 8")
+	_expect(lockbox.is_unlocked, "the wheels are held from the moment the code is right")
+	view.turn(0, 1)
+	_expect(lockbox.digits == [1, 4, 0, 8], "so a last nudge cannot undo it")
+	var opened: Array[bool] = [false]
+	lockbox.unlocked.connect(func() -> void: opened[0] = true)
+	await _until(func() -> bool: return opened[0] and lockbox.find_child("Key", true, false) != null, 6.0)
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"js_lockbox_open", false)), "the opening is remembered")
+	var latch_stream: AudioStream = lockbox._sound.stream
+	_expect(latch_stream != null and latch_stream.get_length() > 0.5, "the latch let go with a CLACK and a CLICK (%.2f s of sound)" % (latch_stream.get_length() if latch_stream != null else 0.0))
+	await _until(func() -> bool: return lockbox.get_node("Model/LidPivot").rotation_degrees.x < -100.0, 6.0)
+	_expect(lockbox.get_node("Model/LidPivot").rotation_degrees.x < -100.0, "the lid popped open (%.0f degrees)" % lockbox.get_node("Model/LidPivot").rotation_degrees.x)
+	_expect(lockbox.get_node("Model/Latch").rotation_degrees.x > 60.0, "the latch is out")
+	_expect(not lockbox.can_interact(player), "the open lockbox no longer answers its dial")
+	await get_tree().process_frame
+	var area_disabled: bool = true
+	for shape: Node in lockbox.get_node("InteractArea").get_children():
+		area_disabled = area_disabled and (shape as CollisionShape3D).disabled
+	_expect(area_disabled, "and its area no longer catches the interaction ray over the contents")
+
+	# The view goes back by itself, a moment after: the player is free and sees the open box.
+	await _until(func() -> bool: return not view.is_open() and not view.is_flying() and not player.modal_ui_open, 10.0)
+	_expect(not view.is_open() and not player.modal_ui_open, "the view goes back by itself and the player is free")
+	_expect(lockbox.get_viewport().get_camera_3d() == player.get_node("Head/Camera3D"), "through their own eyes again")
+	_expect(lockbox.get_node_or_null("LockboxViewCamera") == null, "the view's camera is gone")
+
+	var key: Collectible = lockbox.find_child("Key", true, false) as Collectible
+	var photo: Collectible = lockbox.find_child("Photo", true, false) as Collectible
+	_expect(key != null and key.item_id == "brass_signal_key" and key.can_interact(player), "the brass signal key lies in the open box")
+	_expect(photo != null and photo.item_id == "photo_adolescence" and photo.can_interact(player), "and the photograph 'Rain at the Station' with it")
+	_check_photo_back(photo, "PHOTO_NOTE_ADOLESCENCE")
+	_expect(key.global_position.y > lockbox.global_position.y + 0.07 and photo.global_position.y > lockbox.global_position.y + 0.07, "both lie on the padding, up near the rim, in sight")
+	_expect(key.global_basis.z.dot(Vector3.UP) > 0.95 and photo.global_basis.z.dot(Vector3.UP) > 0.95, "lying flat")
+	await _ray_finds(key, eye, key.global_position, "the key in the open lockbox")
+	await _ray_finds(photo, eye, photo.global_position, "the photograph in the open lockbox")
 
 
 ## A ray from an eye at `eye` to `aim`, as the interaction ray would run (it sees areas as well as solids): the
@@ -463,17 +873,17 @@ func _ray_finds(item: Node, eye: Vector3, aim: Vector3, what: String) -> void:
 	)
 
 
-## The key and Rain at the Station out of the lantern's drawer, the key into the lock; the Scraped Knee and the Broken Lever taken from where they lie.
+## The key and Rain at the Station out of the lockbox, the key into the lock; the Scraped Knee and the Broken Lever taken from where they lie.
 func _take_from_tower() -> void:
-	var lantern: SignalLantern = (clearing.get_node("CampDressing") as FigClearingProps).lantern as SignalLantern
-	var rain: Collectible = lantern.find_child("Photo", true, false) as Collectible
+	var lockbox: JSLockbox = (clearing.get_node("CampDressing") as FigClearingProps).lockbox
+	var rain: Collectible = lockbox.find_child("Photo", true, false) as Collectible
 	rain.interact(player)
 	_expect(player.inspect_controller.is_open(), "Rain at the Station opens the inspect view")
 	await _wait(0.5)
 	player.inspect_controller.close(false)
 	player.inventory_ui_controller.close()
 	await _wait(0.6)
-	var key: Collectible = lantern.find_child("Key", true, false) as Collectible
+	var key: Collectible = lockbox.find_child("Key", true, false) as Collectible
 	key.interact(player)
 	_expect(player.has_inventory_item("brass_signal_key"), "the key is in the inventory")
 	_expect(bool(SaveManager.get_state_value(&"collectibles", &"brass_signal_key", false)), "taking it is remembered")

@@ -5,7 +5,10 @@ class_name PlayerInteractionController
 
 var player: CharacterBody3D = null
 var interact_ray: RayCast3D = null
+## The scene's own label of the prompt: no longer shown, it only keeps the text (the prompt is drawn by `prompt_view`).
 var interaction_prompt: Label = null
+## The prompt as the player sees it: a key cap and a word on a panel, like every other prompt of the game.
+var prompt_view: InteractionPromptView = null
 
 var current_interactable: Interactable = null
 
@@ -17,6 +20,9 @@ func setup(player_node: CharacterBody3D) -> void:
 
 	interaction_prompt.visible = false
 	interaction_prompt.text = ""
+	# White text over the flashlight's white circle cannot be read: the prompt sits on a panel (see `InteractionPromptView`).
+	prompt_view = InteractionPromptView.new()
+	player.get_node("InteractionUI").add_child(prompt_view)
 
 	_setup_interact_ray()
 
@@ -43,12 +49,21 @@ func update_state(dialogue_frozen: bool, inventory_open: bool) -> void:
 
 	if interactable != null and interactable.can_interact(player):
 		current_interactable = interactable
-		interaction_prompt.text = InputBindings.format_text(
-			tr(interactable.get_prompt_text())
-		)
-		interaction_prompt.visible = true
+		var text: String = InputBindings.format_text(_with_key(tr(interactable.get_prompt_text())))
+		interaction_prompt.text = text
+		if prompt_view != null:
+			prompt_view.show_prompt(text)
 	else:
 		clear_prompt()
+
+
+## Every prompt names the key ("[E] Inspect"): one that is written without it ("Pull lever 2 down", "Inspect") is given it here, so no
+## prompt can lack the key, whatever wrote it.
+func _with_key(text: String) -> String:
+	if text.is_empty() or text.contains("{") or text.begins_with("["):
+		return text
+
+	return "[{interact}] " + text
 
 
 func try_interact(player_node: Node) -> void:
@@ -62,6 +77,9 @@ func clear_prompt() -> void:
 	if interaction_prompt != null:
 		interaction_prompt.visible = false
 		interaction_prompt.text = ""
+
+	if prompt_view != null:
+		prompt_view.hide_prompt()
 
 
 func _setup_interact_ray() -> void:

@@ -157,7 +157,7 @@ func _check_without_fichas() -> void:
 	await _face_booth()
 	var controller: PlayerInteractionController = player.interaction_controller
 	_expect(controller.current_interactable == phone.interactable, "the player's ray finds the booth")
-	_expect(_prompt() == "Examine Orelhão", "with no fichas it only offers 'Examine Orelhão' (%s)" % _prompt())
+	_expect(_prompt() == "Examine Payphone", "with no fichas it only offers 'Examine Payphone' (%s)" % _prompt())
 
 	var before: Vector3 = player.global_position
 	phone.interactable.interact(player)

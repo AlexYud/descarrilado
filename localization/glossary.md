@@ -9,6 +9,8 @@
 | station | station | estação | |
 | flashlight | flashlight | lanterna | |
 | night shift | night shift | turno noturno | |
+| lockbox | lockbox | caixa de segurança | The J & S box on the camp table (the code is 1408) |
+| railway radio | railway radio | rádio ferroviário | The transmitter at the camp entrance; its dial is locked at 14.08 MHz (14,08 MHz in Portuguese) |
 
 Preserve the restrained, first-person psychological-horror tone. Avoid adding
 supernatural facts that are not present in the canonical Portuguese text.

@@ -9,6 +9,8 @@ extends CharacterBody3D
 @onready var flashlight_controller: Node = $Hand/SpotLight3D
 
 var focus_blur: FocusBlurController = null
+## The forest map the player carries, opened with its own key (see `PlayerMapController`); built in `_ready`.
+var map_controller: PlayerMapController = null
 var motion_blur: MotionBlurController = null
 var cold_breath: ColdBreath = null
 
@@ -66,6 +68,11 @@ func _ready() -> void:
 	if inspect_controller != null:
 		inspect_controller.setup(self)
 
+	map_controller = PlayerMapController.new()
+	map_controller.name = "MapController"
+	add_child(map_controller)
+	map_controller.setup(self)
+
 	# Camera effects, each of which the player can switch off in the options.
 	focus_blur = FocusBlurController.new()
 	focus_blur.name = "FocusBlur"
@@ -107,7 +114,19 @@ func _input(event: InputEvent) -> void:
 	if cutscene_frozen:
 		return
 
-	if inspect_controller != null and inspect_controller.is_open():
+	# The map in the hands: the player walks and looks with it, and puts it away with its key, Esc or the inventory key.
+	if inspect_controller != null and inspect_controller.is_walkable_view():
+		if (
+			event.is_action_pressed("ui_cancel")
+			or ((event.is_action_pressed("map") or event.is_action_pressed("inventory")) and not event.is_echo())
+		):
+			if map_controller != null:
+				map_controller.close()
+
+			get_viewport().set_input_as_handled()
+			return
+
+	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		var return_to_inventory: bool = false
 
 		if inventory_ui_controller != null:
@@ -164,6 +183,12 @@ func _input(event: InputEvent) -> void:
 
 			return
 
+		# The map key puts the map away, as the inventory key puts away what was taken from it.
+		if map_controller != null and map_controller.is_open and event.is_action_pressed("map") and not event.is_echo():
+			map_controller.close()
+			get_viewport().set_input_as_handled()
+			return
+
 		if event.is_action_pressed("inventory"):
 			inspect_controller.close(return_to_inventory)
 
@@ -209,6 +234,11 @@ func _input(event: InputEvent) -> void:
 
 		return
 
+	if event.is_action_pressed("map") and not event.is_echo() and map_controller != null and map_controller.can_open():
+		map_controller.open()
+		get_viewport().set_input_as_handled()
+		return
+
 	if dialogue_frozen or modal_ui_open or view_locked:
 		return
 
@@ -220,7 +250,7 @@ func _input(event: InputEvent) -> void:
 	):
 		block_look = true
 
-	if inspect_controller != null and inspect_controller.is_open():
+	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		block_look = true
 
 	if movement_controller != null:
@@ -228,6 +258,14 @@ func _input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Whatever takes the player's attention puts the map in their hands away.
+	if (
+		map_controller != null
+		and map_controller.is_open
+		and (dialogue_frozen or modal_ui_open or view_locked or cutscene_frozen)
+	):
+		map_controller.close()
+
 	var interaction_blocked: bool = cutscene_frozen
 
 	if (
@@ -236,7 +274,7 @@ func _physics_process(delta: float) -> void:
 	):
 		interaction_blocked = true
 
-	if inspect_controller != null and inspect_controller.is_open():
+	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		interaction_blocked = true
 
 	var gameplay_frozen: bool = (
@@ -254,7 +292,7 @@ func _physics_process(delta: float) -> void:
 
 	var movement_frozen: bool = gameplay_frozen
 
-	if inspect_controller != null and inspect_controller.is_open():
+	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		movement_frozen = true
 
 	if Time.get_ticks_msec() < _movement_hold_until_msec:
@@ -271,7 +309,7 @@ func _physics_process(delta: float) -> void:
 		and inventory_ui_controller != null
 		and not inventory_ui_controller.is_inventory_open()
 		and inspect_controller != null
-		and not inspect_controller.is_open()
+		and not inspect_controller.blocks_gameplay()
 		and Input.is_action_just_pressed("interact")
 	):
 		if interaction_controller != null:
@@ -538,7 +576,7 @@ func is_flashlight_blocked() -> bool:
 	):
 		return true
 
-	if inspect_controller != null and inspect_controller.is_open():
+	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		return true
 
 	return false
@@ -650,7 +688,8 @@ func set_view_locked(locked: bool) -> void:
 ## (not to the inventory panel).
 func show_pickup_inspect(
 	item_id: String,
-	start_transform: Transform3D
+	start_transform: Transform3D,
+	held_open: bool = false
 ) -> void:
 	if cutscene_frozen or inspect_controller == null:
 		return
@@ -667,7 +706,8 @@ func show_pickup_inspect(
 
 	var opened: bool = inspect_controller.open_inventory(
 		slot_data,
-		start_transform
+		start_transform,
+		held_open
 	)
 
 	if opened and inventory_ui_controller != null:

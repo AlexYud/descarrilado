@@ -5,6 +5,8 @@ class_name Collectible
 @export var item_name: String = "ITEM_GENERIC_NEW"
 @export_multiline var item_description: String = ""
 @export var pickup_prompt_text: String = "PROMPT_PICK_UP"
+## A foldable item that is taken open (a map off a board) is shown open as it was taken; it folds when it is put away.
+@export var shown_open_when_taken: bool = false
 
 
 func _ready() -> void:
@@ -57,6 +59,11 @@ func interact(player: Node) -> void:
 				true
 			)
 
+			# The first thing the player picks up is when they are taught the inventory (once they are back in the game).
+			var hints: Node = player.get_node_or_null("TutorialHints")
+			if hints != null and hints.has_method("trigger"):
+				hints.call("trigger", &"inventory")
+
 			# Show what was taken, flying in from where it lay.
 			if player.has_method("show_pickup_inspect"):
 				var start_transform: Transform3D = (
@@ -67,7 +74,8 @@ func interact(player: Node) -> void:
 				player.call(
 					"show_pickup_inspect",
 					item_id,
-					start_transform
+					start_transform,
+					shown_open_when_taken
 				)
 
 			queue_free()

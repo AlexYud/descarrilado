@@ -27,6 +27,7 @@ shader_parameter/scanline_strength = 0.06
 shader_parameter/chroma_noise_strength = 0.035
 shader_parameter/lens_distortion = 0.014
 shader_parameter/lens_frame_softness = 0.012
+shader_parameter/fisheye_strength = 0.06
 shader_parameter/video_desaturation = 0.26
 shader_parameter/video_contrast_wash = 0.12
 shader_parameter/video_black_lift = 0.008

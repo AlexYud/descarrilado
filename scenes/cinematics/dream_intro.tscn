@@ -75,6 +75,7 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/train_ticket.tscn" id="tt_ticket"]
 [ext_resource type="Script" path="res://scripts/interactions/tutorial_trigger.gd" id="60_trigger"]
 [ext_resource type="PackedScene" path="res://scenes/objects/forest_map.tscn" id="forest_map_scene"]
+[ext_resource type="Script" path="res://scripts/environment/trailhead_props.gd" id="trailhead_script"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -694,8 +695,11 @@ transform = Transform3D(0.8712, 0, -0.4909, 0, 1, 0, 0.4909, 0, 0.8712, 379.31, 
 [node name="DoorController" parent="Scenery" unique_id=944800287 instance=ExtResource("14_vm3m4")]
 transform = Transform3D(-0.29896778, 0.22261663, -0.9279337, 0.047131047, 0.97466606, 0.2186434, 0.95309865, 0.021632805, -0.30188614, 10.320974, -1.3286178, 4.864848)
 
-[node name="ForestMap" parent="Scenery" instance=ExtResource("forest_map_scene")]
-transform = Transform3D(0.90447, 0.42074, 0.070087, -0.057956, -0.041567, 0.997453, 0.422581, -0.906229, -0.013211, 13.6, -2.003926, 6.9)
+[node name="Trailhead" type="Node3D" parent="Scenery"]
+transform = Transform3D(-0.309017, 0, -0.951057, 0, 1, 0, 0.951057, 0, -0.309017, 10, -1.35, 5.86)
+script = ExtResource("trailhead_script")
+
+[node name="ForestMap" parent="Scenery/Trailhead" instance=ExtResource("forest_map_scene")]
 
 [node name="SprintTutorialTrigger" type="Area3D" parent="Scenery"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, -1.3, 5)

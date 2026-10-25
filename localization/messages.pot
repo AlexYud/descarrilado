@@ -688,6 +688,9 @@ msgstr ""
 msgid "BINDING_INVENTORY"
 msgstr ""
 
+msgid "BINDING_MAP"
+msgstr ""
+
 msgid "BINDING_SKIP_CINEMATIC"
 msgstr ""
 
@@ -808,6 +811,15 @@ msgstr ""
 msgid "TUTORIAL_SPRINT_TOGGLE"
 msgstr ""
 
+msgid "TUTORIAL_INVENTORY"
+msgstr ""
+
+msgid "TUTORIAL_MAP"
+msgstr ""
+
+msgid "PROMPT_COLLECT"
+msgstr ""
+
 
 # Controls, key bindings and tutorial hints
 msgid "BINDINGS_INSPECT"
@@ -919,9 +931,6 @@ msgstr ""
 msgid "MAP_TITLE"
 msgstr ""
 
-msgid "MAP_LEGEND_YOU"
-msgstr ""
-
 msgid "MAP_LABEL_DOOR"
 msgstr ""
 
@@ -941,6 +950,15 @@ msgid "MAP_LABEL_HOUSE"
 msgstr ""
 
 msgid "MAP_LABEL_OVERLOOK"
+msgstr ""
+
+msgid "SIGN_TRAILHEAD_WELCOME"
+msgstr ""
+
+msgid "SIGN_TRAILHEAD_OLD_NAME"
+msgstr ""
+
+msgid "SIGN_TRAILHEAD_NEW_NAME"
 msgstr ""
 
 msgid "PROMPT_EXAMINE_ORELHAO"
@@ -1033,15 +1051,6 @@ msgid "ITEM_BRASS_SIGNAL_KEY_NAME"
 msgstr ""
 
 msgid "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION"
-msgstr ""
-
-msgid "ITEM_CAMP_NOTE_NAME"
-msgstr ""
-
-msgid "ITEM_CAMP_NOTE_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_CAMP_NOTE"
 msgstr ""
 
 msgid "ITEM_TOWER_DOOR_NOTE_NAME"
@@ -1144,5 +1153,21 @@ msgstr ""
 msgid "READABLE_THERMOS"
 msgstr ""
 
-msgid "PROMPT_ROTATE_FILTER"
+msgid "PROMPT_INSPECT_LOCKBOX"
 msgstr ""
+
+msgid "PROMPT_INSPECT_RADIO"
+msgstr ""
+
+msgid "ITEM_RADIO_NAME"
+msgstr ""
+
+msgid "ITEM_RADIO_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_RADIO"
+msgstr ""
+
+msgid "LOCKBOX_VIEW_HINT"
+msgstr ""
+

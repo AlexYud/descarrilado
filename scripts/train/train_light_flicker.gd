@@ -316,10 +316,10 @@ static func build_horror_beats(sequence_seed: int, total_seconds: float) -> Arra
 	for beat: Vector2 in beats:
 		pattern_length += beat.x
 
-	var scale: float = maxf(total_seconds - 0.2, 0.2) / pattern_length
+	var stretch: float = maxf(total_seconds - 0.2, 0.2) / pattern_length
 	var scaled: Array[Vector2] = []
 	for beat: Vector2 in beats:
-		scaled.append(Vector2(beat.x * scale, beat.y))
+		scaled.append(Vector2(beat.x * stretch, beat.y))
 
 	scaled.append(Vector2(0.2, 0.0))
 	return scaled

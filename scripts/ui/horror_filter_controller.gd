@@ -154,6 +154,26 @@ func pulse_unease(amount: float, seconds: float) -> void:
 		filter_material.set_shader_parameter(parameter, base[parameter])
 
 
+## Where the lens shows what the camera drew at `point` (a position in the viewport, in pixels). The shader reads the drawing at
+## `p * (1 + curve * |p|^2) / (1 + fisheye)` for a shown position `p` (0 is the middle of the picture, 1 its edges), so a drawn point is
+## shown where that gives it back; the curve is gentle and a few rounds of the inverse settle it. This filter is the bottom layer, so what
+## is laid over the picture from a 3D position (the lockbox's arrows) goes through here to stay on the thing it marks. A filter with no
+## lens, or one that is hidden, gives the point back.
+func lens_position(point: Vector2, viewport_size: Vector2) -> Vector2:
+	var filter_material: ShaderMaterial = horror_rect.material as ShaderMaterial
+	if filter_material == null or not visible or not horror_rect.visible or viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return point
+
+	var fisheye: float = _read_parameter(filter_material, &"fisheye_strength")
+	var curve: float = _read_parameter(filter_material, &"lens_distortion") + fisheye
+	var drawn: Vector2 = point / viewport_size * 2.0 - Vector2.ONE
+	var shown: Vector2 = drawn
+	for i: int in 6:
+		shown = drawn * (1.0 + fisheye) / (1.0 + curve * shown.length_squared())
+
+	return (shown * 0.5 + Vector2(0.5, 0.5)) * viewport_size
+
+
 ## What a shader parameter is now (its own default when the material never set it).
 func _read_parameter(filter_material: ShaderMaterial, parameter: StringName) -> float:
 	var value: Variant = filter_material.get_shader_parameter(parameter)

@@ -37,6 +37,9 @@ func _run(player: CharacterBody3D) -> void:
 	_expect(bloom > 0.2 and gain > 0.1, "the glare is on in the usual picture (bloom %.2f, push %.2f)" % [bloom, gain])
 	_expect(float(material.get_shader_parameter("vhs_line_jitter")) > 0.0 and not material.shader.code.contains("vhs_dropouts"), "the tape wobble is there, the white dropout dashes are not")
 	_expect(not material.shader.code.contains("vhs_head_switch"), "and the torn band along the bottom is gone")
+	var fisheye: float = float(material.get_shader_parameter("fisheye_strength"))
+	_expect(material.shader.code.contains("fisheye_strength") and fisheye > 0.03 and fisheye < 0.1, "the picture has a little fisheye, not a lot (%.2f)" % fisheye)
+	_check_the_lens(filter, material, fisheye)
 
 	var whistle: Inspectable = (load("res://scenes/objects/waiting_shed/carved_whistle.tscn") as PackedScene).instantiate()
 	add_child(whistle)
@@ -52,6 +55,41 @@ func _run(player: CharacterBody3D) -> void:
 	await get_tree().create_timer(0.8).timeout
 	_expect(absf(float(material.get_shader_parameter("bloom_strength")) - bloom) < 0.01 and absf(float(material.get_shader_parameter("highlight_gain")) - gain) < 0.01, "put away, the glare comes back as it was")
 	whistle.queue_free()
+
+
+## What is laid over the picture from a 3D position follows the lens: the middle stays, the inner part of the picture is pushed outward and the corners are drawn in
+## (the fisheye's bulge), and it is the shader's curve turned round.
+func _check_the_lens(filter: Node, material: ShaderMaterial, fisheye: float) -> void:
+	var size: Vector2 = Vector2(1000.0, 600.0)
+	var middle: Vector2 = size * 0.5
+	var at_middle: Vector2 = filter.call("lens_position", middle, size)
+	_expect(at_middle.distance_to(middle) < 0.01, "the middle of the picture stays where it was")
+	var curve: float = float(material.get_shader_parameter("lens_distortion")) + fisheye
+	var turned_round: bool = true
+	var pushed_out: bool = true
+	var drawn_in: bool = true
+	for point: Vector2 in [Vector2(700.0, 300.0), Vector2(250.0, 450.0), Vector2(900.0, 100.0), Vector2(500.0, 560.0), Vector2(40.0, 30.0)]:
+		var shown: Vector2 = filter.call("lens_position", point, size)
+		var shown_in_lens: Vector2 = shown / size * 2.0 - Vector2.ONE
+		var read_at: Vector2 = shown_in_lens * (1.0 + curve * shown_in_lens.length_squared()) / (1.0 + fisheye)
+		turned_round = turned_round and read_at.distance_to(point / size * 2.0 - Vector2.ONE) < 0.0005
+		var is_corner: bool = (point / size * 2.0 - Vector2.ONE).length_squared() > 1.0
+		if is_corner:
+			drawn_in = drawn_in and shown.distance_to(middle) < point.distance_to(middle)
+		else:
+			pushed_out = pushed_out and shown.distance_to(middle) > point.distance_to(middle)
+
+	_expect(turned_round, "a point of the drawing is shown where the shader reads it from (the curve turned round)")
+	_expect(pushed_out and drawn_in, "the inner part of the picture is pushed out from the middle and the corners are drawn in, as the picture bulges")
+
+	# No lens, no shift.
+	var lens_distortion: Variant = material.get_shader_parameter("lens_distortion")
+	material.set_shader_parameter("lens_distortion", 0.0)
+	material.set_shader_parameter("fisheye_strength", 0.0)
+	var unmoved: Vector2 = filter.call("lens_position", Vector2(900.0, 100.0), size)
+	material.set_shader_parameter("lens_distortion", lens_distortion)
+	material.set_shader_parameter("fisheye_strength", fisheye)
+	_expect(unmoved.distance_to(Vector2(900.0, 100.0)) < 0.01, "with no lens a point is where the camera drew it")
 
 
 func _expect(condition: bool, message: String) -> void:

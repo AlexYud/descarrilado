@@ -4,23 +4,22 @@
 [ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
-size = Vector3(0.17, 0.14, 0.05)
+size = Vector3(0.54, 0.36, 0.4)
 
-[node name="ClotheslineNote" type="Node3D"]
+[node name="RailwayRadio" type="Node3D"]
 script = ExtResource("1_inspectable")
-inspect_name = "ITEM_CAMP_NOTE_NAME"
-inspect_description = "ITEM_CAMP_NOTE_DESCRIPTION"
-prompt_text = "PROMPT_INSPECT"
+inspect_name = "ITEM_RADIO_NAME"
+inspect_description = "ITEM_RADIO_DESCRIPTION"
+prompt_text = "PROMPT_INSPECT_RADIO"
 
 [node name="Visual" type="Node3D" parent="."]
-metadata/readable_text = "READABLE_CAMP_NOTE"
-metadata/inspect_mode = "read"
 script = ExtResource("2_prop")
-kind = &"clothesline_note"
-metadata/inspect_id = "camp_note"
+kind = &"railway_radio"
+metadata/inspect_id = "railway_radio"
+metadata/inspect_fit_scale = 1.4
 
 [node name="InteractArea" type="Area3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0.012)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
 shape = SubResource("BoxShape3D_area")

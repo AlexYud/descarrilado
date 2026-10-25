@@ -92,8 +92,12 @@ const BLACKOUT_RECT_PATH := NodePath(
 ## dark just as the player is free. False plays the old short strobe (the two durations above) instead.
 @export var continuity_horror_flicker: bool = true
 
-## How long the failure lasts. 0 uses the head raise's length less half a second.
+## How long the failure lasts. 0 uses the head raise's length less `continuity_horror_early_seconds`.
 @export var continuity_horror_duration: float = 0.0
+
+## How long before the head is fully raised the failure is over and the wagon is dark (the lights used to go dark just as the head
+## came up; it was asked to stop earlier).
+@export var continuity_horror_early_seconds: float = 2.2
 
 ## The same seed fails every light fitting of the train in the same way, every time.
 @export var continuity_horror_seed: int = 1989
@@ -846,7 +850,7 @@ func _start_horror_continuity() -> void:
 	continuity_light_tween.tween_callback(_complete_continuity_light_sequence)
 
 
-## How long the failure lasts: what was set, or the head raise's length less half a second.
+## How long the failure lasts: what was set, or the head raise's length less `continuity_horror_early_seconds`.
 func _horror_flicker_seconds() -> float:
 	if continuity_horror_duration > 0.0:
 		return continuity_horror_duration
@@ -856,7 +860,7 @@ func _horror_flicker_seconds() -> float:
 		and head_raise_animation_player.has_animation(head_raise_animation_name)
 	):
 		var length: float = head_raise_animation_player.get_animation(head_raise_animation_name).length
-		return maxf(length - 0.5, 1.0)
+		return maxf(length - continuity_horror_early_seconds, 1.0)
 
 	return 5.8
 

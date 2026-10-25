@@ -596,7 +596,7 @@ func _sounds_at(watch: Node3D) -> Array[AudioStreamPlayer3D]:
 
 func _check_translations() -> void:
 	_expect(tr("READABLE_TOWER_DOOR_NOTE") == "We can't let anyone find this place, Sophia, or we lose our HQ forever. I'm keeping the key with me at the fig tree camp until the rain stops. — Juliana", "the door note, in English")
-	_expect(tr("CAPTION_TOWER_DOOR_LOCKED") == "Locked. Someone pinned a note to the door.", "the locked door's line, in English")
+	_expect(tr("CAPTION_TOWER_DOOR_LOCKED") == "Where is the HQ key?", "the locked door's line, in English")
 	GameSettings.set_text_locale("pt_BR", false)
 	var all_translated: bool = true
 	for key: String in ["READABLE_TOWER_DOOR_NOTE", "CAPTION_TOWER_DOOR_LOCKED", "TOWER_HQ_CARVED_TEXT", "ITEM_TOWER_CHALKBOARD_NAME", "ITEM_TOWER_CHALKBOARD_DESCRIPTION", "ITEM_BRASS_SIGNAL_KEY_NAME", "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION", "ITEM_TOWER_DOOR_NOTE_NAME", "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"]:

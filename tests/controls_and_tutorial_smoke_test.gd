@@ -23,6 +23,7 @@ func _ready() -> void:
 	await _check_controls_tab()
 	await _check_tutorial()
 	await _check_tutorial_trigger()
+	await _check_inventory_tutorial()
 	await _check_head_bob()
 
 	InputBindings.reset_all()
@@ -334,6 +335,110 @@ func _check_tutorial_trigger() -> void:
 	fast_player.queue_free()
 	trigger.queue_free()
 	floor_body.queue_free()
+	SaveManager.delete_slot(1)
+	await get_tree().process_frame
+
+
+## The inventory lesson, taught after the trail map is taken (`trigger(&"inventory")`): it waits to be started, comes up at the bottom
+## naming the player's key, goes away the moment the inventory is opened, is remembered, and is silent when the hints are off.
+func _check_inventory_tutorial() -> void:
+	SaveManager.delete_slot(1)
+	SaveManager.create_new_game(1, TEST_SCENE_PATH, "tutorial_test_start", "SAVE_LOCATION_DREAM_INTRO")
+	TutorialHintController._learned_this_run = false
+	TutorialHintController._lessons_learned_this_run.clear()
+	GameSettings.set_tutorial_hints(true, false)
+
+	var player: CharacterBody3D = (load("res://scenes/player/player.tscn") as PackedScene).instantiate()
+	add_child(player)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var hints: TutorialHintController = player.get_node("TutorialHints")
+	hints.lesson_delay = 0.2
+	hints.fade_seconds = 0.05
+	await get_tree().create_timer(0.6).timeout
+	_expect(not hints.is_lesson_showing(&"inventory"), "the inventory lesson waits to be started")
+
+	hints.trigger(&"inventory")
+	await _until(func() -> bool: return hints.is_lesson_showing(&"inventory"), 3.0)
+	_expect(hints.is_lesson_showing(&"inventory"), "it comes up once it is started")
+	var label: RichTextLabel = hints._lessons[&"inventory"]["label"]
+	_expect(label != null and label.get_parsed_text().contains(InputBindings.get_binding_label(&"inventory", -1, true)), "it names the player's key (%s)" % (label.get_parsed_text() if label != null else ""))
+	_expect(not hints.is_showing, "and the walking lesson waits")
+
+	# Shown over a cutscene or a close up? No: it goes away and comes back.
+	player.cutscene_frozen = true
+	await _until(func() -> bool: return not hints.is_lesson_showing(&"inventory"), 2.0)
+	_expect(not hints.is_lesson_showing(&"inventory"), "it does not show over a cutscene")
+	player.cutscene_frozen = false
+	await _until(func() -> bool: return hints.is_lesson_showing(&"inventory"), 3.0)
+	_expect(hints.is_lesson_showing(&"inventory"), "and comes back after")
+
+	# Opening the inventory is the lesson learned.
+	var slots: Array[Dictionary] = player.inventory_controller.get_slots()
+	player.inventory_ui_controller.show_inventory(slots)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_expect(not hints.is_lesson_showing(&"inventory"), "opening the inventory puts the hint away")
+	_expect(hints.is_lesson_learned(&"inventory"), "and counts as learned")
+	_expect(bool(SaveManager.get_state_value(&"tutorials", &"inventory_hint_done", false)), "it is remembered in the saved game")
+	player.inventory_ui_controller.close()
+	await get_tree().create_timer(0.5).timeout
+	_expect(not hints.is_lesson_showing(&"inventory"), "it does not come back")
+
+	# The map lesson: started when the player is given the map. The map shown to them as they take it is not the lesson learned; looking
+	# at it with the key is.
+	var maps: PlayerMapController = player.map_controller
+	var inspect: PlayerInspectController = player.inspect_controller
+	maps.give_map()
+	hints.trigger(&"map")
+	maps.open(player.get_node("Head/Camera3D").global_transform, true)
+	await get_tree().create_timer(0.6).timeout
+	_expect(maps.is_open and not hints.is_lesson_learned(&"map"), "the map shown as it is taken does not count as the lesson learned")
+	_expect(not hints.is_lesson_showing(&"map"), "and no hint is over its view")
+	maps.close()
+	await _until(func() -> bool: return not inspect.is_open(), 5.0)
+	await _until(func() -> bool: return hints.is_lesson_showing(&"map"), 4.0)
+	_expect(hints.is_lesson_showing(&"map"), "once it is put away the hint of the map key comes up")
+	var map_label: RichTextLabel = hints._lessons[&"map"]["label"]
+	_expect(map_label.get_parsed_text().contains(InputBindings.get_binding_label(&"map", -1, true)), "it names the map key (%s)" % map_label.get_parsed_text())
+	_expect(not hints.is_lesson_showing(&"inventory"), "and it is not about the inventory")
+	_expect(maps.open(), "the player opens the map with its key")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_expect(hints.is_lesson_learned(&"map") and not hints.is_lesson_showing(&"map"), "that is the lesson learned")
+	_expect(bool(SaveManager.get_state_value(&"tutorials", &"map_hint_done", false)), "and it is remembered")
+	maps.close()
+	await _until(func() -> bool: return not inspect.is_open(), 5.0)
+
+	# A loaded game that learned it is not taught again, even if the map is triggered again.
+	player.queue_free()
+	await get_tree().process_frame
+	var again: CharacterBody3D = (load("res://scenes/player/player.tscn") as PackedScene).instantiate()
+	add_child(again)
+	await get_tree().physics_frame
+	var again_hints: TutorialHintController = again.get_node("TutorialHints")
+	again_hints.lesson_delay = 0.1
+	again_hints.trigger(&"inventory")
+	await get_tree().create_timer(0.6).timeout
+	_expect(not again_hints.is_lesson_showing(&"inventory"), "a game that learned it is not taught again")
+	again.queue_free()
+	await get_tree().process_frame
+
+	# Hints turned off in the options: silent.
+	SaveManager.delete_slot(1)
+	SaveManager.create_new_game(1, TEST_SCENE_PATH, "tutorial_test_start", "SAVE_LOCATION_DREAM_INTRO")
+	TutorialHintController._lessons_learned_this_run.clear()
+	GameSettings.set_tutorial_hints(false, false)
+	var quiet: CharacterBody3D = (load("res://scenes/player/player.tscn") as PackedScene).instantiate()
+	add_child(quiet)
+	await get_tree().physics_frame
+	var quiet_hints: TutorialHintController = quiet.get_node("TutorialHints")
+	quiet_hints.lesson_delay = 0.1
+	quiet_hints.trigger(&"inventory")
+	await get_tree().create_timer(0.6).timeout
+	_expect(not quiet_hints.is_lesson_showing(&"inventory"), "with the hints turned off the lesson is silent")
+	quiet.queue_free()
+	GameSettings.set_tutorial_hints(true, false)
 	SaveManager.delete_slot(1)
 	await get_tree().process_frame
 

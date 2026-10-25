@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/path_cross_slope.gd" id="1"]
+
+[node name="PathCrossSlope" type="Node"]
+script = ExtResource("1")

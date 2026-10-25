@@ -6,7 +6,11 @@ enum InspectState {
 	CLOSED,
 	OPENING,
 	VIEWING,
-	CLOSING
+	CLOSING,
+	## A folded item being gathered up in the hand before it comes to the view (taken from the world).
+	PREPARING,
+	## A foldable item folding itself small before it goes away.
+	FOLDING
 }
 
 
@@ -38,6 +42,11 @@ const INSPECT_RENDER_LAYER_MASK: int = 1 << 19
 const META_INSPECT_MODE: StringName = &"inspect_mode"
 ## `inspect_fit_scale` metadata of a Visual: a multiplier on the size the item first comes up at (below 1: smaller).
 const META_FIT_SCALE: StringName = &"inspect_fit_scale"
+## `inspect_fold_rig` metadata of a Visual: the path (from the Visual) of a node that folds small and opens out again (a
+## map: `FoldingSheet`). It needs `set_closed(bool)`, `close_over(seconds) -> float` and `open_out(seconds) -> float`. Such an
+## item comes to the view folded and opens out when it settles; when it goes away it folds first. Taken from the world it
+## is folded in the hand before it flies to the view.
+const META_FOLD_RIG: StringName = &"inspect_fold_rig"
 
 ## `readable_text` (a localization key, with BBCode) is the writing on a document or
 ## an inscription on an object; `art_language` the language the art itself is in
@@ -57,8 +66,21 @@ const MODE_READ: StringName = &"read"
 ## Each wheel notch changes the distance by this fraction.
 @export var zoom_fraction: float = 0.1
 @export var transition_speed: float = 6.0
+## How long a full fold and a full opening of a foldable item take, in seconds.
+## How long a foldable item (the map) takes to fold small and to open out (developer feedback: the first values, 0.7 and 0.95 s, were slow).
+@export var fold_seconds: float = 0.4
+@export var unfold_seconds: float = 0.5
 ## Radians of turn per pixel of mouse travel.
 @export var rotate_speed: float = 0.011
+
+@export_category("Held view (an item the player walks with: the map)")
+## The item fills the screen ALWAYS, standing or walking (developer feedback: it is on purpose that the map blocks the view, to make the
+## player put it away after a while of walking): its height is this much of the screen's, and it is never wider than `held_max_width` of the
+## screen's width (a narrow window); `held_center` is where its middle sits (0 is the top of the screen, 1 the bottom: a little above the middle
+## so that the bottom row of the view stays clear).
+@export_range(0.3, 1.0, 0.01) var held_height: float = 0.86
+@export_range(0.3, 1.0, 0.01) var held_max_width: float = 0.94
+@export_range(0.1, 0.95, 0.01) var held_center: float = 0.47
 
 @export_category("Handling")
 ## How much of the view height the largest side of an object fills at first. A
@@ -155,6 +177,16 @@ var back_facing_time: float = 0.0
 var current_inspect_distance: float = 0.28
 
 var inspect_mode: StringName = MODE_EXAMINE
+## True while the item shown is one the player walks with (see `open_inventory`): nothing holds the player, the mouse stays captured, and the
+## item follows the view, filling the screen.
+var _walkable: bool = false
+## The item's width and height in metres (its bounds at its own scale), to fit it to the screen.
+var _item_extent: Vector2 = Vector2(0.1, 0.1)
+var _fold_rig: Node = null
+var _fold_wait: float = 0.0
+var _close_keeps_mouse: bool = false
+## The player asked to close while a taken item was still being folded up: it closes as soon as it has come to the view.
+var _pending_close: bool = false
 var _fit_scale: float = 1.0
 var _caption_name_key: String = ""
 
@@ -218,6 +250,17 @@ func is_open() -> bool:
 	return state != InspectState.CLOSED
 
 
+## True while the view is one the player walks with (the map): it is open, but nothing is held.
+func is_walkable_view() -> bool:
+	return _walkable and state != InspectState.CLOSED
+
+
+## True while a view is open that takes the player's attention: they cannot walk, look, interact or use the flashlight. The map in the
+## hands does not.
+func blocks_gameplay() -> bool:
+	return state != InspectState.CLOSED and not _walkable
+
+
 func open_world(inspectable: Inspectable) -> bool:
 	if inspectable == null:
 		return false
@@ -246,6 +289,7 @@ func open_world(inspectable: Inspectable) -> bool:
 	_get_runtime_parent().add_child(current_visual_copy)
 	_prepare_visual_for_inspection(current_visual_copy)
 	_configure_for_item(current_visual_copy)
+	var gathered: bool = _attach_fold_rig(current_visual_copy, true)
 	_show_title(inspectable.inspect_name)
 	_begin_tracking()
 
@@ -261,6 +305,8 @@ func open_world(inspectable: Inspectable) -> bool:
 
 	transition_t = 0.0
 	state = InspectState.OPENING
+	if gathered:
+		_begin_gathering()
 	is_dragging = false
 	keep_mouse_visible_on_finish = false
 
@@ -274,10 +320,16 @@ func open_world(inspectable: Inspectable) -> bool:
 
 
 ## `start_transform` (a Transform3D, optional) makes the item fly in from where it
-## lay in the world; without it the item comes from the inventory corner.
+## lay in the world; without it the item comes from the inventory corner. `as_held_open` is for a foldable
+## item that was taken open (a map taken off a board, held open in the hands): it is shown open as it is,
+## without being folded in the hand first and opened out; it folds, as always, when it is put away, and
+## comes out of the inventory folded the next time. `walkable` is for an item the player walks with (the map): nothing holds the player, the
+## mouse stays captured and the item follows the view (see `_update_walkable_view`).
 func open_inventory(
 	slot_data: Dictionary,
-	start_transform: Variant = null
+	start_transform: Variant = null,
+	as_held_open: bool = false,
+	walkable: bool = false
 ) -> bool:
 	var template_variant: Variant = slot_data.get(
 		"inspect_visual_template",
@@ -305,6 +357,7 @@ func open_inventory(
 
 	source_visual = null
 	current_visual_copy = visual_copy
+	_walkable = walkable
 
 	_get_runtime_parent().add_child(
 		current_visual_copy
@@ -314,6 +367,7 @@ func open_inventory(
 		current_visual_copy
 	)
 	_configure_for_item(current_visual_copy)
+	var gathered: bool = _attach_fold_rig(current_visual_copy, start_transform is Transform3D, as_held_open)
 	_show_title(str(slot_data.get("name", "")))
 	_begin_tracking()
 
@@ -332,14 +386,17 @@ func open_inventory(
 
 	transition_t = 0.0
 	state = InspectState.OPENING
+	if gathered:
+		_begin_gathering()
+
 	is_dragging = false
-	keep_mouse_visible_on_finish = true
+	keep_mouse_visible_on_finish = not walkable
 
 	if inspect_overlay_layer != null:
 		inspect_overlay_layer.visible = true
 
 	_set_inspect_light_active(true)
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED if walkable else Input.MOUSE_MODE_VISIBLE)
 
 	return true
 
@@ -347,6 +404,17 @@ func open_inventory(
 func close(
 	keep_mouse_visible: bool = false
 ) -> void:
+	# A foldable item is folding itself to go away: that finishes first.
+	if state == InspectState.FOLDING:
+		return
+
+	# One that is still being folded up in the hand (just taken) is put away as soon as it has come to the view, without
+	# opening out: the press is kept, not lost.
+	if state == InspectState.PREPARING:
+		_pending_close = true
+		_close_keeps_mouse = keep_mouse_visible
+		return
+
 	if (
 		state == InspectState.CLOSED
 		or current_visual_copy == null
@@ -362,6 +430,19 @@ func close(
 
 	_report_closed()
 
+	# A foldable item folds small in the hand first, and then goes away.
+	if state == InspectState.VIEWING and is_instance_valid(_fold_rig):
+		_close_keeps_mouse = keep_mouse_visible
+		is_dragging = false
+		state = InspectState.FOLDING
+		_fold_wait = float(_fold_rig.call("close_over", fold_seconds))
+		return
+
+	_begin_closing_flight(keep_mouse_visible)
+
+
+## The way back to where the item came from (the world, or the inventory's corner).
+func _begin_closing_flight(keep_mouse_visible: bool) -> void:
 	from_transform = (
 		current_visual_copy.global_transform
 	)
@@ -376,11 +457,49 @@ func close(
 	transition_t = 0.0
 	state = InspectState.CLOSING
 	is_dragging = false
-	keep_mouse_visible_on_finish = keep_mouse_visible
+	keep_mouse_visible_on_finish = keep_mouse_visible and not _walkable
+
+
+## A foldable item found on the copy that was just made: it is given its rig. Taken from the world it is flat and is folded in
+## the hand (`_begin_gathering`, true is returned); coming from the inventory it is already folded.
+func _attach_fold_rig(item: Node3D, taken_from_world: bool, held_open: bool = false) -> bool:
+	_fold_rig = null
+	_pending_close = false
+	if not item.has_meta(META_FOLD_RIG):
+		return false
+
+	var rig: Node = item.get_node_or_null(NodePath(str(item.get_meta(META_FOLD_RIG))))
+	if rig == null or not rig.has_method("set_closed") or not rig.has_method("close_over") or not rig.has_method("open_out"):
+		return false
+
+	_fold_rig = rig
+	# Held open as it was taken: neither folded in the hand nor opened out when it comes to the view.
+	if held_open:
+		rig.call("set_closed", false)
+		return false
+
+	if not taken_from_world:
+		rig.call("set_closed", true)
+
+	return taken_from_world
+
+
+func _begin_gathering() -> void:
+	if not is_instance_valid(_fold_rig):
+		return
+
+	_fold_wait = float(_fold_rig.call("close_over", fold_seconds * 0.7))
+	state = InspectState.PREPARING
+
+
+## The item has settled in front of the player: a folded one opens out.
+func _unfold_item() -> void:
+	if is_instance_valid(_fold_rig):
+		_fold_rig.call("open_out", unfold_seconds)
 
 
 func handle_input(event: InputEvent) -> void:
-	if state != InspectState.VIEWING or current_visual_copy == null:
+	if state != InspectState.VIEWING or current_visual_copy == null or _walkable:
 		return
 
 	# The readable spots (the prompt, the open text) take the first chance.
@@ -444,12 +563,32 @@ func handle_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	if state == InspectState.OPENING:
+	if state == InspectState.PREPARING:
+		_fold_wait -= delta
+		if _fold_wait <= 0.0:
+			transition_t = 0.0
+			state = InspectState.OPENING
+
+	elif state == InspectState.FOLDING:
+		# A map folding in the hands goes where the player's view goes (they may be walking).
+		if _walkable:
+			_update_walkable_view(delta)
+
+		_fold_wait -= delta
+		if _fold_wait <= 0.0:
+			_begin_closing_flight(_close_keeps_mouse)
+
+	elif state == InspectState.OPENING:
 		transition_t = minf(
 			transition_t
 			+ delta * transition_speed,
 			1.0
 		)
+
+		# The place it flies to moves with the view, if the player is walking.
+		if _walkable:
+			_frame_walkable(true)
+			to_transform = _get_inspect_target_transform(current_visual_copy)
 
 		_apply_interpolated_transform(
 			from_transform,
@@ -460,6 +599,11 @@ func _process(delta: float) -> void:
 		if transition_t >= 1.0:
 			state = InspectState.VIEWING
 			_report_opened()
+			if _pending_close:
+				_pending_close = false
+				close(_close_keeps_mouse)
+			else:
+				_unfold_item()
 
 	elif state == InspectState.VIEWING:
 		_update_view(delta)
@@ -471,6 +615,9 @@ func _process(delta: float) -> void:
 			+ delta * transition_speed,
 			1.0
 		)
+
+		if _walkable and not is_instance_valid(source_visual) and current_visual_copy != null:
+			to_transform = _get_inventory_spawn_transform(current_visual_copy)
 
 		_apply_interpolated_transform(
 			from_transform,
@@ -660,6 +807,9 @@ func _update_back_tracking(delta: float) -> void:
 
 
 func _finish_close() -> void:
+	_walkable = false
+	_fold_rig = null
+	_pending_close = false
 	if readables != null:
 		readables.end()
 
@@ -691,6 +841,9 @@ func _finish_close() -> void:
 
 
 func _force_close_immediate() -> void:
+	_walkable = false
+	_fold_rig = null
+	_pending_close = false
 	if readables != null:
 		readables.end()
 
@@ -1007,7 +1160,11 @@ func _layout_overlay() -> void:
 	var verb_key: String = (
 		"INSPECT_BACK" if readables != null and readables.is_text_open() else "INSPECT_VERB_CLOSE"
 	)
-	close_hint.set_hint(tr("KEY_NAME_ESCAPE"), tr(verb_key), body, get_ui_font(false))
+	if _walkable:
+		# The map in the hands is put away with its own key (Esc does it too); nothing else is offered over the game.
+		close_hint.set_hint(InputBindings.get_binding_label(&"map", -1, true), tr("INSPECT_VERB_CLOSE"), body, get_ui_font(false))
+	else:
+		close_hint.set_hint(tr("KEY_NAME_ESCAPE"), tr(verb_key), body, get_ui_font(false))
 	close_hint.position = Vector2(left + column - close_hint.size.x, row_top)
 
 	var title_width: float = maxf(column - close_hint.size.x - 28.0, 40.0)
@@ -1015,6 +1172,7 @@ func _layout_overlay() -> void:
 	title_label.position = Vector2(left, row_top)
 	title_label.size = Vector2(title_width, close_hint.size.y)
 
+	controls_label.visible = not _walkable
 	controls_label.add_theme_font_override("font", get_ui_font(false))
 	controls_label.add_theme_font_size_override("font_size", maxi(int(body * 0.85), 12))
 	controls_label.position = Vector2(left, row_top - body * 7.6)
@@ -1032,6 +1190,11 @@ func _layout_overlay() -> void:
 ## item. No row while a text is open (Back is the only choice then).
 func _layout_action_row(left: float, column: float, row_top: float, body: int) -> void:
 	if read_hint == null or rotate_hint == null:
+		return
+
+	if _walkable:
+		read_hint.visible = false
+		rotate_hint.visible = false
 		return
 
 	var can_read: bool = readables != null and readables.has_obvious_reading()
@@ -1066,7 +1229,7 @@ func _on_read_hint_pressed() -> void:
 func _on_reading_changed(_is_reading: bool) -> void:
 	_layout_overlay()
 	if controls_label != null:
-		controls_label.visible = not _is_reading
+		controls_label.visible = not _is_reading and not _walkable
 
 
 func _connect_language_settings() -> void:
@@ -1131,6 +1294,7 @@ func _configure_for_item(item: Node3D) -> void:
 
 	var bounds: AABB = _local_bounds(item)
 	_center_local = bounds.get_center()
+	_item_extent = Vector2(bounds.size.x * _item_scale.x, bounds.size.y * _item_scale.y)
 
 	var largest: float = maxf(
 		bounds.size.x * _item_scale.x,
@@ -1207,6 +1371,10 @@ func _reset_view() -> void:
 
 
 func _update_view(delta: float) -> void:
+	if _walkable:
+		_update_walkable_view(delta)
+		return
+
 	# Reading a spot: the item eases round to show it squarely and nothing turns it.
 	if readables != null and readables.is_focusing():
 		var follow: float = 1.0 - exp(-7.0 * delta)
@@ -1289,6 +1457,38 @@ func _apply_pose() -> void:
 	)
 
 
+## The walkable view's own life: it follows the player's view (the item is placed against the camera every frame, as in any view), and it
+## fills the screen, standing or walking.
+func _update_walkable_view(delta: float) -> void:
+	_frame_walkable(false)
+	_shift_current = _shift_current.lerp(_shift_target, 1.0 - exp(-14.0 * delta))
+	_apply_pose()
+
+
+## How far from the camera, and how high or low in the view, the walkable item sits so that it fills the screen (its height is `held_height`
+## of the screen's, and its width no more than `held_max_width`). The camera's field of view moves a little when the player walks fast, so
+## this is worked out every frame.
+func _frame_walkable(immediately: bool) -> void:
+	var half_view: float = tan(deg_to_rad(camera.fov * 0.5))
+	var screen: Vector2 = _screen_size()
+	var aspect: float = screen.x / screen.y
+	var distance: float = inspect_distance
+	if _item_extent.x > 0.001 and _item_extent.y > 0.001:
+		distance = maxf(
+			_item_extent.y / (held_height * 2.0 * half_view),
+			_item_extent.x / (held_max_width * 2.0 * half_view * aspect)
+		)
+
+	distance = clampf(distance, min_inspect_distance, max_inspect_distance)
+	_zoom_min = min_inspect_distance
+	_zoom_max = max_inspect_distance
+	_fit_distance = distance
+	_set_inspect_distance(distance)
+	_shift_target = Vector2(0.0, (0.5 - held_center) * 2.0 * distance * half_view)
+	if immediately:
+		_shift_current = _shift_target
+
+
 ## The camera's direction without its roll: the breathing sway and the small
 ## leans of the player's view must not tilt a paper held up to read.
 func _steady_basis() -> Basis:
@@ -1334,6 +1534,10 @@ func _update_readable_state(immediately: bool) -> void:
 ## document, smaller when it is an object to turn in the hand. The first size is
 ## deliberately modest; the player can zoom in to look closer.
 func _reframe(immediately: bool) -> void:
+	if _walkable:
+		_frame_walkable(true)
+		return
+
 	var half_view: float = tan(deg_to_rad(camera.fov * 0.5))
 	var screen: Vector2 = _screen_size()
 	var aspect: float = screen.x / screen.y

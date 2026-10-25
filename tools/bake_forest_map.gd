@@ -303,7 +303,7 @@ func _draw_trees(cells: PackedFloat32Array, smooth: PackedFloat32Array) -> void:
 			if near_trail[index] > 0.012 or smooth[index] > 0.05:
 				continue
 
-			if point.y < 80.0 or point.distance_to(compass) < 80.0 or (point.x < 300.0 and point.y > float(_height) - 90.0):
+			if point.y < 80.0 or point.distance_to(compass) < 80.0:
 				continue
 
 			var world: Vector2 = ForestMapProps.WORLD_MIN + point / float(ForestMapProps.PIXELS_PER_METER)

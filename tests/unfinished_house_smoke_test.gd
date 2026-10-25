@@ -577,21 +577,28 @@ func _ray_finds(item: Node, stand: Vector3, aim: Vector3, what: String) -> void:
 	await _wait(0.4)
 
 	var camera: Camera3D = player.get_node("Head/Camera3D")
-	var to_aim: Vector3 = aim - camera.global_position
-	player.movement_controller.look_yaw = -rad_to_deg(atan2(-to_aim.x, -to_aim.z))
-	player.movement_controller.look_pitch = -rad_to_deg(
-		atan2(to_aim.y, Vector2(to_aim.x, to_aim.z).length())
-	)
-	# The view eases towards where it is told to look: give it time to arrive before the ray is read.
-	await _wait(0.6)
-	for i: int in 3:
-		await get_tree().physics_frame
-
 	var ray: RayCast3D = player.get_node("Head/Camera3D/InteractRay")
-	ray.force_raycast_update()
-	var found: Node = ray.get_collider() as Node
-	while found != null and not found is Interactable:
-		found = found.get_parent()
+	var found: Node = null
+	# The camera is still settling after the move (the player drops to the floor) and the view eases towards where it is told
+	# to look, so the aim is taken again from where the camera is now, until the ray arrives. An item that cannot be reached
+	# never does, and the check fails after the last try.
+	for attempt: int in 3:
+		var to_aim: Vector3 = aim - camera.global_position
+		player.movement_controller.look_yaw = -rad_to_deg(atan2(-to_aim.x, -to_aim.z))
+		player.movement_controller.look_pitch = -rad_to_deg(
+			atan2(to_aim.y, Vector2(to_aim.x, to_aim.z).length())
+		)
+		await _wait(0.6)
+		for i: int in 3:
+			await get_tree().physics_frame
+
+		ray.force_raycast_update()
+		found = ray.get_collider() as Node
+		while found != null and not found is Interactable:
+			found = found.get_parent()
+
+		if found == item:
+			break
 
 	_expect(
 		found == item,

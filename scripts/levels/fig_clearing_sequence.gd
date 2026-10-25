@@ -12,18 +12,19 @@ class_name FigClearingSequence
 ## herrings). Half of them are here, in the camp: Rain at the Station, Bus Stop Departure (both right)
 ## and Lucas at the Workshop (a red herring). The other half are in the lockbox in the ruined signal tower
 ## (`SignalTowerBuilder`): Scraped Knee (right) and The Broken Lever and The Foggy Platform (red herrings).
-## The tower's door is locked and its key, `brass_signal_key`, is hidden here (`CampDressing`, `FigClearingProps`):
-## Juliana's note on the clothesline (`READABLE_CAMP_NOTE`) says it was tucked away near the campsite, Sophia's note
-## on the thermos on the log table (`READABLE_THERMOS`) says it is in the signal box of the lantern, and turning
-## the lantern's filter to red (`SignalLantern`) springs the drawer in its base, which holds the key and Rain at the
-## Station. A note pinned to the tower's door (`READABLE_TOWER_DOOR_NOTE`) says it is kept at the fig tree camp.
+## The tower's door is locked and its key, `brass_signal_key`, is hidden here (`CampDressing`, `FigClearingProps`): Sophia's note on
+## the thermos on the log table (`READABLE_THERMOS`) says she locked the key and the station photo in their lockbox, with the code of their
+## emergency radio channel, and that the radio's panel at the entrance has it. The railway radio on its crate by the western trail
+## entrance (`RailwayRadio`, `[E] Inspect Radio`) is looked at close up: its analog dial is locked on 14.08 MHz, with a strip of masking tape
+## marked HQ above it (`READABLE_RADIO`). So the code of the J & S lockbox on the table is 1 4 0 8, and its lid pops open (`JSLockbox`)
+## on the key and Rain at the Station. A note pinned to the tower's door (`READABLE_TOWER_DOOR_NOTE`) says it is kept at the fig tree camp.
 ## So the two parts of the puzzle can be met in either order.
 ##
 ## The album is judged when every space is full: right (Scraped Knee, Rain at the Station, Bus Stop
 ## Departure, in that order), the finale starts; wrong, a short burst of static says the memory does not line up.
 ##
-## The scene ends the moment the recording does: rain, campfire and flashlight cut out together,
-## into total darkness. After `ficha_delay_seconds` of it a metallic CLINK sounds on the table,
+## The scene ends the moment the recording does: rain, campfire, flashlight and the camp's lantern (and the radio's lamp and hiss) cut out
+## together, into total darkness. After `ficha_delay_seconds` of it a metallic CLINK sounds on the table,
 ## the flashlight comes back, and by its light the fire pit holds cold ash and Juliana's Ficha
 ## (a telephone token scratched with "CALL HER") lies beside the album: the only thing the player
 ## takes from the clearing. The photographs are never taken from the album (they are only put in it; the
@@ -104,6 +105,7 @@ func _restore_stage() -> void:
 
 	if _recording_done:
 		fire.extinguish()
+		_put_out_camp_lights()
 		_place_ficha()
 		stage = Stage.DONE
 		return
@@ -238,6 +240,7 @@ func _play_rain(enabled: bool) -> void:
 ## The flashlight comes back by itself after the clink.
 func _put_out_lights() -> void:
 	fire.extinguish()
+	_put_out_camp_lights()
 
 	var flashlight: Node = _get_flashlight()
 	if flashlight != null and flashlight.has_method("turn_off"):
@@ -247,6 +250,14 @@ func _put_out_lights() -> void:
 # ============================================================
 # HELPERS
 # ============================================================
+
+## The camp's other lights go with the fire (the lantern on the memory table, the railway radio's lamp and its hiss): `CampDressing` puts them out,
+## and they stay out.
+func _put_out_camp_lights() -> void:
+	var dressing: FigClearingProps = get_node_or_null("CampDressing") as FigClearingProps
+	if dressing != null:
+		dressing.put_out_lights()
+
 
 func _get_flashlight() -> Node:
 	var target: Node = _get_player()

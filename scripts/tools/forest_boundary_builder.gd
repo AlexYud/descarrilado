@@ -107,6 +107,24 @@ func build(terrain: Terrain3D) -> Dictionary:
 	}
 
 
+## Reads where the wall plants are inside `zone` (without building any wall), so that a tool can ask `is_wall_plant_at`.
+func prepare_plants(terrain: Terrain3D) -> void:
+	_data = terrain.data
+	_cols = int(ceilf(zone.size.x / CELL))
+	_rows = int(ceilf(zone.size.y / CELL))
+	_compute_blocked(terrain)
+
+
+## Whether a wall plant (a bush, a tall plant, a fern, a tree) covers the world point (x, z): after `prepare_plants`.
+func is_wall_plant_at(point: Vector2) -> bool:
+	var col: int = int(floorf((point.x - zone.position.x) / CELL))
+	var row: int = int(floorf((point.y - zone.position.y) / CELL))
+	if col < 0 or row < 0 or col >= _cols or row >= _rows:
+		return false
+
+	return _blocked[row * _cols + col] == 1
+
+
 # ============================================================
 # PATH DISTANCE
 # ============================================================
