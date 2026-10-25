@@ -96,6 +96,10 @@ func get_effort() -> int:
 		return 2
 
 	if Vector2(_player.velocity.x, _player.velocity.z).length() > 0.3:
+		# A hard climb (a steep slope, stairs up) takes the breath as running does.
+		if movement != null and movement.slope_effort > 0.6:
+			return 2
+
 		return 1
 
 	return 0

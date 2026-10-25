@@ -59,7 +59,7 @@ const FLOOR_PLANTS: Array[Dictionary] = [
 ]
 
 ## Nodes of the clearing scene that keep plants away, with a clearance radius
-## in metres. The photographs lie on the ground and must stay visible (the cup and the camp dressing, with the lockbox and the thermos, are on tables; the railway radio's crate by the western entrance is not listed: grass may grow round it). The camp was laid out again on 2026-10-24 (the tents, the memory table and the firewood moved) without rebuilding the terrain: the entries name nodes, so a rebuild would clear the plants at their new places, and the old bare patches (the wood yard stands in one) would fill with plants.
+## in metres. The photographs lie on the ground and must stay visible (the cup and the camp dressing, with the lockbox and the thermos, are on tables; the railway radio's crate by the western entrance is not listed: grass may grow round it). The camp was laid out again on 2026-10-24 (the tents, the memory table and the firewood moved) without rebuilding the terrain: the entries name nodes, so a rebuild would clear the plants at their new places, and the old bare patches (the wood yard stands in one) would fill with plants. The plants that had grown through the new camp were taken away on 2026-10-25 by `clear_camp_plants.tscn` (it measures the real meshes of the camp, so it needs no list here); run it again after a rebuild.
 const PROP_CLEARANCE: Dictionary = {
 	"Scenery/Tent": 2.0,
 	"Scenery/Tent2": 2.0,

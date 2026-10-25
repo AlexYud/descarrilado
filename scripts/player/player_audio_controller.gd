@@ -43,6 +43,8 @@ var _forest_steps: Array[AudioStream] = []
 var _last_forest_step: int = -1
 var _terrain: Terrain3D = null
 var _next_terrain_search_msec: int = 0
+var _creak_player: AudioStreamPlayer = null
+static var _stair_creaks: Array[AudioStreamWAV] = []
 
 
 func setup(player_node: CharacterBody3D) -> void:
@@ -86,6 +88,28 @@ func trigger_footstep(wants_sprint: bool, strength: float = 1.0) -> void:
 	sfx_walk.pitch_scale *= 0.97 if _left_foot else 1.03
 	sfx_walk.volume_db = _walk_base_db + loudness_db
 	sfx_walk.play()
+
+
+## An old board of a wooden stair groaning under a heavy step: a short creak (one of a few, never the same twice in a row), under the footstep. The movement
+## controller asks for it now and then, only on stairs that creak.
+func trigger_stair_creak(strength: float = 1.0) -> void:
+	if _creak_player == null:
+		_creak_player = AudioStreamPlayer.new()
+		_creak_player.name = "StairCreak"
+		_creak_player.bus = sfx_walk.bus
+		player.add_child(_creak_player)
+
+	if _stair_creaks.is_empty():
+		for variant: int in 4:
+			_stair_creaks.append(PlaceholderAudio.make_stair_creak(0.55, 11 + 13 * variant))
+
+	if _creak_player.playing:
+		return
+
+	_creak_player.stream = _stair_creaks[randi() % _stair_creaks.size()]
+	_creak_player.pitch_scale = randf_range(0.85, 1.2)
+	_creak_player.volume_db = _walk_base_db - 7.0 + 6.0 * log(clampf(strength, 0.4, 1.8)) / log(10.0)
+	_creak_player.play()
 
 
 ## One of the forest steps, never the one just played.

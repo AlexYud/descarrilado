@@ -602,6 +602,9 @@ func _build_stairs(holder: Node3D) -> void:
 	stairs.add_child(ramp)
 	ramp.basis = tilt
 	ramp.position = Vector3(STAIR_CENTER_X, BASE_HEIGHT * 0.5, mid_z) - tilt.y * 0.05
+	# Stairs for the player's walk (`PlayerMovementController`): a slow, heavy step to every two treads, and the old boards groan.
+	ramp.add_to_group(&"stairs")
+	ramp.set_meta(&"stair_creaks", true)
 
 	# The banister on the outer side: posts and a rail that follow the stairs, and a block so nobody walks off.
 	var post_count: int = 5

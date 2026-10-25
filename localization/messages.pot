@@ -1065,15 +1065,6 @@ msgstr ""
 msgid "CAPTION_TOWER_DOOR_LOCKED"
 msgstr ""
 
-msgid "TOWER_HQ_CARVED_TEXT"
-msgstr ""
-
-msgid "ITEM_TOWER_CHALKBOARD_NAME"
-msgstr ""
-
-msgid "ITEM_TOWER_CHALKBOARD_DESCRIPTION"
-msgstr ""
-
 # Signal tower: the town's history, on the control floor
 
 msgid "ITEM_TOWER_NEWS_NAME"
@@ -1114,13 +1105,13 @@ msgstr ""
 
 # Signal tower: the children's headquarters
 
-msgid "ITEM_JULIANA_SKETCH_NAME"
+msgid "ITEM_JULIANA_NOTE_NAME"
 msgstr ""
 
-msgid "ITEM_JULIANA_SKETCH_DESCRIPTION"
+msgid "ITEM_JULIANA_NOTE_DESCRIPTION"
 msgstr ""
 
-msgid "READABLE_JULIANA_SKETCH"
+msgid "READABLE_JULIANA_NOTE"
 msgstr ""
 
 msgid "ITEM_SOPHIA_NOTE_NAME"
@@ -1130,18 +1121,6 @@ msgid "ITEM_SOPHIA_NOTE_DESCRIPTION"
 msgstr ""
 
 msgid "READABLE_SOPHIA_NOTE"
-msgstr ""
-
-msgid "TOWER_WALKIE_TALKIE"
-msgstr ""
-
-msgid "ITEM_POCKET_WATCH_NAME"
-msgstr ""
-
-msgid "ITEM_POCKET_WATCH_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_POCKET_WATCH"
 msgstr ""
 
 msgid "ITEM_THERMOS_NAME"

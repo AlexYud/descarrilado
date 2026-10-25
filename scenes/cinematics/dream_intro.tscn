@@ -135,7 +135,9 @@ density = 0.5
 cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 96.0
+lod0_range = 128.0
+lod1_range = 224.0
+fade_margin = 16.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_yilg7"]
 name = "tree_test"
@@ -144,7 +146,9 @@ scene_file = ExtResource("12_gi2up")
 density = 0.25
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 192.0
+lod1_range = 320.0
+fade_margin = 24.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_ywnw5"]
 name = "mediun_generic_tree"
@@ -153,7 +157,9 @@ scene_file = ExtResource("10_d72hq")
 density = 0.25
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 192.0
+lod1_range = 320.0
+fade_margin = 24.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_e6tct"]
 name = "pitangueira"
@@ -162,7 +168,9 @@ scene_file = ExtResource("11_gi2up")
 density = 0.2
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 192.0
+lod1_range = 320.0
+fade_margin = 24.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_romvk"]
 name = "big_foliage_01"
@@ -172,7 +180,9 @@ density = 0.2
 cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 96.0
+lod0_range = 128.0
+lod1_range = 224.0
+fade_margin = 16.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_j64lv"]
 name = "ground_leaves_01"
@@ -184,6 +194,7 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 40.0
+fade_margin = 8.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_pyuur"]
 name = "medium_foliage_01"
@@ -194,6 +205,8 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 64.0
+lod1_range = 112.0
+fade_margin = 12.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_scb0d"]
 name = "tall_thin_foliage_02"
@@ -204,6 +217,7 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 48.0
+fade_margin = 10.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_rhjrb"]
 name = "white_flower_01"
@@ -214,6 +228,8 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 128.0
+lod1_range = 224.0
+fade_margin = 16.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vqhyl"]
 name = "medium_foliage_02"
@@ -224,6 +240,8 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 64.0
+lod1_range = 112.0
+fade_margin = 12.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_r8hnu"]
 name = "kelp_like_foliage"
@@ -234,6 +252,8 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 64.0
+lod1_range = 112.0
+fade_margin = 12.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_vx2e6"]
 name = "small_foliage_01"
@@ -244,6 +264,7 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 48.0
+fade_margin = 10.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_07f30"]
 name = "small_foliage_02"
@@ -254,6 +275,7 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 48.0
+fade_margin = 10.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_8gc8m"]
 name = "tall_thin_foliage_01"
@@ -264,6 +286,7 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 48.0
+fade_margin = 10.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_hxwua"]
 name = "araucaria"
@@ -272,7 +295,9 @@ scene_file = ExtResource("22_tky3d")
 density = 0.01
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 192.0
+lod1_range = 320.0
+fade_margin = 24.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_6m8mj"]
 name = "tent"
@@ -299,7 +324,9 @@ material_override = ExtResource("tint_rock1")
 density = 1.0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 160.0
+lod1_range = 272.0
+fade_margin = 20.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_sgxxr"]
 name = "rock_002"
@@ -309,7 +336,9 @@ material_override = ExtResource("tint_rock2")
 density = 2.0
 last_lod = 0
 last_shadow_lod = 0
-lod0_range = 128.0
+lod0_range = 160.0
+lod1_range = 272.0
+fade_margin = 20.0
 
 [sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_i8qao"]
 name = "bench"
@@ -329,6 +358,8 @@ cast_shadows = 0
 last_lod = 0
 last_shadow_lod = 0
 lod0_range = 128.0
+lod1_range = 224.0
+fade_margin = 16.0
 
 [sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_svmu2"]
 name = "Poliigon_GrassPatchyGround_4585_BaseColor"

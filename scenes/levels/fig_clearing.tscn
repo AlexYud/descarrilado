@@ -271,27 +271,27 @@ shape = SubResource("BoxShape3D_table")
 
 [node name="EnamelCup" type="MeshInstance3D" parent="Scenery" unique_id=1214750326]
 cast_shadow = 0
-transform = Transform3D(0.62014085, 0, 0.78449047, 0, 1, 0, -0.78449047, 0, 0.62014085, 0.75, 0.825, -2.48)
+transform = Transform3D(0.62014085, 0, 0.78449047, 0, 1, 0, -0.78449047, 0, 0.62014085, 0.75, 0.825, -2.52)
 mesh = SubResource("CylinderMesh_cup")
 surface_material_override/0 = SubResource("Mat_enamel")
 
 [node name="Props" type="Node3D" parent="." unique_id=302041315]
 
 [node name="CassetteRecorder" parent="Props" unique_id=2045306204 instance=ExtResource("5_recorder")]
-transform = Transform3D(0.94243544, 0, 0.33318955, 0, 0.99999994, 0, -0.33318955, 0, 0.94243544, -0.01000002, 0.78, -2.15)
+transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, -0.05, 0.78, -2.14)
 
 [node name="PhotoAlbum" parent="Props" unique_id=1257153703 instance=ExtResource("6_album")]
-transform = Transform3D(0.99997383, 0, -0.007235706, 0, 1, 0, 0.007235706, 0, 0.99997383, 0.47, 0.78, -2.2)
+transform = Transform3D(0.99997383, 0, -0.007235706, 0, 1, 0, 0.007235706, 0, 0.99997383, 0.53, 0.78, -2.25)
 
 [node name="PhotoRecent" parent="Props" unique_id=938142182 instance=ExtResource("9_recent")]
 transform = Transform3D(-0.69922113, 0.71490544, 3.1249513e-08, 0, -4.371139e-08, 1, 0.71490544, 0.69922113, 3.0563925e-08, 0.21402094, 0.004, 2.358548)
 
 
 [node name="PhotoWorkshop" parent="Props" instance=ExtResource("30_workshop")]
-transform = Transform3D(0.9387284, -0.3446577, 0, 0, 0, 1, -0.3446577, -0.9387284, 0, 0.85, 0.786, -2.02)
+transform = Transform3D(0.9387284, -0.3446577, 0, 0, 0, 1, -0.3446577, -0.9387284, 0, 0.95, 0.786, -1.98)
 
 [node name="FichaSpot" type="Marker3D" parent="Props"]
-transform = Transform3D(0.62014085, 0, 0.78449047, 0, 1, 0, -0.78449047, 0, 0.62014085, 0.47, 0.784, -1.9000001)
+transform = Transform3D(0.62014085, 0, 0.78449047, 0, 1, 0, -0.78449047, 0, 0.62014085, 0.55, 0.784, -1.93)
 
 [node name="CampDressing" type="Node3D" parent="."]
 script = ExtResource("33_dressing")

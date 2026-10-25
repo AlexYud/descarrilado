@@ -196,6 +196,9 @@ func _apply_blackout() -> void:
 
 @export_category("Overlook Vista")
 
+## A change of the player's distance from the focus bigger than this between two frames is not a walk (a teleport, a loaded game): the reach is taken at once.
+const TELEPORT_DISTANCE: float = 4.0
+
 ## While the forest atmosphere is locked, the fog still clears and the moon rises as the
 ## player walks onto the city overlook, so the town in the valley can be seen. Leave empty
 ## to turn this off. The reveal uses the low altitude fog and camera distance values below.
@@ -216,6 +219,17 @@ var vista_ease_power: float = 1.8
 ## The view never changes faster than this per second (1 is the whole change), however fast the walk.
 @export_range(0.005, 1.0, 0.005)
 var vista_max_rate: float = 0.03
+
+## The fog's reach (where the depth fog begins and ends, and how far the camera sees) stays the forest's until the player is this close to the focus, and then
+## opens. The plants and trees of the forest end at ranges of their own (they fade out over a margin, see the mesh assets of the terrain): while the fog
+## still hides everything past the forest's own limit nothing can be seen to appear, and in the last stretch, where the forest is thin and the view opens
+## on the valley, there is little left to appear. The light, the colour of the mist and its strength still change over the whole walk (`vista_start_distance`).
+@export_range(2.0, 400.0, 1.0)
+var vista_reach_distance: float = 40.0
+
+## The reach never opens faster than this per second (1 is all of it).
+@export_range(0.005, 1.0, 0.005)
+var vista_reach_max_rate: float = 0.05
 
 ## Moonlight and ambient light at the full vista (the forest has almost none): enough to
 ## read the mountains and the town's walls from far away.
@@ -367,6 +381,10 @@ var _vista_focus: Node3D = null
 ## The vista blend as the player has been shown it (it creeps towards the walked-to value).
 var _vista_smoothed: float = 0.0
 var _vista_creep_ready: bool = false
+## The same for the fog's reach (see `vista_reach_distance`).
+var _reach_smoothed: float = 0.0
+var _reach_ready: bool = false
+var _last_vista_distance: float = -1.0
 var _runtime_moon: DirectionalLight3D = null
 
 var _base_fog_density: float = 0.0
@@ -499,6 +517,13 @@ func _get_vista_blend() -> float:
 	# player never sees the fog thin or the far trees and lights appear, there is only a sense that the
 	# air has gradually cleared by the time they reach the overlook.
 	var linear: float = 1.0 - smoothstep(vista_full_distance, maxf(vista_start_distance, vista_full_distance + 1.0), distance)
+	var reach_linear: float = 1.0 - smoothstep(vista_full_distance, maxf(vista_reach_distance, vista_full_distance + 1.0), distance)
+	# The reach only ever creeps, however fast the walk (it lags behind a quick one); a jump in the position (a teleport, a loaded game) is taken at once.
+	if _last_vista_distance >= 0.0 and absf(distance - _last_vista_distance) > TELEPORT_DISTANCE:
+		_reach_ready = false
+
+	_last_vista_distance = distance
+	_reach_creep(pow(reach_linear, vista_ease_power))
 	return _vista_creep(pow(linear, vista_ease_power))
 
 
@@ -514,21 +539,33 @@ func _vista_creep(target: float) -> float:
 	return _vista_smoothed
 
 
+## The reach of the fog, moved towards `target` no faster than `vista_reach_max_rate` per second (the first time, or after a jump in the position, at once).
+func _reach_creep(target: float) -> void:
+	if not _reach_ready:
+		_reach_smoothed = target
+		_reach_ready = true
+		return
+
+	_reach_smoothed = move_toward(_reach_smoothed, target, vista_reach_max_rate * get_process_delta_time())
+
+
 ## The fog and the camera distance follow the low altitude values (with their curve, so the
 ## forest stays dense until the player is close), the light rises to the vista values.
+## The reach of the fog (its depth and the camera's far plane) has a blend of its own, which opens later (`vista_reach_distance`).
 func _apply_vista(vista: float) -> void:
-	var virtual_altitude: float = lerpf(fog_reduction_start_altitude, fog_reduction_end_altitude, vista)
+	var virtual_altitude: float = lerpf(fog_reduction_start_altitude, fog_reduction_end_altitude, _reach_smoothed)
 	_update_dream_fog_for_altitude(virtual_altitude)
 	_follow_player_fog_height()
 	_update_dream_camera_distance_for_altitude(virtual_altitude)
 
 	var light: float = pow(vista, maxf(0.1, altitude_visibility_curve))
+	var reach: float = pow(_reach_smoothed, maxf(0.1, altitude_visibility_curve))
 
 	# The valley mist: depth fog that builds up with distance, in a cool grey that the moon lights.
 	environment.fog_density = lerpf(environment.fog_density, vista_mist_density, light)
-	environment.fog_depth_begin = lerpf(environment.fog_depth_begin, vista_mist_begin, light)
-	environment.fog_depth_end = maxf(environment.fog_depth_begin + 1.0, lerpf(environment.fog_depth_end, vista_mist_end, light))
-	environment.fog_depth_curve = lerpf(_base_fog_curve, vista_mist_curve, light)
+	environment.fog_depth_begin = lerpf(environment.fog_depth_begin, vista_mist_begin, reach)
+	environment.fog_depth_end = maxf(environment.fog_depth_begin + 1.0, lerpf(environment.fog_depth_end, vista_mist_end, reach))
+	environment.fog_depth_curve = lerpf(_base_fog_curve, vista_mist_curve, reach)
 	environment.fog_light_color = _base_fog_color.lerp(vista_mist_color, light)
 	environment.fog_light_energy = lerpf(_base_fog_energy, vista_mist_energy, light)
 	environment.fog_sky_affect = lerpf(environment.fog_sky_affect, vista_mist_sky_affect, light)

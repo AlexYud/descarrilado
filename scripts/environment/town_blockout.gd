@@ -891,6 +891,8 @@ func _build_steps(parent: Node3D, start: Vector3, end: Vector3, half_width: floa
 	var slope_basis: Basis = Basis.looking_at(slope.normalized(), Vector3.UP)
 	var body: StaticBody3D = StaticBody3D.new()
 	body.name = "SlopeCollision"
+	# Stairs for the player's walk (`PlayerMovementController`): a slow, heavy step to every two treads.
+	body.add_to_group(&"stairs")
 	body.transform = Transform3D(slope_basis, start + slope * 0.5 - slope_basis.y * 0.15 + Vector3(0.0, absf(rise) * 0.5, 0.0))
 	var shape: CollisionShape3D = CollisionShape3D.new()
 	var box: BoxShape3D = BoxShape3D.new()

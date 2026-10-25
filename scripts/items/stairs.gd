@@ -75,6 +75,7 @@ func make_stairs() -> void:
 	stairs_poly.position = Vector3(-stair_size.x / 2.0, -stair_size.y / 2.0, stair_size.z / 2.0)
 
 	_update_ramp_collision(ramp_body, ramp_collision)
+	ramp_body.add_to_group(&"stairs")
 
 	_cur_stair_size = stair_size
 	_cur_num_stairs = num_stairs

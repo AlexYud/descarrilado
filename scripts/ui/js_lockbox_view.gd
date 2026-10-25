@@ -32,6 +32,8 @@ var _flying: bool = false
 var _selected: int = 0
 
 var _root: Control = null
+## The frame round the row the digits are read in (see `ReadingBand`).
+var _band: ReadingBand = null
 var _hint: Label = null
 var _back: KeyHint = null
 var _up: Array[Arrow] = []
@@ -257,6 +259,11 @@ func _layout_arrows() -> void:
 	if _camera == null or not is_instance_valid(_camera):
 		return
 
+	var band_left: float = INF
+	var band_right: float = -INF
+	var band_middle: float = 0.0
+	var band_radius: float = 0.0
+	var counted: int = 0
 	for i: int in _up.size():
 		var middle: Vector3 = lockbox.get_wheel_position(i)
 		if _camera.is_position_behind(middle):
@@ -276,6 +283,20 @@ func _layout_arrows() -> void:
 		_down[i].position = Vector2(centre.x - arrow_size.x * 0.5, centre.y + radius + gap)
 		_up[i].visible = true
 		_down[i].visible = true
+		band_left = minf(band_left, centre.x - radius * 1.2)
+		band_right = maxf(band_right, centre.x + radius * 1.2)
+		band_middle += centre.y
+		band_radius = radius
+		counted += 1
+
+	# The row the digits are read in: the digit that counts is in the middle of its wheel, and this frames it.
+	_band.visible = counted > 0
+	if counted > 0:
+		var band_size: Vector2 = Vector2(band_right - band_left, band_radius * 0.9)
+		_band.position = Vector2(band_left, band_middle / float(counted) - band_size.y * 0.5)
+		if not _band.size.is_equal_approx(band_size):
+			_band.size = band_size
+			_band.queue_redraw()
 
 	_layout_row()
 
@@ -318,6 +339,11 @@ func _build_ui() -> void:
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
+
+	_band = ReadingBand.new()
+	_band.name = "ReadingBand"
+	_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_band)
 
 	for i: int in lockbox.code.size():
 		var up: Arrow = Arrow.new()
@@ -374,6 +400,20 @@ func _layout_row() -> void:
 	_hint.add_theme_font_size_override("font_size", body)
 	_hint.position = Vector2(left, row_top)
 	_hint.size = Vector2(maxf(column - _back.size.x - 28.0, 40.0), _back.size.y)
+
+
+## The row the digits are read in: a thin frame round the middle of the wheels, with a small pointer at each end. The digit that counts is the one in
+## the frame (the lockbox turns the wheels so that it is, see `JSLockbox`); the others are dimmed.
+class ReadingBand extends Control:
+	func _draw() -> void:
+		var rect: Rect2 = Rect2(Vector2.ZERO, size)
+		draw_rect(rect, Color(UIConfig.color_bright, 0.05))
+		draw_rect(rect, Color(UIConfig.color_bright, 0.55), false, 2.0)
+		var point: float = clampf(size.y * 0.32, 6.0, 16.0)
+		var middle: float = size.y * 0.5
+		var colour: Color = Color(UIConfig.color_bright, 0.9)
+		draw_colored_polygon(PackedVector2Array([Vector2(-point - 4.0, middle - point * 0.8), Vector2(-4.0, middle), Vector2(-point - 4.0, middle + point * 0.8)]), colour)
+		draw_colored_polygon(PackedVector2Array([Vector2(size.x + point + 4.0, middle - point * 0.8), Vector2(size.x + 4.0, middle), Vector2(size.x + point + 4.0, middle + point * 0.8)]), colour)
 
 
 ## A squared button with a triangle (no font needs an arrow glyph): bright when it is the chosen wheel's or under the mouse.

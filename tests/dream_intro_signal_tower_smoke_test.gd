@@ -188,7 +188,8 @@ func _check_walking() -> void:
 
 	# 3. From the pad, the stairs: east along their length from the foot, up to the balcony.
 	await _place(player, Vector2(97.4, -33.25), 90.0)
-	await _walk(player, 7.5)
+	# (The stairs are climbed slowly now, one step to two treads: walk until the top, for as long as it takes.)
+	await _walk_until(player, func() -> bool: return player.global_position.y > base_y + 2.7, 16.0)
 	_expect(player.global_position.y > base_y + 2.7, "the player climbs the stairs to the balcony (%.2f m up)" % (player.global_position.y - base_y))
 	_expect(movement != null, "(the player has its movement controller)")
 
@@ -204,6 +205,18 @@ func _place(player: CharacterBody3D, spot: Vector2, yaw: float) -> void:
 func _walk(player: CharacterBody3D, seconds: float) -> void:
 	Input.action_press(&"up")
 	await get_tree().create_timer(seconds).timeout
+	Input.action_release(&"up")
+	await get_tree().create_timer(0.2).timeout
+
+
+## Walks forward until `done` is true (or `seconds` have passed).
+func _walk_until(_player: CharacterBody3D, done: Callable, seconds: float) -> void:
+	Input.action_press(&"up")
+	var waited: float = 0.0
+	while waited < seconds and not bool(done.call()):
+		await get_tree().physics_frame
+		waited += get_physics_process_delta_time()
+
 	Input.action_release(&"up")
 	await get_tree().create_timer(0.2).timeout
 

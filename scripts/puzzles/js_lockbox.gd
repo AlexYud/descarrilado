@@ -13,8 +13,13 @@ class_name JSLockbox
 ## player a wrong code is close.
 ##
 ## The model is `Model` (ProceduralProp kind `js_lockbox`, see FigClearingProps): `Wheels/Wheel0..3` (a thumb wheel each, ten digits round
-## its rim, turned about X: the digit at the front is the value), `LidPivot`, `Latch` and `CloseUp` (where the close-up view's camera
+## its rim, turned about X: the digit that faces the close-up camera is the value), `LidPivot`, `Latch` and `CloseUp` (where the close-up view's camera
 ## goes). The opened lockbox is saved (`puzzles/js_lockbox_open`) and so are the wheels' digits.
+##
+## Which digit counts has to be plain: the camera looks down on the dial, so the wheels are turned `reading_degrees` further than straight ahead,
+## which puts the digit that counts in the middle of its wheel as it is seen (it used to be seen low, between two others, and the player set the
+## wrong one), and the digits next to it are dimmed more the further they are from it, so that the wheel reads at a glance. The close-up view
+## frames that row as well (`JSLockboxView`).
 
 signal digit_changed(index: int, value: int)
 signal unlocked
@@ -27,6 +32,10 @@ signal closed
 const STATE_SECTION: StringName = &"puzzles"
 ## How far a wheel turns for one digit.
 const DEGREES_PER_DIGIT: float = 36.0
+## How bright a digit is, by its distance in degrees round the wheel from the one that counts: full at the reading line, `DIGIT_DIM` of it from
+## `DIM_FROM_DEGREES` on.
+const DIGIT_DIM: float = 0.35
+const DIM_FROM_DEGREES: float = 40.0
 
 ## One digit per wheel.
 @export var code: Array[int] = [1, 4, 0, 8]
@@ -44,6 +53,8 @@ const DEGREES_PER_DIGIT: float = 36.0
 var digits: Array[int] = []
 var is_unlocked: bool = false
 var view: JSLockboxView = null
+## Degrees above straight ahead at which the digit that counts is read (see the top of the file).
+var reading_degrees: float = 0.0
 
 var _wheels: Array[Node3D] = []
 ## How many digits each wheel has been turned by since the start (not wrapped), so that it always turns the way it was pushed.
@@ -53,9 +64,15 @@ var _latch: Node3D = null
 var _contents: Node3D = null
 var _sound: AudioStreamPlayer3D = null
 var _close_up: Marker3D = null
+## The ten digit labels of each wheel, and the colour they have at full brightness.
+var _digit_labels: Array = []
+var _digit_base: Color = Color(0.95, 0.9, 0.72)
+## How much longer the digits' brightness is kept up to date (a wheel is turning).
+var _glow_time: float = 0.0
 
 
 func _ready() -> void:
+	reading_degrees = FigClearingProps.lockbox_reading_degrees()
 	for i: int in code.size():
 		digits.append(0)
 		_wheel_steps.append(0)
@@ -66,6 +83,14 @@ func _ready() -> void:
 			var wheel: Node3D = wheels.get_node_or_null("Wheel%d" % i) as Node3D
 			if wheel != null:
 				_wheels.append(wheel)
+				var labels: Array[Label3D] = []
+				for digit: int in 10:
+					labels.append(wheel.get_node_or_null("Digit%d" % digit) as Label3D)
+
+				_digit_labels.append(labels)
+
+	if not _digit_labels.is_empty() and (_digit_labels[0] as Array)[0] != null:
+		_digit_base = ((_digit_labels[0] as Array)[0] as Label3D).modulate
 
 	_lid = get_node_or_null(^"Model/LidPivot") as Node3D
 	_latch = get_node_or_null(^"Model/Latch") as Node3D
@@ -86,6 +111,7 @@ func _ready() -> void:
 	view = JSLockboxView.new()
 	add_child(view)
 	view.setup(self)
+	set_process(false)
 
 
 func _exit_tree() -> void:
@@ -212,7 +238,14 @@ func _make_contents() -> void:
 ## Puts each wheel at its digit.
 func _pose_wheels() -> void:
 	for i: int in _wheels.size():
-		_wheels[i].rotation_degrees.x = float(_wheel_steps[i]) * DEGREES_PER_DIGIT
+		_wheels[i].rotation_degrees.x = _wheel_angle(i)
+
+	_update_digit_glow()
+
+
+## The angle a wheel is turned to for its digit: the digit that counts is read `reading_degrees` above straight ahead.
+func _wheel_angle(index: int) -> float:
+	return float(_wheel_steps[index]) * DEGREES_PER_DIGIT - reading_degrees
 
 
 func _spin_wheel(index: int) -> void:
@@ -220,8 +253,32 @@ func _spin_wheel(index: int) -> void:
 		return
 
 	create_tween().tween_property(
-		_wheels[index], "rotation_degrees:x", float(_wheel_steps[index]) * DEGREES_PER_DIGIT, wheel_turn_seconds
+		_wheels[index], "rotation_degrees:x", _wheel_angle(index), wheel_turn_seconds
 	).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_glow_time = wheel_turn_seconds + 0.15
+	set_process(true)
+
+
+func _process(delta: float) -> void:
+	_glow_time -= delta
+	_update_digit_glow()
+	if _glow_time <= 0.0:
+		set_process(false)
+
+
+## Dims every digit by how far it is, round its wheel, from the reading line (the one that counts is full).
+func _update_digit_glow() -> void:
+	for i: int in _wheels.size():
+		var turned: float = _wheels[i].rotation_degrees.x
+		var labels: Array = _digit_labels[i] as Array
+		for digit: int in labels.size():
+			var label: Label3D = labels[digit] as Label3D
+			if label == null:
+				continue
+
+			var from_line: float = absf(wrapf(DEGREES_PER_DIGIT * float(digit) - turned - reading_degrees, -180.0, 180.0))
+			var brightness: float = lerpf(1.0, DIGIT_DIM, smoothstep(2.0, DIM_FROM_DEGREES, from_line))
+			label.modulate = Color(_digit_base.r * brightness, _digit_base.g * brightness, _digit_base.b * brightness, _digit_base.a)
 
 
 func _play(stream: AudioStream, volume_db: float, pitch: float = 1.0) -> void:

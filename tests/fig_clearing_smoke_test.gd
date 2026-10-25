@@ -574,7 +574,7 @@ func _check_the_camp_layout(dressing: FigClearingProps) -> void:
 			var to_fire: Vector2 = (fire_at - Vector2(tent.global_position.x, tent.global_position.z)).normalized()
 			var facing: float = Vector2(tent.global_basis.z.x, tent.global_basis.z.z).normalized().dot(to_fire)
 			_expect(facing > 0.8, "%s is pitched with its door toward the fire (%.2f)" % [tent.name, facing])
-			_expect(tent.find_child("Door", false, false) != null and tent.find_child("Gear", false, false) != null, "%s has an open doorway and some gear in front of it" % tent.name)
+			_expect(tent.find_child("Door", true, false) == null and tent.find_child("Gear", false, false) != null, "%s has some gear in front of it and no dark doorway drawn on it" % tent.name)
 
 		_expect(tents[0].find_child("Backpack", true, false) != null and tents[1].find_child("Boot0", true, false) != null, "a backpack at one tent, boots at the other")
 
@@ -602,6 +602,28 @@ func _check_the_camp_layout(dressing: FigClearingProps) -> void:
 		var local: Vector3 = table.to_local(item.global_position)
 		all_on = all_on and absf(local.x) < 0.72 and absf(local.z) < 0.38 and local.y > 0.77 and local.y < 0.86
 	_expect(all_on, "the recorder, the album, the photograph, the cup and the Ficha's place are all on the table")
+	# ... and none of them lies over another (the recorder used to trespass on the album).
+	var laid: Dictionary = {
+		"recorder": _footprint(clearing.recorder, Vector2(0.12, 0.075), false),
+		"album": _footprint(clearing.album, Vector2(0.38, 0.145), false),
+		"photograph": _footprint(clearing.get_node("Props/PhotoWorkshop") as Node3D, Vector2(0.075, 0.05), true),
+		"cup": _footprint(scenery.get_node("EnamelCup") as Node3D, Vector2(0.045, 0.045), false),
+		"Ficha's place": _footprint(clearing.ficha_spot, Vector2(0.05, 0.05), false),
+		"lantern": _footprint(dressing.lantern, Vector2(0.062, 0.062), false),
+	}
+	var tightest: float = INF
+	var tightest_pair: String = ""
+	var names: Array = laid.keys()
+	for i: int in names.size():
+		for j: int in range(i + 1, names.size()):
+			var gap: float = _footprint_gap(laid[names[i]], laid[names[j]])
+			if gap < tightest:
+				tightest = gap
+				tightest_pair = "%s and %s" % [names[i], names[j]]
+
+	_expect(tightest > 0.04, "nothing on the memory table lies over another thing: the tightest are the %s, %.0f cm apart" % [tightest_pair, tightest * 100.0])
+	var recorder_gap: float = _footprint_gap(laid["recorder"], laid["album"])
+	_expect(recorder_gap > 0.06, "and the recorder is clear of the album (%.0f cm)" % (recorder_gap * 100.0))
 	_expect(dressing.lantern != null and dressing.lantern.get_parent() == table, "a lantern stands on it")
 	_expect(dressing.lantern_light != null and dressing.lantern_light.visible and dressing.lantern_light.light_energy > 0.5 and dressing.lantern_light.global_position.distance_to(clearing.album.global_position) < 1.2, "lit, with a warm light of its own over the album")
 	_expect(dressing.lantern_light.light_color.r > 0.9 and dressing.lantern_light.light_color.b < 0.6 and not dressing.lantern_light.shadow_enabled, "a warm one, with no shadows to pay for")
@@ -663,6 +685,82 @@ func _check_the_camp_layout(dressing: FigClearingProps) -> void:
 	_expect(hiss != null and hiss.playing and hiss_stream != null and hiss_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "the railway radio hisses (a looping dead channel)")
 	_expect(hiss != null and hiss.volume_db < -12.0 and hiss.max_distance >= 8.0 and hiss.global_position.distance_to(clearing.to_global(Vector3(-7.0, 1.2, 0.5))) < hiss.max_distance, "faintly, and it carries to the trail")
 	_expect(dressing.radio_lamp_material != null and dressing.radio_lamp_material.emission_enabled and dressing.radio_lamp_material.emission_energy_multiplier > 0.3, "and its lamp glows red")
+
+
+## Which digit counts has to be plain. The camera looks down on the dial, so the digit that faces straight out of the box used to be seen low, between two
+## others. Now the digit that counts is the one that faces the close-up camera, on the line of sight through its wheel's axis (the middle of the wheel as it is
+## seen); the other digits are dimmed by their distance from it; and the view frames that row.
+func _check_the_digit_that_counts(lockbox: JSLockbox, view: JSLockboxView, view_camera: Camera3D) -> void:
+	var seen_right: bool = true
+	var on_the_line: bool = true
+	var dimmed: bool = true
+	for i: int in 4:
+		var axis: Vector3 = lockbox.get_wheel_position(i)
+		var to_camera: Vector3 = (view_camera.global_position - axis).normalized()
+		var facing_digit: int = -1
+		var facing_dot: float = -2.0
+		var brightest: int = -1
+		var brightest_value: float = -1.0
+		for digit: int in 10:
+			var label: Label3D = lockbox._wheels[i].get_node("Digit%d" % digit) as Label3D
+			var dot: float = label.global_basis.z.normalized().dot((view_camera.global_position - label.global_position).normalized())
+			if dot > facing_dot:
+				facing_dot = dot
+				facing_digit = digit
+
+			if label.modulate.r > brightest_value:
+				brightest_value = label.modulate.r
+				brightest = digit
+
+		seen_right = seen_right and facing_digit == lockbox.digits[i] and facing_dot > cos(deg_to_rad(18.0)) and brightest == lockbox.digits[i]
+		var label_at: Vector3 = (lockbox._wheels[i].get_node("Digit%d" % lockbox.digits[i]) as Label3D).global_position
+		var inverse: Transform3D = view_camera.global_transform.affine_inverse()
+		var label_seen: Vector3 = inverse * label_at
+		var axis_seen: Vector3 = inverse * axis
+		var higher: float = (label_seen.y / label_seen.z - axis_seen.y / axis_seen.z) * absf(axis_seen.z)
+		on_the_line = on_the_line and absf(higher) < 0.0015
+		var next: Label3D = lockbox._wheels[i].get_node("Digit%d" % posmod(lockbox.digits[i] + 1, 10)) as Label3D
+		var chosen: Label3D = lockbox._wheels[i].get_node("Digit%d" % lockbox.digits[i]) as Label3D
+		dimmed = dimmed and next.modulate.r < chosen.modulate.r * 0.6
+
+	_expect(seen_right, "on every wheel the digit that faces the camera is the value, and it is the brightest one")
+	_expect(on_the_line, "and it is seen in the middle of its wheel, not above or below the axis (within 1.5 mm)")
+	_expect(dimmed, "its neighbours are dimmed, so the wheel reads at a glance")
+	var band: Control = view._band
+	var arrows_left: float = view._up[0].position.x
+	var arrows_right: float = view._up[3].position.x + view._up[3].size.x
+	_expect(band != null and band.visible and band.position.x < arrows_left + view._up[0].size.x * 0.5 and band.position.x + band.size.x > arrows_right - view._up[3].size.x * 0.5, "the view frames the row the digits are read in, across the four wheels")
+	var wheel_screen_y: float = view._through_the_lens(view_camera.unproject_position(lockbox.get_wheel_position(1))).y
+	_expect(absf(band.position.y + band.size.y * 0.5 - wheel_screen_y) < 1.0, "with the frame on the middle of the wheels (off by %.1f px)" % absf(band.position.y + band.size.y * 0.5 - wheel_screen_y))
+
+
+## A rectangle on the ground plane for a thing on a table: where its middle is, the directions of its two sides and half of each. A thing that lies
+## on its back (a card) has its sides along the node's x and y; one that stands has them along x and z.
+func _footprint(node: Node3D, half: Vector2, lying: bool) -> Dictionary:
+	var basis: Basis = node.global_basis
+	var first: Vector3 = basis.x
+	var second: Vector3 = basis.y if lying else basis.z
+	return {
+		"centre": Vector2(node.global_position.x, node.global_position.z),
+		"axes": [Vector2(first.x, first.z).normalized(), Vector2(second.x, second.z).normalized()],
+		"half": half,
+	}
+
+
+## How far apart two such rectangles are, in metres (negative while they overlap): the separating axis test, the biggest gap along the four sides.
+func _footprint_gap(a: Dictionary, b: Dictionary) -> float:
+	var best: float = -INF
+	for owner: Dictionary in [a, b]:
+		for axis: Vector2 in owner["axes"]:
+			var apart: float = absf(((b["centre"] as Vector2) - (a["centre"] as Vector2)).dot(axis))
+			var reach: float = 0.0
+			for rect: Dictionary in [a, b]:
+				for k: int in 2:
+					reach += absf((rect["axes"][k] as Vector2).dot(axis)) * (rect["half"] as Vector2)[k]
+
+			best = maxf(best, apart - reach)
+
+	return best
 
 
 ## The solid things of the clearing that overlap another one (each pair once). The ground and the invisible walls are left out, and every shape is
@@ -787,8 +885,9 @@ func _open_the_lockbox(lockbox: JSLockbox, eye: Vector3) -> void:
 	view.turn(0, 1)
 	_expect(lockbox.digits == [1, 0, 0, 0], "wheel one up once is 1 0 0 0")
 	_expect(lockbox._sound.playing and lockbox._sound.stream != null and lockbox._sound.stream.get_length() > 0.2, "a heavy double tick sounds (%.2f s)" % lockbox._sound.stream.get_length())
-	await _until(func() -> bool: return absf(wrapf(lockbox._wheels[0].rotation_degrees.x - JSLockbox.DEGREES_PER_DIGIT, -180.0, 180.0)) < 1.0, 4.0)
-	_expect(absf(wrapf(lockbox._wheels[0].rotation_degrees.x - JSLockbox.DEGREES_PER_DIGIT, -180.0, 180.0)) < 1.0, "and the wheel turned its 36 degrees")
+	var turned_to: float = JSLockbox.DEGREES_PER_DIGIT - lockbox.reading_degrees
+	await _until(func() -> bool: return absf(wrapf(lockbox._wheels[0].rotation_degrees.x - turned_to, -180.0, 180.0)) < 1.0, 4.0)
+	_expect(absf(wrapf(lockbox._wheels[0].rotation_degrees.x - turned_to, -180.0, 180.0)) < 1.0, "and the wheel turned its 36 degrees (to the reading line, %.0f degrees above straight ahead)" % lockbox.reading_degrees)
 	view.turn(3, -1)
 	_expect(lockbox.digits == [1, 0, 0, 9], "wheel four down once is 9, round the other way")
 	for step: int in 10:
@@ -799,6 +898,7 @@ func _open_the_lockbox(lockbox: JSLockbox, eye: Vector3) -> void:
 	_expect(lockbox.find_child("Key", true, false) == null, "and the key is out of reach")
 
 	_expect(view._selected == 2, "the wheel last turned is the chosen one, for the keyboard")
+	_check_the_digit_that_counts(lockbox, view, view_camera)
 
 	# Esc steps back: the player has their eyes and their hands again, the wheels keep their digits, and the box can be tried again.
 	var cancel: InputEventAction = InputEventAction.new()

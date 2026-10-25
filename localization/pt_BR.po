@@ -1151,15 +1151,6 @@ msgstr "Não podemos deixar ninguém achar este lugar, Sophia, ou perdemos nosso
 msgid "CAPTION_TOWER_DOOR_LOCKED"
 msgstr "Onde está a chave do QG?"
 
-msgid "TOWER_HQ_CARVED_TEXT"
-msgstr "SOPHIA & JULI - QG Nº 1 - ENTRADA PROIBIDA"
-
-msgid "ITEM_TOWER_CHALKBOARD_NAME"
-msgstr "Lousa"
-
-msgid "ITEM_TOWER_CHALKBOARD_DESCRIPTION"
-msgstr "Uma pequena lousa de ardósia, esfregada até ficar cinza. Trilhas de giz serpenteiam entre árvores rabiscadas: uma termina num quadrado marcado QG, outra numa árvore grande com um X ao lado. Alguém desenhou uma chavinha junto ao X."
-
 # Signal tower: the town's history, on the control floor
 
 msgid "ITEM_TOWER_NEWS_NAME"
@@ -1200,14 +1191,14 @@ msgstr "AVISO DA SAÚDE MUNICIPAL (1991): Os moradores próximos à linha da flo
 
 # Signal tower: the children's headquarters
 
-msgid "ITEM_JULIANA_SKETCH_NAME"
-msgstr "Caderno da Juliana"
+msgid "ITEM_JULIANA_NOTE_NAME"
+msgstr "Bilhete da Juliana"
 
-msgid "ITEM_JULIANA_SKETCH_DESCRIPTION"
-msgstr "Um caderno de couro gasto, com um cordão de fecho, deitado sobre a mesa. Um rostinho de franja está marcado na capa."
+msgid "ITEM_JULIANA_NOTE_DESCRIPTION"
+msgstr "Uma folha arrancada de um caderno escolar, dobrada uma vez e deixada na gaveta da mesa. Um rostinho de franja está desenhado no canto."
 
-msgid "READABLE_JULIANA_SKETCH"
-msgstr "Outubro de 1989. A mulher do açougueiro disse à Sophia, no mercado, que eu tenho olhos mortos como os pássaros que se afogam no reservatório quando chove forte. A Sophia não ficou brava nem gritou. Só sorriu, deu uma mordida demorada na maçã e disse: 'A Juliana enxerga as coisas que vocês têm medo demais de olhar.' Depois me entregou o miolo e mandou plantar bem atrás da torre de sinalização, para vermos crescer no meio do cascalho. Ela é a única pessoa que não baixa a voz quando eu entro numa sala."
+msgid "READABLE_JULIANA_NOTE"
+msgstr "Outubro de 1989. A mulher do açougueiro disse à Sophia, no mercado, que eu tenho olhos mortos como os pássaros que se afogam no reservatório quando chove forte. A Sophia não ficou brava nem gritou. Só sorriu, deu uma mordida demorada na maçã e disse: 'A Juliana enxerga as coisas que vocês têm medo demais de olhar.' Depois me entregou o miolo e mandou plantar bem atrás da torre de sinalização, para vermos crescer no meio do cascalho. Ela é a única pessoa que não baixa a voz quando eu entro numa sala. — Juliana"
 
 msgid "ITEM_SOPHIA_NOTE_NAME"
 msgstr "Carta Dobrada da Sophia"
@@ -1217,18 +1208,6 @@ msgstr "Uma folha de papel quadriculado dobrada em quatro, deixada sobre a almof
 
 msgid "READABLE_SOPHIA_NOTE"
 msgstr "Para a Chefe de Operações do QG Nº 1: Ouvi meu pai conversando com o chefe da estação ontem à noite. Eles acham que a cidade vai fechar a linha norte antes do inverno porque o chão não para de se mexer debaixo dos dormentes. Meu pai disse que este lugar foi construído sobre uma crosta oca que está desabando devagar. Eu disse que ele estava sendo paranoico. Mas se os trilhos desabarem e os trens pararem de vir, nós vamos ficar com esta torre, Juli. Vamos trancar a porta de baixo, puxar a escada e deixar a neblina engolir o resto do vale. — Sophia"
-
-msgid "TOWER_WALKIE_TALKIE"
-msgstr "Ela nunca voltou para a torre, Juli..."
-
-msgid "ITEM_POCKET_WATCH_NAME"
-msgstr "Relógio de Bolso de Latão"
-
-msgid "ITEM_POCKET_WATCH_DESCRIPTION"
-msgstr "Um relógio de bolso de latão parado, com os ponteiros congelados poucos minutos antes da meia-noite. A tampa está aberta, e há algo gravado por dentro."
-
-msgid "READABLE_POCKET_WATCH"
-msgstr "Para a Juli. Para você sempre saber a hora de me encontrar."
 
 msgid "ITEM_THERMOS_NAME"
 msgstr "Garrafa Térmica Gasta"

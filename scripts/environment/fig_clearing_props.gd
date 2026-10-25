@@ -77,14 +77,11 @@ const RADIO_LOCKED_AT: float = 14.08
 
 # The camp round the fire (the clearing's frame; the tents, the memory table and the firewood are in the scene). The three seats are logs lying along the
 # ring (a position and the yaw of the log's length), the kettle stands on a stone on the fire's north east side, and the wood yard is where the first tent
-# stood. A tent's front face slopes back from its base (z about 1.55) by `TENT_FRONT_SLOPE` of a metre for each metre up. The lantern stands on the
-# memory table (in the table's frame, the top 0.78 m up).
+# stood. The lantern stands on the memory table (in the table's frame, the top 0.78 m up).
 const SEAT_POSITIONS: Array[Vector3] = [Vector3(-0.59, 0.0, 2.2), Vector3(-0.1, 0.0, 4.03), Vector3(1.45, 0.0, 4.35)]
 const SEAT_YAWS: Array[float] = [70.0, -40.0, 25.0]
 const KETTLE_AT: Vector3 = Vector3(1.78, 0.0, 2.15)
 const BLOCK_AT: Vector3 = Vector3(-3.7, 0.0, 1.75)
-const TENT_FRONT_BASE_Z: float = 1.55
-const TENT_FRONT_SLOPE: float = 0.545
 const LANTERN_ON_MEMORY_TABLE: Vector3 = Vector3(0.63, 0.78, -0.17)
 const LANTERN_LIGHT_ENERGY: float = 1.1
 const LANTERN_LIGHT_RANGE: float = 5.0
@@ -116,6 +113,9 @@ const LOCKBOX_WHEEL_Y: float = 0.043
 const LOCKBOX_WHEEL_RADIUS: float = 0.0185
 const LOCKBOX_WHEEL_SPACING: float = 0.052
 const LOCKBOX_PADDING_TOP: float = 0.075
+## The lockbox's close-up camera: this far above the rim of the box and this far in front of the dial (the box's frame).
+const LOCKBOX_CLOSE_UP_RISE: float = 0.06
+const LOCKBOX_CLOSE_UP_DISTANCE: float = 0.28
 const LOCKBOX_PHOTO_AT: Vector3 = Vector3(0.0, 0.0773, -0.004)
 const LOCKBOX_KEY_AT: Vector3 = Vector3(-0.05, 0.0793, 0.035)
 
@@ -684,10 +684,18 @@ static func _build_js_lockbox(root: Node3D) -> void:
 
 	var close_up: Marker3D = Marker3D.new()
 	close_up.name = "CloseUp"
-	var eye: Vector3 = Vector3(0.0, height + 0.06, front_z + 0.28)
+	var eye: Vector3 = Vector3(0.0, height + LOCKBOX_CLOSE_UP_RISE, front_z + LOCKBOX_CLOSE_UP_DISTANCE)
 	var target: Vector3 = Vector3(0.0, LOCKBOX_WHEEL_Y + 0.004, front_z + 0.012)
 	close_up.transform = Transform3D(Basis.looking_at(target - eye, Vector3.UP), eye)
 	root.add_child(close_up)
+
+
+## How many degrees above straight ahead the digit that counts is read. The close-up camera looks down on the dial from above, so the digit that faces
+## straight out of the box is seen below the middle of its wheel, between two others, and the player could not tell which of them was the one. The wheels are
+## turned this much further, so that the digit that counts faces the camera and is seen in the middle of its wheel (see `JSLockbox`).
+static func lockbox_reading_degrees() -> float:
+	var rise: float = LOCKBOX_SIZE.y + LOCKBOX_CLOSE_UP_RISE - LOCKBOX_WHEEL_Y
+	return rad_to_deg(atan2(rise, LOCKBOX_CLOSE_UP_DISTANCE - 0.004))
 
 
 ## "J & S" in paint, three marks (a J, an ampersand and an S) each a little off its line and tilted, as if by hand. `letter_height` is how
@@ -901,7 +909,9 @@ func _build_radio_stand() -> void:
 	radio.position = RADIO_ON_CRATE + Vector3(0.0, size.y + 0.0005, 0.0)
 	radio.rotation_degrees = Vector3(0.0, 3.0, 0.0)
 	radio_crate.add_child(radio)
-	var jewel: MeshInstance3D = radio.get_visual_node().find_child("LampJewel", true, false) as MeshInstance3D
+	# (In the editor the instanced scene's script is only a placeholder: it has no methods.)
+	var radio_visual: Node3D = radio.get_node_or_null("Visual") as Node3D
+	var jewel: MeshInstance3D = radio_visual.find_child("LampJewel", true, false) as MeshInstance3D if radio_visual != null else null
 	radio_lamp_material = jewel.material_override as StandardMaterial3D if jewel != null else null
 	# It is on a dead channel: a faint hiss that carries a few metres, so that it is heard before it is seen (not in the editor).
 	radio_static = AudioStreamPlayer3D.new()
@@ -1113,34 +1123,20 @@ func _build_wood_yard() -> void:
 	_merge_by_material(yard, [&"Axe"])
 
 
-## The tents are pitched with their doors toward the middle of the camp (the clearing scene turns them): each gets an open door (a dark
-## doorway on the slope of its front face with its zip along the edge) and a little gear in front of it: a rolled mat and a backpack at the first
-## tent, a pair of boots at the second.
+## The tents are pitched with their doors toward the middle of the camp (the clearing scene turns them): each gets a little gear in front of its
+## door: a rolled mat and a backpack at the first tent, a pair of boots at the second. (The door itself is the model's: a dark doorway drawn on
+## it was tried and removed.)
 func _dress_tents() -> void:
 	var scenery: Node = get_parent().get_node_or_null("Scenery") if get_parent() != null else null
 	if scenery == null:
 		return
 
-	var dark: StandardMaterial3D = HouseProps.material(Color(0.015, 0.015, 0.02), 1.0)
-	var zip: StandardMaterial3D = HouseProps.material(Color(0.74, 0.68, 0.3), 0.6)
-	var tilt: float = -rad_to_deg(atan(TENT_FRONT_SLOPE))
 	for tent_name: String in ["Tent", "Tent2"]:
 		var tent: Node3D = scenery.get_node_or_null(tent_name) as Node3D
 		if tent == null:
 			continue
 
 		tents.append(tent)
-		var front_z: float = TENT_FRONT_BASE_Z - TENT_FRONT_SLOPE * 0.72
-		var door: Node3D = Node3D.new()
-		door.name = "Door"
-		door.position = Vector3(0.0, 0.72, front_z + 0.02)
-		door.rotation_degrees = Vector3(tilt, 0.0, 0.0)
-		tent.add_child(door)
-		HouseProps.add_box(door, "Opening", Vector3(0.92, 1.26, 0.012), Vector3.ZERO, dark)
-		for side: float in [-1.0, 1.0]:
-			HouseProps.add_box(door, "Zip", Vector3(0.014, 1.28, 0.016), Vector3(side * 0.468, 0.0, 0.002), zip)
-
-		HouseProps.add_box(door, "ZipTop", Vector3(0.95, 0.014, 0.016), Vector3(0.0, 0.636, 0.002), zip)
 
 	if tents.size() > 0:
 		_add_tent_gear(tents[0], true)
@@ -1148,7 +1144,7 @@ func _dress_tents() -> void:
 	if tents.size() > 1:
 		_add_tent_gear(tents[1], false)
 
-	# (A tent's own mesh is not a plain one and stays; its door and gear are folded, the empty groups kept for whoever looks for them.)
+	# (A tent's own mesh is not a plain one and stays; its gear is folded, the empty groups kept for whoever looks for them.)
 	for tent: Node3D in tents:
 		_merge_by_material(tent, [], false)
 

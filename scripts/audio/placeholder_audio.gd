@@ -556,28 +556,6 @@ static func make_sobbing(seconds: float = 6.0) -> AudioStreamWAV:
 	return _to_wav(samples, true)
 
 
-## The soft mechanical ticking of a pocket watch, `seconds` long: a tick and a lower tock every quarter of a second,
-## each a tiny metallic click that rings for a few milliseconds. It does not loop.
-static func make_watch_ticking(seconds: float = 3.0) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 7007
-	var beat: float = 0.25
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		var phase: float = fmod(t, beat)
-		var frequency: float = 3100.0 if int(t / beat) % 2 == 0 else 2350.0
-		var click: float = 0.0
-		if phase < 0.025:
-			var envelope: float = exp(-phase * 300.0)
-			click = (sin(TAU * frequency * phase) * 0.6 + rng.randf_range(-1.0, 1.0) * 0.3) * envelope
-
-		samples[i] = click * 0.5 * clampf((seconds - t) / 0.05, 0.0, 1.0)
-
-	return _to_wav(samples, false)
-
-
 ## A breathy whisper of seven syllables ("you're not sup-posed to be here"): shaped noise, no pitch.
 static func make_whisper() -> AudioStreamWAV:
 	var seconds: float = 1.9
@@ -1046,5 +1024,113 @@ static func make_lockbox_latch() -> AudioStreamWAV:
 			)
 
 		samples[i] = clampf(clack + click, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## A wooden drawer on its runners, made from the drawer's own motion (`DeskDrawer.get_profile`), so that the sound goes with what is seen: the scrape
+## follows the drawer's speed (a rough band of noise whose grain gets quicker as it does, with a low groan of old wood under it), the break away is a
+## small tack, and every knock against the stop is a dull thump of wood with a short rattle of what lies in the drawer after it. `speeds` are
+## recorded every `step_seconds`, `hits` are (time, strength 0 to 1) pairs, `seconds` the length of the sound.
+static func make_drawer_slide(speeds: PackedFloat32Array, step_seconds: float, hits: Array[Vector2], seconds: float, opening: bool) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 1989 if opening else 1991
+	var peak: float = 0.001
+	for speed: float in speeds:
+		peak = maxf(peak, absf(speed))
+
+	var broke_at: float = -1.0
+	for index: int in speeds.size():
+		if absf(speeds[index]) > 0.02 * peak:
+			broke_at = float(index) * step_seconds
+			break
+
+	var fast: float = 0.0
+	var slow: float = 0.0
+	var knock_fast: float = 0.0
+	var groan_phase: float = 0.0
+	var grain_phase: float = 0.0
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var at: float = clampf(t / step_seconds, 0.0, float(speeds.size() - 1))
+		var index: int = int(floorf(at))
+		var next: int = mini(index + 1, speeds.size() - 1)
+		var speed: float = absf(lerpf(speeds[index], speeds[next], at - float(index))) / peak
+
+		# The scrape: noise between about 100 Hz and 1.2 kHz, louder and grainier the faster the drawer goes.
+		var white: float = rng.randf_range(-1.0, 1.0)
+		fast = lerpf(fast, white, 0.3)
+		slow = lerpf(slow, fast, 0.035)
+		grain_phase += TAU * (14.0 + 52.0 * speed) / MIX_RATE
+		var grain: float = 0.62 + 0.38 * sin(grain_phase) * sin(grain_phase * 0.37 + 1.1)
+		var scrape: float = (fast - slow) * pow(speed, 0.85) * grain * 0.55
+
+		# The groan of old wood: a low, slightly rough tone that climbs with the speed.
+		groan_phase += TAU * (96.0 + 70.0 * speed + 6.0 * sin(t * 9.0)) / MIX_RATE
+		var groan: float = (sin(groan_phase) + 0.45 * sin(groan_phase * 2.01)) * pow(speed, 1.4) * 0.085
+		var value: float = scrape + groan
+
+		# The tack as it breaks away from its runners.
+		if broke_at >= 0.0:
+			var tack: float = t - broke_at
+			if tack > 0.0 and tack < 0.12:
+				value += (
+					white * exp(-tack * 190.0) * 0.42
+					+ sin(TAU * 1450.0 * tack) * exp(-tack * 170.0) * 0.18
+					+ sin(TAU * 150.0 * tack) * exp(-tack * 62.0) * 0.3
+				) * 0.55
+
+		# The knocks against the stop.
+		knock_fast = lerpf(knock_fast, white, 0.5)
+		for hit: Vector2 in hits:
+			var u: float = t - hit.x
+			if u <= 0.0 or u > 0.6:
+				continue
+
+			var strength: float = hit.y
+			var knock: float = (
+				sin(TAU * 74.0 * u) * exp(-u * 26.0) * 0.8
+				+ sin(TAU * 188.0 * u + 0.4) * exp(-u * 48.0) * 0.45
+				+ knock_fast * exp(-u * 85.0) * 0.5
+			)
+			var rattle: float = 0.0
+			if u > 0.03:
+				rattle = white * exp(-(u - 0.03) * 55.0) * (0.55 + 0.45 * sin(TAU * 31.0 * u)) * 0.16
+			value += (knock + rattle) * strength * 0.88
+
+		samples[i] = clampf(value, -1.0, 1.0)
+
+	return _to_wav(samples, false)
+
+
+## An old board of a wooden stair groaning under a step: a low, rough tone that slides a little while the wood sticks and slips (the pulsing is what makes it a
+## creak), with a soft knock of the board where it starts. `seed_value` makes each one different.
+static func make_stair_creak(seconds: float = 0.55, seed_value: int = 1) -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.resize(int(seconds * MIX_RATE))
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var start_frequency: float = rng.randf_range(95.0, 150.0)
+	var end_frequency: float = start_frequency * rng.randf_range(0.7, 1.3)
+	var slip_rate: float = rng.randf_range(24.0, 44.0)
+	var phase: float = 0.0
+	var slip_phase: float = 0.0
+	var smoothed: float = 0.0
+	for i: int in samples.size():
+		var t: float = float(i) / MIX_RATE
+		var progress: float = t / seconds
+		var frequency: float = lerpf(start_frequency, end_frequency, progress) * (1.0 + 0.05 * sin(TAU * 6.0 * t))
+		phase += TAU * frequency / MIX_RATE
+		slip_phase += TAU * slip_rate * (1.0 + 0.3 * sin(TAU * 3.1 * t)) / MIX_RATE
+		# The board sticks, then lets go, again and again.
+		var slip: float = pow(maxf(sin(slip_phase), 0.0), 1.6)
+		var saw: float = fmod(phase / TAU, 1.0) * 2.0 - 1.0
+		var tone: float = (saw + 0.5 * sin(phase * 3.0)) * slip
+		smoothed = lerpf(smoothed, tone + rng.randf_range(-0.25, 0.25) * slip, 0.35)
+		var envelope: float = minf(progress * 14.0, 1.0) * pow(1.0 - progress, 1.3)
+		var knock: float = sin(TAU * 88.0 * t) * exp(-t * 38.0) * 0.5
+		samples[i] = clampf((smoothed * envelope * 0.55 + knock) * 0.7, -1.0, 1.0)
 
 	return _to_wav(samples, false)

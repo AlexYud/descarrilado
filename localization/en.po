@@ -1151,15 +1151,6 @@ msgstr "We can't let anyone find this place, Sophia, or we lose our HQ forever. 
 msgid "CAPTION_TOWER_DOOR_LOCKED"
 msgstr "Where is the HQ key?"
 
-msgid "TOWER_HQ_CARVED_TEXT"
-msgstr "SOPHIA & JULI - HQ NO. 1 - KEEP OUT"
-
-msgid "ITEM_TOWER_CHALKBOARD_NAME"
-msgstr "Chalkboard"
-
-msgid "ITEM_TOWER_CHALKBOARD_DESCRIPTION"
-msgstr "A small slate, scrubbed grey. Chalk trails wind between scribbled trees: one ends at a square marked HQ, another at a big tree with an X beside it. Someone has drawn a tiny key next to the X."
-
 # Signal tower: the town's history, on the control floor
 
 msgid "ITEM_TOWER_NEWS_NAME"
@@ -1200,14 +1191,14 @@ msgstr "MUNICIPAL HEALTH ANNOUNCEMENT (1991): Residents living near the forest l
 
 # Signal tower: the children's headquarters
 
-msgid "ITEM_JULIANA_SKETCH_NAME"
-msgstr "Juliana's Notebook"
+msgid "ITEM_JULIANA_NOTE_NAME"
+msgstr "Juliana's Note"
 
-msgid "ITEM_JULIANA_SKETCH_DESCRIPTION"
-msgstr "A worn leather notebook with a cord strap, lying flat on the desk. A small face with a fringe is pressed into the cover."
+msgid "ITEM_JULIANA_NOTE_DESCRIPTION"
+msgstr "A page torn from a school notebook, folded once and left in the desk drawer. A small face with a fringe is drawn in the corner."
 
-msgid "READABLE_JULIANA_SKETCH"
-msgstr "October 1989. The butcher's wife told Sophia at the market that I have dead eyes like the birds that drown in the reservoir during heavy rain. Sophia didn't get angry or shout. She just smiled, took a long bite of her apple, and said, 'Juliana sees the things you're too afraid to look at.' Then she handed me the core and told me to plant it right behind the signal tower so we could watch it grow out of the gravel. She is the only person who doesn't lower her voice when I walk into a room."
+msgid "READABLE_JULIANA_NOTE"
+msgstr "October 1989. The butcher's wife told Sophia at the market that I have dead eyes like the birds that drown in the reservoir during heavy rain. Sophia didn't get angry or shout. She just smiled, took a long bite of her apple, and said, 'Juliana sees the things you're too afraid to look at.' Then she handed me the core and told me to plant it right behind the signal tower so we could watch it grow out of the gravel. She is the only person who doesn't lower her voice when I walk into a room. — Juliana"
 
 msgid "ITEM_SOPHIA_NOTE_NAME"
 msgstr "Sophia's Folded Letter"
@@ -1217,18 +1208,6 @@ msgstr "A sheet of graph paper folded in four, left on the bench cushion with on
 
 msgid "READABLE_SOPHIA_NOTE"
 msgstr "To the Chief Operator of HQ No. 1: I overheard my father talking to the station master last night. They think the town is going to close the northern line before winter because the ground keeps shifting under the ties. My father said this place is built on a hollow crust that is slowly caving in. I told him he was being paranoid. But if the tracks do collapse and the trains stop coming, we are keeping this tower, Juli. We will lock the bottom door, pull up the stairs, and let the fog swallow the rest of the valley. — Sophia"
-
-msgid "TOWER_WALKIE_TALKIE"
-msgstr "She never came back to the tower, Juli..."
-
-msgid "ITEM_POCKET_WATCH_NAME"
-msgstr "Brass Pocket Watch"
-
-msgid "ITEM_POCKET_WATCH_DESCRIPTION"
-msgstr "A stopped brass pocket watch, its hands frozen a few minutes before midnight. The lid is open, and something is engraved inside it."
-
-msgid "READABLE_POCKET_WATCH"
-msgstr "For Juli. So you always know when to meet me."
 
 msgid "ITEM_THERMOS_NAME"
 msgstr "Weathered Thermos"

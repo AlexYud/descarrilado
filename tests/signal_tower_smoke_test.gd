@@ -3,7 +3,7 @@ extends Node
 ## Builds the ruined signal tower (`SignalTowerBuilder`, its furniture `SignalTowerProps`) and checks it:
 ## the shape of the two levels, the locked door and the key that opens it, the stairs up to the balcony
 ## walked with the real player, the children's headquarters (its three zones, each with a photograph, the desk
-## lamp, the bench with its folded letter, the shelf with the tin and the pocket watch, carved wall text, chalkboard
+## lamp, the bench with its folded letter, the desk's drawer with Juliana's note, the shelf with the tin,
 ## with the three photographs), the levers, the decay (broken panes, the roof breach, the ivy) and that
 ## every clue can be reached by an interaction ray. The notes' words are checked here for the door and in
 ## the fig clearing test for the camp. Run it as a scene; it quits by itself with a non-zero exit code on failure.
@@ -69,7 +69,7 @@ func _run() -> void:
 	_check_clues_are_reachable()
 	await _check_the_stairs()
 	await _check_the_key_and_the_doors()
-	await _check_the_watch_beat()
+	await _check_the_drawer()
 	await _check_the_door_note()
 	await _read_the_lore()
 	_check_translations()
@@ -180,24 +180,15 @@ func _check_props() -> void:
 		var spot: Vector3 = (stool as Node3D).global_position
 		_expect(absf(spot.x) < 1.65 and absf(spot.z) < 1.65, "%s is inside the room (%.2f, %.2f)" % [stool.name, spot.x, spot.z])
 
-	_expect(props.carved_text != null and props.carved_text.text == "TOWER_HQ_CARVED_TEXT", "the wall has carved text")
-	_expect(tr("TOWER_HQ_CARVED_TEXT") == "SOPHIA & JULI - HQ NO. 1 - KEEP OUT", "that says SOPHIA & JULI - HQ NO. 1 - KEEP OUT")
-	_expect(absf(props.carved_text.global_position.z + 1.8) < 0.05, "carved into a board on the back wall")
+	# What is not there any more: the carved board with the children's names, the chalkboard, the pocket watch and the notebook.
+	_expect(props.find_child("CarvedBoard", true, false) == null and props.find_child("Chalkboard", true, false) == null, "no carved board and no chalkboard hang on the walls")
+	var written: bool = false
+	for label: Node in props.find_children("*", "Label3D", true, false):
+		written = written or (label as Label3D).text.contains("HQ")
+
+	_expect(not written, "and nothing is carved or written on them")
+	_expect(not props.ground_items.has(&"watch") and not props.ground_items.has(&"sketchbook") and props.find_child("TowerPocketWatch", true, false) == null and props.find_child("TowerSketchbook", true, false) == null, "there is no pocket watch and no notebook")
 	_expect(tower.props.lore_items.size() == 4 and not tower.props.ground_items.is_empty(), "(the cabin's documents and the headquarters' items are kept by key)")
-
-	var chalkboard: Inspectable = props.chalkboard
-	_expect(chalkboard != null and chalkboard.inspect_name == "ITEM_TOWER_CHALKBOARD_NAME", "a small chalkboard hangs on the wall")
-	var slate: MeshInstance3D = chalkboard.get_visual_node().get_node("Slate") as MeshInstance3D
-	var texture: Texture2D = (slate.material_override as StandardMaterial3D).albedo_texture
-	_expect(texture != null and texture.get_width() == 512, "with a chalk map drawn on it")
-	var bright: int = 0
-	var image: Image = texture.get_image()
-	for y: int in range(0, image.get_height(), 2):
-		for x: int in range(0, image.get_width(), 2):
-			if image.get_pixel(x, y).v > 0.6:
-				bright += 1
-	_expect(bright > 400, "the map has real chalk strokes on the dark slate (%d chalk pixels)" % bright)
-
 
 	# The relay room: a cabinet and the like.
 	_expect(props.get_node("RelayRoom/RelayCabinet") != null and props.get_node("RelayRoom/Barrel") != null, "the relay room has its cabinet and its barrel")
@@ -209,7 +200,7 @@ func _check_props() -> void:
 # ============================================================
 
 const GROUND_TEXTS: Dictionary = {
-	"sketchbook": ["READABLE_JULIANA_SKETCH", "October 1989. The butcher's wife told Sophia at the market that I have dead eyes like the birds that drown in the reservoir during heavy rain. Sophia didn't get angry or shout. She just smiled, took a long bite of her apple, and said, 'Juliana sees the things you're too afraid to look at.' Then she handed me the core and told me to plant it right behind the signal tower so we could watch it grow out of the gravel. She is the only person who doesn't lower her voice when I walk into a room."],
+	"juliana_note": ["READABLE_JULIANA_NOTE", "October 1989. The butcher's wife told Sophia at the market that I have dead eyes like the birds that drown in the reservoir during heavy rain. Sophia didn't get angry or shout. She just smiled, took a long bite of her apple, and said, 'Juliana sees the things you're too afraid to look at.' Then she handed me the core and told me to plant it right behind the signal tower so we could watch it grow out of the gravel. She is the only person who doesn't lower her voice when I walk into a room. — Juliana"],
 	"sophia_note": ["READABLE_SOPHIA_NOTE", "To the Chief Operator of HQ No. 1: I overheard my father talking to the station master last night. They think the town is going to close the northern line before winter because the ground keeps shifting under the ties. My father said this place is built on a hollow crust that is slowly caving in. I told him he was being paranoid. But if the tracks do collapse and the trains stop coming, we are keeping this tower, Juli. We will lock the bottom door, pull up the stairs, and let the fog swallow the rest of the valley. — Sophia"],
 }
 
@@ -225,20 +216,26 @@ func _check_zones() -> void:
 	_expect(photos.size() == 3 and knee is Collectible and lever is Collectible and platform is Collectible, "three photographs lie in the relay room, as collectibles")
 	_expect(props.get_node_or_null("HeadQuarters/Lockbox") == null and props.find_child("Lockbox", true, false) == null, "none of them in a box")
 	var apart: float = minf(knee.global_position.distance_to(lever.global_position), minf(knee.global_position.distance_to(platform.global_position), lever.global_position.distance_to(platform.global_position)))
-	_expect(apart > 1.8, "in three separate zones (at least %.1f m apart)" % apart)
+	_expect(apart > 1.5, "in three separate zones (at least %.1f m apart)" % apart)
 	for photo: Node3D in [knee, lever, platform]:
 		_expect(absf(photo.global_position.x) < 1.8 and absf(photo.global_position.z) < 1.8 and photo.global_position.y < 1.0, "%s is inside the room, low enough to reach" % photo.name)
 
-	# Zone 1: the desk. The Scraped Knee leans against the desk lamp's base; Juliana's sketchbook is open beside it.
+	# Zone 1: the desk. The Scraped Knee lies flat in the middle of the plank; Juliana's note is in the drawer under it.
 	var table: Node3D = props.get_node("HeadQuarters/CrateTable")
 	var lamp: Node3D = props.desk_lamp
 	_expect(lamp != null and table.is_ancestor_of(lamp), "a desk lamp stands on the HQ desk")
+	var on_table: Vector3 = table.to_local(knee.global_position)
+	_expect(Vector2(on_table.x, on_table.z).length() < 0.12, "the Scraped Knee lies in the middle of the plank (%.2f, %.2f)" % [on_table.x, on_table.z])
+	_expect(knee.global_basis.z.dot(Vector3.UP) > 0.99 and absf(on_table.y - 0.5635) < 0.006, "flat, face up, on the plank's top (%.3f)" % on_table.y)
 	var from_lamp: Vector2 = Vector2(knee.global_position.x - lamp.global_position.x, knee.global_position.z - lamp.global_position.z)
-	_expect(from_lamp.length() < 0.2 and from_lamp.length() > 0.03, "the Scraped Knee is against the lamp's base (%.2f m from its stem)" % from_lamp.length())
-	_expect(knee.global_position.y > table.global_position.y + 0.58 and knee.global_basis.z.dot(Vector3.UP) > 0.3 and knee.global_basis.y.dot(Vector3.UP) > 0.7, "standing up on the desk, leaning back")
-	var sketchbook: Node3D = props.ground_items[&"sketchbook"]
-	_expect(sketchbook != null and sketchbook.global_position.distance_to(knee.global_position) < 0.5 and table.is_ancestor_of(sketchbook), "Juliana's sketchbook lies open on the desk next to it")
-	_expect(sketchbook.global_basis.z.dot(Vector3.UP) > 0.99, "face up")
+	_expect(from_lamp.length() > 0.25, "and not propped against the lamp (%.2f m from its stem)" % from_lamp.length())
+	var drawer: DeskDrawer = props.desk_drawer
+	_expect(drawer != null and drawer.get_parent() == table, "a drawer is built into the desk, under the plank")
+	var juliana_note: Node3D = props.ground_items[&"juliana_note"]
+	_expect(juliana_note != null and drawer.is_ancestor_of(juliana_note) and juliana_note.global_basis.z.dot(Vector3.UP) > 0.99, "Juliana's note lies in the drawer, face up")
+	_expect(not drawer.is_open and is_zero_approx(drawer.get_openness()), "and the drawer is shut")
+	var note_in_table: Vector3 = table.to_local(juliana_note.global_position)
+	_expect(note_in_table.y < 0.5 and absf(note_in_table.x) < 0.2, "under the plank, between the crates (%s)" % str(note_in_table))
 
 	# Zone 2: the wooden bench (the daybed). The Broken Lever on the cushion, with Sophia's folded letter beside it.
 	var daybed: Node3D = props.get_node("HeadQuarters/Daybed")
@@ -257,14 +254,6 @@ func _check_zones() -> void:
 	var shelf: Node3D = props.get_node("HeadQuarters/BackShelf")
 	var tin: Node3D = props.photo_tin
 	_expect(shelf.global_position.y < 0.2 and tin != null and shelf.is_ancestor_of(tin), "a low wooden shelf on the back wall carries an open tin")
-	_expect(absf(props.carved_text.global_position.x - shelf.global_position.x) < 0.1 and props.carved_text.global_position.y > shelf.global_position.y + 0.8, "right under the carved board")
-	var watch: Node3D = props.ground_items[&"watch"]
-	_expect(watch is PocketWatch and watch.inspect_name == "ITEM_POCKET_WATCH_NAME" and shelf.is_ancestor_of(watch), "a pocket watch lies on the shelf")
-	_expect(watch.global_position.distance_to(platform.global_position) < 0.4, "right next to the Foggy Platform (%.2f m)" % watch.global_position.distance_to(platform.global_position))
-	_expect(watch.global_basis.z.dot(Vector3.UP) > 0.99 and watch.global_position.y > shelf.global_position.y + 0.46, "dial up, on the top board")
-	var inscription: ReadableSpot = watch.get_visual_node().find_child("InscriptionSpot", true, false) as ReadableSpot
-	_expect(inscription != null and inscription.text_key == "READABLE_POCKET_WATCH", "its lid is engraved (READABLE_POCKET_WATCH)")
-	_expect(tr("READABLE_POCKET_WATCH") == "For Juli. So you always know when to meet me." and not tr("READABLE_POCKET_WATCH").contains("-"), "it reads 'For Juli. So you always know when to meet me.'")
 	var in_tin: Vector3 = tin.to_local(platform.global_position)
 	_expect(Vector2(in_tin.x, in_tin.z).length() < 0.095 and in_tin.y > 0.02 and in_tin.y < 0.09, "the Foggy Platform stands in the tin, above its rim (%s)" % str(in_tin))
 
@@ -278,13 +267,10 @@ func _check_zones() -> void:
 	_expect(aisle_clear, "no furniture stands in the way from the door")
 
 	# Every item can be reached by a ray from the aisle: no collider of the floor or of the furniture hides it.
-	_ray_finds(knee, knee.global_position + Vector3(0.5, 0.9, 0.9), knee.global_position, "the Scraped Knee against the lamp")
-	_ray_finds(sketchbook, sketchbook.global_position + Vector3(0.5, 0.9, 0.9), sketchbook.global_position, "Juliana's sketchbook on the desk")
+	_ray_finds(knee, knee.global_position + Vector3(0.5, 0.9, 0.9), knee.global_position, "the Scraped Knee on the plank")
 	_ray_finds(lever, lever.global_position + Vector3(-0.8, 0.9, 0.3), lever.global_position, "the Broken Lever on the cushion")
 	_ray_finds(note, note.global_position + Vector3(-0.8, 0.9, 0.4), note.global_position, "Sophia's note on the cushion")
-	_ray_finds(watch, watch.global_position + Vector3(0.1, 0.8, 0.9), watch.global_position, "the pocket watch on the shelf")
 	_ray_finds(platform, platform.global_position + Vector3(0.2, 0.9, 0.9), platform.global_position, "the Foggy Platform in the tin")
-	_ray_finds(props.chalkboard, Vector3(-0.9, 1.5, -0.5), props.chalkboard.global_position, "the chalkboard above the desk")
 
 	# The texts: the written ones, in both languages, with no hyphen.
 	for key: String in GROUND_TEXTS:
@@ -300,7 +286,7 @@ func _check_zones() -> void:
 		var key_text: String = (GROUND_TEXTS[key] as Array)[0]
 		translated = translated and tr(key_text) != key_text and tr(key_text) != str((GROUND_TEXTS[key] as Array)[1])
 		clean = clean and not tr(key_text).contains("-")
-	for key_text: String in ["ITEM_JULIANA_SKETCH_NAME", "ITEM_JULIANA_SKETCH_DESCRIPTION", "ITEM_SOPHIA_NOTE_NAME", "ITEM_SOPHIA_NOTE_DESCRIPTION", "ITEM_POCKET_WATCH_NAME", "ITEM_POCKET_WATCH_DESCRIPTION", "READABLE_POCKET_WATCH", "TOWER_WALKIE_TALKIE"]:
+	for key_text: String in ["ITEM_JULIANA_NOTE_NAME", "ITEM_JULIANA_NOTE_DESCRIPTION", "ITEM_SOPHIA_NOTE_NAME", "ITEM_SOPHIA_NOTE_DESCRIPTION"]:
 		translated = translated and tr(key_text) != key_text
 	_expect(translated, "all of it is translated into Portuguese")
 	_expect(clean, "with no hyphen there either")
@@ -466,9 +452,6 @@ func _check_clues_are_reachable() -> void:
 	var note: Node3D = door.get_node("Hinge/DoorRoot/DoorNote")
 	_ray_finds(note, note.global_position + Vector3(0.1, 0.1, 1.0), note.global_position, "the note on the door")
 
-	var chalkboard: Node3D = props.chalkboard
-	_ray_finds(chalkboard, Vector3(-0.4, 1.4, -0.4), chalkboard.global_position, "the chalkboard")
-
 
 # ============================================================
 # WALKING AND OPENING
@@ -528,50 +511,99 @@ func _check_the_key_and_the_doors() -> void:
 	_expect(top.z < -1.7, "up to the door's full height (%.2f)" % top.z)
 
 
-## Closing the pocket watch's inspect view sets it off: three seconds of soft ticking from where it lies, a faint
-## whisper over the last of them, and then dead silence; once, never again.
-func _check_the_watch_beat() -> void:
-	var watch: PocketWatch = tower.props.ground_items[&"watch"] as PocketWatch
-	_expect(watch != null, "the pocket watch is the item that sets off the beat")
-	_expect(_sounds_at(watch).is_empty() and not watch.has_played(), "the watch is silent until the view is closed")
-	watch.interact(player)
-	await _wait(0.6)
-	var inspect: PlayerInspectController = player.inspect_controller
-	_expect(inspect.is_open(), "looking at the watch opens it in the inspect view as usual")
-	_expect(not watch.beat_running and _sounds_at(watch).is_empty(), "and nothing ticks while it is looked at")
-	inspect.close(false)
-	player.inventory_ui_controller.close()
-	await _wait(0.25)
-	_expect(watch.beat_running and _sounds_at(watch).size() == 1 and _sounds_at(watch)[0].playing, "closing the view starts the ticking at the watch")
-	_expect(absf(_sounds_at(watch)[0].stream.get_length() - 3.0) < 0.05, "three seconds of it (%.2f s)" % _sounds_at(watch)[0].stream.get_length())
-	_expect(_sounds_at(watch)[0].volume_db < -8.0, "soft (%.0f dB)" % _sounds_at(watch)[0].volume_db)
-	await _wait(2.5)
-	var whisper: AudioStreamPlayer3D = null
-	var ticking_still: bool = false
-	for sound: AudioStreamPlayer3D in _sounds_at(watch):
-		if sound.stream.get_length() < 2.5:
-			whisper = sound
-		else:
-			ticking_still = true
-	_expect(whisper != null and whisper.playing, "then a faint whisper, from the same place")
-	_expect(ticking_still, "over the last of the ticking")
-	_expect(whisper != null and whisper.volume_db < -12.0, "low (%.0f dB)" % (whisper.volume_db if whisper != null else 0.0))
-	_expect(tr("TOWER_WALKIE_TALKIE") == "She never came back to the tower, Juli...", "its words are 'She never came back to the tower, Juli...'")
+## The desk's drawer. Its motion is a small simulation (a hand pulling through a spring, wood that holds and then lets go, a stop it knocks against twice),
+## played by the drawer and made into its sound. Aimed at, it opens with a scrape and a knock and shows Juliana's note (which cannot be aimed at while
+## the drawer is shut), and it shuts again.
+func _check_the_drawer() -> void:
+	var drawer: DeskDrawer = tower.props.desk_drawer
+	var table: Node3D = drawer.get_parent() as Node3D
+	var note: Inspectable = tower.props.ground_items[&"juliana_note"] as Inspectable
+
+	# The motion that is played: from rest, a hold, a break away, a run, a knock against the stop, a second softer one, and still.
+	var pull: Dictionary = DeskDrawer.get_profile(true, drawer.travel)
+	var covered: PackedFloat32Array = pull["x"]
+	var speeds: PackedFloat32Array = pull["v"]
+	var hits: Array = pull["hits"]
+	_expect(absf(covered[covered.size() - 1] - drawer.travel) < 0.004, "pulled open, it ends at its stop (%.3f of %.3f m)" % [covered[covered.size() - 1], drawer.travel])
+	_expect(float(pull["seconds"]) > 0.6 and float(pull["seconds"]) < 1.6, "in about a second (%.2f s)" % float(pull["seconds"]))
+	_expect(hits.size() >= 2 and (hits[0] as Vector2).y > 0.3 and (hits[1] as Vector2).y < (hits[0] as Vector2).y, "it knocks against the stop and again, softer (%d knocks)" % hits.size())
+	var top_speed: float = 0.0
+	for speed: float in speeds:
+		top_speed = maxf(top_speed, speed)
+
+	_expect(top_speed > 0.3 and top_speed < 0.9, "it runs at a hand's pace, %.2f m/s at most" % top_speed)
+	_expect(speeds[int(0.03 / DeskDrawer.RECORD_STEP)] < 0.02, "it holds on its runners for a moment before it breaks away")
+	var shut_hits: Array = DeskDrawer.get_profile(false, drawer.travel)["hits"]
+	_expect(not shut_hits.is_empty() and (shut_hits[0] as Vector2).y >= (hits[0] as Vector2).y, "pushed shut it is hit at least as hard")
+
+	# Shut: what is in it cannot be aimed at, and the front is what a ray from the room meets.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var note_areas: Array[Node] = note.find_children("*", "CollisionShape3D", true, false)
+	var reachable: bool = false
+	for shape: Node in note_areas:
+		reachable = reachable or not (shape as CollisionShape3D).disabled
+
+	_expect(not note_areas.is_empty() and not reachable, "while the drawer is shut the note has no area to be aimed at")
+	var front: Vector3 = table.to_global(Vector3(0.0, 0.452, 0.36))
+	_ray_finds(drawer, front + table.global_basis.z * 0.7 + Vector3(0.0, 0.5, 0.0), front, "the drawer's front")
+	_expect(drawer.can_interact(player) and drawer.get_prompt_text() == "PROMPT_OPEN" and tr("PROMPT_OPEN").ends_with("] Open"), "aimed at, it offers [E] Open")
+
+	# Pulled open.
+	var shut_at: Vector3 = drawer.slide.global_position
+	drawer.interact(player)
+	_expect(drawer.is_moving and not drawer.can_interact(player), "[E] sets it moving, and it is not used again meanwhile")
+	await _wait(0.45)
+	var mid: float = drawer.get_openness()
+	_expect(mid > 0.1 and mid < 0.95 and drawer.is_moving, "it is on its way (%.0f%% out)" % (mid * 100.0))
+	var sound: AudioStreamPlayer3D = drawer.get_node("Sound") as AudioStreamPlayer3D
+	_expect(sound.playing and sound.stream != null and sound.stream.get_length() > 0.8, "its scrape and its knocks sound (%.2f s)" % (sound.stream.get_length() if sound.stream != null else 0.0))
+	var movement: Object = player.get("movement_controller") as Object
+	_expect(movement != null and (movement.get("gesture_offset") as Vector3).z < -0.005, "the player leans in while they pull (%s)" % str(movement.get("gesture_offset")))
 	var waited: float = 0.0
-	while watch.beat_running and waited < 20.0:
+	while drawer.is_moving and waited < 4.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
-	await get_tree().process_frame
-	await get_tree().process_frame
-	_expect(not watch.beat_running and _sounds_at(watch).is_empty(), "and it cuts to dead silence: nothing is left playing")
-	_expect(bool(SaveManager.get_state_value(&"triggers", &"tower_walkie_beat", false)), "that it was heard is remembered")
 
-	watch.interact(player)
-	await _wait(0.5)
-	inspect.close(false)
+	await _wait(0.3)
+	_expect(drawer.is_open and is_equal_approx(drawer.get_openness(), 1.0), "it comes to rest at its stop")
+	_expect(absf(drawer.slide.global_position.distance_to(shut_at) - drawer.travel) < 0.01, "%.0f cm out of the desk" % (drawer.travel * 100.0))
+	_expect(drawer.get_prompt_text() == "PROMPT_CLOSE" and tr("PROMPT_CLOSE").ends_with("] Close"), "and now it offers [E] Close")
+	_expect(bool((SaveManager.get_state_value(&"drawers", &"tower_desk_drawer", {}) as Dictionary).get("is_open", false)), "that it is open is kept in the save")
+	_expect(movement != null and (movement.get("gesture_offset") as Vector3).length() < 0.01, "the player has straightened up")
+
+	# The note is out where it can be seen and aimed at.
+	var out: Vector3 = table.to_local(note.global_position)
+	_expect(out.z > 0.4 and out.y < 0.5, "Juliana's note lies in the open part of the drawer, past the plank's edge (%s)" % str(out))
+	reachable = false
+	for shape: Node in note_areas:
+		reachable = reachable or not (shape as CollisionShape3D).disabled
+
+	_expect(reachable, "and it can be aimed at again")
+	_ray_finds(note, note.global_position + table.global_basis.z * 0.7 + Vector3(0.0, 0.8, 0.0), note.global_position, "Juliana's note in the open drawer")
+	_ray_finds(drawer, drawer.slide.global_position + table.global_basis.z * 0.9 + Vector3(0.0, 0.1, 0.0), drawer.slide.global_position + table.global_basis.z * 0.26, "the open drawer's front")
+	note.interact(player)
+	await _wait(0.8)
+	_expect(player.inspect_controller.is_open(), "the note opens in the inspect view")
+	player.inspect_controller.close(false)
 	player.inventory_ui_controller.close()
-	await _wait(0.5)
-	_expect(not watch.beat_running and _sounds_at(watch).is_empty(), "looking at it again and closing the view plays nothing")
+	await _wait(0.6)
+
+	# And shut again.
+	drawer.interact(player)
+	waited = 0.0
+	while drawer.is_moving and waited < 4.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+
+	await _wait(0.3)
+	_expect(not drawer.is_open and is_zero_approx(drawer.get_openness()) and drawer.slide.global_position.distance_to(shut_at) < 0.003, "pushed shut, it is flush with the desk again")
+	reachable = false
+	for shape: Node in note_areas:
+		reachable = reachable or not (shape as CollisionShape3D).disabled
+
+	_expect(not reachable, "and the note is out of reach again")
+	_expect(not bool((SaveManager.get_state_value(&"drawers", &"tower_desk_drawer", {}) as Dictionary).get("is_open", true)), "(that it is shut is kept too)")
 
 
 ## The pinned note on the door opens the inspect view like any note.
@@ -585,24 +617,14 @@ func _check_the_door_note() -> void:
 	await _wait(0.6)
 
 
-func _sounds_at(watch: Node3D) -> Array[AudioStreamPlayer3D]:
-	var sounds: Array[AudioStreamPlayer3D] = []
-	for child: Node in watch.get_children():
-		if child is AudioStreamPlayer3D and not child.is_queued_for_deletion():
-			sounds.append(child as AudioStreamPlayer3D)
-
-	return sounds
-
-
 func _check_translations() -> void:
 	_expect(tr("READABLE_TOWER_DOOR_NOTE") == "We can't let anyone find this place, Sophia, or we lose our HQ forever. I'm keeping the key with me at the fig tree camp until the rain stops. — Juliana", "the door note, in English")
 	_expect(tr("CAPTION_TOWER_DOOR_LOCKED") == "Where is the HQ key?", "the locked door's line, in English")
 	GameSettings.set_text_locale("pt_BR", false)
 	var all_translated: bool = true
-	for key: String in ["READABLE_TOWER_DOOR_NOTE", "CAPTION_TOWER_DOOR_LOCKED", "TOWER_HQ_CARVED_TEXT", "ITEM_TOWER_CHALKBOARD_NAME", "ITEM_TOWER_CHALKBOARD_DESCRIPTION", "ITEM_BRASS_SIGNAL_KEY_NAME", "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION", "ITEM_TOWER_DOOR_NOTE_NAME", "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"]:
+	for key: String in ["READABLE_TOWER_DOOR_NOTE", "CAPTION_TOWER_DOOR_LOCKED", "ITEM_BRASS_SIGNAL_KEY_NAME", "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION", "ITEM_TOWER_DOOR_NOTE_NAME", "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"]:
 		all_translated = all_translated and tr(key) != key
 	_expect(all_translated, "every text of the tower is also in Portuguese")
-	_expect(tr("TOWER_HQ_CARVED_TEXT").begins_with("SOPHIA & JULI"), "the carved names are the same in Portuguese")
 	GameSettings.set_text_locale("en", false)
 
 

@@ -63,6 +63,50 @@ const BASE_FOV: float = 75.0
 ## The field of view widens only slightly when walking fast.
 const FOV_FAST_WALK: float = 1.5
 
+# The ground's slope changes how the player walks. Uphill is slower and heavier (shorter, harder steps, a head that leans in, a heavier breath), downhill is
+# quicker and the heels come down harder. The slope is the rise over the run along the way the player is going (0.36 is about 20 degrees), smoothed so that
+# the bumps of the ground do not show.
+const SLOPE_FOLLOW_RATE: float = 5.0
+const UPHILL_SLOWEST: float = 0.6
+const UPHILL_FULL_GRADE: float = 0.62
+const DOWNHILL_QUICKEST: float = 1.2
+const DOWNHILL_PEAK_GRADE: float = 0.24
+const DOWNHILL_STEEP_GRADE: float = 0.7
+## The grade at which the climb is as hard as it gets (for the breath).
+const CLIMB_EFFORT_GRADE: float = 0.45
+## How the length of a step changes at full uphill (x) and full downhill (y).
+const SLOPE_STEP_LENGTH: Vector2 = Vector2(0.86, 1.12)
+## How the head is held at full uphill (leaning in, looking at the ground ahead) and full downhill (leaning back), in degrees.
+const SLOPE_PITCH_DEGREES: Vector2 = Vector2(-1.6, 0.9)
+## How much heavier the feet come down at full uphill (x) and full downhill (y).
+const SLOPE_FOOTFALL_WEIGHT: Vector2 = Vector2(0.3, 0.35)
+
+# Stairs (the game's stairs have one smooth ramp for the feet, and put it in the `stairs` group; its `stair_creaks` meta says whether the wood groans): a
+# slow, heavy climb, one step to every two treads. The head rises in the middle of each step and settles as the foot lands (going up); going down it stays up
+# and drops as the heel comes down; every step is a thud with a nod, a rolling shoulder and a sway, and the old boards creak now and then.
+const STAIRS_GROUP: StringName = &"stairs"
+const STAIRS_SPEED_UP: float = 0.55
+const STAIRS_SPEED_DOWN: float = 0.62
+const STAIRS_STEP_LENGTH_WALK: float = 0.5
+const STAIRS_STEP_LENGTH_FAST: float = 0.62
+const STAIRS_BLEND_RATE: float = 7.0
+const STAIRS_LEAVE_SECONDS: float = 0.2
+const STAIRS_KICK_UP: float = 1.5
+const STAIRS_KICK_DOWN: float = 1.9
+## How far the head rises and sinks about the smooth ramp the body really climbs (camera units), going up and going down.
+const STAIRS_LIFT_UP: float = 0.034
+const STAIRS_LIFT_DOWN: float = 0.05
+const STAIRS_ROLL_FACTOR: float = 2.0
+const STAIRS_SWAY_FACTOR: float = 1.5
+const STAIRS_WEIGHT: float = 0.45
+const STAIRS_PITCH_UP: float = -1.2
+const STAIRS_PITCH_DOWN: float = -2.6
+const STAIRS_CREAK_CHANCE: float = 0.3
+## The extremes of the two lift curves, to scale them to the amounts above (see `_stairs_lift`).
+const STAIRS_UP_PEAK: float = 0.226
+const STAIRS_DOWN_PEAK: float = 0.25
+const STAIRS_DOWN_MEAN: float = 0.2
+
 @export var player_acceleration: float = 4.0
 @export var player_deceleration: float = 9.0
 ## Share of the ground acceleration that applies in the air.
@@ -163,6 +207,15 @@ var _corridor_max: float = 0.0
 var corridor_speed_scale: float = 1.0
 ## A developer multiplier on the walking speed (the dev console's `speed`); 1 in normal play.
 var speed_multiplier: float = 1.0
+
+## The slope of the ground along the player's way (rise over the run, uphill positive; smoothed), how much of the time (0 to 1) they are on stairs, and how
+## hard the climb is (0 to 1: a steep slope or stairs up; it makes the breath heavier and the cold breath quicker).
+var slope_grade: float = 0.0
+var stairs_blend: float = 0.0
+var slope_effort: float = 0.0
+var _stairs_leave_timer: float = 0.0
+var _stairs_creaks: bool = false
+var _slope_pitch: float = 0.0
 
 # The guided walk: the player is walked to a spot at a slow, natural pace, looking
 # where they will act (used to walk up to a door before pushing it).
@@ -276,9 +329,10 @@ func physics_update(
 		and forward_dot > 0.3
 	)
 	is_sprinting = wants_sprint
+	_update_slope(move_dir, delta)
 	var current_speed: float = _get_current_speed(
 		wants_sprint
-	) * _get_direction_speed_factor(forward_dot)
+	) * _get_direction_speed_factor(forward_dot) * _get_slope_speed_factor()
 
 	_track_landing()
 	_apply_horizontal_movement(
@@ -554,6 +608,62 @@ func _get_direction_speed_factor(forward_dot: float) -> float:
 	return lerpf(STRAFE_SPEED_FACTOR, BACKWARD_SPEED_FACTOR, -forward_dot)
 
 
+## Reads the slope under the player along their way, and whether the ground is a stair, and eases the numbers that the pace and the view are made from.
+func _update_slope(move_dir: Vector3, delta: float) -> void:
+	var target_grade: float = 0.0
+	if player.is_on_floor() and move_dir.length() > 0.01:
+		var normal: Vector3 = player.get_floor_normal()
+		if normal.y > 0.2:
+			target_grade = -(normal.x * move_dir.x + normal.z * move_dir.z) / normal.y
+
+	slope_grade = lerpf(slope_grade, target_grade, 1.0 - exp(-SLOPE_FOLLOW_RATE * delta))
+	if _find_stairs():
+		_stairs_leave_timer = STAIRS_LEAVE_SECONDS
+	else:
+		_stairs_leave_timer = maxf(_stairs_leave_timer - delta, 0.0)
+
+	stairs_blend = lerpf(stairs_blend, 1.0 if _stairs_leave_timer > 0.0 else 0.0, 1.0 - exp(-STAIRS_BLEND_RATE * delta))
+	var climbing: float = clampf(slope_grade / CLIMB_EFFORT_GRADE, 0.0, 1.0)
+	if slope_grade > 0.1:
+		climbing = maxf(climbing, stairs_blend)
+
+	slope_effort = lerpf(slope_effort, climbing, 1.0 - exp(-2.0 * delta))
+
+
+## Whether the ground under the player's feet is a stair: the body that a ray straight down meets is in the `stairs` group. (The slide collisions of the
+## last move do not say: going down a slope the body is only held to it by the floor snap, and meets nothing.)
+func _find_stairs() -> bool:
+	if not player.is_on_floor():
+		return false
+
+	var from: Vector3 = player.global_position + Vector3(0.0, 0.3, 0.0)
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, from + Vector3(0.0, -1.4, 0.0))
+	query.exclude = [player.get_rid()]
+	var hit: Dictionary = player.get_world_3d().direct_space_state.intersect_ray(query)
+	var body: Node = hit.get("collider") as Node
+	if body != null and body.is_in_group(STAIRS_GROUP):
+		_stairs_creaks = bool(body.get_meta(&"stair_creaks", false))
+		return true
+
+	return false
+
+
+## The pace on this ground as a share of the usual one: the slope's, or the stairs' while the player is on them.
+func _get_slope_speed_factor() -> float:
+	var stairs: float = STAIRS_SPEED_UP if slope_grade >= 0.0 else STAIRS_SPEED_DOWN
+	return lerpf(slope_speed_factor(slope_grade), stairs, stairs_blend)
+
+
+## How the slope changes the pace (1 on the flat): uphill slower the steeper it is, downhill quicker up to a point, and taken carefully again when it gets steep.
+static func slope_speed_factor(grade: float) -> float:
+	if grade >= 0.0:
+		return lerpf(1.0, UPHILL_SLOWEST, smoothstep(0.0, UPHILL_FULL_GRADE, grade))
+
+	var downhill: float = -grade
+	var quicker: float = lerpf(1.0, DOWNHILL_QUICKEST, smoothstep(0.0, DOWNHILL_PEAK_GRADE, downhill))
+	return lerpf(quicker, 1.0 + (DOWNHILL_QUICKEST - 1.0) * 0.4, smoothstep(DOWNHILL_PEAK_GRADE, DOWNHILL_STEEP_GRADE, downhill))
+
+
 func _apply_horizontal_movement(
 	move_dir: Vector3,
 	speed: float,
@@ -671,6 +781,12 @@ func _advance_steps(
 	if wants_sprint:
 		step_length = STEP_LENGTH_FAST
 
+	# Uphill the steps are shorter, downhill longer; on stairs a step takes two treads.
+	var uphill: float = clampf(slope_grade / UPHILL_FULL_GRADE, 0.0, 1.0)
+	var downhill: float = clampf(-slope_grade / DOWNHILL_PEAK_GRADE, 0.0, 1.0)
+	step_length *= lerpf(1.0, SLOPE_STEP_LENGTH.x, uphill) * lerpf(1.0, SLOPE_STEP_LENGTH.y, downhill)
+	step_length = lerpf(step_length, STAIRS_STEP_LENGTH_FAST if wants_sprint else STAIRS_STEP_LENGTH_WALK, stairs_blend)
+
 	# The cadence wanders a little, as a walker's does, instead of ticking like a clock.
 	step_length *= 1.0 + GAIT_CADENCE_DRIFT * _noise_at(6.0, 0.12)
 
@@ -693,6 +809,11 @@ func _on_footfall(
 	)
 
 	# No two footfalls are alike: this one rolls its own weight, bob and sway.
+	# The feet come down harder going up a slope, and harder still going down it; on stairs every step is a thud, however slow.
+	var heavy: float = 1.0 + SLOPE_FOOTFALL_WEIGHT.x * clampf(slope_grade / UPHILL_FULL_GRADE, 0.0, 1.0) + SLOPE_FOOTFALL_WEIGHT.y * clampf(-slope_grade / DOWNHILL_PEAK_GRADE, 0.0, 1.0)
+	strength = lerpf(strength, maxf(strength, 0.9), stairs_blend)
+	heavy = lerpf(heavy, STAIRS_KICK_UP if slope_grade >= 0.0 else STAIRS_KICK_DOWN, stairs_blend)
+	strength *= heavy
 	strength *= _rng.randf_range(FOOTFALL_KICK_MIN, FOOTFALL_KICK_MAX)
 	_gait_amount_target = _rng.randf_range(GAIT_AMOUNT_MIN, GAIT_AMOUNT_MAX)
 	_gait_roll_target = _rng.randf_range(GAIT_ROLL_MIN, GAIT_ROLL_MAX)
@@ -706,6 +827,8 @@ func _on_footfall(
 
 	if audio_controller != null:
 		audio_controller.trigger_footstep(wants_sprint, strength)
+		if stairs_blend > 0.5 and _stairs_creaks and _rng.randf() < STAIRS_CREAK_CHANCE:
+			audio_controller.trigger_stair_creak(strength)
 
 
 func _track_landing() -> void:
@@ -770,13 +893,26 @@ func _apply_view_motion(
 	_gait_roll = lerpf(_gait_roll, _gait_roll_target, follow)
 	_gait_asymmetry = lerpf(_gait_asymmetry, _gait_asymmetry_target, follow * 0.3)
 
+	# The ground: a slope weighs on the walk a little (uphill most), stairs a lot.
+	var uphill: float = clampf(slope_grade / UPHILL_FULL_GRADE, 0.0, 1.0) * (1.0 - stairs_blend)
+	var downhill: float = clampf(-slope_grade / DOWNHILL_PEAK_GRADE, 0.0, 1.0) * (1.0 - stairs_blend)
+	var weight: float = 1.0 + 0.4 * uphill + 0.2 * downhill + STAIRS_WEIGHT * stairs_blend
 	var base_intensity: float = (
 		pow(
 			clampf(horizontal_speed / WALK_SPEED, 0.0, 1.6),
 			BOB_SPEED_EXPONENT
 		)
 		* _bob_blend
+		* weight
 	)
+	var sway_gain: float = lerpf(1.0, STAIRS_SWAY_FACTOR, stairs_blend)
+	var roll_gain: float = lerpf(1.0, STAIRS_ROLL_FACTOR, stairs_blend)
+	var stair_lift: float = _stairs_lift(step_phase) * stairs_blend * _bob_blend
+	# The head is held a little differently: leaning in uphill, back downhill, looking at the steps on stairs.
+	var pitch_bias: float = SLOPE_PITCH_DEGREES.x * uphill + SLOPE_PITCH_DEGREES.y * downhill + stairs_blend * (STAIRS_PITCH_UP if slope_grade >= 0.0 else STAIRS_PITCH_DOWN)
+	_slope_pitch = lerpf(_slope_pitch, pitch_bias * _bob_blend, 1.0 - exp(-3.0 * delta))
+	# A climb takes the breath: quick, deep, shoulders and head moving with it.
+	var pant: float = sin(TAU * _breath_phase * 3.2) * slope_effort * _bob_blend
 	var intensity: float = base_intensity * _gait_amount
 	var roll_intensity: float = base_intensity * _gait_roll
 
@@ -814,13 +950,13 @@ func _apply_view_motion(
 
 	var procedural: Vector3 = Vector3(
 		(
-			sway * BOB_LATERAL * intensity
+			sway * BOB_LATERAL * intensity * sway_gain
 			+ wobble_a * NOISE_POSITION * _bob_blend
 			+ drift_x * IDLE_SWAY * calm
 			+ event[0]
 		),
 		(
-			vertical + _step_spring
+			vertical + _step_spring + stair_lift + pant * 0.0035
 			+ breath * BREATH_VERTICAL * calm
 			+ drift_y * IDLE_SWAY * 0.6 * calm
 			+ event[1]
@@ -830,13 +966,14 @@ func _apply_view_motion(
 	var bob: Vector3 = procedural * motion + _gesture_offset_applied
 
 	_view_roll = -deg_to_rad(motion * (
-		BOB_ROLL_DEGREES * sway * roll_intensity
+		BOB_ROLL_DEGREES * sway * roll_intensity * roll_gain
 		+ BOB_NOISE_DEGREES * wobble_a * (0.3 + 0.7 * _bob_blend)
 		+ event[2]
 	)) + deg_to_rad(_gesture_roll_applied)
 	_view_pitch = deg_to_rad(motion * (
 		_step_spring * STEP_NOD_DEGREES_PER_UNIT
 		+ breath * BREATH_PITCH_DEGREES * calm
+		+ pant * 0.2 + _slope_pitch
 		+ BOB_NOISE_DEGREES * 0.7 * wobble_b * _bob_blend
 		+ event[4]
 	) + _gesture_pitch_applied)
@@ -868,6 +1005,17 @@ func _apply_view_motion(
 
 	_applied_bob = bob
 	_applied_hand_bob = hand_bob
+
+
+## The height of the head over a stair, relative to the smooth ramp the body really climbs (the feet ride one slope, the stairs are only to look at). Going up
+## the head rises in the middle of each step and settles as the foot is planted; going down it stays up and drops as the heel comes down. It averages out to
+## nothing over a step, so that it never lifts or lowers the view for good. `phase` is the step phase (a whole number is a foot landing).
+func _stairs_lift(phase: float) -> float:
+	var t: float = fposmod(phase, 1.0)
+	if slope_grade >= 0.0:
+		return STAIRS_LIFT_UP * (smoothstep(0.2, 0.8, t) - t) / STAIRS_UP_PEAK
+
+	return STAIRS_LIFT_DOWN * ((t - smoothstep(0.45, 0.95, t)) - STAIRS_DOWN_MEAN) / STAIRS_DOWN_PEAK
 
 
 ## Smooth noise from -1 to 1 that never repeats; `channel` picks an independent
@@ -950,6 +1098,11 @@ func _next_event_wait(walking: bool) -> float:
 
 
 func _reset_view_motion() -> void:
+	slope_grade = 0.0
+	stairs_blend = 0.0
+	slope_effort = 0.0
+	_stairs_leave_timer = 0.0
+	_slope_pitch = 0.0
 	step_phase = 0.0
 	_last_step_index = 0
 	_bob_blend = 0.0
