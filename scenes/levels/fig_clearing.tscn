@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/cassette_recorder.tscn" id="5_recorder"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_album.tscn" id="6_album"]
 [ext_resource type="PackedScene" path="res://scenes/objects/photo_recent.tscn" id="9_recent"]
-[ext_resource type="PackedScene" path="res://scenes/objects/photo_workshop.tscn" id="30_workshop"]
 [ext_resource type="PackedScene" uid="uid://cjkk68a68rvy1" path="res://assets/models/trees/custom_tree/tree_test.glb" id="10_tree"]
 [ext_resource type="PackedScene" uid="uid://bcmu0upxtqw7r" path="res://assets/models/camping/tent/tent.glb" id="11_tent"]
 [ext_resource type="PackedScene" uid="uid://cje0ebg64e0a7" path="res://assets/models/camping/campfire/campfire.glb" id="12_campfire"]
@@ -79,13 +78,16 @@ metallic = 0.2
 roughness = 0.35
 cull_mode = 2
 
-[node name="FigClearing" type="Node3D" unique_id=2095720563 node_paths=PackedStringArray("album", "recorder", "fire", "ficha_spot", "rain_player")]
+[node name="FigClearing" type="Node3D" unique_id=2095720563 node_paths=PackedStringArray("album", "recorder", "fire", "empty_seat", "ficha_spot", "recording_voice_player", "seat_voice_player", "rain_player")]
 script = ExtResource("1_sequence")
 album = NodePath("Props/PhotoAlbum")
 recorder = NodePath("Props/CassetteRecorder")
 fire = NodePath("Scenery/Campfire/CampfireFire")
+empty_seat = NodePath("Props/EmptySeat")
 ficha_scene = ExtResource("24_ficha")
-ficha_spot = NodePath("Props/FichaSpot")
+ficha_spot = NodePath("Props/EmptySeat/FichaSpot")
+recording_voice_player = NodePath("Props/CassetteRecorder/VoicePlayer")
+seat_voice_player = NodePath("Props/EmptySeat/SeatVoice")
 rain_player = NodePath("Recording/RainPlayer")
 
 [node name="Scenery" type="Node3D" parent="." unique_id=1763627874]
@@ -280,18 +282,27 @@ surface_material_override/0 = SubResource("Mat_enamel")
 [node name="CassetteRecorder" parent="Props" unique_id=2045306204 instance=ExtResource("5_recorder")]
 transform = Transform3D(0.9781476, 0, 0.2079117, 0, 1, 0, -0.2079117, 0, 0.9781476, -0.05, 0.78, -2.14)
 
+[node name="VoicePlayer" type="AudioStreamPlayer3D" parent="Props/CassetteRecorder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+unit_size = 2.5
+max_distance = 16.0
+
 [node name="PhotoAlbum" parent="Props" unique_id=1257153703 instance=ExtResource("6_album")]
 transform = Transform3D(0.99997383, 0, -0.007235706, 0, 1, 0, 0.007235706, 0, 0.99997383, 0.53, 0.78, -2.25)
 
 [node name="PhotoRecent" parent="Props" unique_id=938142182 instance=ExtResource("9_recent")]
-transform = Transform3D(-0.69922113, 0.71490544, 3.1249513e-08, 0, -4.371139e-08, 1, 0.71490544, 0.69922113, 3.0563925e-08, 0.21402094, 0.004, 2.358548)
-
-
-[node name="PhotoWorkshop" parent="Props" instance=ExtResource("30_workshop")]
 transform = Transform3D(0.9387284, -0.3446577, 0, 0, 0, 1, -0.3446577, -0.9387284, 0, 0.95, 0.786, -1.98)
 
-[node name="FichaSpot" type="Marker3D" parent="Props"]
-transform = Transform3D(0.62014085, 0, 0.78449047, 0, 1, 0, -0.78449047, 0, 0.62014085, 0.55, 0.784, -1.93)
+[node name="EmptySeat" type="Marker3D" parent="Props"]
+transform = Transform3D(0.9063078, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.9063078, 1.45, 0, 4.35)
+
+[node name="SeatVoice" type="AudioStreamPlayer3D" parent="Props/EmptySeat"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+unit_size = 3.0
+max_distance = 20.0
+
+[node name="FichaSpot" type="Marker3D" parent="Props/EmptySeat"]
+transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, 0.32, 0.277, 0)
 
 [node name="CampDressing" type="Node3D" parent="."]
 script = ExtResource("33_dressing")

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c4mb748noxx6s" path="res://scripts/train/train_light_flicker.gd" id="1_8c4ah"]
 [ext_resource type="PackedScene" uid="uid://dkr3q7w5oxxm5" path="res://assets/models/trains/demo_train_v2/train.tscn" id="1_sd6qm"]
+[ext_resource type="Script" path="res://scripts/audio/ambience_zone.gd" id="90_ambience_zone"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_7fnek"]
 size = Vector3(0.7, 0.04, 0.25)
@@ -63,3 +64,9 @@ distance_fade_begin = 8.0
 distance_fade_shadow = 4.0
 distance_fade_length = 4.0
 omni_range = 4.0
+
+[node name="AmbienceInterior" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+script = ExtResource("90_ambience_zone")
+size = Vector3(4.6, 3.2, 12.5)
+interior = 0.9

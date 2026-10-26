@@ -386,6 +386,9 @@ msgstr ""
 msgid "CAPTION_SPEAKER_JULIANA_RECORDING"
 msgstr ""
 
+msgid "CAPTION_SPEAKER_SOPHIA"
+msgstr ""
+
 msgid "CAPTION_REC_01"
 msgstr ""
 

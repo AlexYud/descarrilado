@@ -114,12 +114,17 @@ func _input(event: InputEvent) -> void:
 	if cutscene_frozen:
 		return
 
-	# The map in the hands: the player walks and looks with it, and puts it away with its key, Esc or the inventory key.
+	# The map in the hands: the player stands still with it (see `is_map_holding_player`), and puts it away with its key, Esc or the
+	# inventory key. While it is
+	# still coming up, its key and the inventory key do nothing: a second press then is most often the same press counted twice (a
+	# keyboard holding Shift and a movement key can send a key again), and it used to cut the map off as it opened.
 	if inspect_controller != null and inspect_controller.is_walkable_view():
-		if (
-			event.is_action_pressed("ui_cancel")
-			or ((event.is_action_pressed("map") or event.is_action_pressed("inventory")) and not event.is_echo())
-		):
+		var put_away_key: bool = (event.is_action_pressed("map") or event.is_action_pressed("inventory")) and not event.is_echo()
+		if put_away_key and inspect_controller.is_arriving():
+			get_viewport().set_input_as_handled()
+			return
+
+		if event.is_action_pressed("ui_cancel") or put_away_key:
 			if map_controller != null:
 				map_controller.close()
 
@@ -253,6 +258,9 @@ func _input(event: InputEvent) -> void:
 	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		block_look = true
 
+	if is_map_holding_player():
+		block_look = true
+
 	if movement_controller != null:
 		movement_controller.handle_input(event, block_look)
 
@@ -277,6 +285,10 @@ func _physics_process(delta: float) -> void:
 	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		interaction_blocked = true
 
+	var map_holds: bool = is_map_holding_player()
+	if map_holds:
+		interaction_blocked = true
+
 	var gameplay_frozen: bool = (
 		dialogue_frozen
 		or modal_ui_open
@@ -295,6 +307,9 @@ func _physics_process(delta: float) -> void:
 	if inspect_controller != null and inspect_controller.blocks_gameplay():
 		movement_frozen = true
 
+	if map_holds:
+		movement_frozen = true
+
 	if Time.get_ticks_msec() < _movement_hold_until_msec:
 		movement_frozen = true
 
@@ -310,10 +325,17 @@ func _physics_process(delta: float) -> void:
 		and not inventory_ui_controller.is_inventory_open()
 		and inspect_controller != null
 		and not inspect_controller.blocks_gameplay()
+		and not map_holds
 		and Input.is_action_just_pressed("interact")
 	):
 		if interaction_controller != null:
 			interaction_controller.try_interact(self)
+
+
+## True while the map is in the hands (coming up, open, or being put away): the player stands still with it and does nothing else
+## (no walking, looking, interacting or flashlight) until it is put away with its key, Esc or the inventory key.
+func is_map_holding_player() -> bool:
+	return inspect_controller != null and inspect_controller.is_walkable_view()
 
 
 ## Keeps the player's feet still for a moment (their hands are busy with a door or
@@ -577,6 +599,9 @@ func is_flashlight_blocked() -> bool:
 		return true
 
 	if inspect_controller != null and inspect_controller.blocks_gameplay():
+		return true
+
+	if is_map_holding_player():
 		return true
 
 	return false

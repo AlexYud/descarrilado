@@ -8,18 +8,19 @@ class_name FigClearingProps
 ##   The clothesline  near the western trail entrance (Trail Entrance A): a rope strung between two of the forest's own trees
 ##       (the project's medium tree model) with a damp jacket hung over it. A dressing only: nothing on it is searched or read.
 ##   The railway radio  on a wooden crate by the same entrance, south of the trail and facing the way the player arrives: a heavy
-##       industrial transmitter of the nineties (`RailwayRadio`, `[E] Inspect Radio`, `READABLE_RADIO`). Its analog dial is locked on
-##       14.08 MHz by a bar bolted over the slider, and a strip of old masking tape above it says HQ: the lockbox's code, 1 4 0 8. It hisses
+##       industrial transmitter of the nineties (`RailwayRadio`, `[E] Inspect Radio`, `READABLE_RADIO`). It is scenery, not a clue: its analog
+##       dial is locked by a bar bolted over the slider, and a strip of old masking tape above it says HQ. It hisses
 ##       faintly (a dead channel) and its lamp glows red, so that it is found from the trail. A heavy cable runs from its back to a car battery.
-##   The memory table  (`Scenery/CampTable` in the scene, with the cassette recorder, the photo album and a photograph on it) stands in the open
+##   The memory table  (`Scenery/CampTable` in the scene, with the cassette recorder, the photo album and Bus Stop Departure on it) stands in the open
 ##       beside the fig tree, clear of its trunk and roots, its front toward the trail; a lit hurricane lantern on it (`CampLantern`) lights it as the
 ##       fire lights the other side of the trail, so that the two lights show the way into the camp from the entrance.
-##   The fire ring  three logs to sit on and a kettle on a stone, round the fire (the side toward the trail is left open).
+##   The fire ring  three logs to sit on and a kettle on a stone, round the fire (the side toward the trail is left open). One of them is
+##       the empty seat the last line of the memory comes from (`FigClearingSequence`; `seat_top()` says where a log's top is).
 ##   The campsite log table  next to the campfire, with a log bench on the fire's side. On it stand a weathered thermos with Sophia's note
-##       around its middle (`READABLE_THERMOS`, in Portuguese: she locked the tower key and the station photo in their lockbox, with the password
-##       of their emergency radio channel, and took the other photos up to the HQ) and the J & S lockbox (`JSLockbox`: four wheels, the code
-##       1 4 0 8; opened, the lid pops up and shows the brass signal key and the photograph "Rain at the Station"). The lockbox stands at the
-##       table's southern end, near the edge, with its dial facing outward (along the table), so that a player at the end of the table is in front of it.
+##       around its middle (`READABLE_THERMOS`: the photo of the two of them as children is still on the desk at HQ) and the J & S lockbox
+##       (`JSLockbox`), standing open, with the photograph "Rain at the Station" on its padding: nothing is locked in it any more (its wheels
+##       are dressing). The lockbox stands at the table's southern end, near the edge, with its front facing outward (along the table), so that
+##       a player at the end of the table is in front of it.
 ##   The wood yard  a chopping block with an axe in it, split wood and kindling, where the camp's first tent used to stand. The two tents (in
 ##       the scene) are pitched with their doors toward the middle of the camp, each with an open door and some gear in front of it.
 ##
@@ -63,7 +64,7 @@ const RADIO_STATIC_DB: float = -21.0
 
 # The railway radio (origin at the middle of the body's underside, front toward +Z): the cabinet's width, height and depth, the height of its
 # rubber feet, the rack panel in front (size, and the plane of its face), the dial (the height of its middle on the panel, the scale it prints
-# and the frequency the slider is locked on: 14.08 MHz, the lockbox's code).
+# and where the slider is locked, between two printed numbers: the radio is scenery, and no frequency on it is a clue).
 const RADIO_BODY: Vector3 = Vector3(0.46, 0.3, 0.3)
 const RADIO_FEET: float = 0.014
 const RADIO_PANEL: Vector2 = Vector2(0.5, 0.32)
@@ -73,13 +74,15 @@ const RADIO_SLOT_Y: float = -0.02
 const RADIO_SCALE_START: float = 14.0
 const RADIO_SCALE_END: float = 14.2
 const RADIO_SCALE_WIDTH: float = 0.3
-const RADIO_LOCKED_AT: float = 14.08
+const RADIO_LOCKED_AT: float = 14.13
 
 # The camp round the fire (the clearing's frame; the tents, the memory table and the firewood are in the scene). The three seats are logs lying along the
 # ring (a position and the yaw of the log's length), the kettle stands on a stone on the fire's north east side, and the wood yard is where the first tent
 # stood. The lantern stands on the memory table (in the table's frame, the top 0.78 m up).
 const SEAT_POSITIONS: Array[Vector3] = [Vector3(-0.59, 0.0, 2.2), Vector3(-0.1, 0.0, 4.03), Vector3(1.45, 0.0, 4.35)]
 const SEAT_YAWS: Array[float] = [70.0, -40.0, 25.0]
+## How far each log is sunk in the ground.
+const SEAT_SINK: float = 0.025
 const KETTLE_AT: Vector3 = Vector3(1.78, 0.0, 2.15)
 const BLOCK_AT: Vector3 = Vector3(-3.7, 0.0, 1.75)
 const LANTERN_ON_MEMORY_TABLE: Vector3 = Vector3(0.63, 0.78, -0.17)
@@ -145,7 +148,7 @@ var lantern_glass_material: StandardMaterial3D = null
 var lantern_flame: MeshInstance3D = null
 var radio_static: AudioStreamPlayer3D = null
 var radio_lamp_material: StandardMaterial3D = null
-## True once `put_out_lights` has been called (the finale): the camp's lights stay out.
+## True once `put_out_lights` has been called: the camp's lights stay out.
 var lights_out: bool = false
 
 var _rope: StandardMaterial3D
@@ -194,8 +197,7 @@ static func build(kind: StringName, root: Node3D) -> void:
 
 
 ## A weathered steel thermos standing upright, centred on the origin, 31 cm tall with its cup on. A strip of paper
-## is wrapped round its middle, tied with twine and held with a brass pin: Sophia's note (`READABLE_THERMOS`: the key and the
-## photo are in their lockbox, the code is the one of their emergency radio channel, and the radio's panel at the entrance shows it) is a
+## is wrapped round its middle, tied with twine and held with a brass pin: Sophia's note (`READABLE_THERMOS`) is a
 ## readable spot on its front, offered from the start.
 static func _build_thermos(root: Node3D) -> void:
 	var steel: StandardMaterial3D = HouseProps.material(Color(0.27, 0.36, 0.31), 0.62, 0.55)
@@ -268,7 +270,7 @@ static func _on_panel(x: float, y: float, out: float = 0.0) -> Vector3:
 ## The railway radio, a heavy industrial transmitter of the nineties, 50 cm wide, 33 cm tall and 31 cm deep, its front toward +Z and its
 ## origin at the middle of the body's underside: a grey green steel cabinet on four rubber feet with a carrying handle on each side, and a rack
 ## panel in front. The dial is a window with a printed scale from 14.00 to 14.20 MHz (`Freq0`..`Freq5`), and a red needle (`Needle`) on a slider
-## (`Slider`) that is locked where it stands, on 14.08, by a steel bar bolted over it (`LockBar`, with a dab of red sealing wax on a bolt).
+## (`Slider`) that is locked where it stands, between two numbers, by a steel bar bolted over it (`LockBar`, with a dab of red sealing wax on a bolt).
 ## Above the dial a strip of old masking tape is marked HQ in marker (`Tape`). Below it: two knobs, a signal meter, two toggle switches
 ## and a socket. The words the overlay gives (`READABLE_RADIO`) are not drawn: the panel is a readable spot facing front (`PanelSpot`), offered
 ## as soon as the radio is looked at. The back has a plate with the power socket the cable goes into (`RearSocket`).
@@ -362,18 +364,15 @@ static func _build_railway_radio(root: Node3D) -> void:
 		var tall: float = 0.027 if step % 4 == 0 else (0.019 if step % 2 == 0 else 0.012)
 		HouseProps.add_box(root, "Tick%d" % step, Vector3(0.0013, tall, 0.0006), _on_panel(tick_x, base_y + tall * 0.5, print_z), cream)
 		if step % 4 == 0:
-			var locked: bool = absf(frequency - RADIO_LOCKED_AT) < 0.001
-			var number: Label3D = HouseProps.add_text(
+			HouseProps.add_text(
 				root, "Freq%d" % floori(float(step) / 4.0), "%.2f" % frequency, _on_panel(tick_x, dial_y + 0.024, print_z + 0.0003),
-				48, 0.00031, Color(0.92, 0.08, 0.06) if locked else cream.albedo_color, 0.0, true
+				48, 0.00031, cream.albedo_color, 0.0, true
 			)
-			# The number the needle is on is printed in a red of its own, whatever the light.
-			number.shaded = not locked
 
 	HouseProps.add_text(root, "Unit", "MHz", _on_panel(0.133, dial_y - 0.032, print_z + 0.0003), 40, 0.00026, cream.albedo_color, 0.0, true)
 
 	# The slider under the dial, in its slot between two brass rails, with the needle (a thin red bar, in front of the dial) rising from it over the
-	# baseline and the long tick of 14.08, and ending right under that number, pointing at it.
+	# baseline, between two printed numbers (the radio is scenery: no frequency on it means anything).
 	var needle_x: float = radio_scale_x(RADIO_LOCKED_AT)
 	var knob_top: float = RADIO_SLOT_Y + 0.014
 	var needle_top: float = base_y + 0.0335
@@ -1010,10 +1009,13 @@ func _place_on_table() -> void:
 	log_table.add_child(flask)
 	thermos = flask as Inspectable
 
-	# The lockbox stands at the table's southern end, near its edge, its dial facing outward along the table: a player at the end of the table is in
-	# front of it, close, with nothing between (the table's own collision keeps them from reaching across it).
+	# The lockbox stands at the table's southern end, near its edge, its front facing outward along the table: a player at the end of the table is in
+	# front of it, close, with nothing between (the table's own collision keeps them from reaching across it). It stands open, with only the
+	# photograph in it (set before it enters the tree, as it reads them in `_ready`).
 	lockbox = (load(LOCKBOX_SCENE_PATH) as PackedScene).instantiate() as JSLockbox
 	lockbox.name = "JSLockbox"
+	lockbox.set("starts_open", true)
+	lockbox.set("key_scene", null)
 	lockbox.position = LOCKBOX_ON_TABLE + Vector3(0.0, TABLE_TOP_Y + 0.0005, 0.0)
 	lockbox.rotation_degrees = Vector3(0.0, LOCKBOX_YAW, 0.0)
 	log_table.add_child(lockbox)
@@ -1050,13 +1052,13 @@ func _build_fire_ring() -> void:
 		seat.rotation_degrees = Vector3(0.0, SEAT_YAWS[i], 0.0)
 		ring.add_child(seat)
 		seats.append(seat)
-		var length: float = 1.3 - 0.07 * float(i)
-		var radius: float = 0.15 + 0.012 * float(i % 2)
-		HouseProps.add_cylinder(seat, "Log", radius, length, Vector3(0.0, radius - 0.025, 0.0), _bark, Vector3(0.0, 0.0, 90.0))
+		var length: float = seat_length(i)
+		var radius: float = seat_radius(i)
+		HouseProps.add_cylinder(seat, "Log", radius, length, Vector3(0.0, radius - SEAT_SINK, 0.0), _bark, Vector3(0.0, 0.0, 90.0))
 		for end: float in [-1.0, 1.0]:
-			HouseProps.add_cylinder(seat, "CutEnd", radius * 0.9, 0.012, Vector3(end * (length * 0.5 + 0.002), radius - 0.025, 0.0), _wood_pale, Vector3(0.0, 0.0, 90.0))
+			HouseProps.add_cylinder(seat, "CutEnd", radius * 0.9, 0.012, Vector3(end * (length * 0.5 + 0.002), radius - SEAT_SINK, 0.0), _wood_pale, Vector3(0.0, 0.0, 90.0))
 
-		HouseProps.add_cylinder(seat, "Stub", 0.022, 0.1, Vector3(0.18 - 0.1 * float(i), radius + 0.035, 0.02), _bark, Vector3(8.0, 0.0, 24.0))
+		HouseProps.add_cylinder(seat, "Stub", 0.022, 0.1, Vector3(seat_stub_x(i), radius + 0.035, 0.02), _bark, Vector3(8.0, 0.0, 24.0))
 		HouseProps.add_solid(seat, "Solid", Vector3(length, radius * 1.9, radius * 2.0), Vector3(0.0, radius * 0.95 - 0.02, 0.0))
 
 	# The kettle: dented dark enamel on a flat stone, its handle up and its spout toward the fire.
@@ -1075,6 +1077,26 @@ func _build_fire_ring() -> void:
 	HouseProps.add_ring(kettle, "Handle", 0.082, 0.09, Vector3(0.0, 0.2, 0.0), HouseProps.material(Color(0.08, 0.08, 0.09), 0.5, 0.5))
 	HouseProps.add_solid(kettle, "Solid", Vector3(0.34, 0.1, 0.3), Vector3(0.0, 0.05, 0.0))
 	_merge_by_material(ring, [])
+
+
+## The length and radius of log `index` of the fire ring, and where along it (its own x) the branch stub sticks up.
+static func seat_length(index: int) -> float:
+	return 1.3 - 0.07 * float(index)
+
+
+static func seat_radius(index: int) -> float:
+	return 0.15 + 0.012 * float(index % 2)
+
+
+static func seat_stub_x(index: int) -> float:
+	return 0.18 - 0.1 * float(index)
+
+
+## The top of log `index`, `along` metres from its middle along its length, in the clearing's frame: the highest line of the bark, where
+## something laid on the log rests (along that line a log is straight, so a small flat thing lies on it without rocking).
+static func seat_top(index: int, along: float) -> Vector3:
+	var top: Vector3 = Vector3(along, 2.0 * seat_radius(index) - SEAT_SINK, 0.0)
+	return SEAT_POSITIONS[index] + Basis(Vector3.UP, deg_to_rad(SEAT_YAWS[index])) * top
 
 
 ## A chopping block with an axe sunk in it, split wood and kindling round it and a few chips on the ground, where the first tent used to stand
@@ -1187,7 +1209,7 @@ func _add_tent_gear(tent: Node3D, with_pack: bool) -> void:
 
 
 ## A hurricane lantern on the memory table (the table with the recorder and the album), lit: a glass with a flame in it and a warm light of its own, so
-## that the table can be seen from the trail like the fire can. It is put out with the fire when the recording ends (`put_out_lights`).
+## that the table can be seen from the trail like the fire can. It stays lit when the fire goes out at the end of the memory.
 func _build_camp_lantern() -> void:
 	var table: Node3D = get_parent().get_node_or_null("Scenery/CampTable") as Node3D if get_parent() != null else null
 	if table == null:
@@ -1233,7 +1255,7 @@ func _build_camp_lantern() -> void:
 
 
 ## Puts every light of the camp that is not the fire out at once (the fire does it itself): the lantern (its light, glass and flame), the lamp of the
-## railway radio and its hiss, as the fire and the flashlight go in the finale. They stay out.
+## railway radio and its hiss. They stay out. (The camp's own ending no longer calls it: only the fire goes out there.)
 func put_out_lights() -> void:
 	lights_out = true
 	if lantern_light != null:

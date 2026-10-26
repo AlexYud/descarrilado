@@ -464,6 +464,9 @@ msgstr "Sophia (recording)"
 msgid "CAPTION_SPEAKER_JULIANA_RECORDING"
 msgstr "Juliana (recording)"
 
+msgid "CAPTION_SPEAKER_SOPHIA"
+msgstr "Sophia"
+
 msgid "CAPTION_REC_01"
 msgstr "You don't have to wait for me."
 
@@ -1216,7 +1219,7 @@ msgid "ITEM_THERMOS_DESCRIPTION"
 msgstr "A dented green steel thermos, long gone cold. A strip of paper is tied round its middle with twine and held by a brass pin."
 
 msgid "READABLE_THERMOS"
-msgstr "Juli, I put the tower key and the station photo in our lockbox. I used the password of our emergency radio channel. I took the other photos to organize the board up at the HQ. See you at the Tower. Don't drink all the coffee at once. — Sophia"
+msgstr "Juli, the photo of us as kids is still on the desk at HQ. Don't drink all the coffee at once. — Sophia"
 
 msgid "PROMPT_INSPECT_LOCKBOX"
 msgstr "Inspect Lockbox"
@@ -1231,7 +1234,7 @@ msgid "ITEM_RADIO_DESCRIPTION"
 msgstr "A heavy grey green transmitter from the nineties, the kind the railway kept in its signal huts. Its tuning slider is clamped in place, and a strip of old masking tape above the dial says HQ."
 
 msgid "READABLE_RADIO"
-msgstr "Industrial Railway Transmitter — Frequency dial stuck at 14.08 MHz."
+msgstr "An old railway transmitter marked HQ."
 
 msgid "LOCKBOX_VIEW_HINT"
 msgstr "Click the arrows or scroll over a wheel to turn it."

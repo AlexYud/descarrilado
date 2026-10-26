@@ -88,11 +88,19 @@ func open(start_transform: Variant = null, held_open: bool = false) -> bool:
 	if interaction != null:
 		interaction.clear_prompt()
 
-	# The map is held in the hands: the view is one the player walks with (nothing holds them, the mouse stays captured), and the
-	# inventory panel is not involved.
+	# The map is held up in the hands, filling the view (the mouse stays captured, the inventory panel is not involved). The player
+	# stops where they are and does nothing else until it is put away (`PlayerController.is_map_holding_player`).
 	var opened: bool = inspect.open_inventory(slot_data, start_transform, held_open, true)
 	if not opened:
 		return false
+
+	var movement: Object = _player.get("movement_controller") as Object
+	if movement != null and movement.has_method("force_stop_immediately"):
+		movement.call("force_stop_immediately")
+
+	var audio: Object = _player.get("audio_controller") as Object
+	if audio != null and audio.has_method("stop_footsteps"):
+		audio.call("stop_footsteps")
 
 	is_open = true
 	opened_by_player = start_transform == null
@@ -138,6 +146,19 @@ func _template_or_build() -> Node3D:
 
 func _on_inspect_closed(inspect_id: String) -> void:
 	if is_open and inspect_id == ITEM_ID:
+		is_open = false
+		map_closed.emit()
+
+
+## The view says it has closed only once the map had come all the way up: put away (or cut off) before that, nothing was said, and the
+## map stayed "open" for good, so its key never opened it again. So the map is also taken as closed as soon as the view is no longer
+## the map in the hands.
+func _process(_delta: float) -> void:
+	if not is_open or _player == null:
+		return
+
+	var inspect: PlayerInspectController = _player.get("inspect_controller") as PlayerInspectController
+	if inspect == null or not inspect.is_walkable_view():
 		is_open = false
 		map_closed.emit()
 

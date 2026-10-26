@@ -1,11 +1,13 @@
 extends Interactable
 class_name JSLockbox
 
-## The "J & S" lockbox on the camp's log table: a steel strongbox Juliana and Sophia painted their initials on, shut with a four wheel
-## combination dial in its front. The right code, 1 4 0 8 (the date they took over the HQ, 14 August: it is stamped in red ink on the old
-## bus ticket in the jacket on the clothesline), lets the latch go with a heavy CLACK-CLICK and the lid pops open, showing what Sophia hid
-## in it: the signal tower's brass key and the photograph "Rain at the Station" (`Contents`: two ordinary Collectibles, out of the scene
-## tree, and so out of reach and sight, until the lid opens).
+## The "J & S" lockbox: a steel strongbox Juliana and Sophia painted their initials on, shut with a four wheel combination dial in its
+## front. The right `code` lets the latch go with a heavy CLACK-CLICK and the lid pops open, showing what is in it (`Contents`: ordinary
+## Collectibles made from `key_scene` and `photo_scene`, out of the scene tree, and so out of reach and sight, until the lid opens).
+##
+## `starts_open` makes a box that is simply open, with no code to find: the lid up, the latch out, the contents in reach and the dial
+## dressing only (the camp's box is one, see `FigClearingProps`; it holds the photograph "Rain at the Station" and no key). It is set
+## before the box enters the tree, and it wins over a saved shut box.
 ##
 ## Interacting opens a close-up (`JSLockboxView`): the view flies to the front panel and the player turns each wheel on its own with the
 ## arrows or the mouse wheel, each step a heavy metallic TICK TICK. There is no button to confirm: the code is judged as the last wheel
@@ -43,6 +45,8 @@ const DIM_FROM_DEGREES: float = 40.0
 @export var persistent_id: StringName = &"js_lockbox"
 @export var key_scene: PackedScene
 @export var photo_scene: PackedScene
+## The box is open from the start (see the top of the file).
+@export var starts_open: bool = false
 @export var wheel_turn_seconds: float = 0.14
 ## The wheels settle this long before the latch lets go, so the last tick is heard first.
 @export var unlock_delay_seconds: float = 0.5
@@ -261,15 +265,20 @@ func _spin_wheel(index: int) -> void:
 
 func _process(delta: float) -> void:
 	_glow_time -= delta
-	_update_digit_glow()
 	if _glow_time <= 0.0:
+		# The last update is from where the wheels come to rest: a long frame can end the glow before a wheel's turn has finished.
+		_update_digit_glow(true)
 		set_process(false)
+		return
+
+	_update_digit_glow()
 
 
-## Dims every digit by how far it is, round its wheel, from the reading line (the one that counts is full).
-func _update_digit_glow() -> void:
+## Dims every digit by how far it is, round its wheel, from the reading line (the one that counts is full). `at_rest` reads each wheel where
+## it is turning to rather than where it is now.
+func _update_digit_glow(at_rest: bool = false) -> void:
 	for i: int in _wheels.size():
-		var turned: float = _wheels[i].rotation_degrees.x
+		var turned: float = _wheel_angle(i) if at_rest else _wheels[i].rotation_degrees.x
 		var labels: Array = _digit_labels[i] as Array
 		for digit: int in labels.size():
 			var label: Label3D = labels[digit] as Label3D
@@ -312,6 +321,11 @@ func _restore_state() -> void:
 		for i: int in mini(saved_list.size(), digits.size()):
 			digits[i] = posmod(int(saved_list[i]), 10)
 			_wheel_steps[i] = digits[i]
+
+	# A box that is simply open has no code to show (its wheels stay as they are).
+	if starts_open:
+		is_unlocked = true
+		return
 
 	# An open box shows its code.
 	if is_unlocked:

@@ -429,7 +429,7 @@ func _check_taking_it() -> void:
 	_expect(not player.view_locked and not player.scripted_flashlight, "and the view is given back")
 	var lens_open: bool = await _wait_for(func() -> bool: return absf(camera.fov - PlayerMovementController.BASE_FOV) < 2.0, 3.0)
 	_expect(lens_open, "with the lens open again, as the paper came to the hands (%.0f degrees)" % camera.fov)
-	_expect(inspect.is_walkable_view() and not inspect.blocks_gameplay(), "the first view, straight after taking it, is one the player can walk with")
+	_expect(inspect.is_walkable_view() and player.is_map_holding_player(), "the first view, straight after taking it, is the map held up in the hands, the player standing still")
 	_expect(player.map_controller.has_map(), "the player has the map")
 	_expect(not player.inventory_controller.has_item("forest_map"), "and it is not an item of the inventory")
 	_expect(bool(SaveManager.get_state_value(&"collectibles", &"forest_map", false)), "it counts as taken, so it never hangs on the board again")
@@ -478,13 +478,14 @@ func _check_taking_it() -> void:
 		_expect(not hints.is_lesson_showing(&"inventory"), "and the inventory is not taught for the map")
 
 
-## The map in the hands is a view the player walks with: nothing holds them, the mouse stays captured, the flashlight works, and it fills the
-## screen ALWAYS, standing or walking (on purpose: it blocks the view, so that the player puts it away after a while). Esc puts it away.
+## The map in the hands holds the player (user 2026-10-25: "not able to walk, not able to do anything while the map is open"): they stand
+## still with it, cannot walk, turn the view, interact or switch the flashlight, the mouse stays captured, and it fills the screen. Its key,
+## Esc or the inventory key put it away.
 func _check_walking_with_the_map() -> void:
 	var inspect: PlayerInspectController = player.inspect_controller
-	_expect(inspect.is_walkable_view() and not inspect.blocks_gameplay(), "the map is a view the player walks with")
+	_expect(inspect.is_walkable_view() and player.is_map_holding_player(), "the map in the hands holds the player")
 	_expect(not inspect.keep_mouse_visible_on_finish, "and it leaves the mouse captured (a headless run cannot read the mode itself)")
-	_expect(not player.is_flashlight_blocked(), "and the flashlight works")
+	_expect(player.is_flashlight_blocked(), "the flashlight cannot be switched meanwhile")
 	# (The opening cinematic still holds the camera in this fixture: let go of it, as the end of the intro does.)
 	for node: Node in level.find_children("*", "", true, false) + [level]:
 		if node.has_method("skip_opening"):
@@ -503,17 +504,21 @@ func _check_walking_with_the_map() -> void:
 	_expect(still_fill > wide_enough, "standing, the map fills the screen (%.0f%% of its height)" % (still_fill * 100.0))
 	_expect(still_middle > 0.4 and still_middle < 0.55, "and sits in the middle, a little high so that the bottom row is clear (%.2f)" % still_middle)
 	var start: Vector3 = player.global_position
+	var yaw_before: float = player.movement_controller.look_yaw
 	Input.action_press("up")
+	Input.action_press("sprint")
+	var turn: InputEventMouseMotion = InputEventMouseMotion.new()
+	turn.relative = Vector2(300.0, 0.0)
+	Input.parse_input_event(turn)
 	await get_tree().create_timer(1.3).timeout
-	var walking_fill: float = _fill_of(inspect, camera, screen)
-	var walking_middle: float = camera.unproject_position(inspect.get_item_center_world()).y / screen.y
 	var walked: float = Vector2(player.global_position.x - start.x, player.global_position.z - start.z).length()
-	Input.action_release("up")
-	_expect(walked > 0.5, "the player walks with the map open (%.2f m)" % walked)
+	_expect(walked < 0.05, "pressing forward (and Shift) does not walk with the map open (%.2f m)" % walked)
+	_expect(is_equal_approx(player.movement_controller.look_yaw, yaw_before), "moving the mouse does not turn the view")
 	_expect(inspect.is_walkable_view() and player.map_controller.is_open, "and it stays open")
-	_expect(absf(walking_fill - still_fill) < 0.03 and absf(walking_middle - still_middle) < 0.03, "and it fills the screen just as much while they walk (%.0f%%, %.2f): it is not lowered to leave the way in sight" % [walking_fill * 100.0, walking_middle])
-	await get_tree().create_timer(1.0).timeout
-	_expect(absf(_fill_of(inspect, camera, screen) - still_fill) < 0.03, "and when they stop")
+	_expect(absf(_fill_of(inspect, camera, screen) - still_fill) < 0.03, "filling the screen as before")
+	Input.action_release("sprint")
+	Input.action_release("up")
+	await get_tree().create_timer(0.3).timeout
 
 
 ## How much of the screen's height the held item takes: its height at its own scale, as seen from the camera.
@@ -588,6 +593,35 @@ func _check_it_is_kept() -> void:
 		return inspect.state == PlayerInspectController.InspectState.CLOSED, 4.0)
 	_expect(closed_by_itself and not inspect.is_open(), "the press is kept: it is put away as soon as it has come to the view")
 	_expect(folded_small[0] and not opened_again[0], "and once it was folded it never opened out on the way")
+	await get_tree().process_frame
+	_expect(not player.map_controller.is_open, "and the map is known to be put away")
+
+	# Pressed twice in a row (a keyboard holding Shift and a movement key can send the key again): the second press, while the map is
+	# still coming up, is ignored; it comes all the way up, and the key puts it away as always.
+	await _press(&"map")
+	_expect(player.map_controller.is_open and inspect.is_arriving(), "the map key brings the map up")
+	await _press(&"map")
+	_expect(player.map_controller.is_open and inspect.is_arriving(), "a second press while it is still coming up does not cut it off")
+	var arrived: bool = await _wait_for(func() -> bool: return inspect.state == PlayerInspectController.InspectState.VIEWING, 3.0)
+	_expect(arrived and player.map_controller.is_open, "it comes all the way up")
+	await _press(&"map")
+	var gone: bool = await _wait_for(func() -> bool: return inspect.state == PlayerInspectController.InspectState.CLOSED, 4.0)
+	_expect(gone and not player.map_controller.is_open, "and its key puts it away")
+
+	# Cut off on its way up by anything else (Esc here): the map is still known to be put away, and its key opens it again (it used to
+	# stay "open" for good, and the key did nothing any more).
+	await _press(&"map")
+	_expect(inspect.is_arriving(), "the map is coming up")
+	await _press(&"ui_cancel")
+	var cut_off: bool = await _wait_for(func() -> bool: return inspect.state == PlayerInspectController.InspectState.CLOSED, 4.0)
+	await get_tree().process_frame
+	_expect(cut_off and not player.map_controller.is_open, "Esc puts it away on its way up, and the map is known to be put away")
+	await _press(&"map")
+	_expect(player.map_controller.is_open and inspect.is_open(), "its key opens it again")
+	await _wait_for(func() -> bool: return inspect.state == PlayerInspectController.InspectState.VIEWING, 3.0)
+	await _press(&"map")
+	await _wait_for(func() -> bool: return inspect.state == PlayerInspectController.InspectState.CLOSED, 4.0)
+	_expect(not player.map_controller.is_open, "and puts it away")
 
 
 func _expect(condition: bool, message: String) -> void:

@@ -319,6 +319,10 @@ func _check_hint_fades() -> void:
 ## The call: nothing is shown of the receiver being picked up, the picture cuts to the cinematic shot of the
 ## town, Sophia speaks, the lamp does not move, the receiver ends up hanging, the view returns to the player.
 func _check_call() -> void:
+	# The wind outside (as in the dream intro): pushed back while she speaks, and let come back after.
+	var wind: OutdoorAmbience = OutdoorAmbience.new()
+	add_child(wind)
+	var wind_in_call: Array[float] = [0.0]
 	var model: OrelhaoModel = phone.model
 	var lines: Array[String] = []
 	var saw_roll: Array[bool] = [false]
@@ -422,8 +426,15 @@ func _check_call() -> void:
 				if lines.is_empty() or lines[lines.size() - 1] != text:
 					lines.append(text)
 
+			if phone._in_call_view:
+				wind_in_call[0] = maxf(wind_in_call[0], wind.target_interior)
+
 	watcher.call()
 	await _until(func() -> bool: return finished[0], 120.0)
+	await _wait(0.2)
+	_expect(wind_in_call[0] >= phone.call_muffle - 0.001, "the wind outside is pushed back while she speaks (%.2f)" % wind_in_call[0])
+	_expect(is_zero_approx(wind.target_interior), "and comes back when the view is the player's again (%.2f)" % wind.target_interior)
+	wind.queue_free()
 
 	_expect(picked[0], "the receiver was picked up")
 	_expect(finished[0], "the call ends")

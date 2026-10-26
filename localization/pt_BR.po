@@ -464,6 +464,9 @@ msgstr "Sophia (gravação)"
 msgid "CAPTION_SPEAKER_JULIANA_RECORDING"
 msgstr "Juliana (gravação)"
 
+msgid "CAPTION_SPEAKER_SOPHIA"
+msgstr "Sophia"
+
 msgid "CAPTION_REC_01"
 msgstr "Você não precisa me esperar."
 
@@ -1216,7 +1219,7 @@ msgid "ITEM_THERMOS_DESCRIPTION"
 msgstr "Uma garrafa térmica de aço verde, amassada, fria há muito tempo. Uma tira de papel está amarrada no meio dela com barbante e presa por um alfinete de latão."
 
 msgid "READABLE_THERMOS"
-msgstr "Juli, guardei a chave da torre e a foto da estação na nossa caixa de segurança. Usei a senha do nosso canal de rádio de emergência. Peguei as outras fotos pra organizar o mural lá em cima no QG. Te vejo na Torre. Não bebe o café todo de uma vez. — Sophia"
+msgstr "Juli, a foto de quando a gente era pequena ficou na mesa do QG. Não bebe o café todo de uma vez. — Sophia"
 
 msgid "PROMPT_INSPECT_LOCKBOX"
 msgstr "Examinar a caixa de segurança"
@@ -1231,7 +1234,7 @@ msgid "ITEM_RADIO_DESCRIPTION"
 msgstr "Um transmissor pesado, verde acinzentado, dos anos noventa, daqueles que a ferrovia guardava nas casinhas de sinalização. O seletor de frequência está preso por uma trava, e uma tira de fita crepe velha acima do mostrador diz HQ."
 
 msgid "READABLE_RADIO"
-msgstr "Transmissor Industrial Ferroviário — Seletor de frequência travado em 14,08 MHz."
+msgstr "Um velho transmissor ferroviário marcado com HQ."
 
 msgid "LOCKBOX_VIEW_HINT"
 msgstr "Clique nas setas ou role o mouse sobre uma roda para girá-la."

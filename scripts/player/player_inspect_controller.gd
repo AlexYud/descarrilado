@@ -255,6 +255,11 @@ func is_walkable_view() -> bool:
 	return _walkable and state != InspectState.CLOSED
 
 
+## True while the item is still on its way to the view (gathered up in the hand, or flying in).
+func is_arriving() -> bool:
+	return state == InspectState.OPENING or state == InspectState.PREPARING
+
+
 ## True while a view is open that takes the player's attention: they cannot walk, look, interact or use the flashlight. The map in the
 ## hands does not.
 func blocks_gameplay() -> bool:

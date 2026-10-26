@@ -1,6 +1,6 @@
 # Unrailed — Story and Gameplay Review
 
-Build reviewed: the "Dream Intro" demo as it stands on 2026-10-25 (working tree, nothing committed).
+Build reviewed: the "Dream Intro" demo as it stands on 2026-10-25, updated the same day for the revised fig tree camp and HQ (no radio code, open box, open tower door, three photographs, the empty seat).
 Written for: you, the developer, to read the whole scripted story and the gameplay flow in one sitting and mark what to change.
 
 **How to read this.** Every line of player-facing text below is copied from `localization/en.po` and `localization/pt_BR.po` by a script, not retyped, so what you read is what the game shows. Each text appears in English (**EN**) and Brazilian Portuguese (**PT**). Section 6 lists the things I noticed while putting this together (contradictions, leftovers, placeholders). Nothing in the game was changed for this document.
@@ -67,12 +67,12 @@ Written for: you, the developer, to read the whole scripted story and the gamepl
 
 **Movement and the ground (new this week).** Walking pace is slow (1.3 m/s) and the fast pace modest (2.3 m/s). The pace follows the slope: uphill is slower (down to 0.6 at about 32 degrees), downhill quicker (up to 1.2 at about 13 degrees). The body follows: uphill the steps are shorter and heavier, the head leans in and the breath turns heavy; downhill the steps are longer and the heels come down hard. **Stairs** have their own dramatic walk: slower, careful, with a creak on wooden ones. The "Head bobbing" option turns every procedural camera motion off for comfort.
 
-**The flashlight** is the main tool. It is a real light with a small start-up flicker. Scenes take it over on purpose: the camp's recording ends and everything including the flashlight cuts out at the same instant; the house trap makes it stutter; the wagon finale weakens it.
+**The flashlight** is the main tool. It is a real light with a small start-up flicker. Scenes take it over on purpose: the house trap makes it stutter; the wagon finale weakens it. The camp's memory leaves it alone.
 
 **Interaction.** A short prompt names what E will do ("[E] Open", "Inspect Radio", "Insert ficha 2", "Pick up Receiver"). Things fall in three groups:
 - *Taken* (collectibles): photographs, keys, fichas. They go to the inventory, which has no limit, and can be inspected again later.
 - *Read in place* (inspectables): notes, journals, the radio, the thermos. They open a close inspect view (drag turns the object, wheel zooms, E reads a detail, R turns the object over) and stay where they lie.
-- *Puzzle screens*: the photo album (drag and drop), the lockbox (four thumb wheels), the payphone.
+- *Puzzle screens*: the photo album (drag and drop), the payphone.
 
 **Captions** are the game's only voice. They are used for Juliana's few spoken thoughts, the narration, the cassette recording and the phone call, and have size options. Writing rules followed so far: notes contain no hyphens (signatures use "— Sophia", "— Juliana", "— Lucas"), and long texts are paragraphs.
 
@@ -177,7 +177,7 @@ Nothing says where to go. The three trails are told apart by what they look like
 |---|---|---|---|
 | Places | Railway radio, fig tree camp, signal tower | Waiting shed beside the old railway | Unfinished house |
 | Mood | Camp at night, warm fire, a rain recording | Open concrete shelter, cold light | A house that is wrong |
-| Puzzle | Radio code, lockbox, tower key, photo album | Order of three objects, three levers | Locked rooms, a notebook, a trap |
+| Puzzle | Photo album (three photographs, camp and HQ) | Order of three objects, three levers | Locked rooms, a notebook, a trap |
 | Memory told | The friendship (photographs, a recording) | Sophia's secret code and Lucas's temper | Lucas and Sophia's love and the red room |
 | Reward | **Juliana's ficha (1)** | **Sophia's ficha (3)** | **Lucas's ficha (2)** |
 
@@ -187,7 +187,7 @@ Nothing says where to go. The three trails are told apart by what they look like
 
 *Arriving.* The trail comes in from the west and arrives at a clearing under a huge fig tree. The first thing the player meets, at the western entrance, is **the railway radio** on a crate. It hisses faintly on a dead channel and its small red lamp glows, so it is heard before it is seen.
 
-**The railway radio** (inspect, read in place). Heavy grey green transmitter, a red needle on 14.08 on its dial, the slider clamped by a bar with two bolts and red sealing wax, a strip of old masking tape above the dial that says HQ.
+**The railway radio** (inspect, read in place; scenery, not a clue). Heavy grey green transmitter, a red needle resting between two printed numbers on its dial, the slider clamped by a bar with two bolts and red sealing wax, a strip of old masking tape above the dial that says HQ.
 
 **Item: Railway Radio** (PT-BR: *Rádio Ferroviário*)  
 *Inventory text, EN:* A heavy grey green transmitter from the nineties, the kind the railway kept in its signal huts. Its tuning slider is clamped in place, and a strip of old masking tape above the dial says HQ.  
@@ -196,14 +196,14 @@ Nothing says where to go. The three trails are told apart by what they look like
 Reading its panel:
 
 > **EN**  
-> Industrial Railway Transmitter — Frequency dial stuck at 14.08 MHz.
+> An old railway transmitter marked HQ.
 >
 > **PT-BR**  
-> Transmissor Industrial Ferroviário — Seletor de frequência travado em 14,08 MHz.
+> Um velho transmissor ferroviário marcado com HQ.
 
-*The camp.* A campfire burns from the start (flames, embers, crackle), ringed by three log seats and a kettle on a stone. Two tents face the fire, each with gear in front (a backpack and a rolled mat, a pair of boots). A wood yard with a chopping block and an axe, a firewood stack, and a clothesline between two trees with a damp mustard coloured jacket (dressing only; nothing to find there). A table by the trail ("the memory table"), lit by a hurricane lantern, holds a **cassette recorder** whose reels turn in silence, a **photo album**, an enamel cup and a photograph. There is no gate or wall; the player can walk in and out whenever they like.
+*The camp.* A campfire burns from the start (flames, embers, crackle), ringed by three log seats and a kettle on a stone. Two tents face the fire, each with gear in front (a backpack and a rolled mat, a pair of boots). A wood yard with a chopping block and an axe, a firewood stack, and a clothesline between two trees with a damp mustard coloured jacket (dressing only; nothing to find there). A table by the trail ("the memory table"), lit by a hurricane lantern, holds a **cassette recorder** whose reels turn in silence, a **photo album**, an enamel cup and the photograph *Bus Stop Departure*. There is no gate or wall; the player can walk in and out whenever they like.
 
-**The log table**: a thermos and a green steel lockbox with the letters J and S painted on the lid.
+**The log table**: a thermos and a green steel lockbox with the letters J and S painted on the lid, standing open.
 
 **Item: Weathered Thermos** (PT-BR: *Garrafa Térmica Gasta*)  
 *Inventory text, EN:* A dented green steel thermos, long gone cold. A strip of paper is tied round its middle with twine and held by a brass pin.  
@@ -212,29 +212,22 @@ Reading its panel:
 Reading the strip tied round it (Sophia's hand):
 
 > **EN**  
-> Juli, I put the tower key and the station photo in our lockbox. I used the password of our emergency radio channel. I took the other photos to organize the board up at the HQ. See you at the Tower. Don't drink all the coffee at once. — Sophia
+> Juli, the photo of us as kids is still on the desk at HQ. Don't drink all the coffee at once. — Sophia
 >
 > **PT-BR**  
-> Juli, guardei a chave da torre e a foto da estação na nossa caixa de segurança. Usei a senha do nosso canal de rádio de emergência. Peguei as outras fotos pra organizar o mural lá em cima no QG. Te vejo na Torre. Não bebe o café todo de uma vez. — Sophia
+> Juli, a foto de quando a gente era pequena ficou na mesa do QG. Não bebe o café todo de uma vez. — Sophia
 
-**The J & S lockbox.** E opens a close up of the box with four brass thumb wheels. The code is **1 4 0 8**: the frequency printed on the radio at the entrance, 14.08 MHz, with the point left out. Each click of a wheel is a heavy double tick. When the last wheel settles, the latch lets go with a clack and the lid springs open. Inside, on padding:
-- the **Brass Signal Key** (the key to the tower)
-- the photograph **Old Photograph: Rain at the Station**
+**The J & S lockbox** stands open from the start, its lid up and its four thumb wheels only dressing: there is no code and nothing to work. On its padding lies the photograph **Old Photograph: Rain at the Station**, and nothing else.
 
-**Item: Brass Signal Key** (PT-BR: *Chave de Latão da Torre*)  
-*Inventory text, EN:* A heavy brass key, its bow rubbed bright by small thumbs. Stamped along the shaft: SIGNAL TOWER.  
-*Inventory text, PT-BR:* Uma pesada chave de latão, com a argola polida por polegares pequenos. Gravado na haste: TORRE DE SINALIZAÇÃO.
+**Photographs.** Three photographs belong in the album, and they are the only ones: two in the camp, one at the HQ.
 
-**Photographs.** Six photographs exist, only three belong in the album. Three lie in the camp, three in the tower (the tower's are brought back in section 3.6).
-
-| Photograph | Where | Belongs in album? |
+| Photograph | Where | Space in the album |
 |---|---|---|
-| Old Photograph: Scraped Knee | Tower, HQ desk | Yes, first |
-| Old Photograph: Rain at the Station | Camp, inside the lockbox | Yes, second |
-| Old Photograph: Bus Stop Departure | Camp, lying on the ground | Yes, third |
-| Old Photograph: Lucas at the Workshop | Camp, on the memory table | No (red herring) |
-| Old Photograph: The Broken Lever | Tower, bench | No (red herring) |
-| Old Photograph: The Foggy Platform | Tower, back shelf tin | No (red herring) |
+| Old Photograph: Scraped Knee | Tower, HQ desk | First |
+| Old Photograph: Rain at the Station | Camp, in the open lockbox | Second |
+| Old Photograph: Bus Stop Departure | Camp, on the memory table beside the album | Third |
+
+(The three red herrings of earlier versions, *Old Photograph: Lucas at the Workshop*, *Old Photograph: The Broken Lever* and *Old Photograph: The Foggy Platform*, are no longer in the world. Their scenes and texts stay so that an old save that carries one still shows it; their texts are in the appendix.)
 
 Each photograph is picked up, looked at, and turned over. Descriptions (what the inventory says), then the handwriting on the back (what the player reads when they turn it over):
 
@@ -268,36 +261,6 @@ Each photograph is picked up, looked at, and turned over. Descriptions (what the
 > **PT-BR**  
 > O dia em que ela disse que ia embora para a capital. Ela não parava de olhar por cima do meu ombro, para as árvores atrás de mim, como se esperasse que alguém a impedisse.
 
-**Item: Old Photograph: Lucas at the Workshop** (PT-BR: *Foto Antiga: Lucas na Oficina*)  
-*Inventory text, EN:* A young man in greasy overalls holds a wrench almost as long as his arm, squinting into the flash. There is handwriting on the back.  
-*Inventory text, PT-BR:* Um rapaz de macacão engordurado segura uma chave inglesa quase do tamanho do braço, de olhos apertados contra o flash. Há uma frase escrita no verso.
-
-> **EN**  
-> Lucas working the late shift. He always thought brute force could fix the machinery in this town.
->
-> **PT-BR**  
-> Lucas no turno da noite. Ele sempre achou que força bruta consertava as máquinas desta cidade.
-
-**Item: Old Photograph: The Broken Lever** (PT-BR: *Foto Antiga: A Alavanca Quebrada*)  
-*Inventory text, EN:* A heavy iron lever bent out of true, its handle snapped halfway down. A boot print is pressed into the oil beside it. There is handwriting on the back.  
-*Inventory text, PT-BR:* Uma pesada alavanca de ferro entortada, com o cabo partido no meio. A marca de uma bota está pressionada no óleo ao lado. Há uma frase escrita no verso.
-
-> **EN**  
-> 1994. Lucas tried to fix the tracks himself after the station closed. He always thought he owned this place.
->
-> **PT-BR**  
-> 1994. O Lucas tentou consertar os trilhos sozinho depois que a estação fechou. Ele sempre achou que era dono deste lugar.
-
-**Item: Old Photograph: The Foggy Platform** (PT-BR: *Foto Antiga: A Plataforma na Neblina*)  
-*Inventory text, EN:* An empty station platform lost in fog, one lamp burning somewhere behind it. Nobody is in the frame. A date stamp is printed in the corner, and there is handwriting on the back.  
-*Inventory text, PT-BR:* Uma plataforma de estação vazia, perdida na neblina, com um único lampião aceso em algum lugar atrás dela. Não há ninguém no quadro. Um carimbo de data está impresso no canto, e há uma frase escrita no verso.
-
-> **EN**  
-> I don't remember taking this. The date stamp says 1988, but I was never at the tracks alone at night back then.
->
-> **PT-BR**  
-> Não lembro de ter tirado esta foto. O carimbo diz 1988, mas eu nunca fiquei sozinha nos trilhos à noite naquela época.
-
 What the faces of the three album photographs show (these are placeholder cards for now; the age in the label is the second clue):
 
 - [Placeholder photo: Two Girls under the Fig Tree. They are about 8 years old.]
@@ -320,9 +283,9 @@ Hint line under the album: EN: “Drag a photograph onto a space. Drag it again 
 
 The first time the album is opened, Juliana says: EN: “Why this place?” · PT: “Por que aqui?”
 
-When all three spaces are full the album is judged. A wrong arrangement gives a short burst of static and everything stays where it is. The right one (childhood, rain, bus stop) locks the album; the three leftover photographs are taken away; the close up closes.
+When all three spaces are full the album is judged. A wrong arrangement gives a short burst of static and everything stays where it is, to be moved or taken back. The right one (childhood, rain, bus stop) locks the album and the close up closes. The album can still be opened to look.
 
-**The recording.** The cassette tape stops, pauses, rewinds, and plays: rain, a bus engine that turns into the mechanism of the cassette, and two voices as captions. Nothing blocks the player; they may walk away and it plays out.
+**The recording.** The cassette tape stops, pauses, rewinds, and plays: rain round two voices as captions, with the fire still burning. Nothing blocks the player; they may walk away and it plays out.
 
 | Time | Speaker | EN | PT |
 |---|---|---|---|
@@ -332,11 +295,16 @@ When all three spaces are full the album is judged. A wrong arrangement gives a 
 | 11.8 to 14.4 s | Juliana | I know. That's why I want to. | Eu sei. É por isso que eu quero. |
 | 17.0 to 20.6 s | Sophia | You always make it impossible to be angry with you. | Você sempre torna impossível ficar brava com você. |
 | 21.2 to 22.4 s | Juliana | Good. | Ótimo. |
-| 26.5 to 29.5 s | Sophia | That isn't always a good thing. | Isso nem sempre é uma coisa boa. |
 
 Speaker labels read "Sophia (recording)" and "Juliana (recording)".
 
-**The end of the memory.** When the tape ends, in the same instant, the rain, the campfire and the flashlight cut out. The fire pit is left with cold ash. Two seconds of total darkness. A metallic clink from the table. The flashlight flickers back on, and on the table beside the album lies **Juliana's ficha** (number 1).
+**The empty seat.** After Juliana's "Good." the reels stop with a clunk and the rain stops with them. A second and a half of quiet. Then Sophia's last line comes once, plainly, from an empty log by the fire, not from the tape, under her own name ("Sophia"):
+
+| Speaker | EN | PT |
+|---|---|---|
+| Sophia | That isn't always a good thing. | Isso nem sempre é uma coisa boa. |
+
+A moment later the log gives a short creak and something shifts there, as if someone got up. Then, at once, the fire is cold ash, and on that log lies **Juliana's ficha** (number 1), with a small clink. Nothing appears; the lantern on the memory table and the radio stay as they are, and the flashlight stays in the player's hands. The game cannot be saved from the moment the album is solved until the ficha lies on the log.
 
 **Item: Juliana's Ficha** (PT-BR: *Ficha da Juliana*)  
 *Inventory text, EN:* A brass telephone token. Blue nail polish is chipped on its rim.  
@@ -354,29 +322,13 @@ The fichas are marked on the face "TELEFONE".
 
 A ruined two level signal tower stands in a dark bowl east of the camp: a red brick relay room below, a green and yellow siding control cabin above, a stair and balcony up one side, ivy on the brick. The light inside is only the player's flashlight.
 
-**The front door is locked.** It wants the brass signal key. A page is pinned to it:
-
-**Item: Note Pinned to the Door** (PT-BR: *Bilhete Preso na Porta*)  
-*Inventory text, EN:* A page torn from a school notebook, held to the wood by a rusty nail. The rain has not reached it under the lintel.  
-*Inventory text, PT-BR:* Uma folha arrancada de caderno escolar, presa à madeira por um prego enferrujado. A chuva não chegou até ela, sob a verga.
-
-> **EN**  
-> We can't let anyone find this place, Sophia, or we lose our HQ forever. I'm keeping the key with me at the fig tree camp until the rain stops. — Juliana
->
-> **PT-BR**  
-> Não podemos deixar ninguém achar este lugar, Sophia, ou perdemos nosso QG para sempre. Vou ficar com a chave no acampamento da figueira até a chuva parar. — Juliana
-
-If the player tries the locked door, Juliana says: EN: “Where is the HQ key?” · PT: “Onde está a chave do QG?”
-
-So the two halves of trail A can be met in either order, and each tells where the other half is: the tower's note says the key is at the camp; the thermos at the camp says the key is in the lockbox.
-
-The balcony door to the control cabin is **not** locked, so the cabin can be visited before the key is found.
+**The front door** opens like any door: no key, nothing pinned to it. The balcony door to the control cabin is not locked either. So the camp and the HQ can be visited in either order; the thermos at the camp says the childhood photo is on the HQ desk.
 
 **The headquarters (inside the relay room)** is laid out in three zones round an open aisle. Everything is reachable by walking the aisle:
 
 1. **The desk** (back left: two crates and a plank, two stools, a green desk lamp). The photograph *Scraped Knee* lies flat in the middle of the plank. Under the plank, between the crates, is a **drawer** with a simulated, weighty slide and a sound that is generated from the same motion. In the drawer lies Juliana's note.
-2. **The bench** (right wall). The photograph *The Broken Lever* lies on the cushion beside Sophia's folded letter.
-3. **The low shelf** (back). A tin holds *The Foggy Platform*.
+2. **The bench** (right wall). Sophia's folded letter lies on the cushion.
+3. **The low shelf** (back). An empty tin, and a few of a child's things on the lower board.
 
 **Item: Juliana's Note** (PT-BR: *Bilhete da Juliana*)  
 *Inventory text, EN:* A page torn from a school notebook, folded once and left in the desk drawer. A small face with a fringe is drawn in the corner.  
@@ -786,7 +738,7 @@ The thing drags her to the door while a bar drains. **It cannot be won.** The ba
 
 Chain of cause for each:
 
-- **Juliana's.** Radio at the entrance (14.08) → lockbox at the camp (1 4 0 8) → brass signal key and *Rain at the Station* → tower front door → *Scraped Knee* on the HQ desk → *Bus Stop Departure* on the camp ground → album in order → recording → ficha.
+- **Juliana's.** *Rain at the Station* in the open box and *Bus Stop Departure* on the memory table (camp), *Scraped Knee* on the HQ desk (tower, its door open), in either order → album in order → recording → the last line from the empty seat → ficha on that log.
 - **Lucas's.** Kitchen recipe → pantry door unlocks → pantry note and rusty key → bedroom door → notebook → trap → capsule → ficha.
 - **Sophia's.** Notebook on the bench (the order) → lantern in the weeds, puncher in the box under the bench, whistle on the mile marker (each with its phrase) → levers UP, DOWN, UP → ficha.
 
@@ -801,12 +753,10 @@ No path is required before another. The payphone is the only gate: all three fic
 | 1962 | The culvert near Mile Marker 4 is filled with solid granite. | Tower newspaper clipping |
 | May 1984 | A maintenance worker hears his missing seven year old daughter calling from inside it. | Tower newspaper clipping |
 | July 1988 | The two girls (about 8) at the fig tree; Sophia's scraped knee; "something under the floorboards grabbed her ankle"; Juliana "saw it too". | *Scraped Knee* |
-| 1988 | A photograph of an empty platform is stamped with this date; Juliana says she was never at the tracks alone at night then. | *The Foggy Platform* |
 | October 1989 | The butcher's wife says Juliana has "dead eyes"; Sophia defends her, the apple core planted behind the tower. | Juliana's note |
 | 1989 | An operator is relieved of duty for stopping trains for "a woman in a black dress". | Tower memo |
 | Before winter, some year | Sophia overhears that the northern line will close "because the ground keeps shifting"; "we are keeping this tower, Juli." | Sophia's folded letter |
 | 1991 | The town advises that the fog causes "auditory illusions: knocking, whispered names, footsteps". | Tower health notice |
-| 1994 | "after the station closed", Lucas tries to fix the tracks himself. | *The Broken Lever* |
 | 1995 | The girls (about 15) under one umbrella; Sophia gets a cold for a week. | *Rain at the Station* |
 | Years later | Sophia (about 28) at the bus stop, "leaving for the capital"; the ticket reads Railway village / São Paulo, one way. | *Bus Stop Departure*, the tickets |
 | Undated | Lucas and Sophia want the house ("OURS?"); the first dinner; the pantry kiss; the notebook entry of May 14th, 6:00 AM. | House notes |
@@ -819,9 +769,9 @@ No path is required before another. The payphone is the only gate: all three fic
 I did not change any of these.
 
 **Contradictions or loose threads**
-1. **The thermos mentions a board that no longer exists.** Sophia's note says "I took the other photos to organize the board up at the HQ." The blackboard (and the carved "HQ No. 1" board) were removed from the tower on request, so "the board" no longer points at anything. The photos now simply lie in three zones.
+1. **Fixed: the thermos and the board.** The thermos now says only that the childhood photo is on the HQ desk; the key, the code and the board are gone from it.
 2. **The time capsule note talks about a code.** "If you ever forget the code to open it, you don't need a key. You only need to trace the steps..." The padlock was removed from the house, so there is no code. It reads as lore, not an instruction, but it can mislead.
-3. **When did the station close?** "After the station closed" (1994) in a photograph's note, against a badge from the earlier real world chapter that has Juliana working nights on the railway line. If the demo's present is later than 1994, say whether the line reopened.
+3. **When did the station close?** "After the station closed" (1994) in the retired *Broken Lever* photograph's note, against a badge from the earlier real world chapter that has Juliana working nights on the railway line. If the demo's present is later than 1994, say whether the line reopened.
 4. **Sophia's ages and the dates.** The 1995 photograph is "about 15", so the third photograph ("about 28") falls around 2008. Nothing in the texts says what year "tonight" is.
 5. **"The capital" against São Paulo.** *Bus Stop Departure* says she was leaving "for the capital"; the bus tickets say São Paulo. Fine if intended.
 6. **The pocket watch beat is gone.** The stopped watch that whispered "She never came back to the tower, Juli..." when its view closed was removed with the watch. Nothing else uses that whisper now, and the tower is otherwise silent.
@@ -830,18 +780,18 @@ I did not change any of these.
 **Placeholders still on screen**
 8. The ticket reads `PASSENGER: JULIANA [SURNAME]` and `DESTINATION: [TOWN NAME]` (and an empty "DEPARTURE:" line). The town's name is now "Fenda", but the ticket still shows the bracket.
 9. The photograph faces are labelled cards ("[Placeholder photo: ...]").
-10. Voices do not exist yet and most sounds are generated stand ins or files named `placeholder_*` (the forest footsteps are your own recording). With captions off the recording, the call and the whole finale are silent.
+10. Voices do not exist yet and most sounds are generated stand ins or files named `placeholder_*` (the forest footsteps are your own recording). With captions off the recording, the empty seat's line, the call and the whole finale are silent. The camp has two empty voice sources waiting for clips: one in the recorder (the conversation) and one at the empty seat (the last line).
 
 16. **An item description is stale.** The time capsule note's inventory text still says "A hasty letter pinned under the brass padlock", and there is no padlock any more.
 17. **Units.** The tower news and memo say "Mile Marker 4" (Portuguese: "Marco de Milha 4"), while the shed's marker reads "KM 214". Everything else is metric. Pick one for the railway.
 
 **Text rules**
-11. The no hyphen rule for notes is broken by two **em dashes inside the body** (not the signature): the ficha's note ("...the top of the hill — let's make that call.") and the radio plate ("Industrial Railway Transmitter — Frequency dial stuck at 14.08 MHz."). The radio line is your own text. Say if you want either changed.
+11. The no hyphen rule for notes is broken by one **em dash inside a body** (not the signature): the ficha's note ("...the top of the hill — let's make that call."). Say if you want it changed. (The radio plate's dash went with its new text.)
 12. **Profanity** in Juliana's one swear line (`What the fuck?`) is intended per the design; flagging it only for content ratings.
 13. **Language of origin.** The Portuguese versions of several notes (the thermos, the radio, the overlook note) are the authored originals and the English is a translation; the trailhead signs are in Portuguese in both languages on purpose.
 
 **Unused text**
-14. Three localization keys are defined but never used by any scene or script: `INVENTORY_SLOT_EMPTY`, `INVENTORY_SLOT_ITEM`, `PROMPT_ENTER_CODE`.
+14. Three localization keys are defined but never used by any scene or script: `INVENTORY_SLOT_EMPTY`, `INVENTORY_SLOT_ITEM`, `PROMPT_ENTER_CODE`. The texts of the old route are now unused in the world too, but kept: the brass key's and the three retired photographs' (an old save may carry them), and the tower door note and the locked door line (`READABLE_TOWER_DOOR_NOTE`, `ITEM_TOWER_DOOR_NOTE_*`, `CAPTION_TOWER_DOOR_LOCKED`), which nothing shows now.
 15. Several chapter 1 item texts (prescription, badge, cellphone, newspaper clipping, station photo, clonazepam) exist and are used only in the real world chapter blockout, not in the dream.
 
 ---
@@ -853,13 +803,11 @@ I did not change any of these.
 | Train ticket | Wagon | Read in place | Front, back, Juliana's two lines |
 | Flashlight | Always carried | Tool | F |
 | Forest map | Trail sign | Taken, own key (M) | Pinned; torn off in a scene |
-| Railway radio | Camp entrance | Read in place | Shows 14.08 |
-| Weathered thermos | Log table | Read in place | Sophia's note |
-| Brass signal key | Lockbox | Taken | Opens the tower door, consumed |
-| Six photographs | Camp (3), tower (3) | Taken | Three belong to the album |
+| Railway radio | Camp entrance | Read in place | Scenery |
+| Weathered thermos | Log table | Read in place | Sophia's note: the photo is on the HQ desk |
+| Three photographs | Camp (2), tower (1) | Taken | All three belong to the album |
 | Photo album | Memory table | Puzzle | Leads to the recording |
-| Juliana's ficha | Memory table | Taken | After the recording |
-| Note on the tower door | Tower | Read in place | Key is at the camp |
+| Juliana's ficha | The empty seat by the fire | Taken | After the last line |
 | Juliana's note | Tower desk drawer | Read in place | October 1989 |
 | Sophia's folded letter | Tower bench | Read in place | Hollow crust, "we are keeping this tower" |
 | Four tower documents | Tower cabin | Read in place | News 1984, memo 1989, journal, notice 1991 |
@@ -871,3 +819,39 @@ I did not change any of these.
 | Capsule note, advertisement, two bus tickets | House | Read in place | |
 | Lucas's ficha | House | Taken | After the trap |
 | Taped note | Payphone | Read in place | "One ficha for each of us." |
+
+**Kept for old saves only** (no longer in the world): the brass key and the three retired photographs.
+
+**Item: Brass Signal Key** (PT-BR: *Chave de Latão da Torre*)  
+*Inventory text, EN:* A heavy brass key, its bow rubbed bright by small thumbs. Stamped along the shaft: SIGNAL TOWER.  
+*Inventory text, PT-BR:* Uma pesada chave de latão, com a argola polida por polegares pequenos. Gravado na haste: TORRE DE SINALIZAÇÃO.
+
+**Item: Old Photograph: Lucas at the Workshop** (PT-BR: *Foto Antiga: Lucas na Oficina*)  
+*Inventory text, EN:* A young man in greasy overalls holds a wrench almost as long as his arm, squinting into the flash. There is handwriting on the back.  
+*Inventory text, PT-BR:* Um rapaz de macacão engordurado segura uma chave inglesa quase do tamanho do braço, de olhos apertados contra o flash. Há uma frase escrita no verso.
+
+> **EN**  
+> Lucas working the late shift. He always thought brute force could fix the machinery in this town.
+>
+> **PT-BR**  
+> Lucas no turno da noite. Ele sempre achou que força bruta consertava as máquinas desta cidade.
+
+**Item: Old Photograph: The Broken Lever** (PT-BR: *Foto Antiga: A Alavanca Quebrada*)  
+*Inventory text, EN:* A heavy iron lever bent out of true, its handle snapped halfway down. A boot print is pressed into the oil beside it. There is handwriting on the back.  
+*Inventory text, PT-BR:* Uma pesada alavanca de ferro entortada, com o cabo partido no meio. A marca de uma bota está pressionada no óleo ao lado. Há uma frase escrita no verso.
+
+> **EN**  
+> 1994. Lucas tried to fix the tracks himself after the station closed. He always thought he owned this place.
+>
+> **PT-BR**  
+> 1994. O Lucas tentou consertar os trilhos sozinho depois que a estação fechou. Ele sempre achou que era dono deste lugar.
+
+**Item: Old Photograph: The Foggy Platform** (PT-BR: *Foto Antiga: A Plataforma na Neblina*)  
+*Inventory text, EN:* An empty station platform lost in fog, one lamp burning somewhere behind it. Nobody is in the frame. A date stamp is printed in the corner, and there is handwriting on the back.  
+*Inventory text, PT-BR:* Uma plataforma de estação vazia, perdida na neblina, com um único lampião aceso em algum lugar atrás dela. Não há ninguém no quadro. Um carimbo de data está impresso no canto, e há uma frase escrita no verso.
+
+> **EN**  
+> I don't remember taking this. The date stamp says 1988, but I was never at the tracks alone at night back then.
+>
+> **PT-BR**  
+> Não lembro de ter tirado esta foto. O carimbo diz 1988, mas eu nunca fiquei sozinha nos trilhos à noite naquela época.

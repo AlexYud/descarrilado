@@ -116,6 +116,8 @@ const STEP_AWAY_GRACE_SECONDS: float = 0.7
 ## The call is near its end this many seconds before its last caption ends: `call_ending` tells the finale, which
 ## then puts the town's lights out one by one.
 @export var call_ending_lead_seconds: float = 7.0
+## How far the wind outside is pushed back while she speaks (`OutdoorAmbience`, 0 to 1), as a film ducks its ambience under dialogue.
+@export_range(0.0, 1.0, 0.05) var call_muffle: float = 0.75
 
 var stage: int = Stage.IDLE
 
@@ -168,6 +170,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	_muffle_outside(false)
 	if _ui_layer != null and is_instance_valid(_ui_layer):
 		_ui_layer.queue_free()
 
@@ -615,6 +618,7 @@ func _take_ficha_visual(item_id: String) -> Node3D:
 ## receiver is left hanging on its cord. Await it.
 func pick_up_receiver() -> void:
 	stage = Stage.CALL
+	_muffle_outside(true)
 	_hide_hints()
 	receiver_picked_up.emit()
 
@@ -665,6 +669,7 @@ func pick_up_receiver() -> void:
 		interactable.enabled = false
 
 	call_finished.emit()
+	_muffle_outside(false)
 	await _exit_view()
 	_player.call("hold_movement", 3600.0)
 	sequence_completed.emit()
@@ -720,6 +725,12 @@ func _announce_the_end() -> void:
 		call_ending.emit(lead)
 
 
+## Pushes the wind outside back while she speaks, or lets it come back (see `call_muffle`).
+func _muffle_outside(on: bool) -> void:
+	if is_inside_tree():
+		get_tree().call_group(OutdoorAmbience.GROUP, "set_muffle", &"overlook_call", call_muffle if on else 0.0)
+
+
 ## Starts the slow push-in on the city (it goes on to the end of the call and past it).
 func _start_zoom() -> void:
 	var last_end: float = 0.0
@@ -740,6 +751,7 @@ func end_view_in_the_dark() -> void:
 
 	_zoom_on = false
 	_in_call_view = false
+	_muffle_outside(false)
 	model.receiver.visible = true
 	model.let_hang()
 	_player_camera.make_current()

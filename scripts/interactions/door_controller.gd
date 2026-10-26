@@ -21,6 +21,9 @@ class_name DoorController
 ##
 ## No two interactions are alike: each picks a variant (a standard or a quick shove) and rolls its
 ## timings, so the same door never plays the same way twice in a row.
+##
+## Opened by the player, the handle itself is heard: one of two real recordings, picked at random each time
+## (`handle_sound_enabled`, `handle_sound_a`/`_b`). Off for the fence gate, whose latch is a drop-bar.
 
 ## Raised when the player opens this door (not when a script does). With the choreography it comes
 ## when the door starts to swing open, not when the button is pressed.
@@ -72,6 +75,13 @@ const KEY_TURN_DEGREES: float = -90.0
 ## Door sounds (latch, key, rattle, thud) are off for now; turn them on when real
 ## recordings replace the stand-ins.
 @export var door_sounds_enabled: bool = false
+## The handle turning as the door is opened: a real recording, unlike the stand-ins above, so it plays on its
+## own (`handle_sound_enabled`), not gated by `door_sounds_enabled`. One of the two is picked at random each
+## time, so the same door does not repeat itself. Off for the wooden fence gate (`fence_door_interactable.tscn`),
+## whose latch is a drop-bar, not a handle.
+@export var handle_sound_enabled: bool = true
+@export var handle_sound_a: AudioStream = preload("res://assets/audios/placeholder_opening_door.mp3")
+@export var handle_sound_b: AudioStream = preload("res://assets/audios/placeholder_opening_door_2.mp3")
 ## Plays this variant of opening every time instead of rolling one (for scripted
 ## scenes and tests): `standard` or `quick`. Empty rolls one.
 @export var open_variant_override: StringName = &""
@@ -227,6 +237,9 @@ func get_prompt_text_for_player(player: Node) -> String:
 
 func interact(player: Node) -> void:
 	var side: int = _get_side_of(player)
+	# Set here too (not only in `_start_choreo`), so `_sound_position()` finds the right side's handle even on the
+	# instant, non-animated path below.
+	_side = side
 	var used_key: bool = false
 
 	if is_locked:
@@ -255,6 +268,7 @@ func interact(player: Node) -> void:
 	_show_resting_key()
 
 	if is_open:
+		_play_handle_sound(_sound_position())
 		opened_by_player.emit()
 
 
@@ -890,6 +904,10 @@ func _eval_open() -> void:
 		lever *= 1.0 - _smooth(_seg(open_time, lever_hold, lever_hold + 0.4))
 	_set_levers(lever)
 
+	# The hand grips and turns the handle the moment it starts to move (after any key turning first).
+	if open_time >= 0.0 and _cue(&"handle"):
+		_play_handle_sound(_sound_position())
+
 	# How far the door has gone from where it was to wide open.
 	var toward: float = 0.0
 	if open_time > 0.0:
@@ -1137,6 +1155,28 @@ func _cue(id: StringName) -> bool:
 
 	_cues[id] = true
 	return true
+
+
+## The handle turning, as the door is opened by the player: one of the two recordings, picked at random, at `at`
+## (the handle, where the hand is). Independent of `door_sounds_enabled` (see `handle_sound_enabled`).
+func _play_handle_sound(at: Vector3) -> void:
+	if not handle_sound_enabled or not is_inside_tree():
+		return
+
+	var stream: AudioStream = handle_sound_a if _rng.randf() < 0.5 else handle_sound_b
+	if stream == null:
+		return
+
+	var player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+	player.stream = stream
+	player.volume_db = -6.0 + _rand(-1.5, 0.5)
+	player.pitch_scale = _rand(0.94, 1.06)
+	player.unit_size = 5.0
+	player.max_distance = 30.0
+	add_child(player)
+	player.global_position = at
+	player.finished.connect(player.queue_free)
+	player.play()
 
 
 ## Plays a sound at `at`. Every play is a little different (volume and pitch), so

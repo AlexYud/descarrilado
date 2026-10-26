@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/pantry_note.tscn" id="9_note"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/master_key.tscn" id="10_key"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/nightstand_drawer.tscn" id="15_drawer"]
+[ext_resource type="Script" path="res://scripts/audio/ambience_zone.gd" id="90_ambience_zone"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_trap"]
 size = Vector3(3.4, 2.0, 2.0)
@@ -168,4 +169,14 @@ open_line = "CAPTION_JULIANA_RECIPE"
 open_line_delay = 1.2
 persistent_id = &"house_recipe"
 
+[node name="AmbienceInteriorNorth" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8125, 1.4, 4.65)
+script = ExtResource("90_ambience_zone")
+size = Vector3(11.625, 2.8, 9.3)
+interior = 0.8
 
+[node name="AmbienceInteriorSouth" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.65, 1.4, 11.9)
+script = ExtResource("90_ambience_zone")
+size = Vector3(9.3, 2.8, 7.2)
+interior = 0.8

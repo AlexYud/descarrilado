@@ -145,10 +145,10 @@ func _check_the_walls() -> void:
 	_expect(corridor_open >= 6, "the path itself is not walled in (%d of 8 points open)" % corridor_open)
 
 
-## The tower inside the dream intro is the same one: locked door, key, props, all built.
+## The tower inside the dream intro is the same one: its door, its props, all built.
 func _check_the_tower_inside() -> void:
-	_expect(tower.lower_door != null and tower.lower_door.is_locked and tower.lower_door.required_key_id == "brass_signal_key", "its front door is locked and wants the brass signal key")
-	_expect(tower.props != null and tower.props.photos.size() == 3, "its three photographs are in the relay room")
+	_expect(tower.lower_door != null and not tower.lower_door.is_locked and tower.lower_door.required_key_id.is_empty(), "its front door is not locked and wants no key")
+	_expect(tower.props != null and tower.props.photos.size() == 1 and tower.props.photos.has("photo_childhood"), "the Scraped Knee is in the relay room")
 	var wall_hits: int = 0
 	for child: Node in level.get_node("Scenery").get_children():
 		if child.name == "SignalTower":

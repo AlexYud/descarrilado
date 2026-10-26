@@ -76,6 +76,9 @@
 [ext_resource type="Script" path="res://scripts/interactions/tutorial_trigger.gd" id="60_trigger"]
 [ext_resource type="PackedScene" path="res://scenes/objects/forest_map.tscn" id="forest_map_scene"]
 [ext_resource type="Script" path="res://scripts/environment/trailhead_props.gd" id="trailhead_script"]
+[ext_resource type="Script" path="res://scripts/audio/outdoor_ambience.gd" id="90_outdoor_ambience"]
+[ext_resource type="AudioStream" uid="uid://bsd6qmpou8g00" path="res://assets/audios/placeholder_windy_forest.mp3" id="91_windy_forest"]
+[ext_resource type="AudioStream" uid="uid://c0qq5ycv2nnwa" path="res://assets/audios/placeholder_night_forest.mp3" id="92_night_forest"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yilg7"]
 
@@ -1144,3 +1147,9 @@ wagon = NodePath("../Train/Wagons/TrainWagon")
 [node name="VegetationWind" type="Node" parent="." node_paths=PackedStringArray("terrain")]
 script = ExtResource("vegetation_wind")
 terrain = NodePath("../Terrain3D")
+
+[node name="OutdoorAmbience" type="Node" parent="." node_paths=PackedStringArray("open_places")]
+script = ExtResource("90_outdoor_ambience")
+stream = ExtResource("91_windy_forest")
+night_stream = ExtResource("92_night_forest")
+open_places = [NodePath("../Train/Wagons/TrainWagon"), NodePath("../Scenery/FigClearing"), NodePath("../Scenery/OverlookPhone")]

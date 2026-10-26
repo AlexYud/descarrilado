@@ -226,7 +226,7 @@ func _process_lesson(id: StringName, state: Dictionary, delta: float) -> bool:
 		_mark_lesson_learned(id)
 		return false
 
-	# The map in the hands does not hold the player, but the hint is about opening it: while it is open (it was shown as it was taken) there
+	# The hint is about opening the map: while it is open (it was shown as it was taken) there
 	# is nothing to tell; the hint comes a moment after it is put away.
 	if id == &"map" and _map_is_open():
 		state["wait"] = lesson_delay
@@ -393,9 +393,12 @@ func _is_gameplay_active() -> bool:
 	if movement != null and bool(movement.get("cutscene_camera_controlled")):
 		return false
 
-	# (The map in the hands does not hold the player: the walking lesson goes on, the map's own is learned by opening it.)
 	var inspect: Object = _player.get("inspect_controller") as Object
 	if inspect != null and inspect.has_method("blocks_gameplay") and bool(inspect.call("blocks_gameplay")):
+		return false
+
+	# The map in the hands holds the player too (the map's own lesson is learned by opening it).
+	if _player.has_method("is_map_holding_player") and bool(_player.call("is_map_holding_player")):
 		return false
 
 	var inventory: Object = _player.get("inventory_ui_controller") as Object

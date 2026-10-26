@@ -15,8 +15,12 @@ extends RefCounted
 
 const INTRO_NARRATION: StringName = &"intro_narration"
 
-## The cassette recording in the fig tree clearing (placeholder timing).
+## The cassette recording in the fig tree clearing (placeholder timing): the conversation up to Juliana's "Good.".
 const FIG_RECORDING: StringName = &"fig_recording"
+
+## Sophia's last line in the clearing, said once from an empty seat by the fire, not from the tape
+## (placeholder timing, from the start of its own clip).
+const FIG_EMPTY_SEAT: StringName = &"fig_empty_seat"
 
 ## Sophia on the overlook payphone (placeholder timing: one long line, an interruption,
 ## the lure, the warning).
@@ -25,6 +29,7 @@ const OVERLOOK_CALL: StringName = &"overlook_call"
 const SPEAKER_SOPHIA_PHONE: String = "CAPTION_SPEAKER_SOPHIA_PHONE"
 const SPEAKER_SOPHIA_RECORDING: String = "CAPTION_SPEAKER_SOPHIA_RECORDING"
 const SPEAKER_JULIANA_RECORDING: String = "CAPTION_SPEAKER_JULIANA_RECORDING"
+const SPEAKER_SOPHIA: String = "CAPTION_SPEAKER_SOPHIA"
 
 const TRACKS: Dictionary = {
 	INTRO_NARRATION: [
@@ -41,9 +46,9 @@ const TRACKS: Dictionary = {
 		{"start": 11.8, "end": 14.4, "key": "CAPTION_REC_04", "speaker": SPEAKER_JULIANA_RECORDING},
 		{"start": 17.0, "end": 20.6, "key": "CAPTION_REC_05", "speaker": SPEAKER_SOPHIA_RECORDING},
 		{"start": 21.2, "end": 22.4, "key": "CAPTION_REC_06", "speaker": SPEAKER_JULIANA_RECORDING},
-		{"start": 26.5, "end": 29.5, "key": "CAPTION_REC_07", "speaker": SPEAKER_SOPHIA_RECORDING},
-		# Silent tail: the bus engine turns into the cassette mechanism.
-		{"start": 29.5, "end": 33.0, "key": ""},
+	],
+	FIG_EMPTY_SEAT: [
+		{"start": 0.0, "end": 3.0, "key": "CAPTION_REC_07", "speaker": SPEAKER_SOPHIA},
 	],
 	# Two voices on the one line, both captioned as Sophia: the warm one (turns 1 and 3, slow and soft) and the
 	# desperate one (2 and 4, high and fast). `voice` says which one the placeholder audio plays. Each turn is

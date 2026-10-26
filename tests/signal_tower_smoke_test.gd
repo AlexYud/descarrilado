@@ -1,12 +1,12 @@
 extends Node
 
 ## Builds the ruined signal tower (`SignalTowerBuilder`, its furniture `SignalTowerProps`) and checks it:
-## the shape of the two levels, the locked door and the key that opens it, the stairs up to the balcony
-## walked with the real player, the children's headquarters (its three zones, each with a photograph, the desk
-## lamp, the bench with its folded letter, the desk's drawer with Juliana's note, the shelf with the tin,
-## with the three photographs), the levers, the decay (broken panes, the roof breach, the ivy) and that
-## every clue can be reached by an interaction ray. The notes' words are checked here for the door and in
-## the fig clearing test for the camp. Run it as a scene; it quits by itself with a non-zero exit code on failure.
+## the shape of the two levels, the front door (not locked: it opens like any door, and a key an old save
+## still carries is left alone), the stairs up to the balcony walked with the real player, the children's
+## headquarters (its three zones: the desk with the Scraped Knee, its lamp and its drawer with Juliana's note,
+## the bench with Sophia's folded letter, the shelf with the empty tin), the levers, the decay (broken panes,
+## the roof breach, the ivy) and that every clue can be reached by an interaction ray. Run it as a scene; it
+## quits by itself with a non-zero exit code on failure.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_signal_tower_smoke"
 const TEST_SCENE_PATH: String = "res://scenes/levels/signal_tower_playtest.tscn"
@@ -61,16 +61,14 @@ func _ready() -> void:
 
 func _run() -> void:
 	_check_shape()
-	_check_doors_and_key_logic()
+	_check_the_doors()
 	_check_props()
 	_check_zones()
 	_check_lore_items()
 	_check_decay()
-	_check_clues_are_reachable()
 	await _check_the_stairs()
-	await _check_the_key_and_the_doors()
+	await _check_opening_the_front_door()
 	await _check_the_drawer()
-	await _check_the_door_note()
 	await _read_the_lore()
 	_check_translations()
 
@@ -120,15 +118,15 @@ func _check_shape() -> void:
 
 
 # ============================================================
-# DOORS AND THE KEY
+# THE DOORS
 # ============================================================
 
-func _check_doors_and_key_logic() -> void:
+func _check_the_doors() -> void:
 	var door: DoorController = tower.lower_door
-	_expect(door.is_locked and door.starts_locked, "the tower's front door starts locked")
-	_expect(door.required_key_id == "brass_signal_key" and SignalTowerBuilder.KEY_ID == "brass_signal_key", "and wants the brass signal key")
-	_expect(door.locked_line == "CAPTION_TOWER_DOOR_LOCKED", "a locked door says so")
-	_expect(door.get_prompt_text_for_player(player) == "PROMPT_LOCKED", "without the key it only offers 'locked'")
+	_expect(not door.is_locked and not door.starts_locked, "the tower's front door is not locked")
+	_expect(door.required_key_id.is_empty() and door.locked_line.is_empty(), "it asks for no key, and has no line about one")
+	_expect(door.get_prompt_text_for_player(player) == "PROMPT_OPEN", "it offers [E] Open")
+	_expect(door.persistent_id == &"signal_tower_front_door", "and is saved as it always was (signal_tower_front_door)")
 	_expect(absf(door.global_position.z - 1.91) < 0.02 and absf(door.global_position.x - (SignalTowerBuilder.DOOR_X - 0.45)) < 0.02, "it is in the front wall, left of the middle")
 
 	# A door of heavy planks with straps, and brass hardware with a keyhole.
@@ -140,9 +138,7 @@ func _check_doors_and_key_logic() -> void:
 			straps += 1
 	_expect(straps >= 4, "it is reinforced with iron straps (%d)" % straps)
 	_expect(door._hardware.size() == 2 and (door._hardware[1] as DoorHardware).get_key_slot_global().distance_to(door.global_position) < 1.5, "and has brass hardware with a keyhole on both faces")
-	var door_note: Inspectable = root.get_node("DoorNote") as Inspectable
-	_expect(door_note != null and absf(door_note.global_position.z - 1.96) < 0.05, "a note is pinned to its front")
-	_expect(str(door_note.get_visual_node().get_meta("readable_text")) == "READABLE_TOWER_DOOR_NOTE", "it reads READABLE_TOWER_DOOR_NOTE")
+	_expect(root.get_node_or_null("DoorNote") == null and tower.find_child("DoorNote", true, false) == null, "no note about a key is pinned to it")
 
 	var upper: DoorController = tower.upper_door
 	_expect(not upper.is_locked, "the cabin's balcony door is not locked")
@@ -205,20 +201,19 @@ const GROUND_TEXTS: Dictionary = {
 }
 
 
-## The three photographs lie in three separate zones of the relay room, each easy to reach from the open aisle,
-## with nothing solid over them; the zones' own items are where they were meant to be.
+## The relay room's three zones, each easy to reach from the open aisle, with nothing solid over what lies in them: the Scraped Knee on
+## the desk (the one photograph the album needs from here), Sophia's letter on the bench, the empty tin on the shelf.
 func _check_zones() -> void:
 	var props: SignalTowerProps = tower.props
 	var photos: Dictionary = props.photos
 	var knee: Node3D = photos["photo_childhood"]
-	var lever: Node3D = photos["photo_broken_lever"]
-	var platform: Node3D = photos["photo_foggy_platform"]
-	_expect(photos.size() == 3 and knee is Collectible and lever is Collectible and platform is Collectible, "three photographs lie in the relay room, as collectibles")
-	_expect(props.get_node_or_null("HeadQuarters/Lockbox") == null and props.find_child("Lockbox", true, false) == null, "none of them in a box")
-	var apart: float = minf(knee.global_position.distance_to(lever.global_position), minf(knee.global_position.distance_to(platform.global_position), lever.global_position.distance_to(platform.global_position)))
-	_expect(apart > 1.5, "in three separate zones (at least %.1f m apart)" % apart)
-	for photo: Node3D in [knee, lever, platform]:
-		_expect(absf(photo.global_position.x) < 1.8 and absf(photo.global_position.z) < 1.8 and photo.global_position.y < 1.0, "%s is inside the room, low enough to reach" % photo.name)
+	_expect(photos.size() == 1 and knee is Collectible, "one photograph lies in the relay room, as a collectible: the Scraped Knee")
+	var others: int = 0
+	for node: Node in tower.find_children("*", "Collectible", true, false):
+		others += 1 if node != knee and str((node as Collectible).item_id).begins_with("photo_") else 0
+	_expect(others == 0, "The Broken Lever and The Foggy Platform are no longer in the tower")
+	_expect(props.get_node_or_null("HeadQuarters/Lockbox") == null and props.find_child("Lockbox", true, false) == null, "it is not in a box")
+	_expect(absf(knee.global_position.x) < 1.8 and absf(knee.global_position.z) < 1.8 and knee.global_position.y < 1.0, "it is inside the room, low enough to reach")
 
 	# Zone 1: the desk. The Scraped Knee lies flat in the middle of the plank; Juliana's note is in the drawer under it.
 	var table: Node3D = props.get_node("HeadQuarters/CrateTable")
@@ -237,25 +232,20 @@ func _check_zones() -> void:
 	var note_in_table: Vector3 = table.to_local(juliana_note.global_position)
 	_expect(note_in_table.y < 0.5 and absf(note_in_table.x) < 0.2, "under the plank, between the crates (%s)" % str(note_in_table))
 
-	# Zone 2: the wooden bench (the daybed). The Broken Lever on the cushion, with Sophia's folded letter beside it.
+	# Zone 2: the wooden bench (the daybed), with Sophia's folded letter on the cushion.
 	var daybed: Node3D = props.get_node("HeadQuarters/Daybed")
-	var local_lever: Vector3 = daybed.to_local(lever.global_position)
-	_expect(absf(local_lever.y - 0.4925) < 0.01 and absf(local_lever.x) < 0.2 and absf(local_lever.z) < 0.85, "the Broken Lever lies on the bench's cushion (%s)" % str(local_lever))
 	var note: Node3D = props.ground_items[&"sophia_note"]
 	_expect(daybed.is_ancestor_of(note) and absf(daybed.to_local(note.global_position).y - 0.4922) < 0.01, "Sophia's folded letter lies on the cushion")
-	_expect(note.global_position.distance_to(lever.global_position) < 0.35, "next to the Broken Lever (%.2f m)" % note.global_position.distance_to(lever.global_position))
 	_expect(note.global_basis.z.dot(Vector3.UP) > 0.99, "lying face up")
 	_expect(note.get_visual_node().find_child("Squares", true, false) != null, "it is a sheet of graph paper")
 	_expect(props.find_child("WalkieTalkie", true, false) == null and props.find_child("SophiaJacket", true, false) == null, "there is no walkie-talkie and no jacket")
-	var gap: float = lever.global_position.distance_to(note.global_position)
-	_expect(gap > 0.12, "the two do not lie on each other (%.2f m apart)" % gap)
+	_expect(knee.global_position.distance_to(note.global_position) > 1.5, "the desk and the bench are separate zones (%.1f m apart)" % knee.global_position.distance_to(note.global_position))
 
-	# Zone 3: the shelf under the carved board; the Foggy Platform in the open tin.
+	# Zone 3: the low shelf on the back wall, with an open tin on it, empty now.
 	var shelf: Node3D = props.get_node("HeadQuarters/BackShelf")
 	var tin: Node3D = props.photo_tin
 	_expect(shelf.global_position.y < 0.2 and tin != null and shelf.is_ancestor_of(tin), "a low wooden shelf on the back wall carries an open tin")
-	var in_tin: Vector3 = tin.to_local(platform.global_position)
-	_expect(Vector2(in_tin.x, in_tin.z).length() < 0.095 and in_tin.y > 0.02 and in_tin.y < 0.09, "the Foggy Platform stands in the tin, above its rim (%s)" % str(in_tin))
+	_expect(tin.find_children("*", "Collectible", true, false).is_empty(), "with nothing to pick up in it")
 
 	# Nothing is cluttered: the crates and barrel are in the front left corner, out of the aisle that runs from
 	# the door to the three zones, and nothing of the three zones is on the door's side of the room.
@@ -268,9 +258,7 @@ func _check_zones() -> void:
 
 	# Every item can be reached by a ray from the aisle: no collider of the floor or of the furniture hides it.
 	_ray_finds(knee, knee.global_position + Vector3(0.5, 0.9, 0.9), knee.global_position, "the Scraped Knee on the plank")
-	_ray_finds(lever, lever.global_position + Vector3(-0.8, 0.9, 0.3), lever.global_position, "the Broken Lever on the cushion")
 	_ray_finds(note, note.global_position + Vector3(-0.8, 0.9, 0.4), note.global_position, "Sophia's note on the cushion")
-	_ray_finds(platform, platform.global_position + Vector3(0.2, 0.9, 0.9), platform.global_position, "the Foggy Platform in the tin")
 
 	# The texts: the written ones, in both languages, with no hyphen.
 	for key: String in GROUND_TEXTS:
@@ -442,18 +430,6 @@ func _check_decay() -> void:
 
 
 # ============================================================
-# CLUES
-# ============================================================
-
-## Every interactable piece can be reached by a ray: no solid lies over it.
-func _check_clues_are_reachable() -> void:
-	var props: SignalTowerProps = tower.props
-	var door: DoorController = tower.lower_door
-	var note: Node3D = door.get_node("Hinge/DoorRoot/DoorNote")
-	_ray_finds(note, note.global_position + Vector3(0.1, 0.1, 1.0), note.global_position, "the note on the door")
-
-
-# ============================================================
 # WALKING AND OPENING
 # ============================================================
 
@@ -482,28 +458,27 @@ func _check_the_stairs() -> void:
 	_expect(through.x < -1.9, "and the way into the cabin is clear (the ray goes in to %.2f)" % through.x)
 
 
-## A locked door stays shut; the key takes it open and is left in the lock.
-func _check_the_key_and_the_doors() -> void:
+## The shut front door blocks the way in, and opens like any door. A brass key an old save still carries is left alone: the door neither
+## asks for it nor takes it.
+func _check_opening_the_front_door() -> void:
 	var door: DoorController = tower.lower_door
 	door.animate_player_interaction = false
 	var shut: Vector3 = _first_hit(Vector3(-0.2, 1.0, 6.0), Vector3(-0.2, 1.0, -1.5))
 	_expect(shut.z > 1.7, "the shut door blocks the way in (%.2f)" % shut.z)
-	door.interact(player)
-	_expect(door.is_locked and not door.is_open, "it does not open without the key")
 
 	var key: Collectible = (load("res://scenes/objects/signal_tower/brass_signal_key.tscn") as PackedScene).instantiate() as Collectible
 	add_child(key)
-	_expect(key.item_id == "brass_signal_key" and key.item_name == "ITEM_BRASS_SIGNAL_KEY_NAME", "the key is the brass signal key")
+	_expect(key.item_id == "brass_signal_key" and key.item_name == "ITEM_BRASS_SIGNAL_KEY_NAME", "an old save's brass signal key is still an item")
 	key.interact(player)
 	await _wait(0.5)
 	player.inspect_controller.close(false)
 	player.inventory_ui_controller.close()
 	await _wait(0.6)
 	_expect(player.has_inventory_item("brass_signal_key"), "which goes in the inventory")
-	_expect(door.get_prompt_text_for_player(player) == "PROMPT_UNLOCK", "and now the door offers to unlock")
+	_expect(door.get_prompt_text_for_player(player) == "PROMPT_OPEN", "the door still offers only [E] Open")
 	door.interact(player)
-	_expect(not door.is_locked and door.is_open, "the key opens the door")
-	_expect(not player.has_inventory_item("brass_signal_key"), "and stays in the lock")
+	_expect(not door.is_locked and door.is_open, "it opens")
+	_expect(player.has_inventory_item("brass_signal_key"), "and the key is still in the hands: it was not used")
 	await _wait(6.0)
 	var open: Vector3 = _first_hit(Vector3(-0.2, 1.0, 6.0), Vector3(-0.2, 1.0, -1.9))
 	_expect(open.z < -1.7, "the way into the relay room is clear (the ray goes in to %.2f)" % open.z)
@@ -606,25 +581,14 @@ func _check_the_drawer() -> void:
 	_expect(not bool((SaveManager.get_state_value(&"drawers", &"tower_desk_drawer", {}) as Dictionary).get("is_open", true)), "(that it is shut is kept too)")
 
 
-## The pinned note on the door opens the inspect view like any note.
-func _check_the_door_note() -> void:
-	var note: Inspectable = tower.lower_door.get_node("Hinge/DoorRoot/DoorNote") as Inspectable
-	note.interact(player)
-	await _wait(0.8)
-	_expect(player.inspect_controller.is_open(), "the door note opens the inspect view")
-	player.inspect_controller.close(false)
-	player.inventory_ui_controller.close()
-	await _wait(0.6)
-
-
+## The brass key's texts stay, in both languages: an old save may still carry one in the inventory.
 func _check_translations() -> void:
-	_expect(tr("READABLE_TOWER_DOOR_NOTE") == "We can't let anyone find this place, Sophia, or we lose our HQ forever. I'm keeping the key with me at the fig tree camp until the rain stops. — Juliana", "the door note, in English")
-	_expect(tr("CAPTION_TOWER_DOOR_LOCKED") == "Where is the HQ key?", "the locked door's line, in English")
+	_expect(tr("ITEM_BRASS_SIGNAL_KEY_NAME") == "Brass Signal Key", "the old key's name, in English")
 	GameSettings.set_text_locale("pt_BR", false)
 	var all_translated: bool = true
-	for key: String in ["READABLE_TOWER_DOOR_NOTE", "CAPTION_TOWER_DOOR_LOCKED", "ITEM_BRASS_SIGNAL_KEY_NAME", "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION", "ITEM_TOWER_DOOR_NOTE_NAME", "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"]:
+	for key: String in ["ITEM_BRASS_SIGNAL_KEY_NAME", "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION"]:
 		all_translated = all_translated and tr(key) != key
-	_expect(all_translated, "every text of the tower is also in Portuguese")
+	_expect(all_translated, "and its name and description in Portuguese")
 	GameSettings.set_text_locale("en", false)
 
 

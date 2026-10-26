@@ -39,6 +39,7 @@ func _ready() -> void:
 	# already standing at it, and the walking has its own checks.
 	DoorController.approach_enabled = false
 	await _check_open_and_close()
+	await _check_handle_sound()
 	await _check_locked_door()
 	await _check_unlocking_with_the_key()
 	await _check_variety()
@@ -145,6 +146,73 @@ func _check_open_and_close() -> void:
 	_expect(_lever_angle(door) < 0.01, "and the handle is at rest")
 
 	door.queue_free()
+	await get_tree().physics_frame
+
+
+## The handle turning: a real recording plays, positioned at the handle, the moment it starts to move (not
+## before, not when the door is only being approached); one of the two clips is picked, and over many tries
+## both are heard; closing the door plays none of it; the fence gate has it switched off.
+func _check_handle_sound() -> void:
+	var door: DoorController = _make_door(Vector3(2.0, 0.0, 0.0))
+	door.open_variant_override = &"standard"
+	await get_tree().physics_frame
+
+	_expect(door.handle_sound_enabled, "an ordinary door has the handle sound on")
+	_expect(door.handle_sound_a != null and door.handle_sound_b != null and door.handle_sound_a != door.handle_sound_b, "with two different recordings to pick from")
+
+	player.global_position = Vector3(2.8, 0.1, 1.2)
+	door.interact(player)
+	_expect(door.find_children("*", "AudioStreamPlayer3D", false, false).is_empty(), "nothing sounds the instant the door is opened")
+
+	await _wait(0.3)
+	var sounds: Array = door.find_children("*", "AudioStreamPlayer3D", false, false)
+	_expect(sounds.size() == 1, "the handle sounds once it starts to move (%d sounds)" % sounds.size())
+	if not sounds.is_empty():
+		var sound: AudioStreamPlayer3D = sounds[0] as AudioStreamPlayer3D
+		_expect(sound.stream == door.handle_sound_a or sound.stream == door.handle_sound_b, "one of the two recordings")
+		_expect(sound.playing, "and it plays")
+		var at_handle: float = sound.global_position.distance_to(door._sound_position())
+		_expect(at_handle < 0.3, "from the handle, where the hand is (%.2f m off)" % at_handle)
+
+	await _wait(0.9)
+	_expect(door.find_children("*", "AudioStreamPlayer3D", false, false).size() == 1, "opening wide makes no second sound")
+
+	# Closing: no handle sound (the pull and the latch are a different sound, not this one).
+	door.interact(player)
+	await _until_still(door)
+	_expect(door.find_children("*", "AudioStreamPlayer3D", false, false).filter(func(s: Node) -> bool: return (s as AudioStreamPlayer3D).playing).is_empty(), "closing the door plays no handle sound")
+
+	# Opened many times, both recordings turn up (the pick is random, not fixed).
+	var heard: Dictionary = {}
+	for i: int in 24:
+		for sound: Node in door.find_children("*", "AudioStreamPlayer3D", false, false):
+			sound.queue_free()
+		await get_tree().process_frame
+		door._play_handle_sound(door._sound_position())
+		for sound: Node in door.find_children("*", "AudioStreamPlayer3D", false, false):
+			heard[(sound as AudioStreamPlayer3D).stream] = true
+
+	_expect(heard.size() == 2, "over 24 tries both recordings are heard (%d)" % heard.size())
+
+	door.queue_free()
+	await get_tree().physics_frame
+
+	# The wooden fence gate: a drop-bar, not a handle, so it stays quiet.
+	var gate: DoorController = (
+		load("res://scenes/objects/fence_door_interactable.tscn") as PackedScene
+	).instantiate()
+	gate.position = Vector3(2.0, 0.0, 10.0)
+	gate.open_variant_override = &"standard"
+	add_child(gate)
+	await get_tree().physics_frame
+	_expect(not gate.handle_sound_enabled, "the fence gate has the handle sound switched off")
+
+	player.global_position = Vector3(2.8, 0.1, 10.0 + gate.approach_handle_fraction)
+	gate.interact(player)
+	await _wait(0.5)
+	_expect(gate.find_children("*", "AudioStreamPlayer3D", false, false).is_empty(), "and opening it makes none of this sound")
+
+	gate.queue_free()
 	await get_tree().physics_frame
 
 

@@ -5,11 +5,15 @@ class_name PhotoAlbum
 ## close-up (AlbumView) where the player drags photographs from their hands
 ## onto the spaces, in any order, and takes them back out again.
 ##
-## There are more photographs than spaces (distractors). Nothing tells the player whether a
+## The photographs that can go in it are `photo_scenes`. Nothing tells the player whether a
 ## single placement is right. The album is judged only when EVERY space is full: with each
 ## space holding its own photograph (the chronological order of the three story photos) it locks
 ## and `completed` fires; full but wrong, `wrong_arrangement` fires (the level plays a glitch)
 ## and everything stays as placed.
+##
+## `retired_photo_scenes` are photographs that used to belong to the album and no longer do. An old
+## save may have one placed in a space (placing took it from the inventory): on load that space is
+## emptied and the photograph goes back to the player's inventory, once, as it was.
 
 signal arrangement_changed
 ## Every slot holds its own photograph. Fires once; the album is then locked.
@@ -25,6 +29,8 @@ signal closed
 
 ## Every photograph that can go in this album (Collectible scenes).
 @export var photo_scenes: Array[PackedScene] = []
+## Photographs that no longer go in it, kept only to give them back from an old save (see the top of the file).
+@export var retired_photo_scenes: Array[PackedScene] = []
 
 const STATE_SECTION: StringName = &"puzzles"
 const KEY_ARRANGEMENT: StringName = &"album_arrangement"
@@ -45,6 +51,10 @@ var view: AlbumView = null
 
 ## item_id -> {scene, name, description, card_color, card_label, card_size}
 var _photo_info: Dictionary = {}
+## The same for `retired_photo_scenes`.
+var _retired_info: Dictionary = {}
+## Retired photographs a loaded save had placed, waiting to be given back.
+var _retired_to_return: Array[String] = []
 
 
 func _ready() -> void:
@@ -59,6 +69,9 @@ func _ready() -> void:
 	view = AlbumView.new()
 	add_child(view)
 	view.setup(self)
+
+	if not _retired_to_return.is_empty():
+		_return_retired_photos()
 
 
 func can_interact(_player: Node) -> bool:
@@ -171,6 +184,8 @@ func is_correct() -> bool:
 ## Gives a photograph back to the player's inventory. False if there is no room.
 func give_back(player: Node, item_id: String) -> bool:
 	var info: Dictionary = get_photo_info(item_id)
+	if info.is_empty():
+		info = _retired_info.get(item_id, {})
 	if info.is_empty() or not player.has_method("add_item_to_inventory"):
 		return false
 
@@ -247,25 +262,59 @@ func _restore_state() -> void:
 	var saved_list: Array = saved as Array
 	for i: int in mini(saved_list.size(), slots.size()):
 		var item_id: String = str(saved_list[i])
+		if _retired_info.has(item_id) and not _retired_to_return.has(item_id):
+			_retired_to_return.append(item_id)
+
 		if item_id.is_empty() or not _photo_info.has(item_id):
 			continue
 
 		arrangement[i] = item_id
 
 
+## Gives back the retired photographs an old save had placed (their spaces are already empty), then saves the arrangement
+## without them. It waits a frame: the player restores the inventory of a loaded save just after the scene is ready, and
+## that would wipe what was given before. One already in the inventory is not given twice; with no player to give them
+## to, the saved arrangement is left as it was, so that the next load tries again.
+func _return_retired_photos() -> void:
+	await get_tree().process_frame
+	var player: Node = get_tree().get_first_node_in_group(&"player")
+	if player == null or not player.has_method("has_inventory_item"):
+		return
+
+	for item_id: String in _retired_to_return:
+		if not bool(player.call("has_inventory_item", item_id)):
+			give_back(player, item_id)
+
+	_retired_to_return.clear()
+	SaveManager.set_state_value(STATE_SECTION, KEY_ARRANGEMENT, arrangement.duplicate())
+
+
 ## Reads each photograph scene once for what the album and its close-up need.
 func _read_photo_info() -> void:
 	for scene: PackedScene in photo_scenes:
-		var photo: Node = scene.instantiate()
-		var visual: Node3D = photo.get_node("Visual") as Node3D
-		var item_id: String = str(photo.get("item_id"))
+		_photo_info[_read_scene_id(scene)] = _read_scene_info(scene)
 
-		_photo_info[item_id] = {
-			"scene": scene,
-			"name": str(photo.get("item_name")),
-			"description": str(photo.get("item_description")),
-			"card_color": visual.get_meta("card_color", Color(0.4, 0.4, 0.4)),
-			"card_label": str(visual.get_meta("card_label", "")),
-			"card_size": visual.get_meta("card_size", Vector2(0.12, 0.12)),
-		}
-		photo.free()
+	for scene: PackedScene in retired_photo_scenes:
+		_retired_info[_read_scene_id(scene)] = _read_scene_info(scene)
+
+
+func _read_scene_id(scene: PackedScene) -> String:
+	var photo: Node = scene.instantiate()
+	var item_id: String = str(photo.get("item_id"))
+	photo.free()
+	return item_id
+
+
+func _read_scene_info(scene: PackedScene) -> Dictionary:
+	var photo: Node = scene.instantiate()
+	var visual: Node3D = photo.get_node("Visual") as Node3D
+	var info: Dictionary = {
+		"scene": scene,
+		"name": str(photo.get("item_name")),
+		"description": str(photo.get("item_description")),
+		"card_color": visual.get_meta("card_color", Color(0.4, 0.4, 0.4)),
+		"card_label": str(visual.get_meta("card_label", "")),
+		"card_size": visual.get_meta("card_size", Vector2(0.12, 0.12)),
+	}
+	photo.free()
+	return info

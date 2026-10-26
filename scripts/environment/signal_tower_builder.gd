@@ -7,23 +7,23 @@ class_name SignalTowerBuilder
 ## cheap to change; the numbers live in the constants below. Built at runtime, so nothing here is
 ## saved in the scene file.
 ##
-## Drawn in metres, the origin at the middle of the foot of the tower, the front (and the door the
-## key opens) facing +Z:
+## Drawn in metres, the origin at the middle of the foot of the tower, the front (and its door) facing +Z:
 ##
 ##   Lower level   a red brick relay room, 4 x 4 m, 2.8 m high with its deck (the upper floor), arched
-##                 narrow windows, a reinforced wooden door with a brass keyhole at x = DOOR_X
+##                 narrow windows, a reinforced wooden door with a brass keyhole at x = DOOR_X (it is not
+##                 locked: it opens like any door)
 ##   Upper level   the control cabin, 4.4 x 4.4 m, overhanging the brick by 0.2 m all round: weathered
 ##                 green and yellow lap siding, wide multi pane windows on three sides (front, back and
 ##                 left, many panes shattered), a shingle roof with a breach and a stovepipe
 ##   Outside       a wooden staircase with a banister up the +X side to a small balcony and the door of
 ##                 the cabin, and ivy creeping up the brick
 ##
-## The furniture (the levers, the children's corner, the lockbox and the notes) is `SignalTowerProps`,
+## The furniture (the levers, the children's corner and the notes) is `SignalTowerProps`,
 ## added as the child `Props`.
 
-## The inventory id of the key to the front door. The key itself is `brass_signal_key.tscn`.
+## The inventory id of the brass key that used to open the front door (`brass_signal_key.tscn`). Nothing asks for it now, but an
+## old save may still carry one in the inventory, where it is harmless.
 const KEY_ID: String = "brass_signal_key"
-const DOOR_LOCKED_LINE: String = "CAPTION_TOWER_DOOR_LOCKED"
 
 # -- Lower level --
 const BASE_SIZE: float = 4.0
@@ -112,6 +112,31 @@ func _ready() -> void:
 	props = SignalTowerProps.new()
 	props.name = "Props"
 	add_child(props)
+	_add_ambience_zones()
+
+
+## Inside, the wind outside is heard muffled (`OutdoorAmbience`): less in the cabin, whose windows are shattered and whose roof has a
+## hole, than in the brick relay room, whose door and arched windows are its only openings.
+func _add_ambience_zones() -> void:
+	if Engine.is_editor_hint():
+		return
+
+	var inner: float = BASE_SIZE - BASE_WALL * 2.0
+	var relay_height: float = BASE_HEIGHT - DECK_THICKNESS - FLOOR_TOP
+	var relay: AmbienceZone = AmbienceZone.new()
+	relay.name = "AmbienceRelayRoom"
+	relay.position = Vector3(0.0, FLOOR_TOP + relay_height * 0.5, 0.0)
+	relay.size = Vector3(inner, relay_height, inner)
+	relay.interior = 0.7
+	add_child(relay)
+
+	var cabin_inner: float = CABIN_SIZE - CABIN_WALL * 2.0
+	var cabin: AmbienceZone = AmbienceZone.new()
+	cabin.name = "AmbienceCabin"
+	cabin.position = Vector3(0.0, BASE_HEIGHT + CABIN_HEIGHT * 0.5, 0.0)
+	cabin.size = Vector3(cabin_inner, CABIN_HEIGHT, cabin_inner)
+	cabin.interior = 0.5
+	add_child(cabin)
 
 
 # ============================================================
@@ -653,17 +678,13 @@ func _build_stairs(holder: Node3D) -> void:
 func _build_doors() -> void:
 	var front_z: float = BASE_SIZE * 0.5 - BASE_WALL * 0.5
 	var front: Node3D = _make_door(
-		"FrontDoor", Vector3(DOOR_X - DOOR_WIDTH * 0.5, FLOOR_TOP + 0.005, front_z), 0.0, true, KEY_ID, &"signal_tower_front_door"
+		"FrontDoor", Vector3(DOOR_X - DOOR_WIDTH * 0.5, FLOOR_TOP + 0.005, front_z), 0.0, false, "", &"signal_tower_front_door"
 	)
-	front.set("locked_line", DOOR_LOCKED_LINE)
 	lower_door = front as DoorController
-
-	# The note pinned to the door moves with it.
-	var note: Node3D = (load("res://scenes/objects/signal_tower/tower_door_note.tscn") as PackedScene).instantiate() as Node3D
-	note.name = "DoorNote"
-	note.position = Vector3(-0.12, 0.42, 0.057)
-	note.rotation_degrees = Vector3(0.0, 0.0, 2.0)
-	(front.get_node("Hinge/DoorRoot") as Node3D).add_child(note)
+	# A save from when the door wanted the brass key may hold it locked (the door restores itself as it enters the tree, just above): this
+	# door is never locked now, so it is let go at once, open or shut as it was saved, and no key is asked for or taken.
+	if lower_door != null and lower_door.is_locked:
+		lower_door.unlock()
 
 	var side_x: float = CABIN_SIZE * 0.5 - CABIN_WALL * 0.5
 	upper_door = _make_door(

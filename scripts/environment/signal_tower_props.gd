@@ -7,15 +7,12 @@ class_name SignalTowerProps
 ## origin at the middle of the foot, the front door facing +Z).
 ##
 ##   Relay room (lower level, floor at y 0.04)  the children's headquarters, in three zones around an open
-##       aisle, each with one of the three photographs the album needs from this place (they lie out in the
-##       open: no box, nothing to unlock):
+##       aisle. The one photograph the album needs from this place lies out in the open (no box, nothing to unlock):
 ##         1. the HQ desk, back left (a makeshift table of two crates and a plank with a drawer under it, two stools, a desk
 ##            lamp): Scraped Knee lies flat in the middle of the plank, and in the drawer (`DeskDrawer`, which slides out when it
 ##            is used) lies the note Juliana wrote;
-##         2. the wooden bench on the right wall (a daybed with a cushion): The Broken Lever on the cushion and
-##            Sophia's folded letter on graph paper beside it;
-##         3. the low shelf on the back wall: The Foggy Platform stands in an open tin, with a few of a child's
-##            things on the lower board.
+##         2. the wooden bench on the right wall (a daybed with a cushion): Sophia's folded letter on graph paper;
+##         3. the low shelf on the back wall: an open tin, with a few of a child's things on the lower board.
 ##       Also a relay cabinet, pipes, crates and a barrel, all kept out of the aisle.
 ##   Control cabin (upper level, floor at y 2.8)  the floor frame with five heavy iron interlocking signal
 ##       levers (the fourth is Lucas's, snapped off), a stove under the stovepipe, a desk with a telegraph,
@@ -55,7 +52,7 @@ const LORE_ITEMS: Dictionary = {
 }
 
 ## The pieces other scripts and the tests look for.
-## The three photographs of the relay room, by item id (Collectibles in the game).
+## The photograph of the relay room, by item id (a Collectible in the game): only `photo_childhood`.
 var photos: Dictionary = {}
 ## The ground floor's other items by key: `juliana_note` (in the desk drawer), `sophia_note` (Inspectables in the game).
 var ground_items: Dictionary = {}
@@ -422,7 +419,7 @@ func _build_desk_zone(corner: Node3D) -> void:
 
 
 ## Zone 2, the daybed along the right wall: a plank frame with a faded cushion, a bolster at the far end; on the
-## cushion The Broken Lever with Sophia's folded letter beside it.
+## cushion Sophia's folded letter.
 func _build_daybed_zone(corner: Node3D) -> void:
 	var inner: float = SignalTowerBuilder.BASE_SIZE * 0.5 - SignalTowerBuilder.BASE_WALL
 	var daybed: Node3D = Node3D.new()
@@ -444,15 +441,11 @@ func _build_daybed_zone(corner: Node3D) -> void:
 
 	# The cushion's top is at 0.49 above the daybed's origin.
 	var top: float = 0.49
-	# Photo 2 lies flat on the cushion, a little turned.
-	_place_photo("photo_broken_lever", "res://scenes/objects/photo_broken_lever.tscn", daybed, Vector3(0.0, top + 0.0025, -0.12), Vector3(-90.0, 25.0, 0.0))
-
-	# Sophia's folded letter lies on the cushion beside the photograph, a little turned.
+	# Sophia's folded letter lies on the cushion, a little turned.
 	_place_ground_item(&"sophia_note", "res://scenes/objects/signal_tower/tower_sophia_note.tscn", daybed, Vector3(-0.02, top + 0.0022, -0.37), Vector3(-90.0, 12.0, 0.0))
 
 
-## Zone 3, the low shelf on the back wall: an open tin with The Foggy Platform standing in
-## it, and a few of a child's things on the lower board.
+## Zone 3, the low shelf on the back wall: an open tin, and a few of a child's things on the lower board.
 func _build_shelf_zone(corner: Node3D) -> void:
 	var shelf: Node3D = Node3D.new()
 	shelf.name = "BackShelf"
@@ -493,9 +486,6 @@ func _build_shelf_zone(corner: Node3D) -> void:
 	tin_node.position = Vector3(0.0, 0.035, 0.0)
 	photo_tin.add_child(tin_node)
 	HouseProps.add_cylinder(photo_tin, "Lid", 0.1, 0.008, Vector3(0.24, 0.004, 0.02), tin_material, Vector3(0.0, 0.0, 6.0))
-
-	# Photo 3, The Foggy Platform, stands in the tin leaning on its back rim.
-	_place_photo("photo_foggy_platform", "res://scenes/objects/photo_foggy_platform.tscn", photo_tin, Vector3(0.0, 0.058, 0.004), Vector3(-14.0, 0.0, 0.0))
 
 
 ## Puts a photograph (a Collectible scene) where it lies. Plain nodes first: in the editor the scripts of

@@ -1,18 +1,25 @@
 extends Node
 
 ## Plays the whole fig tree clearing, and the ruined signal tower that is its other half, through the
-## game's own APIs (triggers, pickups, the locked door and its key, the tower's photographs, the album close-up's drag
-## and drop, inspect, captions) and checks each stage. Run it as a scene; it quits by itself with a non-zero exit code
-## on failure. Game time runs faster so the 30 s recording does not take 30 s.
+## game's own APIs (pickups, the open J & S box, the tower's door, the album close-up's drag and drop, inspect,
+## captions) and checks each stage: camp first, then the HQ, then the album and the memory, the last line from the
+## empty seat, the cold fire and the Ficha on the log, and the clearing loaded again before and after the Ficha is
+## taken. A lockbox of the scene's own (shut, with its dial) is checked on its own, as other boxes may use it. Run it
+## as a scene; it quits by itself with a non-zero exit code on failure. Game time runs faster so the memory does not
+## take 30 s.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_fig_clearing_smoke"
 const TEST_SCENE_PATH: String = "res://tests/fig_clearing_test.tscn"
+const CLEARING_SCENE_PATH: String = "res://scenes/levels/fig_clearing.tscn"
 const TIME_SCALE: float = 6.0
+const STORY_PHOTOS: Array[String] = ["photo_adolescence", "photo_childhood", "photo_recent"]
+const RETIRED_PHOTOS: Array[String] = ["photo_workshop", "photo_broken_lever", "photo_foggy_platform"]
 
 var test_failed: bool = false
 var back_revealed_ids: Array[String] = []
 var wrong_count: int = 0
 
+var level: Node = null
 var clearing: FigClearingSequence = null
 var tower: SignalTowerBuilder = null
 var player: CharacterBody3D = null
@@ -27,7 +34,7 @@ func _ready() -> void:
 	)
 	GameSettings.set_captions_enabled(true, false)
 
-	var level: Node = (load(TEST_SCENE_PATH) as PackedScene).instantiate()
+	level = (load(TEST_SCENE_PATH) as PackedScene).instantiate()
 	add_child(level)
 	await get_tree().physics_frame
 	await get_tree().physics_frame
@@ -50,7 +57,9 @@ func _run() -> void:
 	_expect(clearing.stage == FigClearingSequence.Stage.EXPLORING, "starts exploring")
 	_expect(clearing.recorder.is_turning(), "the cassette turns in silence from the start")
 	_expect(clearing.album.slots.size() == 3, "the album has three slots")
-	_expect(clearing.album.get_photo_ids().size() == 6, "but six photographs belong to it (three are red herrings)")
+	var candidates: Array[String] = clearing.album.get_photo_ids()
+	candidates.sort()
+	_expect(candidates == STORY_PHOTOS, "and only the three story photographs belong to it (%s)" % str(candidates))
 	_expect(clearing.fire.is_lit, "the campfire starts lit")
 	var ash: Node3D = clearing.fire.get_node_or_null("ColdAsh") as Node3D
 	_expect(ash != null and not ash.visible, "the cold ash is not shown while the fire burns")
@@ -63,24 +72,20 @@ func _run() -> void:
 	var album: PhotoAlbum = clearing.album
 	var flashlight: Node = player.get_node("Hand/SpotLight3D")
 
-	# Half of the six photographs lie about the camp, none on top of another, and each has its note on the
-	# back as a readable spot (no words are drawn on the model). The other half are in the tower.
-	var photo_names: Array[String] = ["PhotoRecent", "PhotoWorkshop"]
-	var note_keys: Array[String] = ["PHOTO_NOTE_RECENT", "PHOTO_NOTE_WORKSHOP"]
-	var closest: float = INF
-	for i: int in photo_names.size():
-		var photo: Collectible = clearing.get_node("Props/" + photo_names[i])
-		_expect(photo.global_position.distance_to(clearing.global_position) < 8.0, photo_names[i] + " lies in the clearing")
-		for j: int in range(i + 1, photo_names.size()):
-			closest = minf(closest, photo.global_position.distance_to(clearing.get_node("Props/" + photo_names[j]).global_position))
+	# The camp's own photograph lies on the memory table beside the album, with its note on the back as a readable spot (no words are
+	# drawn on the model). Rain at the Station is in the open box on the log table; Scraped Knee is at the HQ.
+	var recent: Collectible = clearing.get_node("Props/PhotoRecent") as Collectible
+	var memory_table: Node3D = clearing.get_node("Scenery/CampTable") as Node3D
+	var on_table: Vector3 = memory_table.to_local(recent.global_position)
+	_expect(absf(on_table.x) < 0.72 and absf(on_table.z) < 0.38 and on_table.y > 0.77 and on_table.y < 0.86, "Bus Stop Departure lies on the memory table, not on the ground (%s)" % str(on_table))
+	_expect(recent.global_basis.z.dot(Vector3.UP) > 0.99, "flat, picture up")
+	_check_photo_back(recent, "PHOTO_NOTE_RECENT")
+	for gone: String in ["PhotoWorkshop", "PhotoChildhood", "PhotoBrokenLever", "PhotoFoggyPlatform", "PhotoAdolescence", "FichaSpot"]:
+		_expect(clearing.get_node_or_null("Props/" + gone) == null, gone + " is not in the camp's props")
+	_expect(_world_items(RETIRED_PHOTOS).is_empty(), "and none of the three photographs that no longer belong to the album can be picked up anywhere, camp or tower")
 
-		_check_photo_back(photo, note_keys[i])
-
-	_expect(closest > 0.4, "no two photographs lie on top of each other (closest %.2f m)" % closest)
-	for gone: String in ["PhotoChildhood", "PhotoBrokenLever", "PhotoFoggyPlatform", "PhotoAdolescence"]:
-		_expect(clearing.get_node_or_null("Props/" + gone) == null, gone + " is no longer in the camp: it is in the tower")
-
-	# The notes are translated, in both languages, and are the written ones: no hyphens in any of them.
+	# The notes are translated, in both languages, and are the written ones: no hyphens in any of them (the three old photographs keep
+	# their texts: an old save may still carry one).
 	var all_note_keys: Array[String] = ["PHOTO_NOTE_CHILDHOOD", "PHOTO_NOTE_ADOLESCENCE", "PHOTO_NOTE_RECENT", "PHOTO_NOTE_WORKSHOP", "PHOTO_NOTE_BROKEN_LEVER", "PHOTO_NOTE_FOGGY_PLATFORM"]
 	_expect(tr("PHOTO_NOTE_CHILDHOOD") == "July 1988. She fell on the gravel behind the signal tower. She swore something under the floorboards grabbed her ankle. I told her it was just a loose wire. I lied. I saw it too.", "the English note of the scraped knee")
 	_expect(tr("PHOTO_NOTE_BROKEN_LEVER") == "1994. Lucas tried to fix the tracks himself after the station closed. He always thought he owned this place.", "the English note of the broken lever")
@@ -91,7 +96,7 @@ func _run() -> void:
 		no_hyphens = no_hyphens and not tr(key).contains("-")
 	GameSettings.set_text_locale("pt_BR", false)
 	var all_translated: bool = true
-	for key: String in all_note_keys + ["PHOTO_FRONT_CHILDHOOD", "PHOTO_FRONT_FOGGY_PLATFORM", "PHOTO_FRONT_BROKEN_LEVER", "ITEM_PHOTO_WORKSHOP_NAME", "ITEM_PHOTO_BROKEN_LEVER_NAME", "ITEM_PHOTO_FOGGY_PLATFORM_NAME", "FICHA_SCRATCH_JULIANA", "INSPECT_VERB_TURN"]:
+	for key: String in all_note_keys + ["PHOTO_FRONT_CHILDHOOD", "PHOTO_FRONT_FOGGY_PLATFORM", "PHOTO_FRONT_BROKEN_LEVER", "ITEM_PHOTO_WORKSHOP_NAME", "ITEM_PHOTO_BROKEN_LEVER_NAME", "ITEM_PHOTO_FOGGY_PLATFORM_NAME", "FICHA_SCRATCH_JULIANA", "INSPECT_VERB_TURN", "CAPTION_SPEAKER_SOPHIA"]:
 		all_translated = all_translated and tr(key) != key
 		if key.begins_with("PHOTO_NOTE"):
 			no_hyphens = no_hyphens and not tr(key).contains("-")
@@ -99,25 +104,24 @@ func _run() -> void:
 	_expect(no_hyphens, "and none of the six photograph notes has a hyphen, in either language")
 	GameSettings.set_text_locale("en", false)
 
-	# The two halves of the puzzle: the clothesline, the thermos and the lockbox in the camp, the note on the tower's door.
-	await _check_two_part_puzzle()
+	# The camp and the HQ: the clothesline, the radio, the thermos and the open box in the camp; the tower's door.
+	await _check_the_camp_and_the_hq()
+	# A lockbox of the scene's own: shut, with its dial and its close-up, as before.
+	await _check_a_shut_lockbox()
 
-	# Picking up a photograph shows it in the inspect view first. The camp's two lie on the ground (the third, Rain at the Station, is in the lockbox); the
-	# tower's lie about its relay room, and are taken after the key (see below). One red herring (the foggy
-	# platform, in the tin on the back shelf) is left there: the solved album will take it away.
-	for photo_name: String in ["PhotoRecent", "PhotoWorkshop"]:
-		var photo: Collectible = clearing.get_node("Props/" + photo_name)
-		_expect(photo.can_interact(player), photo_name + " can be picked up")
-		photo.interact(player)
-		_expect(player.inspect_controller.is_open(), photo_name + " opens the inspect view")
-		await _wait(0.5)
-		player.inspect_controller.close(false)
-		player.inventory_ui_controller.close()
-		await _wait(0.6)
-
+	# Camp first: the photograph on the memory table, then Rain at the Station from the open box; then the HQ.
+	_expect(recent.can_interact(player), "Bus Stop Departure can be picked up")
+	recent.interact(player)
+	_expect(player.inspect_controller.is_open(), "it opens the inspect view")
+	await _wait(0.5)
+	player.inspect_controller.close(false)
+	player.inventory_ui_controller.close()
+	await _wait(0.6)
+	await _take_from_the_box()
 	await _take_from_tower()
-	for item_id: String in ["photo_childhood", "photo_adolescence", "photo_recent", "photo_workshop", "photo_broken_lever"]:
+	for item_id: String in STORY_PHOTOS:
 		_expect(player.has_inventory_item(item_id), item_id + " is in the inventory")
+	_expect(not player.has_inventory_item("brass_signal_key"), "and no key was needed or found on the way")
 
 	# Reading the back works as in the waiting shed: [E] turns the photo over and shows its note as an overlay.
 	var inspect: PlayerInspectController = player.inspect_controller
@@ -161,7 +165,9 @@ func _run() -> void:
 	player.inventory_ui_controller.close()
 	await _wait(0.6)
 
-	# The flashlight is on while the memory plays, so it must go out with the fire.
+	# An old save may still carry a photograph that no longer belongs to the album: the album does not offer it, and leaves it alone.
+	_give_item("photo_workshop", "res://scenes/objects/photo_workshop.tscn")
+	# The flashlight is on when the memory starts: nothing in the memory may put it out or turn it on.
 	flashlight.call("restore_save_state", {"is_on": true})
 
 	# Opening the album freezes the player and gives Juliana's first line.
@@ -170,113 +176,92 @@ func _run() -> void:
 	_expect(album.view.is_open(), "the album close-up opens")
 	_expect(player.modal_ui_open, "the player is held while the album is open")
 	_expect(not player.can_manual_save(), "saving is blocked while the album is open")
+	var view: AlbumView = album.view
+	var tray_ids: Array[String] = []
+	for card: Node in view._tray_row.get_children():
+		if card is PhotoCardUI and not card.is_queued_for_deletion():
+			tray_ids.append((card as PhotoCardUI).item_id)
+	tray_ids.sort()
+	_expect(tray_ids == STORY_PHOTOS, "the tray offers the three story photographs, and not the old one in the hands (%s)" % str(tray_ids))
 
 	# Any photo can go in any space; the album is judged only when every space is full.
-	var view: AlbumView = album.view
 	album.wrong_arrangement.connect(func() -> void: wrong_count += 1)
-	_expect(view.drop_on_slot(0, _from_hand("photo_workshop")), "a distractor can be placed")
-	_expect(view.drop_on_slot(1, _from_hand("photo_broken_lever")), "and another")
+	_expect(view.drop_on_slot(0, _from_hand("photo_recent")), "a photograph can go in any space")
+	_expect(view.drop_on_slot(1, _from_hand("photo_childhood")), "and another")
 	_expect(wrong_count == 0, "no reaction while a space is still empty")
-	_expect(view.drop_on_slot(2, _from_hand("photo_recent")), "the last space is filled")
-	_expect(
-		album.arrangement == ["photo_workshop", "photo_broken_lever", "photo_recent"],
-		"the wrong photographs are kept as placed"
-	)
-	_expect(wrong_count == 1, "a full but wrong album plays the static glitch (%d)" % wrong_count)
+	_expect(view.drop_on_slot(2, _from_hand("photo_adolescence")), "the last space is filled")
+	_expect(album.arrangement == ["photo_recent", "photo_childhood", "photo_adolescence"], "the photographs are kept as placed")
+	_expect(wrong_count == 1, "a full album in the wrong order plays the static glitch (%d)" % wrong_count)
 	_expect(not album.locked, "a wrong arrangement does not lock the album")
 	_expect(clearing.stage == FigClearingSequence.Stage.EXPLORING, "a wrong arrangement triggers nothing else")
 
 	# A photo can be taken back and put down again.
-	_expect(
-		view.drop_on_tray({"item_id": "photo_recent", "from_slot": 2}),
-		"a photo can be taken back"
-	)
+	_expect(view.drop_on_tray({"item_id": "photo_recent", "from_slot": 0}), "a photo can be taken back")
 	_expect(player.has_inventory_item("photo_recent"), "the photo is back in the hands")
-	_expect(album.arrangement[2] == "", "its slot is empty again")
+	_expect(album.arrangement[0] == "", "its slot is empty again")
 	_expect(wrong_count == 1, "taking one out is not judged")
-	_expect(view.drop_on_slot(2, _from_hand("photo_recent")), "and it goes back")
+	_expect(view.drop_on_slot(0, _from_hand("photo_recent")), "and it goes back")
 	_expect(wrong_count == 2, "the same full arrangement made again is judged again (%d)" % wrong_count)
 
-	# Right photographs, wrong order, is still wrong.
-	_expect(view.drop_on_slot(0, _from_hand("photo_childhood")), "a story photograph replaces a distractor")
-	_expect(player.has_inventory_item("photo_workshop"), "the replaced one is back in the hands")
-	_expect(wrong_count == 3, "[childhood, clock, recent] is judged wrong (%d)" % wrong_count)
-	_expect(not album.locked, "still not locked")
+	# Photographs move between spaces (two swap), and one from the hands put on a full space gives the one there back.
+	_expect(view.drop_on_slot(1, {"item_id": "photo_recent", "from_slot": 0}), "a placed photograph can be moved to another space")
+	_expect(album.arrangement == ["photo_childhood", "photo_recent", "photo_adolescence"], "the two swap places")
+	_expect(wrong_count == 3 and not album.locked, "[childhood, recent, adolescence] is still wrong (%d)" % wrong_count)
+	_expect(view.drop_on_tray({"item_id": "photo_adolescence", "from_slot": 2}), "the last one is taken back")
+	_expect(view.drop_on_slot(1, _from_hand("photo_adolescence")), "and put where Bus Stop Departure was")
+	_expect(player.has_inventory_item("photo_recent") and album.arrangement == ["photo_childhood", "photo_adolescence", ""], "which goes back to the hands")
 	var before_last: int = wrong_count
 
-	# The last distractor out, the right photograph in: the chronological order.
-	_expect(view.drop_on_slot(1, _from_hand("photo_adolescence")), "the last space gets its photograph")
+	# The right order: the chronological one.
+	_expect(view.drop_on_slot(2, _from_hand("photo_recent")), "the last space gets its photograph")
 	_expect(album.arrangement == ["photo_childhood", "photo_adolescence", "photo_recent"], "in chronological order")
 	_expect(wrong_count == before_last, "the right order is not a wrong arrangement")
 	_expect(album.locked, "the right order locks the album")
-	_expect(clearing.stage >= FigClearingSequence.Stage.FINALE, "the finale starts")
-	_expect(
-		not view.can_drop_on_slot(0, _from_hand("photo_childhood")),
-		"a locked album refuses changes"
-	)
+	_expect(clearing.stage >= FigClearingSequence.Stage.FINALE, "the memory starts")
+	_expect(not view.can_drop_on_slot(0, _from_hand("photo_childhood")), "a locked album refuses changes")
 
-	# The album took the stray photographs: out of the hands and out of the clearing.
+	# The album took only what was put in it.
 	await get_tree().process_frame
-	_expect(not player.has_inventory_item("photo_workshop") and not player.has_inventory_item("photo_broken_lever"), "the strays are no longer in the inventory")
-	var foggy: Variant = tower.props.photos["photo_foggy_platform"]
-	_expect(not is_instance_valid(foggy) or (foggy as Node).is_queued_for_deletion(), "the stray still standing in the tower's tin is gone too")
-	_expect(bool(SaveManager.get_state_value(&"collectibles", &"photo_foggy_platform", false)), "and is remembered as taken, for when the tower is loaded again")
+	_expect(player.has_inventory_item("photo_workshop"), "the old photograph in the hands is left where it is")
+	var marked: bool = false
+	for item_id: String in RETIRED_PHOTOS:
+		marked = marked or (item_id != "photo_workshop" and bool(SaveManager.get_state_value(&"collectibles", StringName(item_id), false)))
+	_expect(not marked, "and nothing the player never took is marked as taken")
 
 	await _until(func() -> bool: return not view.is_open())
 	_expect(not player.modal_ui_open, "the player is released when the album closes")
 
-	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.RECORDING)
-	_expect(not player.can_manual_save(), "saving is blocked during the sequence")
+	await _watch_the_memory(flashlight)
 
-	await _until(
-		func() -> bool: return clearing.stage == FigClearingSequence.Stage.DONE,
-		40.0
-	)
 	_expect(
 		bool(SaveManager.get_state_value(&"puzzles", &"fig_clearing_recording_done", false)),
-		"the recording is remembered as heard"
+		"the memory is remembered as heard"
 	)
-
-	# The moment the tape ends everything cuts at once, into total darkness.
-	_expect(not clearing.fire.is_lit, "the campfire goes out when the recording ends")
-	_expect(not clearing.fire.flames.visible, "no flame lingers")
-	_expect(not clearing.fire.light.visible, "the fire's light is off at once")
+	_expect(not clearing.fire.is_lit and not clearing.fire.flames.visible and not clearing.fire.light.visible, "the campfire is out, no flame lingers and its light is off")
+	_expect(ash != null and ash.visible, "the fire pit is cold ash")
 	var camp: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
-	_expect(camp.lights_out and not camp.lantern_light.visible and is_zero_approx(camp.lantern_glass_material.emission_energy_multiplier) and not camp.lantern_flame.visible, "the lantern on the memory table goes out with the fire: total darkness")
-	_expect(not camp.radio_static.playing and is_zero_approx(camp.radio_lamp_material.emission_energy_multiplier), "and so do the railway radio's hiss and lamp")
-	_expect(ash != null and ash.visible, "the fire pit is left with cold ash")
-	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight goes out with it")
-	_expect(clearing.rain_player != null and not clearing.rain_player.playing, "the rain stops")
-	_expect(clearing.ficha_delay_seconds == 2.0, "the dark lasts two seconds before anything happens")
+	_expect(not camp.lights_out and camp.lantern_light.visible and camp.lantern_glass_material.emission_energy_multiplier > 1.0 and camp.lantern_flame.visible, "the lantern on the memory table is still lit")
+	_expect(camp.radio_static.playing and camp.radio_lamp_material.emission_energy_multiplier > 0.3, "and the railway radio still hisses, its lamp still red")
+	_expect(clearing.rain_player != null and not clearing.rain_player.playing, "the rain has stopped")
+	_expect(not clearing.recorder.is_turning(), "and so have the reels")
+	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight is as the player left it (they switched it off during the memory)")
 	_expect(player.can_manual_save(), "saving is allowed again")
+	_expect(clearing.stage == FigClearingSequence.Stage.DONE, "and the scene is over")
 
-	# Two seconds of dark: no Ficha, no light. Then the clink, the Ficha, and the flashlight returns.
-	await _wait(1.0)
-	_expect(clearing._ficha == null, "in the dark nothing has appeared yet")
-	_expect(not bool(flashlight.get("flashlight_on")), "and the flashlight is still out")
-	await _until(func() -> bool: return clearing._ficha != null, 6.0)
-	var clink_heard: bool = false
-	for child: Node in clearing.ficha_spot.get_children():
-		if child is AudioStreamPlayer3D:
-			clink_heard = true
-	_expect(clink_heard, "a clink sounds on the table as the Ficha is set down")
-	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight is still out at that instant")
-	await _wait(0.9)
-	_expect(bool(flashlight.get("flashlight_on")), "then the flashlight comes back on by itself")
-	_expect(clearing.stage == FigClearingSequence.Stage.DONE, "and the scene stays over")
-
-	# The album can no longer give up a photograph; Juliana's Ficha lies on the table beside it.
-	_expect(album.can_interact(player), "the album can be used after the memory")
-	_expect(album.get_prompt_text() == "PROMPT_OPEN_ALBUM", "it only opens to look: no photograph can be taken from it")
+	# Juliana's Ficha lies on the empty seat's log, in reach of a standing player.
 	var ficha: Collectible = clearing._ficha as Collectible
-	_expect(ficha != null and ficha.item_id == "juliana_ficha", "Juliana's Ficha lies beside the album")
-	_expect(
-		ficha != null and ficha.global_position.distance_to(clearing.ficha_spot.global_position) < 0.05,
-		"on the table, where the spot is"
-	)
+	_expect(ficha != null and ficha.item_id == "juliana_ficha", "Juliana's Ficha lies where nobody sat")
+	await _check_the_empty_seat(ficha)
 	var scratch: ReadableSpot = ficha.get_node("Visual").find_child("ScratchSpot", true, false) as ReadableSpot
 	_expect(scratch != null and not scratch.obvious and tr(scratch.text_key) == "CALL HER", "its back is scratched with CALL HER, read as an overlay")
-	_expect(ficha != null and ficha.get_prompt_text() == "PROMPT_PICK_UP", "and it can be picked up")
+	_expect(_ficha_scene_path() == str(OverlookPhoneSequence.FICHA_SCENES["juliana_ficha"]) and OverlookPhoneSequence.FICHA_IDS.has(ficha.item_id), "it is the Ficha the payphone takes (%s)" % ficha.item_id)
+
+	# Loaded again before the Ficha is taken: the memory is not played again, the fire is cold, the lantern lit, one Ficha on the log.
+	await _check_loaded_again(true)
+
+	_expect(album.can_interact(player), "the album can be used after the memory")
+	_expect(album.get_prompt_text() == "PROMPT_OPEN_ALBUM", "it only opens to look: no photograph can be taken from it")
+	_expect(ficha.get_prompt_text() == "PROMPT_PICK_UP", "the Ficha can be picked up")
 	ficha.interact(player)
 	_expect(player.has_inventory_item("juliana_ficha"), "the Ficha goes in the inventory")
 	_expect(album.arrangement[2] == "photo_recent", "the photograph stays in the album")
@@ -304,9 +289,207 @@ func _run() -> void:
 	player.inspect_controller.close(false)
 	player.inventory_ui_controller.close()
 	await _wait(1.0)
+
+	# Loaded again after it is taken: no Ficha comes back.
+	await _check_loaded_again(false)
+
 	album.interact(player)
 	_expect(view.is_open(), "the finished album can still be looked at")
 	view.close()
+
+
+## The memory, watched frame by frame: the tape's six lines with the fire burning, the reels and the rain stopping, Sophia's last line once
+## under her own name, then a creak from the empty seat, and the fire cold and the Ficha down together. Saving is never allowed before the
+## Ficha lies on the log. Halfway the player switches the flashlight off themselves: nothing switches it back.
+func _watch_the_memory(flashlight: Node) -> void:
+	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.RECORDING)
+	_expect(not player.can_manual_save(), "saving is blocked during the memory")
+	_expect(clearing.fire.is_lit, "the fire still burns while the tape plays")
+	_expect(clearing.rain_player.playing, "rain plays round the recording")
+	var tape_voice: AudioStreamPlayer3D = clearing.recording_voice_player
+	_expect(tape_voice != null and tape_voice.get_parent() == clearing.recorder, "the recorder has a voice source of its own")
+	_expect(tape_voice != null and tape_voice.stream == null and not tape_voice.playing, "with no clip yet: the conversation is captions only")
+	_expect(not player.modal_ui_open and not player.view_locked and not player.cutscene_frozen, "and the player is free to move and look")
+
+	var shown: Array[String] = []
+	var elapsed: float = 0.0
+	var line_at: float = -1.0
+	var creak_at: float = -1.0
+	var fire_out_at: float = -1.0
+	var ficha_at: float = -1.0
+	var reels_at_line: bool = true
+	var rain_at_line: bool = true
+	var fire_at_line: bool = false
+	var save_window: bool = false
+	var torch_on_at_seat: bool = false
+	var torch_switched: bool = false
+	while clearing.stage != FigClearingSequence.Stage.DONE and elapsed < 60.0:
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+		var key: String = CaptionManager._shown_key
+		if not key.is_empty() and (shown.is_empty() or shown[shown.size() - 1] != key):
+			shown.append(key)
+
+		if clearing.stage != FigClearingSequence.Stage.DONE and player.can_manual_save():
+			save_window = true
+
+		if clearing.stage == FigClearingSequence.Stage.EMPTY_SEAT and not torch_switched:
+			torch_on_at_seat = bool(flashlight.get("flashlight_on"))
+			flashlight.call("player_toggle")
+			torch_switched = true
+
+		if line_at < 0.0 and key.begins_with("CAPTION_REC_07"):
+			line_at = elapsed
+			reels_at_line = clearing.recorder.is_turning()
+			rain_at_line = clearing.rain_player.playing
+			fire_at_line = clearing.fire.is_lit
+
+		if creak_at < 0.0 and _stand_up_sounds() > 0:
+			creak_at = elapsed
+
+		if fire_out_at < 0.0 and not clearing.fire.is_lit:
+			fire_out_at = elapsed
+
+		if ficha_at < 0.0 and clearing._ficha != null:
+			ficha_at = elapsed
+
+	_expect(clearing.stage == FigClearingSequence.Stage.DONE, "the memory plays to its end, with no clip to wait for (%.1f s of game time)" % elapsed)
+	var lines: Array[String] = []
+	for entry: String in shown:
+		if entry.begins_with("CAPTION_REC_"):
+			lines.append(entry)
+	var expected: Array[String] = []
+	for i: int in 6:
+		expected.append("CAPTION_REC_%02d|%s" % [i + 1, CaptionTracks.SPEAKER_SOPHIA_RECORDING if i % 2 == 0 else CaptionTracks.SPEAKER_JULIANA_RECORDING])
+	expected.append("CAPTION_REC_07|" + CaptionTracks.SPEAKER_SOPHIA)
+	_expect(lines == expected, "the tape's six lines, then Sophia's last line once, under her own name and not the recording's (%s)" % str(lines))
+	var on_tape: bool = false
+	for cue: Dictionary in CaptionTracks.get_cues(CaptionTracks.FIG_RECORDING):
+		on_tape = on_tape or str(cue["key"]) == "CAPTION_REC_07"
+	_expect(not on_tape, "the last line is not on the tape's track")
+	_expect(CaptionTracks.get_cues(CaptionTracks.FIG_RECORDING).back()["key"] == "CAPTION_REC_06", "which ends on Juliana's \"Good.\", with no silent tail")
+	_expect(line_at > 0.0 and not reels_at_line and not rain_at_line, "the reels and the rain had stopped before the last line")
+	_expect(fire_at_line, "the fire was still burning while it was said")
+	_expect(creak_at > line_at, "someone seems to get up from the seat after the line (%.2f s after it)" % (creak_at - line_at))
+	_expect(fire_out_at > creak_at and absf(fire_out_at - ficha_at) < 0.001, "then the fire is cold and the Ficha is down, in the same moment (%.2f s after the creak)" % (fire_out_at - creak_at))
+	_expect(not save_window, "the game could not be saved at any moment before the Ficha lay on the log")
+	_expect(torch_on_at_seat, "the flashlight the player had on was never put out by the memory")
+	var seat_voice: AudioStreamPlayer3D = clearing.seat_voice_player
+	_expect(seat_voice != null and seat_voice.stream == null and not seat_voice.playing, "the empty seat has no clip yet either: the line is a caption")
+
+
+## The empty seat is one of the logs round the fire. The Ficha lies on the top of that log (not floating, not sunk, clear of its branch
+## stub and its ends), the seat's voice source is at the seat (not on the player, and not heard everywhere), and a player standing by the
+## log can reach the Ficha with the interaction ray.
+func _check_the_empty_seat(ficha: Collectible) -> void:
+	var dressing: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
+	var seat_anchor: Node3D = clearing.empty_seat
+	var index: int = -1
+	for i: int in dressing.seats.size():
+		var seat: Node3D = dressing.seats[i]
+		if seat.global_position.distance_to(seat_anchor.global_position) < 0.01 and seat.global_basis.x.dot(seat_anchor.global_basis.x) > 0.999:
+			index = i
+	_expect(index >= 0, "the empty seat is one of the three logs round the fire (%s)" % (dressing.seats[index].name if index >= 0 else "none"))
+	if index < 0:
+		return
+
+	var seat_log: Node3D = dressing.seats[index]
+	var voice: AudioStreamPlayer3D = clearing.seat_voice_player
+	_expect(voice != null and voice.get_parent() == seat_anchor and not player.is_ancestor_of(voice), "its voice source is at the seat, not on the player")
+	var voice_at: Vector3 = seat_log.to_local(voice.global_position)
+	_expect(Vector2(voice_at.x, voice_at.z).length() < 0.3 and voice_at.y > 0.7 and voice_at.y < 1.2, "where a seated head would be (%s)" % str(voice_at))
+	_expect(voice.unit_size <= 4.0 and voice.max_distance > 0.0 and voice.max_distance <= 25.0, "and it is heard round the camp, not everywhere (%.0f m)" % voice.max_distance)
+
+	_expect(ficha.global_position.distance_to(clearing.ficha_spot.global_position) < 0.01 and ficha.get_parent() == seat_anchor, "the Ficha lies at the seat's spot")
+	_expect(ficha.global_basis.z.dot(Vector3.UP) > 0.99, "flat, face up")
+	var in_seat: Vector3 = seat_log.to_local(ficha.global_position)
+	var log_top: float = 2.0 * FigClearingProps.seat_radius(index) - FigClearingProps.SEAT_SINK
+	var bottom: float = in_seat.y - 0.003
+	_expect(absf(in_seat.z) < 0.005 and bottom < log_top + 0.0005 and bottom > log_top - 0.002, "on the top line of the log's bark, neither floating nor sunk (its underside %.1f mm from the top)" % ((bottom - log_top) * 1000.0))
+	_expect(absf(in_seat.x) < FigClearingProps.seat_length(index) * 0.5 - 0.1, "well inside the log's ends (%.2f m from the middle)" % in_seat.x)
+	_expect(absf(in_seat.x - FigClearingProps.seat_stub_x(index)) > 0.1, "and clear of its branch stub")
+	_expect(clearing.to_global(FigClearingProps.seat_top(index, in_seat.x)).distance_to(ficha.global_position - Vector3(0.0, 0.003, 0.0)) < 0.002, "where the camp's own geometry says the log's top is")
+	# Nothing lies over it: a ray straight down meets the Ficha first.
+	await _ray_finds(ficha, ficha.global_position + Vector3(0.0, 1.5, 0.0), ficha.global_position, "the Ficha, from straight above")
+
+	# A player standing by the log, on the fire's side, reaches it: the capsule fits there, and the eyes are within the ray's reach.
+	var body_shape: CollisionShape3D = player.get_node("CollisionShape3D") as CollisionShape3D
+	var capsule: CapsuleShape3D = body_shape.shape as CapsuleShape3D
+	var standing: CapsuleShape3D = CapsuleShape3D.new()
+	standing.radius = capsule.radius * body_shape.global_basis.get_scale().x
+	standing.height = capsule.height * body_shape.global_basis.get_scale().y
+	var query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
+	query.shape = standing
+	var space: PhysicsDirectSpaceState3D = clearing.get_world_3d().direct_space_state
+	var fire_side: float = signf(seat_log.to_local(clearing.fire.global_position).z)
+	var home: Vector3 = player.global_position
+	var spot: Vector3 = Vector3.ZERO
+	var found: bool = false
+	for step: int in 40:
+		var out: float = FigClearingProps.seat_radius(index) + standing.radius + 0.02 + 0.01 * float(step)
+		spot = seat_log.to_global(Vector3(in_seat.x, 0.0, fire_side * out))
+		spot.y = body_shape.global_position.y
+		query.transform = Transform3D(Basis.IDENTITY, spot)
+		var blocked: bool = false
+		for info: Dictionary in space.intersect_shape(query, 8):
+			var hit: Node = info.get("collider") as Node
+			blocked = blocked or (hit != null and hit != player and hit.name != &"Ground")
+		if not blocked:
+			found = true
+			break
+
+	_expect(found, "a player can stand right by the log, on the fire's side")
+	player.velocity = Vector3.ZERO
+	player.global_position = Vector3(spot.x, home.y, spot.z)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var camera: Camera3D = player.get_node("Head/Camera3D") as Camera3D
+	var reach: float = camera.global_position.distance_to(ficha.global_position)
+	_expect(reach < player.interaction_controller.interaction_distance - 0.3, "standing there, the Ficha is %.2f m from the player's eyes (the ray reaches %.1f m): no crouching" % [reach, player.interaction_controller.interaction_distance])
+	await _ray_finds(ficha, camera.global_position, ficha.global_position, "the Ficha, from a standing player's eyes by the log")
+	player.velocity = Vector3.ZERO
+	player.global_position = home
+	await get_tree().physics_frame
+
+
+## The clearing loaded again with the saved state: the memory is over and stays over (no stage plays, no caption is queued, the reels
+## stand still), the fire is cold ash, the lantern and the radio are as they always are, and Juliana's Ficha lies on the empty seat once,
+## or not at all once it has been taken.
+func _check_loaded_again(with_ficha: bool) -> void:
+	var again: FigClearingSequence = (load(CLEARING_SCENE_PATH) as PackedScene).instantiate() as FigClearingSequence
+	again.position = Vector3(0.0, 0.0, 60.0)
+	level.add_child(again)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	var when: String = "loaded again %s the Ficha is taken" % ("before" if with_ficha else "after")
+	_expect(again.stage == FigClearingSequence.Stage.DONE and not again.recorder.is_turning() and again.album.locked, when + ": the memory stays over, the reels still, the album solved")
+	_expect(CaptionManager._active_run.is_empty() and CaptionManager._runs.is_empty(), when + ": nothing is said again")
+	_expect(not again.fire.is_lit and (again.fire.get_node("ColdAsh") as Node3D).visible, when + ": the fire is cold ash")
+	var dressing: FigClearingProps = again.get_node("CampDressing") as FigClearingProps
+	_expect(not dressing.lights_out and dressing.lantern_light.visible and dressing.radio_static.playing, when + ": the lantern is lit and the radio hisses")
+	var fichas: Array[Collectible] = []
+	for node: Node in again.find_children("*", "Collectible", true, false):
+		var item: Collectible = node as Collectible
+		if item.item_id == "juliana_ficha" and not item.is_queued_for_deletion():
+			fichas.append(item)
+	_expect(fichas.size() == (1 if with_ficha else 0), when + ": %d Ficha lies in the clearing" % fichas.size())
+	if with_ficha and fichas.size() == 1:
+		_expect(fichas[0].global_position.distance_to(again.ficha_spot.global_position) < 0.01, when + ": on the empty seat's log")
+	again.queue_free()
+	await get_tree().process_frame
+
+
+## The stand up sounds playing at the empty seat (its one shot players; the seat's own voice source is not one).
+func _stand_up_sounds() -> int:
+	var count: int = 0
+	for child: Node in clearing.empty_seat.get_children():
+		if child is AudioStreamPlayer3D and child != clearing.seat_voice_player:
+			count += 1
+	return count
+
+
+func _ficha_scene_path() -> String:
+	return clearing.ficha_scene.resource_path if clearing.ficha_scene != null else ""
 
 
 ## A photograph's note is on its back as a readable spot facing away from the picture, and no text is drawn there.
@@ -318,13 +501,10 @@ func _check_photo_back(photo: Collectible, note_key: String) -> void:
 	_expect(visual.find_child("BackLabel", true, false) == null, "and no text is drawn on the model's back")
 
 
-## The tower's key is in the camp, and it takes some doing to get it: Sophia's note on the thermos says she locked it (and the station photo) in the
-## J & S lockbox, with the code of their emergency radio channel, and that the radio's panel at the entrance has it. The railway radio on its crate
-## by the western trail entrance has its dial locked on 14.08 MHz (a red needle, a bar bolted over the slider, a strip of masking tape marked HQ
-## above it), and 1 4 0 8 on the lockbox's dial pops its lid open on the key and the photograph "Rain at the Station". The lockbox stands at
-## the southern end of the log table, near its edge, facing out along it. A note pinned to the tower's door says the key is at the camp. The
-## tower's door is locked until the key is used.
-func _check_two_part_puzzle() -> void:
+## The camp and the HQ, with nothing between the player and the album: the radio is scenery, the thermos says where the childhood photo
+## is, the J & S box stands open with Rain at the Station in it (no code, no key), and the tower's door opens like any door, with no note
+## about a key pinned to it.
+func _check_the_camp_and_the_hq() -> void:
 	var dressing: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
 	_expect(dressing != null, "the camp has its dressing")
 	for gone: String in ["BrassSignalKey", "CampNote", "PhotoAdolescence"]:
@@ -365,55 +545,54 @@ func _check_two_part_puzzle() -> void:
 	_expect(absf(lockbox.global_position.y - table.global_position.y - FigClearingProps.TABLE_TOP_Y) < 0.01, "the lockbox rests on the planks")
 	_expect(dressing.find_child("SignalLantern", true, false) == null and dressing.find_child("Pane0", true, false) == null and dressing.find_child("Cage", true, false) == null, "the old signal lantern is gone from the table")
 
-	# The lockbox is at the table's southern end, near the edge, with its dial turned out along the table (not toward the bench, and not in the
+	# The lockbox is at the table's southern end, near the edge, with its front turned out along the table (not toward the bench, and not in the
 	# middle), so that a player at the end of the table stands right in front of it.
 	var in_table: Vector3 = table.to_local(lockbox.global_position)
 	_expect(in_table.x > 0.5 and absf(in_table.z) < 0.2, "the lockbox stands at the southern end of the table, not in the middle (%.2f m along it, %.2f across)" % [in_table.x, in_table.z])
 	var along: Vector3 = table.global_basis.x.normalized()
 	var faces: float = lockbox.global_basis.z.normalized().dot(along)
-	_expect(faces > 0.99, "its dial faces out along the table, toward its end (%.3f)" % faces)
+	_expect(faces > 0.99, "its front faces out along the table, toward its end (%.3f)" % faces)
 	var front_edge: float = in_table.x + FigClearingProps.LOCKBOX_SIZE.z * 0.5 + 0.016
 	var margin: float = FigClearingProps.TABLE_LENGTH * 0.5 - front_edge
 	_expect(margin > 0.0 and margin < 0.06, "with its front just short of the table's end (%.1f cm from the edge)" % (margin * 100.0))
 	_expect(table.to_local(thermos.global_position).x < -0.4, "the thermos stands at the other end")
 
+	# Sophia's note on the thermos says where the childhood photo is, and nothing about a key, a code, a radio or a board.
 	var thermos_spot: ReadableSpot = thermos.get_visual_node().find_child("NoteSpot", true, false) as ReadableSpot
 	_expect(thermos_spot != null and thermos_spot.text_key == "READABLE_THERMOS" and thermos_spot.obvious, "the thermos has its note as a readable spot, offered from the start")
 	_expect(thermos.get_visual_node().find_child("Pin", true, false) != null, "pinned round its middle")
-	var thermos_en: String = "Juli, I put the tower key and the station photo in our lockbox. I used the password of our emergency radio channel. I took the other photos to organize the board up at the HQ. See you at the Tower. Don't drink all the coffee at once. — Sophia"
-	_expect(tr("READABLE_THERMOS") == thermos_en, "the thermos note in English (%s)" % tr("READABLE_THERMOS").left(30))
+	_expect(tr("READABLE_THERMOS") == "Juli, the photo of us as kids is still on the desk at HQ. Don't drink all the coffee at once. — Sophia", "the thermos note in English (%s)" % tr("READABLE_THERMOS").left(30))
 	_expect(not tr("READABLE_THERMOS").contains("-"), "with no hyphen")
+	for stale: String in ["key", "lockbox", "password", "radio", "board", "code"]:
+		_expect(not tr("READABLE_THERMOS").to_lower().contains(stale), "and no '%s' in it" % stale)
 	for piece: Node3D in [thermos, lockbox, dressing.radio]:
 		_expect(piece.find_children("*", "PhysicsBody3D", true, false).is_empty() and piece.find_children("*", "CSGShape3D", true, false).is_empty(), piece.name + " is nothing solid: it cannot block the player or a ray")
 	GameSettings.set_text_locale("pt_BR", false)
-	_expect(tr("READABLE_THERMOS") == "Juli, guardei a chave da torre e a foto da estação na nossa caixa de segurança. Usei a senha do nosso canal de rádio de emergência. Peguei as outras fotos pra organizar o mural lá em cima no QG. Te vejo na Torre. Não bebe o café todo de uma vez. — Sophia", "the thermos note is Sophia's Portuguese, word for word")
+	_expect(tr("READABLE_THERMOS") == "Juli, a foto de quando a gente era pequena ficou na mesa do QG. Não bebe o café todo de uma vez. — Sophia", "the thermos note is Sophia's Portuguese, word for word")
 	_expect(not tr("READABLE_THERMOS").contains("-"), "with no hyphen in Portuguese either")
-	_expect(tr("PROMPT_INSPECT_LOCKBOX") == "Examinar a caixa de segurança", "the lockbox prompt in Portuguese")
-	_expect(tr("ITEM_THERMOS_NAME") != "ITEM_THERMOS_NAME" and tr("LOCKBOX_VIEW_HINT") != "LOCKBOX_VIEW_HINT", "and the thermos's name and the texts of the lockbox view too")
+	_expect(tr("ITEM_THERMOS_NAME") != "ITEM_THERMOS_NAME", "and the thermos's name too")
 	GameSettings.set_text_locale("en", false)
-	_expect(tr("PROMPT_INSPECT_LOCKBOX") == "Inspect Lockbox", "[E] Inspect Lockbox")
 
-	# The lockbox, before it is touched: shut, the code 1 4 0 8 on four wheels, the contents inside and out of the scene.
-	_expect(lockbox.code == [1, 4, 0, 8], "the code is 1 4 0 8")
-	var radio_digits: Array[int] = []
-	for letter: String in ("%.2f" % FigClearingProps.RADIO_LOCKED_AT).replace(".", ""):
-		radio_digits.append(int(letter))
-
-	_expect(radio_digits == lockbox.code, "which is the frequency the radio's dial is locked on, 14.08, without the point")
-	_expect(lockbox.digits == [0, 0, 0, 0] and not lockbox.is_unlocked, "the wheels start at 0 0 0 0, the lockbox shut")
-	_expect(lockbox.can_interact(player) and lockbox.get_prompt_text() == "PROMPT_INSPECT_LOCKBOX", "it offers 'Inspect Lockbox'")
-	var wheels: Node = lockbox.get_node("Model/Wheels")
-	_expect(wheels.get_child_count() == 4, "the dial has four wheels")
-	var digits_on_rims: bool = true
-	for wheel: Node in wheels.get_children():
-		digits_on_rims = digits_on_rims and wheel.find_children("Digit*", "Label3D", false, false).size() == 10
-
-	_expect(digits_on_rims, "each with its ten digits round the rim")
+	# The J & S box stands open from the start: no code to find, nothing to work, and in it only Rain at the Station.
+	_expect(lockbox.starts_open and lockbox.is_unlocked, "the J & S box stands open from the start")
+	_expect(not lockbox.can_interact(player), "it offers nothing to do: no dial to work")
+	var lid: Node3D = lockbox.get_node("Model/LidPivot")
+	_expect(lid.rotation_degrees.x < -100.0 and lockbox.get_node("Model/Latch").rotation_degrees.x > 60.0, "its lid is up and its latch out (%.0f degrees)" % lid.rotation_degrees.x)
+	await get_tree().process_frame
+	var area_disabled: bool = true
+	for shape: Node in lockbox.get_node("InteractArea").get_children():
+		area_disabled = area_disabled and (shape as CollisionShape3D).disabled
+	_expect(area_disabled, "and its area does not catch the interaction ray over what is inside")
 	var initials: Array[Node] = lockbox.find_children("Mark*", "Label3D", true, false)
 	_expect(initials.size() == 6, "'J & S' is painted on the front and on the lid, a mark at a time (%d marks)" % initials.size())
-	_expect(lockbox.find_child("Key", true, false) == null and lockbox.find_child("Photo", true, false) == null, "the key and the photograph are inside, out of reach")
-	var lid: Node3D = lockbox.get_node("Model/LidPivot")
-	_expect(is_zero_approx(lid.rotation_degrees.x), "the lid is shut")
+	var wheels: Node = lockbox.get_node("Model/Wheels")
+	_expect(wheels.get_child_count() == 4, "the dial's four wheels are still on it, as dressing")
+	var photo: Collectible = lockbox.find_child("Photo", true, false) as Collectible
+	_expect(photo != null and photo.is_inside_tree() and photo.item_id == "photo_adolescence" and photo.can_interact(player), "the photograph 'Rain at the Station' lies in it, in the scene and in reach")
+	if photo != null:
+		_check_photo_back(photo, "PHOTO_NOTE_ADOLESCENCE")
+		_expect(photo.global_position.y > lockbox.global_position.y + 0.07 and photo.global_basis.z.dot(Vector3.UP) > 0.95, "on the padding, up near the rim, lying flat")
+	_expect(lockbox.find_child("Key", true, false) == null and _world_items(["brass_signal_key"]).is_empty(), "and there is no key, in it or anywhere")
 
 	# An interaction ray, run from where the player would stand, reaches each one: nothing solid hides them.
 	var front: Vector3 = lockbox.global_basis.z.normalized()
@@ -422,12 +601,16 @@ func _check_two_part_puzzle() -> void:
 	var thermos_eye: Vector3 = thermos.global_position + table.global_basis.z.normalized() * 0.9
 	thermos_eye.y = 1.5
 	await _ray_finds(thermos, thermos_eye, thermos.global_position, "the thermos")
-	await _ray_finds(lockbox, eye, lockbox.global_position + Vector3(0.0, 0.05, 0.0), "the lockbox")
+	if photo != null:
+		await _ray_finds(photo, eye, photo.global_position, "the photograph in the open box")
 	var memory_table: Node3D = clearing.get_node("Scenery/CampTable") as Node3D
 	var album_eye: Vector3 = clearing.album.global_position + memory_table.global_basis.z.normalized() * 0.9
 	album_eye.y = 1.4
 	await _ray_finds(clearing.album, album_eye, clearing.album.to_global(Vector3(-0.2, 0.012, 0.1)), "the album on the memory table")
-	await _check_standing_at_the_lockbox(table, lockbox)
+	var recent: Collectible = clearing.get_node("Props/PhotoRecent") as Collectible
+	await _ray_finds(recent, album_eye, recent.global_position, "Bus Stop Departure beside the album")
+	if photo != null:
+		await _check_standing_at_the_lockbox(table, photo)
 
 	# Looking at the thermos opens the inspect view, which offers its note to read straight away.
 	thermos.interact(player)
@@ -438,29 +621,24 @@ func _check_two_part_puzzle() -> void:
 	player.inventory_ui_controller.close()
 	await _wait(0.6)
 
-	await _open_the_lockbox(lockbox, eye)
+	# Trying the open box does nothing: no combination close-up.
+	lockbox.interact(player)
+	_expect(not lockbox.view.is_open() and not player.modal_ui_open, "trying the open box opens no combination close-up")
 
-	_expect(tower.lower_door.is_locked and tower.lower_door.required_key_id == "brass_signal_key", "the tower's door starts locked, and the brass signal key is what opens it")
-	var door_note: Inspectable = tower.lower_door.get_node("Hinge/DoorRoot/DoorNote") as Inspectable
-	_expect(door_note != null, "a note is pinned to the tower's door")
-	_expect(str(door_note.get_visual_node().get_meta("readable_text")) == "READABLE_TOWER_DOOR_NOTE", "its words are READABLE_TOWER_DOOR_NOTE")
-	_expect(tr("READABLE_TOWER_DOOR_NOTE") == "We can't let anyone find this place, Sophia, or we lose our HQ forever. I'm keeping the key with me at the fig tree camp until the rain stops. — Juliana", "the door note says the key is kept at the fig tree camp (%s)" % tr("READABLE_TOWER_DOOR_NOTE").left(30))
-	GameSettings.set_text_locale("pt_BR", false)
-	_expect(tr("READABLE_TOWER_DOOR_NOTE") != "READABLE_TOWER_DOOR_NOTE" and tr("CAPTION_TOWER_DOOR_LOCKED") != "CAPTION_TOWER_DOOR_LOCKED", "the door note and the locked line are translated into Portuguese")
-	GameSettings.set_text_locale("en", false)
-
-	# The door will not open without the key.
+	# The tower's door: not locked, no key asked for, nothing pinned to it about one.
+	var door: DoorController = tower.lower_door
+	_expect(not door.starts_locked and not door.is_locked and door.required_key_id.is_empty(), "the tower's door is not locked, and asks for no key")
+	_expect(door.locked_line.is_empty(), "and it has no line about a missing key")
+	_expect(door.get_node_or_null("Hinge/DoorRoot/DoorNote") == null and tower.find_child("DoorNote", true, false) == null, "no note about the key is pinned to it")
 	DoorController.approach_enabled = false
-	tower.lower_door.animate_player_interaction = false
-	_expect(tower.lower_door.get_prompt_text_for_player(player) == "PROMPT_LOCKED", "without the key the door offers only 'locked'")
-	tower.lower_door.interact(player)
-	_expect(tower.lower_door.is_locked and not tower.lower_door.is_open, "and stays shut when tried")
+	door.animate_player_interaction = false
+	_expect(door.get_prompt_text_for_player(player) == "PROMPT_OPEN", "it offers [E] Open")
 	await get_tree().process_frame
 
 
-## The railway radio on its crate by the western trail entrance: it faces the way the player arrives, its dial is locked on 14.08 MHz (a red needle
-## on the scale, a bar bolted over the slider, masking tape marked HQ above it), `[E] Inspect Radio` shows its front panel close up and offers its
-## words, and the words are the ones the brief gives, in both languages.
+## The railway radio on its crate by the western trail entrance: it faces the way the player arrives, its dial is locked by a bar bolted over the
+## slider with masking tape marked HQ above it, `[E] Inspect Radio` shows its front panel close up and offers its words, and the words are plain
+## scenery now, in both languages: no frequency is a clue, so the needle rests between two printed numbers and none is picked out.
 func _check_the_radio(dressing: FigClearingProps) -> void:
 	var radio: Inspectable = dressing.radio
 	var crate: Node3D = dressing.radio_crate
@@ -485,23 +663,28 @@ func _check_the_radio(dressing: FigClearingProps) -> void:
 	_expect(spot != null and spot.text_key == "READABLE_RADIO" and spot.obvious, "its front panel is a readable spot, offered from the start")
 	_expect(spot != null and spot.get_facing_normal().dot(visual.global_basis.z) > 0.99, "facing front")
 
-	# The dial: a scale printed from 14.00 to 14.20 MHz, the red needle on the 14.08 mark, the slider locked there under a bar, tape above.
+	# The dial: a scale printed from 14.00 to 14.20 MHz, all in one colour, the red needle between two numbers, the slider locked under a bar, tape above.
 	var labels: Array[String] = []
 	var number_x: Array[float] = []
+	var one_colour: bool = true
 	for i: int in 6:
 		var number: Label3D = visual.find_child("Freq%d" % i, true, false) as Label3D
 		labels.append(number.text if number != null else "?")
 		number_x.append(number.position.x if number != null else 0.0)
+		one_colour = one_colour and number != null and number.modulate.g > 0.7 and number.shaded
 
 	_expect(labels == ["14.00", "14.04", "14.08", "14.12", "14.16", "14.20"], "the dial's scale is printed from 14.00 to 14.20 MHz (%s)" % str(labels))
+	_expect(one_colour, "every number in the same cream: none is picked out in red")
 	var needle: MeshInstance3D = visual.get_node_or_null("Needle") as MeshInstance3D
 	_expect(needle != null, "the dial has a needle")
 	var needle_color: Color = (needle.material_override as StandardMaterial3D).albedo_color
 	_expect(needle_color.r > 0.6 and needle_color.g < 0.15 and needle_color.b < 0.15, "a red one")
-	_expect(absf(needle.position.x - number_x[2]) < 0.002 and absf(needle.position.x - FigClearingProps.radio_scale_x(14.08)) < 0.0005, "pointing at 14.08 MHz (the needle is %.1f mm from the 14.08 mark)" % (absf(needle.position.x - number_x[2]) * 1000.0))
+	var nearest: float = INF
+	for x: float in number_x:
+		nearest = minf(nearest, absf(needle.position.x - x))
+	_expect(nearest > 0.01, "resting between two printed numbers, pointing at none (%.0f mm from the nearest)" % (nearest * 1000.0))
 	var number_label: Label3D = visual.find_child("Freq2", true, false) as Label3D
-	_expect(number_label.modulate.r > 0.8 and number_label.modulate.g < 0.5, "and that number is printed red")
-	_expect(needle.position.y + (needle.mesh as BoxMesh).size.y * 0.5 < number_label.position.y, "the needle ends under the number, not over it")
+	_expect(needle.position.y + (needle.mesh as BoxMesh).size.y * 0.5 < number_label.position.y, "the needle ends under the numbers, not over them")
 	var slider: Node3D = visual.get_node_or_null("Slider") as Node3D
 	var lock: Node3D = visual.get_node_or_null("LockBar") as Node3D
 	_expect(slider != null and absf(slider.position.x - needle.position.x) < 0.001, "the needle sits on the slider, under the dial")
@@ -519,11 +702,13 @@ func _check_the_radio(dressing: FigClearingProps) -> void:
 	var tape_mark: Label3D = tape.get_node_or_null("Mark") as Label3D
 	_expect(tape_mark != null and tape_mark.text == "HQ", "marked HQ")
 
-	# The words, in both languages, exactly as the brief gives them.
-	_expect(tr("READABLE_RADIO") == "Industrial Railway Transmitter — Frequency dial stuck at 14.08 MHz.", "the radio's words in English (%s)" % tr("READABLE_RADIO"))
+	# The words, in both languages: an old transmitter, no frequency.
+	_expect(tr("READABLE_RADIO") == "An old railway transmitter marked HQ.", "the radio's words in English (%s)" % tr("READABLE_RADIO"))
+	_expect(not tr("READABLE_RADIO").contains("14") and not tr("ITEM_RADIO_DESCRIPTION").contains("14"), "with no frequency in them")
 	_expect(tr("PROMPT_INSPECT_RADIO") == "Inspect Radio" and tr("ITEM_RADIO_NAME") != "ITEM_RADIO_NAME" and tr("ITEM_RADIO_DESCRIPTION") != "ITEM_RADIO_DESCRIPTION", "[E] Inspect Radio, with a name and a description")
 	GameSettings.set_text_locale("pt_BR", false)
-	_expect(tr("READABLE_RADIO") == "Transmissor Industrial Ferroviário — Seletor de frequência travado em 14,08 MHz.", "and in Portuguese")
+	_expect(tr("READABLE_RADIO") == "Um velho transmissor ferroviário marcado com HQ.", "and in Portuguese")
+	_expect(not tr("READABLE_RADIO").contains("14"), "with no frequency either")
 	_expect(tr("PROMPT_INSPECT_RADIO") == "Examinar o rádio" and tr("ITEM_RADIO_NAME") != "ITEM_RADIO_NAME" and tr("ITEM_RADIO_DESCRIPTION") != "ITEM_RADIO_DESCRIPTION", "with the prompt, the name and the description translated")
 	GameSettings.set_text_locale("en", false)
 
@@ -596,19 +781,19 @@ func _check_the_camp_layout(dressing: FigClearingProps) -> void:
 	var trunk_gap: float = (table_at - tree_at).length()
 	_expect(trunk_gap > 2.3, "the memory table stands clear of the fig tree (%.1f m from its middle)" % trunk_gap)
 	_expect(table.global_basis.z.dot(Vector3(0.0, 0.0, 1.0)) > 0.9, "with its front toward the trail")
-	var on_table: Array[Node3D] = [clearing.recorder, clearing.album, clearing.get_node("Props/PhotoWorkshop") as Node3D, clearing.ficha_spot, scenery.get_node("EnamelCup") as Node3D]
+	var photograph: Node3D = clearing.get_node("Props/PhotoRecent") as Node3D
+	var on_table: Array[Node3D] = [clearing.recorder, clearing.album, photograph, scenery.get_node("EnamelCup") as Node3D]
 	var all_on: bool = true
 	for item: Node3D in on_table:
 		var local: Vector3 = table.to_local(item.global_position)
 		all_on = all_on and absf(local.x) < 0.72 and absf(local.z) < 0.38 and local.y > 0.77 and local.y < 0.86
-	_expect(all_on, "the recorder, the album, the photograph, the cup and the Ficha's place are all on the table")
+	_expect(all_on, "the recorder, the album, Bus Stop Departure and the cup are all on the table")
 	# ... and none of them lies over another (the recorder used to trespass on the album).
 	var laid: Dictionary = {
 		"recorder": _footprint(clearing.recorder, Vector2(0.12, 0.075), false),
 		"album": _footprint(clearing.album, Vector2(0.38, 0.145), false),
-		"photograph": _footprint(clearing.get_node("Props/PhotoWorkshop") as Node3D, Vector2(0.075, 0.05), true),
+		"photograph": _footprint(photograph, Vector2(0.075, 0.05), true),
 		"cup": _footprint(scenery.get_node("EnamelCup") as Node3D, Vector2(0.045, 0.045), false),
-		"Ficha's place": _footprint(clearing.ficha_spot, Vector2(0.05, 0.05), false),
 		"lantern": _footprint(dressing.lantern, Vector2(0.062, 0.062), false),
 	}
 	var tightest: float = INF
@@ -687,6 +872,35 @@ func _check_the_camp_layout(dressing: FigClearingProps) -> void:
 	_expect(dressing.radio_lamp_material != null and dressing.radio_lamp_material.emission_enabled and dressing.radio_lamp_material.emission_energy_multiplier > 0.3, "and its lamp glows red")
 
 
+## A lockbox of the scene's own (`js_lockbox.tscn` as it is, not the camp's open one): shut, its code the scene's, its contents out of the
+## scene, and its dial and close-up working as they always have. It is put in the open by the trail, at a table's height (as a box is used),
+## checked and taken away again.
+func _check_a_shut_lockbox() -> void:
+	var box: JSLockbox = (load("res://scenes/objects/fig_clearing/js_lockbox.tscn") as PackedScene).instantiate() as JSLockbox
+	box.persistent_id = &"test_shut_lockbox"
+	box.position = Vector3(-2.0, FigClearingProps.TABLE_TOP_Y + 0.0005, -1.2)
+	clearing.add_child(box)
+	await get_tree().process_frame
+	_expect(not box.starts_open and not box.is_unlocked, "a lockbox of the scene's own starts shut")
+	_expect(box.code == [1, 4, 0, 8] and box.digits == [0, 0, 0, 0], "with its code on four wheels, at 0 0 0 0")
+	_expect(box.can_interact(player) and box.get_prompt_text() == "PROMPT_INSPECT_LOCKBOX" and tr("PROMPT_INSPECT_LOCKBOX") == "Inspect Lockbox", "it offers 'Inspect Lockbox'")
+	var digits_on_rims: bool = true
+	for wheel: Node in box.get_node("Model/Wheels").get_children():
+		digits_on_rims = digits_on_rims and wheel.find_children("Digit*", "Label3D", false, false).size() == 10
+	_expect(digits_on_rims, "each wheel with its ten digits round the rim")
+	_expect(box.find_child("Key", true, false) == null and box.find_child("Photo", true, false) == null, "what is in it is inside, out of reach")
+	_expect(is_zero_approx(box.get_node("Model/LidPivot").rotation_degrees.x), "the lid is shut")
+	GameSettings.set_text_locale("pt_BR", false)
+	_expect(tr("PROMPT_INSPECT_LOCKBOX") == "Examinar a caixa de segurança" and tr("LOCKBOX_VIEW_HINT") != "LOCKBOX_VIEW_HINT", "the lockbox prompt and the view's hint in Portuguese")
+	GameSettings.set_text_locale("en", false)
+	var eye: Vector3 = box.global_position + box.global_basis.z.normalized() * 0.9
+	eye.y = 1.5
+	await _ray_finds(box, eye, box.global_position + Vector3(0.0, 0.05, 0.0), "the shut lockbox")
+	await _open_the_lockbox(box, eye)
+	box.queue_free()
+	await get_tree().process_frame
+
+
 ## Which digit counts has to be plain. The camera looks down on the dial, so the digit that faces straight out of the box used to be seen low, between two
 ## others. Now the digit that counts is the one that faces the close-up camera, on the line of sight through its wheel's axis (the middle of the wheel as it is
 ## seen); the other digits are dimmed by their distance from it; and the view frames that row.
@@ -694,9 +908,10 @@ func _check_the_digit_that_counts(lockbox: JSLockbox, view: JSLockboxView, view_
 	var seen_right: bool = true
 	var on_the_line: bool = true
 	var dimmed: bool = true
+	## Each wheel as value:facing digit/brightest digit/how squarely it faces, for the message.
+	var wheel_report: Array[String] = []
 	for i: int in 4:
 		var axis: Vector3 = lockbox.get_wheel_position(i)
-		var to_camera: Vector3 = (view_camera.global_position - axis).normalized()
 		var facing_digit: int = -1
 		var facing_dot: float = -2.0
 		var brightest: int = -1
@@ -713,6 +928,7 @@ func _check_the_digit_that_counts(lockbox: JSLockbox, view: JSLockboxView, view_
 				brightest = digit
 
 		seen_right = seen_right and facing_digit == lockbox.digits[i] and facing_dot > cos(deg_to_rad(18.0)) and brightest == lockbox.digits[i]
+		wheel_report.append("%d:%d/%d/%.2f" % [lockbox.digits[i], facing_digit, brightest, facing_dot])
 		var label_at: Vector3 = (lockbox._wheels[i].get_node("Digit%d" % lockbox.digits[i]) as Label3D).global_position
 		var inverse: Transform3D = view_camera.global_transform.affine_inverse()
 		var label_seen: Vector3 = inverse * label_at
@@ -723,7 +939,7 @@ func _check_the_digit_that_counts(lockbox: JSLockbox, view: JSLockboxView, view_
 		var chosen: Label3D = lockbox._wheels[i].get_node("Digit%d" % lockbox.digits[i]) as Label3D
 		dimmed = dimmed and next.modulate.r < chosen.modulate.r * 0.6
 
-	_expect(seen_right, "on every wheel the digit that faces the camera is the value, and it is the brightest one")
+	_expect(seen_right, "on every wheel the digit that faces the camera is the value, and it is the brightest one (%s)" % ", ".join(wheel_report))
 	_expect(on_the_line, "and it is seen in the middle of its wheel, not above or below the axis (within 1.5 mm)")
 	_expect(dimmed, "its neighbours are dimmed, so the wheel reads at a glance")
 	var band: Control = view._band
@@ -808,8 +1024,8 @@ func _solid_overlaps() -> Array[String]:
 
 
 ## A player stands as close as they can to the end of the log table (the closest their capsule gets without overlapping the table's collision,
-## which is right and solid): the lockbox is right in front of them, close, and the interaction ray from their eyes reaches it.
-func _check_standing_at_the_lockbox(table: Node3D, lockbox: JSLockbox) -> void:
+## which is right and solid): the open box is right in front of them, close, and the interaction ray from their eyes reaches the photograph in it.
+func _check_standing_at_the_lockbox(table: Node3D, photo: Collectible) -> void:
 	var home: Vector3 = player.global_position
 	var body_shape: CollisionShape3D = player.get_node("CollisionShape3D") as CollisionShape3D
 	var capsule: CapsuleShape3D = body_shape.shape as CapsuleShape3D
@@ -819,7 +1035,7 @@ func _check_standing_at_the_lockbox(table: Node3D, lockbox: JSLockbox) -> void:
 	var query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
 	query.shape = standing
 	var space: PhysicsDirectSpaceState3D = clearing.get_world_3d().direct_space_state
-	var in_table: Vector3 = table.to_local(lockbox.global_position)
+	var in_table: Vector3 = table.to_local(photo.global_position)
 	var spot: Vector3 = Vector3.ZERO
 	var gap: float = 0.0
 	var found: bool = false
@@ -843,17 +1059,17 @@ func _check_standing_at_the_lockbox(table: Node3D, lockbox: JSLockbox) -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	var camera: Camera3D = player.get_node("Head/Camera3D") as Camera3D
-	var aim: Vector3 = lockbox.global_position + Vector3(0.0, 0.05, 0.0)
+	var aim: Vector3 = photo.global_position
 	var reach: float = camera.global_position.distance_to(aim)
-	_expect(reach < 0.9, "standing there, the player's eyes are close to the lockbox (%.2f m from the dial; the interaction ray reaches %.1f m)" % [reach, player.interaction_controller.interaction_distance])
-	await _ray_finds(lockbox, camera.global_position, aim, "the lockbox, from the player's eyes at the end of the table")
+	_expect(reach < 0.9, "standing there, the player's eyes are close to the photograph in the box (%.2f m; the interaction ray reaches %.1f m)" % [reach, player.interaction_controller.interaction_distance])
+	await _ray_finds(photo, camera.global_position, aim, "the photograph in the box, from the player's eyes at the end of the table")
 	player.velocity = Vector3.ZERO
 	player.global_position = home
 	await get_tree().physics_frame
 
 
-## The lockbox's dial: a wrong code does nothing; 1 4 0 8 holds the wheels, lets the latch go (CLACK-CLICK) and pops the lid open on the key and
-## the photograph "Rain at the Station", which are then ordinary pickups.
+## The lockbox's dial: a wrong code does nothing; the right one holds the wheels, lets the latch go (CLACK-CLICK) and pops the lid open on the key and
+## the photograph, which are then ordinary pickups.
 func _open_the_lockbox(lockbox: JSLockbox, eye: Vector3) -> void:
 	var view: JSLockboxView = lockbox.view
 	lockbox.interact(player)
@@ -924,7 +1140,7 @@ func _open_the_lockbox(lockbox: JSLockbox, eye: Vector3) -> void:
 	var opened: Array[bool] = [false]
 	lockbox.unlocked.connect(func() -> void: opened[0] = true)
 	await _until(func() -> bool: return opened[0] and lockbox.find_child("Key", true, false) != null, 6.0)
-	_expect(bool(SaveManager.get_state_value(&"puzzles", &"js_lockbox_open", false)), "the opening is remembered")
+	_expect(bool(SaveManager.get_state_value(&"puzzles", lockbox._key("open"), false)), "the opening is remembered")
 	var latch_stream: AudioStream = lockbox._sound.stream
 	_expect(latch_stream != null and latch_stream.get_length() > 0.5, "the latch let go with a CLACK and a CLICK (%.2f s of sound)" % (latch_stream.get_length() if latch_stream != null else 0.0))
 	await _until(func() -> bool: return lockbox.get_node("Model/LidPivot").rotation_degrees.x < -100.0, 6.0)
@@ -945,9 +1161,8 @@ func _open_the_lockbox(lockbox: JSLockbox, eye: Vector3) -> void:
 
 	var key: Collectible = lockbox.find_child("Key", true, false) as Collectible
 	var photo: Collectible = lockbox.find_child("Photo", true, false) as Collectible
-	_expect(key != null and key.item_id == "brass_signal_key" and key.can_interact(player), "the brass signal key lies in the open box")
-	_expect(photo != null and photo.item_id == "photo_adolescence" and photo.can_interact(player), "and the photograph 'Rain at the Station' with it")
-	_check_photo_back(photo, "PHOTO_NOTE_ADOLESCENCE")
+	_expect(key != null and key.item_id == "brass_signal_key" and key.can_interact(player), "the scene's key lies in the open box")
+	_expect(photo != null and photo.can_interact(player), "and its photograph with it")
 	_expect(key.global_position.y > lockbox.global_position.y + 0.07 and photo.global_position.y > lockbox.global_position.y + 0.07, "both lie on the padding, up near the rim, in sight")
 	_expect(key.global_basis.z.dot(Vector3.UP) > 0.95 and photo.global_basis.z.dot(Vector3.UP) > 0.95, "lying flat")
 	await _ray_finds(key, eye, key.global_position, "the key in the open lockbox")
@@ -961,6 +1176,7 @@ func _ray_finds(item: Node, eye: Vector3, aim: Vector3, what: String) -> void:
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(eye, aim + (aim - eye).normalized() * 0.1)
 	query.collide_with_areas = true
 	query.collide_with_bodies = true
+	query.exclude = [player.get_rid()]
 	var hit: Dictionary = space.intersect_ray(query)
 	var collider: Node = hit.get("collider") as Node
 	var found: Node = collider
@@ -973,8 +1189,8 @@ func _ray_finds(item: Node, eye: Vector3, aim: Vector3, what: String) -> void:
 	)
 
 
-## The key and Rain at the Station out of the lockbox, the key into the lock; the Scraped Knee and the Broken Lever taken from where they lie.
-func _take_from_tower() -> void:
+## Rain at the Station out of the camp's open box.
+func _take_from_the_box() -> void:
 	var lockbox: JSLockbox = (clearing.get_node("CampDressing") as FigClearingProps).lockbox
 	var rain: Collectible = lockbox.find_child("Photo", true, false) as Collectible
 	rain.interact(player)
@@ -983,39 +1199,47 @@ func _take_from_tower() -> void:
 	player.inspect_controller.close(false)
 	player.inventory_ui_controller.close()
 	await _wait(0.6)
-	var key: Collectible = lockbox.find_child("Key", true, false) as Collectible
-	key.interact(player)
-	_expect(player.has_inventory_item("brass_signal_key"), "the key is in the inventory")
-	_expect(bool(SaveManager.get_state_value(&"collectibles", &"brass_signal_key", false)), "taking it is remembered")
+
+
+## The tower's door opens with no key; Scraped Knee is taken from the HQ desk. It is the only photograph in the tower.
+func _take_from_tower() -> void:
+	var door: DoorController = tower.lower_door
+	door.interact(player)
+	_expect(not door.is_locked and door.is_open, "the tower's door opens, with no key")
+
+	var photos: Dictionary = tower.props.photos
+	var ids: Array = photos.keys()
+	_expect(ids == ["photo_childhood"], "the Scraped Knee is the tower's only photograph (%s)" % str(ids))
+	var in_tower: int = 0
+	for node: Node in tower.find_children("*", "Collectible", true, false):
+		in_tower += 1 if str((node as Collectible).item_id).begins_with("photo_") else 0
+	_expect(in_tower == 1, "and no other photograph lies anywhere in the tower (%d)" % in_tower)
+	var photo: Collectible = photos["photo_childhood"] as Collectible
+	_check_photo_back(photo, "PHOTO_NOTE_CHILDHOOD")
+	_expect(photo.can_interact(player), "it can be picked up where it lies")
+	photo.interact(player)
 	await _wait(0.5)
 	player.inspect_controller.close(false)
 	player.inventory_ui_controller.close()
 	await _wait(0.6)
 
-	var door: DoorController = tower.lower_door
-	_expect(door.get_prompt_text_for_player(player) == "PROMPT_UNLOCK", "with the key the door offers to unlock")
-	door.interact(player)
-	_expect(not door.is_locked and door.is_open, "the key opens the tower's door")
-	_expect(not player.has_inventory_item("brass_signal_key"), "and stays in the lock")
 
-	# The tower's three photographs lie about the relay room (none in a box): the Scraped Knee against the desk
-	# lamp, the Broken Lever on the daybed, the Foggy Platform in the tin on the back shelf.
-	var photos: Dictionary = tower.props.photos
-	var ids: Array = photos.keys()
-	ids.sort()
-	_expect(ids == ["photo_broken_lever", "photo_childhood", "photo_foggy_platform"], "the Scraped Knee, the Broken Lever and the Foggy Platform lie in the tower (%s)" % str(ids))
-	_check_photo_back(photos["photo_childhood"], "PHOTO_NOTE_CHILDHOOD")
-	_check_photo_back(photos["photo_broken_lever"], "PHOTO_NOTE_BROKEN_LEVER")
-	_check_photo_back(photos["photo_foggy_platform"], "PHOTO_NOTE_FOGGY_PLATFORM")
+## The Collectibles anywhere in the game with one of these item ids (not on their way out).
+func _world_items(ids: Array) -> Array[Collectible]:
+	var found: Array[Collectible] = []
+	for node: Node in get_tree().root.find_children("*", "Collectible", true, false):
+		var item: Collectible = node as Collectible
+		if ids.has(item.item_id) and not item.is_queued_for_deletion():
+			found.append(item)
+	return found
 
-	for item_id: String in ["photo_childhood", "photo_broken_lever"]:
-		var photo: Collectible = photos[item_id] as Collectible
-		_expect(photo.can_interact(player), item_id + " can be picked up where it lies")
-		photo.interact(player)
-		await _wait(0.5)
-		player.inspect_controller.close(false)
-		player.inventory_ui_controller.close()
-		await _wait(0.6)
+
+## Puts an item in the player's hands as a pickup would (an old save's inventory).
+func _give_item(item_id: String, scene_path: String) -> void:
+	var root: Node = (load(scene_path) as PackedScene).instantiate()
+	var visual: Node3D = (root.get_node("Visual") as Node3D).duplicate() as Node3D
+	player.call("add_item_to_inventory", item_id, str(root.get("item_name")), str(root.get("item_description")), visual, scene_path)
+	root.free()
 
 
 func _from_hand(item_id: String) -> Dictionary:
