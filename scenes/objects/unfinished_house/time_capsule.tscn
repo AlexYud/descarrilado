@@ -7,12 +7,21 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/bus_ticket_unclaimed.tscn" id="5_ticket_unclaimed"]
 [ext_resource type="PackedScene" path="res://scenes/objects/overlook/lucas_ficha.tscn" id="6_lucas_ficha"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_lock"]
+size = Vector3(0.46, 0.17, 0.3)
+
 [node name="TimeCapsule" type="Node3D"]
 script = ExtResource("1_lock")
 
 [node name="Model" type="Node3D" parent="."]
 script = ExtResource("2_prop")
 kind = &"time_capsule"
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.085, 0)
+shape = SubResource("BoxShape3D_lock")
 
 [node name="Contents" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.098, 0)
@@ -30,4 +39,3 @@ rotation_degrees = Vector3(-90, -12, 0)
 
 [node name="LucasFicha" parent="Contents" instance=ExtResource("6_lucas_ficha")]
 transform = Transform3D(1, 0, 0, 0, 0.342, -0.94, 0, 0.94, 0.342, 0, 0.022, 0.07)
-

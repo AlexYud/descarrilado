@@ -683,7 +683,8 @@ func _build_doors() -> void:
 	lower_door = front as DoorController
 	# A save from when the door wanted the brass key may hold it locked (the door restores itself as it enters the tree, just above): this
 	# door is never locked now, so it is let go at once, open or shut as it was saved, and no key is asked for or taken.
-	if lower_door != null and lower_door.is_locked:
+	# (Not in the editor: there the door's script is a placeholder, which has the exported properties but no `is_locked`.)
+	if lower_door != null and not Engine.is_editor_hint() and lower_door.is_locked:
 		lower_door.unlock()
 
 	var side_x: float = CABIN_SIZE * 0.5 - CABIN_WALL * 0.5

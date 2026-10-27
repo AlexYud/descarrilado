@@ -525,75 +525,60 @@ msgstr "Cápsula do tempo"
 msgid "LOCK_VIEW_HINT"
 msgstr "Clique nas setas ou role sobre uma roda para girá-la. Botão direito ou Esc para voltar."
 
-msgid "CAPTION_JULIANA_RECIPE"
-msgstr "Lembro dela me contando sobre aquela sopa meses atrás... ela não parava de rir."
-
 msgid "ITEM_NOTE_CAPSULE_NAME"
-msgstr "Bilhete na Cápsula do Tempo"
+msgstr "Bilhete na cápsula"
 
 msgid "ITEM_NOTE_CAPSULE_DESCRIPTION"
-msgstr "Uma carta escrita às pressas, presa sob o cadeado de latão."
+msgstr "Um bilhete dobrado sobre a tampa da caixa."
 
 msgid "NOTE_CAPSULE_TEXT"
-msgstr "Para abrir daqui a 5 anos.\n\nSophia, meu amor. Dentro desta caixa está tudo o que estamos construindo. Ela guarda o nosso objetivo, a nossa casa e o futuro que prometemos um ao outro em segredo.\n\nSe um dia você esquecer o código para abri-la, não precisa de chave. Só precisa refazer os passos de como tudo começou, na ordem exata em que a nossa história aconteceu.\n\n— Lucas"
+msgstr "Para abrir daqui a cinco anos.\n\nSophia,\n\nGuardei o anúncio com as outras coisas.\n\nLiguei outra vez. Ainda não venderam. Vou pedir as medidas do quarto.\n\nLucas"
 
 msgid "ITEM_KITCHEN_RECIPE_NAME"
-msgstr "Embrulho da Feira e Receita"
+msgstr "Receita de sopa de batata"
 
 msgid "ITEM_KITCHEN_RECIPE_DESCRIPTION"
-msgstr "Um embrulho de papel da feira, manchado de gordura, com anotações à mão no verso."
+msgstr "Um papel de embrulho manchado de gordura. Há uma receita de um lado e uma lembrança escrita no verso."
 
 msgid "RECIPE_TEXT"
-msgstr "A primeira vez que tentamos cozinhar uma refeição de verdade juntos. Você insistiu em fazer a sopa de batata da sua mãe para me impressionar, mas derramou água e óleo por todo o assoalho.\n\nAntes que eu pudesse pegar um pano, você escorregou feio e bateu a cabeça na bancada. Ficou sentado no chão, sangrando na têmpora, olhando por cima de mim para a pia de concreto, bem onde alguém ficaria para lavar a louça.\n\nVocê jurou que a Juliana estava ali no escuro, segurando um bilhete e lendo em silêncio. Eu me virei, mas não havia ninguém. Falei que você só estava delirando por causa da pancada na cabeça. Pff... Você só a viu porque odiava o quanto nós éramos próximas.\n\nS."
+msgstr "SOPA DE BATATA\n\nQuatro batatas, uma cebola pequena, dois dentes de alho e uma colher de manteiga.\n\nCobrir com água e cozinhar até as batatas desmancharem. Amassar algumas dentro da panela para engrossar.\n\nO sal só no fim. Sua mãe tinha razão."
 
 msgid "ITEM_PANTRY_NOTE_NAME"
-msgstr "Bilhete Dobrado"
+msgstr "Bilhete dobrado"
 
 msgid "ITEM_PANTRY_NOTE_DESCRIPTION"
-msgstr "Um bilhete deixado na prateleira da despensa."
+msgstr "Um papel dobrado duas vezes. A escrita ocupa apenas um dos lados."
 
 msgid "JAR_NOTE_TEXT"
-msgstr "Presos dentro desta despensa minúscula e escura enquanto sua família gritava uns com os outros na sala de jantar.\n\nO ar estava empoeirado e cheirava a madeira velha. Suas mãos tremiam nas minhas enquanto prendíamos a respiração, com medo de que alguém abrisse a porta e nos flagrasse.\n\nQuando você finalmente se inclinou e me beijou no escuro total, os gritos lá fora sumiram em nada. Lembro de pensar, bem ali, que eu nunca quis voltar para aquele corredor.\n\nS."
+msgstr "Eu tinha ido buscar um copo. Você entrou atrás de mim e deixou a porta encostada.\n\nDo outro lado, sua família começou de novo.\n\nVocê ficou empurrando as latas para o fundo da prateleira, uma por uma. Eu tirei a última da sua mão. Você segurou a minha.\n\nNão lembro quem chegou mais perto.\n\nLembro de você esbarrar na prateleira quando nos beijamos. Uma lata caiu e ficamos quietos, esperando alguém vir perguntar o que tinha acontecido.\n\nNinguém veio.\n\nVocê abriu um pouco a porta para olhar o corredor. Eu puxei sua camisa antes que saísse.\n\nO copo ficou na prateleira.\n\nSophia"
 
 msgid "ITEM_MASTER_KEY_NAME"
 msgstr "Chave Enferrujada"
 
 msgid "ITEM_MASTER_KEY_DESCRIPTION"
-msgstr "Uma chave enferrujada, muito usada."
+msgstr "Uma chave enferrujada da porta do quarto."
 
 msgid "ITEM_LUCAS_DIARY_NAME"
-msgstr "Caderno do Lucas"
+msgstr "Caderno de Lucas"
 
 msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
-msgstr "Uma anotação em um diário encadernado em couro."
+msgstr "Um caderno com marcas de uso. Uma das páginas está dobrada no canto."
 
 msgid "DIARY_TEXT"
-msgstr "Os pássaros começavam a cantar nas árvores lá fora, e o quarto estava frio, úmido e cinzento. Não tínhamos dormido um minuto sequer.\n\nSophia estava deitada ao meu lado no assoalho, olhando para as vigas inacabadas do telhado. De repente ela agarrou meu braço, tremendo, e sussurrou que a mancha vermelha na madeira do teto estava pingando no peito dela. Eu olhei para cima. Não havia água, nem sangue, nem mancha, só pinho seco.\n\nMas quando toquei o rosto dela, a pele estava queimando de quente, e os olhos dela refletiam uma luz carmesim que não existia no quarto. Ela se arrastou para trás em pânico total, as botas arranhando o assoalho, e disparou para o corredor em direção à porta da frente. Ela não parava de gritar que o quarto estava sangrando.\n\nMas quando o sol finalmente atravessou as árvores às 06:00 da manhã, ela ainda estava aqui na cidade. Foi naquele exato momento que eu soube que ela nunca iria embora. Ela é minha para sempre."
+msgstr "Ela perguntou se eu estava confortável. Eu estava com metade do corpo fora da cama e um braço dormente. Disse que sim.\n\nSophia riu e me puxou para o meio.\n\nQuando começou a clarear, ela se sentou. Passou a mão no ombro e olhou para cima. Depois passou de novo.\n\nDisse que tinha alguma coisa pingando.\n\nOlhei para o teto. Não consegui enxergar nada molhado. Encostei a mão no lençol, perto dela. Também estava seco.\n\nEla pediu que eu parasse de olhar para ela e olhasse para cima.\n\nFoi quando disse que o quarto estava sangrando.\n\nPegou a roupa do chão. Eu ainda estava tentando entender quando ela saiu pelo corredor.\n\nEncontrei Sophia perto da porta da frente, descalça. Fui buscar seus sapatos. Quando voltei, ela tinha sentado na soleira.\n\nFicamos ali até o céu clarear de vez.\n\nDepois fui comprar pão. Trouxe para dois, mas ela já tinha ido para casa quando voltei.\n\nLucas"
 
 
 msgid "ITEM_HOUSE_AD_NAME"
-msgstr "Anúncio de Casa"
+msgstr "Anúncio de casa"
 
 msgid "ITEM_HOUSE_AD_DESCRIPTION"
-msgstr "O anúncio venceu há dois anos. Lucas circulou todos os cômodos. Sophia escreveu apenas embaixo da fotografia."
+msgstr "Um anúncio dobrado muitas vezes, com anotações em duas caligrafias."
 
 msgid "AD_HEADLINE"
-msgstr "CASA À VENDA\nCentro da vila"
+msgstr "CASA À VENDA"
 
 msgid "AD_SOPHIA_NOTE"
-msgstr "As janelas azuis são bonitas."
-
-msgid "AD_ROOM_LIVING"
-msgstr "Sala"
-
-msgid "AD_ROOM_KITCHEN"
-msgstr "Cozinha"
-
-msgid "AD_ROOM_BEDROOM"
-msgstr "Quarto"
-
-msgid "AD_ROOM_PANTRY"
-msgstr "Despensa"
+msgstr "As janelas azuis são bonitas.\n\nSophia"
 
 msgid "AD_OURS"
 msgstr "NOSSA?"
@@ -602,16 +587,16 @@ msgid "ITEM_BUS_TICKET_SOPHIA_NAME"
 msgstr "Passagem de Ônibus da Sophia"
 
 msgid "ITEM_BUS_TICKET_SOPHIA_DESCRIPTION"
-msgstr "Uma passagem só de ida para São Paulo. Sophia escreveu o nome nela."
+msgstr "Uma passagem só de ida para São Paulo, em nome de Sophia."
 
 msgid "ITEM_BUS_TICKET_UNCLAIMED_NAME"
 msgstr "Passagem de Ônibus Sem Dono"
 
 msgid "ITEM_BUS_TICKET_UNCLAIMED_DESCRIPTION"
-msgstr "Duas passagens para a mesma partida. Sophia pegou uma e deixou a outra para alguém escolher."
+msgstr "Mesmo destino e horário da outra passagem. O campo do nome foi preenchido à mão."
 
 msgid "BUS_TICKET_PRINT"
-msgstr "PASSAGEM DE ÔNIBUS\nVila ferroviária / São Paulo\nSó ida"
+msgstr "PASSAGEM\n\nDestino: São Paulo\nSó ida"
 
 msgid "BUS_TICKET_PASSENGER"
 msgstr "Passageiro:"
@@ -623,7 +608,7 @@ msgid "BUS_TICKET_IF_YOU_WANT"
 msgstr "Se quiser."
 
 msgid "DIARY_HEADING"
-msgstr "14 de maio, 6h00."
+msgstr "6h da manhã."
 
 # Waiting shed and signal box
 msgid "LEVER_UP"
@@ -926,16 +911,16 @@ msgstr "Arrastar: inclinar    Roda: zoom    {inspect_flip}: virar o papel"
 
 # Readable documents: the writing shown as an overlay when the art is in another language
 msgid "READABLE_RECIPE"
-msgstr "A primeira vez que tentamos cozinhar uma refeição de verdade juntos. Você insistiu em fazer a sopa de batata da sua mãe para me impressionar, mas derramou água e óleo por todo o assoalho.\n\nAntes que eu pudesse pegar um pano, você escorregou feio e bateu a cabeça na bancada. Ficou sentado no chão, sangrando na têmpora, olhando por cima de mim para a pia de concreto, bem onde alguém ficaria para lavar a louça.\n\nVocê jurou que a Juliana estava ali no escuro, segurando um bilhete e lendo em silêncio. Eu me virei, mas não havia ninguém. Falei que você só estava delirando por causa da pancada na cabeça. Pff... Você só a viu porque odiava o quanto nós éramos próximas.\n\nS."
+msgstr "[b]SOPA DE BATATA[/b]\n\nQuatro batatas, uma cebola pequena, dois dentes de alho e uma colher de manteiga.\n\nCobrir com água e cozinhar até as batatas desmancharem. Amassar algumas dentro da panela para engrossar.\n\nO sal só no fim. Sua mãe tinha razão.\n\n* * *\n\nVocê não queria que eu ajudasse. Disse que eu ia descobrir a surpresa.\n\nAcabei descascando as batatas enquanto você cuidava do fogão. Toda vez que provava, fazia aquela cara. Eu perguntava o que estava faltando e você dizia que não sabia. Só que não estava igual.\n\nEu repeti o prato. Foi quando você finalmente parou de pedir desculpa pela sopa.\n\nDepois derramou água no chão levando a panela para a pia. Escorregou antes que eu alcançasse o pano.\n\nQuando me abaixei para olhar o corte na sua testa, você estava olhando por cima do meu ombro.\n\nPerguntou por que eu tinha chamado a Juliana.\n\nDisse que ela estava diante da pia, com um papel aberto nas mãos. Que não levantava os olhos, mesmo quando você falava com ela.\n\nEu me virei. Não havia ninguém.\n\nFui buscar outro pano na despensa. Quando voltei, você tinha se levantado. Não quis mais sentar de costas para a pia.\n\nNo dia seguinte, você só me perguntou se eu tinha gostado mesmo da sopa.\n\nSophia"
 
 msgid "READABLE_PANTRY_NOTE"
 msgstr "Presos dentro desta despensa minúscula e escura enquanto sua família gritava uns com os outros na sala de jantar.\n\nO ar estava empoeirado e cheirava a madeira velha. Suas mãos tremiam nas minhas enquanto prendíamos a respiração, com medo de que alguém abrisse a porta e nos flagrasse.\n\nQuando você finalmente se inclinou e me beijou no escuro total, os gritos lá fora sumiram em nada. Lembro de pensar, bem ali, que eu nunca quis voltar para aquele corredor.\n\nS."
 
 msgid "READABLE_DIARY"
-msgstr "Os pássaros começavam a cantar nas árvores lá fora, e o quarto estava frio, úmido e cinzento. Não tínhamos dormido um minuto sequer.\n\nSophia estava deitada ao meu lado no assoalho, olhando para as vigas inacabadas do telhado. De repente ela agarrou meu braço, tremendo, e sussurrou que a mancha vermelha na madeira do teto estava pingando no peito dela. Eu olhei para cima. Não havia água, nem sangue, nem mancha, só pinho seco.\n\nMas quando toquei o rosto dela, a pele estava queimando de quente, e os olhos dela refletiam uma luz carmesim que não existia no quarto. Ela se arrastou para trás em pânico total, as botas arranhando o assoalho, e disparou para o corredor em direção à porta da frente. Ela não parava de gritar que o quarto estava sangrando.\n\nMas quando o sol finalmente atravessou as árvores às 06:00 da manhã, ela ainda estava aqui na cidade. Foi naquele exato momento que eu soube que ela nunca iria embora. Ela é minha para sempre."
+msgstr "[b]6h da manhã.[/b]\n\nEla perguntou se eu estava confortável. Eu estava com metade do corpo fora da cama e um braço dormente. Disse que sim.\n\nSophia riu e me puxou para o meio.\n\nQuando começou a clarear, ela se sentou. Passou a mão no ombro e olhou para cima. Depois passou de novo.\n\nDisse que tinha alguma coisa pingando.\n\nOlhei para o teto. Não consegui enxergar nada molhado. Encostei a mão no lençol, perto dela. Também estava seco.\n\nEla pediu que eu parasse de olhar para ela e olhasse para cima.\n\nFoi quando disse que o quarto estava sangrando.\n\nPegou a roupa do chão. Eu ainda estava tentando entender quando ela saiu pelo corredor.\n\nEncontrei Sophia perto da porta da frente, descalça. Fui buscar seus sapatos. Quando voltei, ela tinha sentado na soleira.\n\nFicamos ali até o céu clarear de vez.\n\nDepois fui comprar pão. Trouxe para dois, mas ela já tinha ido para casa quando voltei.\n\nLucas"
 
 msgid "READABLE_NOTE_CAPSULE"
-msgstr "Para abrir daqui a 5 anos.\n\nSophia, meu amor. Dentro desta caixa está tudo o que estamos construindo. Ela guarda o nosso objetivo, a nossa casa e o futuro que prometemos um ao outro em segredo.\n\nSe um dia você esquecer o código para abri-la, não precisa de chave. Só precisa refazer os passos de como tudo começou, na ordem exata em que a nossa história aconteceu.\n\n— Lucas"
+msgstr "Para abrir daqui a cinco anos.\n\nSophia,\n\nGuardei o anúncio com as outras coisas.\n\nLiguei outra vez. Ainda não venderam. Vou pedir as medidas do quarto.\n\nLucas"
 
 msgid "READABLE_FICHA_NOTE"
 msgstr "Eu sabia que você ia achar, Juli. Você é a única que realmente presta atenção.\n\nLeve a ficha até o topo do morro — vamos fazer essa ligação."
@@ -944,13 +929,13 @@ msgid "READABLE_JOURNAL"
 msgstr "O Lucas acha que consegue passar por tudo à força com uma chave inglesa.\n\nEle não entende que essa velha caixa de junção segue uma sequência. Lembra do nosso código secreto para pegar o trem da noite, Juli?\n\n[b]Primeiro, você ilumina os trilhos.[/b]\n[b]Depois, você fura o bilhete.[/b]\n[b]Por fim, você apita o sinal.[/b]"
 
 msgid "READABLE_HOUSE_AD"
-msgstr "[b]CASA À VENDA[/b]\nCentro da vila\n\nSala · Cozinha · Quarto · Quarto · Despensa\n\n[i]As janelas azuis são bonitas.[/i]\n\n[b]NOSSA?[/b]"
+msgstr "[b]CASA À VENDA[/b]\n\nSala, cozinha, dois quartos e despensa.\n\nAcabamento por concluir.\n\n[b][i]NOSSA?\nLucas[/i][/b]\n\n[i]As janelas azuis são bonitas.\nSophia[/i]"
 
 msgid "READABLE_BUS_TICKET_SOPHIA"
-msgstr "[b]PASSAGEM DE ÔNIBUS[/b]\nVila ferroviária / São Paulo\nSó ida\n\nPassageiro: [i]Sophia[/i]"
+msgstr "[b]PASSAGEM[/b]\n\nDestino: São Paulo\nSó ida\n\nPassageira: [i]Sophia[/i]"
 
 msgid "READABLE_BUS_TICKET_UNCLAIMED"
-msgstr "[b]PASSAGEM DE ÔNIBUS[/b]\nVila ferroviária / São Paulo\nSó ida\n\nPassageiro: [i]Se quiser.[/i]"
+msgstr "[b]PASSAGEM[/b]\n\nDestino: São Paulo\nSó ida\n\nPassageiro: [i]Se quiser.[/i]"
 
 # Readable spots on inspected items
 msgid "INSPECT_PROMPT_READ"
@@ -1239,3 +1224,86 @@ msgstr "Um velho transmissor ferroviário marcado com HQ."
 msgid "LOCKBOX_VIEW_HINT"
 msgstr "Clique nas setas ou role o mouse sobre uma roda para girá-la."
 
+msgid "AD_BODY"
+msgstr "Sala, cozinha, dois quartos e despensa.\n\nAcabamento por concluir."
+
+msgid "AD_LUCAS_SIGNATURE"
+msgstr "Lucas"
+
+msgid "BUS_TICKET_PASSENGER_SOPHIA"
+msgstr "Passageira:"
+
+msgid "CAPTION_HOUSE_BED_01"
+msgstr "Você escreveu isso quando chegou?"
+
+msgid "CAPTION_HOUSE_BED_02"
+msgstr "Acho que foi no primeiro dia."
+
+msgid "CAPTION_HOUSE_BED_03"
+msgstr "Sua mãe já tinha morrido?"
+
+msgid "CAPTION_HOUSE_BED_04"
+msgstr "Já."
+
+msgid "CAPTION_HOUSE_BED_05"
+msgstr "“Não precisa se preocupar comigo.”"
+
+msgid "CAPTION_HOUSE_BED_06"
+msgstr "Eu sei o que está escrito."
+
+msgid "CAPTION_HOUSE_BED_07"
+msgstr "Eu só não sabia que você escrevia pra ela."
+
+msgid "CAPTION_HOUSE_BED_08"
+msgstr "Não escrevia. Foi esse."
+
+msgid "CAPTION_HOUSE_BED_09"
+msgstr "E ficou aqui."
+
+msgid "CAPTION_HOUSE_BED_10"
+msgstr "Eu guardo conta de luz também."
+
+msgid "CAPTION_HOUSE_BED_11"
+msgstr "Tá bom."
+
+msgid "CAPTION_HOUSE_BED_12"
+msgstr "Você ficou chateada?"
+
+msgid "CAPTION_HOUSE_BED_13"
+msgstr "Não."
+
+msgid "CAPTION_HOUSE_BED_14"
+msgstr "Então vem deitar."
+
+msgid "CAPTION_HOUSE_BED_15"
+msgstr "Eu já vou."
+
+msgid "CAPTION_HOUSE_BED_16"
+msgstr "Quer que eu guarde?"
+
+msgid "CAPTION_HOUSE_BED_17"
+msgstr "Não. Deixa onde estava."
+
+msgid "CAPTION_HOUSE_SHH"
+msgstr "Shhh."
+
+msgid "CAPTION_SPEAKER_LUCAS"
+msgstr "Lucas"
+
+msgid "ITEM_CAPSULE_KEY_DESCRIPTION"
+msgstr "Uma pequena chave da cápsula na sala."
+
+msgid "ITEM_CAPSULE_KEY_NAME"
+msgstr "Chave da cápsula"
+
+msgid "ITEM_POSTCARD_NAME"
+msgstr "Cartão-postal"
+
+msgid "ITEM_POSTCARD_DESCRIPTION"
+msgstr "Um cartão-postal da Fenda, escrito por Lucas. Sem endereço ou selo."
+
+msgid "POSTCARD_TEXT"
+msgstr "Mãe,\n\nCheguei bem. Aqui é tranquilo.\nNão precisa se preocupar comigo.\n\nLucas"
+
+msgid "READABLE_POSTCARD"
+msgstr "Mãe,\n\nCheguei bem. Aqui é tranquilo.\nNão precisa se preocupar comigo.\n\nLucas"

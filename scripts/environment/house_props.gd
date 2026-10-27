@@ -39,9 +39,9 @@ static func build(kind: StringName, root: Node3D) -> void:
 		&"house_advertisement":
 			_build_house_advertisement(root)
 		&"bus_ticket_sophia":
-			_build_bus_ticket(root, "BUS_TICKET_NAME_SOPHIA")
+			_build_bus_ticket(root, "BUS_TICKET_PASSENGER_SOPHIA", "BUS_TICKET_NAME_SOPHIA")
 		&"bus_ticket_unclaimed":
-			_build_bus_ticket(root, "BUS_TICKET_IF_YOU_WANT")
+			_build_bus_ticket(root, "BUS_TICKET_PASSENGER", "BUS_TICKET_IF_YOU_WANT")
 		&"time_capsule":
 			_build_time_capsule(root)
 		&"crate":
@@ -52,10 +52,24 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_chalk_outline(root)
 		&"nightstand":
 			_build_nightstand(root)
-		&"alarm_clock":
-			_build_alarm_clock(root)
+		&"postcard":
+			_build_postcard(root)
 		&"pantry_shelves":
 			_build_pantry_shelves(root)
+		&"kitchen_counter":
+			_build_kitchen_counter(root)
+		&"pantry_lamp":
+			_build_pantry_lamp(root)
+		&"bed":
+			_build_bed(root)
+		&"memory_bedding":
+			_build_memory_bedding(root)
+		&"memory_chair":
+			_build_memory_chair(root)
+		&"memory_cups":
+			_build_memory_cups(root)
+		&"bedside_lamp":
+			_build_bedside_lamp(root)
 		&"standing_silhouette":
 			_build_standing_silhouette(root)
 		_:
@@ -325,7 +339,7 @@ static func _build_pantry_note(root: Node3D) -> void:
 	)
 	add_paragraphs(
 		note, "Text", "JAR_NOTE_TEXT",
-		Vector3(-0.062, 0.078, 0.0009), 22, 0.00025, INK_BLUE, 496.0
+		Vector3(-0.062, 0.078, 0.0009), 17, 0.00025, INK_BLUE, 496.0, 0.0035
 	)
 
 
@@ -405,13 +419,11 @@ static func _build_lucas_diary(root: Node3D) -> void:
 	)
 	add_paragraphs(
 		root, "Text", "DIARY_TEXT",
-		Vector3(0.013, 0.064, 0.0042), 17, 0.00025, INK_DARK, 400.0
+		Vector3(0.013, 0.066, 0.0042), 12, 0.00025, INK_DARK, 420.0, 0.0022
 	)
 
 
 static func _build_house_advertisement(root: Node3D) -> void:
-	var red: StandardMaterial3D = material(INK_RED, 0.6)
-
 	_add_paper(root, "Page", Vector2(0.2, 0.28), Vector3.ZERO, NEWSPRINT)
 	add_text(
 		root, "Headline", "AD_HEADLINE", Vector3(-0.088, 0.128, 0.0009),
@@ -441,46 +453,41 @@ static func _build_house_advertisement(root: Node3D) -> void:
 		material(Color(0.3, 0.2, 0.12), 0.9)
 	)
 
-	add_text(
-		root, "SophiaNote", "AD_SOPHIA_NOTE", Vector3(-0.072, -0.0, 0.0009),
-		26, 0.00024, INK_BLUE, 600.0
+	# The printed advertisement under the photograph.
+	add_paragraphs(
+		root, "Body", "AD_BODY", Vector3(-0.088, -0.006, 0.0009),
+		22, 0.00026, INK_DARK, 400.0, 0.004
 	)
 
-	# Every room circled by Lucas, and his question.
-	var room_keys: Array[String] = [
-		"AD_ROOM_LIVING", "AD_ROOM_KITCHEN", "AD_ROOM_BEDROOM",
-		"AD_ROOM_BEDROOM", "AD_ROOM_PANTRY",
-	]
-	for i: int in room_keys.size():
-		var top: float = -0.026 - i * 0.0185
-		add_text(
-			root, "Room%d" % i, room_keys[i], Vector3(-0.078, top, 0.0009),
-			24, 0.00026, INK_DARK, 300.0
-		)
-		add_frame(
-			root, "Circle%d" % i, Vector2(0.066, 0.0125),
-			Vector3(-0.047, top - 0.0045, 0.0012), 0.0007, red,
-			-1.6 if i % 2 == 0 else 1.4
-		)
-
+	# Two hands on it: Lucas's question in red, beside the print, and Sophia's line in blue, under it; each signed.
 	add_text(
-		root, "Ours", "AD_OURS", Vector3(0.018, -0.07, 0.0009),
-		50, 0.00034, INK_RED, 0.0
+		root, "Ours", "AD_OURS", Vector3(0.026, -0.008, 0.0009),
+		50, 0.00034, INK_RED, 0.0, false, Vector3(0.0, 0.0, 4.0)
+	)
+	add_text(
+		root, "LucasSignature", "AD_LUCAS_SIGNATURE", Vector3(0.034, -0.03, 0.0009),
+		30, 0.00028, INK_RED, 0.0, false, Vector3(0.0, 0.0, 4.0)
+	)
+	add_paragraphs(
+		root, "SophiaNote", "AD_SOPHIA_NOTE", Vector3(-0.08, -0.078, 0.0009),
+		26, 0.00024, INK_BLUE, 600.0, 0.003
 	)
 
 
-static func _build_bus_ticket(root: Node3D, handwriting_key: String) -> void:
+## A one way bus ticket: the print, and the passenger field filled in by hand. `passenger_key` is the field's printed label
+## (in Portuguese it agrees with who travels: "Passageira" on Sophia's, "Passageiro" on the other).
+static func _build_bus_ticket(root: Node3D, passenger_key: String, handwriting_key: String) -> void:
 	_add_paper(root, "Paper", Vector2(0.16, 0.07), Vector3.ZERO, Color(0.82, 0.78, 0.64))
 	add_box(
 		root, "Stripe", Vector3(0.16, 0.008, 0.0008), Vector3(0.0, 0.031, 0.0009),
 		material(Color(0.4, 0.16, 0.14), 0.9)
 	)
 	add_text(
-		root, "Print", "BUS_TICKET_PRINT", Vector3(-0.073, 0.024, 0.0009),
-		22, 0.00028, INK_DARK, 520.0
+		root, "Print", "BUS_TICKET_PRINT", Vector3(-0.073, 0.025, 0.0009),
+		18, 0.00026, INK_DARK, 520.0
 	)
 	add_text(
-		root, "PassengerLabel", "BUS_TICKET_PASSENGER", Vector3(-0.073, -0.012, 0.0009),
+		root, "PassengerLabel", passenger_key, Vector3(-0.073, -0.012, 0.0009),
 		20, 0.00026, INK_DARK, 0.0
 	)
 	add_box(
@@ -663,27 +670,52 @@ static func _build_nightstand(root: Node3D) -> void:
 	add_solid(root, "Collision", Vector3(0.54, 0.575, 0.3), Vector3(0.0, 0.2875, 0.0))
 
 
-## A 1990s battery alarm clock frozen at 06:00. The red digits are the one text
-## in the house that is meant to glow.
-static func _build_alarm_clock(root: Node3D) -> void:
-	add_box(
-		root, "Body", Vector3(0.16, 0.07, 0.06), Vector3(0.0, 0.035, 0.0),
-		material(Color(0.04, 0.04, 0.045), 0.5)
+## The size of `postcard` (width, height), in metres: an ordinary postcard.
+const POSTCARD_SIZE: Vector2 = Vector2(0.148, 0.105)
+
+
+## An old postcard, never sent: the written side faces +Z (Lucas's message, `POSTCARD_TEXT`, in blue ink; no address, no stamp)
+## and the picture side -Z (a faded print of the town: old houses, the station's canopy and the rails, fog). Centred on the
+## origin, +Y up the writing, so the inspect view and a scene can both show the writing the same way. The picture names no
+## place.
+static func _build_postcard(root: Node3D) -> void:
+	var card: StandardMaterial3D = material(Color(0.83, 0.79, 0.67), 0.95)
+	add_box(root, "Card", Vector3(POSTCARD_SIZE.x, POSTCARD_SIZE.y, 0.0006), Vector3.ZERO, card)
+
+	# The message, in the middle of the written side (it is what fills the picture when it is read close).
+	add_paragraphs(
+		root, "Text", "POSTCARD_TEXT", Vector3(-0.05, 0.027, 0.0004), 26, 0.00022, INK_BLUE, 500.0, 0.004
 	)
-	add_box(
-		root, "Face", Vector3(0.13, 0.04, 0.002), Vector3(0.0, 0.038, 0.0305),
-		material(Color(0.015, 0.012, 0.012), 0.4)
-	)
-	var digits: Label3D = add_text(
-		root, "Digits", "06:00", Vector3(0.0, 0.038, 0.0318), 48, 0.00055,
-		Color(0.95, 0.12, 0.06), 0.0, true
-	)
-	digits.shaded = false
-	for i: int in 2:
-		add_box(
-			root, "Button%d" % i, Vector3(0.018, 0.006, 0.014),
-			Vector3(-0.03 + i * 0.06, 0.073, 0.0), material(Color(0.1, 0.1, 0.11), 0.5)
-		)
+
+	# The picture side: a white margin round a faded print.
+	var back: Node3D = Node3D.new()
+	back.name = "Picture"
+	back.position = Vector3(0.0, 0.0, -0.0004)
+	back.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	root.add_child(back)
+	var sky: StandardMaterial3D = material(Color(0.62, 0.62, 0.58), 1.0)
+	var fog: StandardMaterial3D = material(Color(0.74, 0.73, 0.68), 1.0)
+	var house: StandardMaterial3D = material(Color(0.33, 0.31, 0.29), 1.0)
+	var roof: StandardMaterial3D = material(Color(0.26, 0.22, 0.2), 1.0)
+	var iron: StandardMaterial3D = material(Color(0.2, 0.19, 0.18), 1.0)
+	add_box(back, "Sky", Vector3(0.134, 0.091, 0.0002), Vector3.ZERO, sky)
+	add_box(back, "Fog", Vector3(0.134, 0.022, 0.0002), Vector3(0.0, -0.004, 0.0001), fog)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 1957
+	for i: int in 6:
+		var x: float = -0.055 + float(i) * 0.016 + rng.randf_range(-0.002, 0.002)
+		var height: float = rng.randf_range(0.014, 0.022)
+		add_box(back, "House%d" % i, Vector3(0.013, height, 0.0002), Vector3(x, -0.024 + height * 0.5, 0.0002), house)
+		var gable: PrismMesh = PrismMesh.new()
+		gable.size = Vector3(0.015, 0.008, 0.0002)
+		_add_mesh(back, "Roof%d" % i, gable, Vector3(x, -0.024 + height + 0.004, 0.0002), roof, Vector3.ZERO)
+	# The station: a long canopy on posts, and the rails running off.
+	add_box(back, "Canopy", Vector3(0.05, 0.003, 0.0002), Vector3(0.03, -0.012, 0.0003), iron)
+	for x: float in [0.008, 0.03, 0.052]:
+		add_box(back, "Post", Vector3(0.0012, 0.016, 0.0002), Vector3(x, -0.021, 0.0003), iron)
+	for y: float in [-0.033, -0.038]:
+		add_box(back, "Rail", Vector3(0.134, 0.0008, 0.0002), Vector3(0.0, y, 0.0003), iron)
+	add_box(back, "Mist", Vector3(0.134, 0.012, 0.0002), Vector3(0.0, -0.03, 0.0004), fog)
 
 
 ## Bare shelves on the pantry's far wall (the wall is at the origin, shelves
@@ -703,6 +735,150 @@ static func _build_pantry_shelves(root: Node3D) -> void:
 				Vector3(-0.03, y - 0.085, z), bracket
 			)
 
+
+
+## A plank laid over two piles of loose bricks beside the sink, unplumbed like it: where the recipe lies. The plank's top
+## is at y 0.9, 0.62 long (along X) and 0.48 deep; the front faces +Z. Origin on the floor.
+static func _build_kitchen_counter(root: Node3D) -> void:
+	var brick: StandardMaterial3D = material(Color(0.5, 0.25, 0.18), 0.95)
+	var plank: StandardMaterial3D = material(Color(0.56, 0.43, 0.27), 0.85)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 29
+
+	for column: int in 2:
+		var x: float = -0.21 + column * 0.42
+		for row: int in 12:
+			var shift: Vector2 = Vector2(rng.randf_range(-0.01, 0.01), rng.randf_range(-0.01, 0.01))
+			var flipped: bool = row % 2 == 1
+			add_box(
+				root, "Brick%d_%d" % [column, row],
+				Vector3(0.1, 0.07, 0.22) if flipped else Vector3(0.22, 0.07, 0.1),
+				Vector3(x + shift.x, 0.035 + row * 0.07, shift.y),
+				brick, Vector3(0.0, rng.randf_range(-3.0, 3.0), 0.0)
+			)
+		add_solid(root, "BrickBody%d" % column, Vector3(0.24, 0.84, 0.24), Vector3(x, 0.42, 0.0))
+
+	add_box(root, "Plank", Vector3(0.62, 0.04, 0.48), Vector3(0.0, 0.88, 0.0), plank)
+	add_solid(root, "PlankBody", Vector3(0.62, 0.04, 0.48), Vector3(0.0, 0.88, 0.0))
+
+
+## A bare bulb hanging from the pantry ceiling on its flex. Origin at the ceiling; the bulb hangs 0.46 below it. The glass
+## is `Bulb` (the house switches its glow on when the lamp is lit; the light itself is a sibling node).
+static func _build_pantry_lamp(root: Node3D) -> void:
+	add_cylinder(root, "Rose", 0.035, 0.02, Vector3(0.0, -0.01, 0.0), material(Color(0.82, 0.8, 0.74), 0.7))
+	add_cylinder(root, "Flex", 0.004, 0.38, Vector3(0.0, -0.21, 0.0), material(Color(0.08, 0.08, 0.08), 0.7))
+	add_cylinder(root, "Holder", 0.016, 0.04, Vector3(0.0, -0.41, 0.0), material(Color(0.35, 0.3, 0.2), 0.5, 0.4))
+	var bulb_mesh: SphereMesh = SphereMesh.new()
+	bulb_mesh.radius = 0.03
+	bulb_mesh.height = 0.07
+	var glass: StandardMaterial3D = material(Color(0.95, 0.9, 0.78), 0.2)
+	glass.emission_enabled = true
+	glass.emission = Color(1.0, 0.72, 0.42)
+	glass.emission_energy_multiplier = 0.0
+	_add_mesh(root, "Bulb", bulb_mesh, Vector3(0.0, -0.46, 0.0), glass, Vector3.ZERO)
+
+
+## A plain double bed against the wall: a pine frame, a headboard and a bare striped mattress (no bedding: the house is
+## unfinished; the bedding is `memory_bedding`). 1.4 wide (X), 1.95 long (Z), its head at -Z. Origin on the floor at the
+## middle of the bed; the mattress's top is at y 0.5.
+static func _build_bed(root: Node3D) -> void:
+	var pine: StandardMaterial3D = material(PINE, 0.85)
+	var ticking: StandardMaterial3D = material(Color(0.72, 0.7, 0.64), 0.95)
+	var stripe: StandardMaterial3D = material(Color(0.42, 0.46, 0.55), 0.95)
+	var stain: StandardMaterial3D = material(Color(0.55, 0.48, 0.36, 0.5), 1.0)
+	stain.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+
+	add_box(root, "RailLeft", Vector3(0.05, 0.16, 1.95), Vector3(-0.675, 0.24, 0.0), pine)
+	add_box(root, "RailRight", Vector3(0.05, 0.16, 1.95), Vector3(0.675, 0.24, 0.0), pine)
+	add_box(root, "RailFoot", Vector3(1.4, 0.16, 0.05), Vector3(0.0, 0.24, 0.95), pine)
+	for x: float in [-0.675, 0.675]:
+		add_box(root, "LegFoot", Vector3(0.06, 0.32, 0.06), Vector3(x, 0.16, 0.95), pine)
+	# Kept under the sill of the bedroom window beside it (0.9).
+	add_box(root, "Headboard", Vector3(1.4, 0.8, 0.05), Vector3(0.0, 0.4, -0.95), pine)
+	add_box(root, "HeadboardTop", Vector3(1.44, 0.04, 0.07), Vector3(0.0, 0.82, -0.95), pine)
+	add_box(root, "Slats", Vector3(1.3, 0.02, 1.85), Vector3(0.0, 0.29, 0.0), material(PINE_DARK, 0.95))
+
+	add_box(root, "Mattress", Vector3(1.32, 0.2, 1.86), Vector3(0.0, 0.4, 0.02), ticking)
+	for i: int in 7:
+		add_box(root, "Stripe%d" % i, Vector3(0.025, 0.002, 1.86), Vector3(-0.54 + i * 0.18, 0.501, 0.02), stripe)
+	add_cylinder(root, "Stain", 0.12, 0.002, Vector3(0.25, 0.502, 0.35), stain)
+
+	add_solid(root, "Collision", Vector3(1.42, 0.5, 1.98), Vector3(0.0, 0.25, 0.0))
+	add_solid(root, "HeadboardBody", Vector3(1.44, 0.84, 0.07), Vector3(0.0, 0.42, -0.95))
+
+
+## The bed made, as it was in the memory: a sheet, a warm wool blanket turned down, two pillows, a throw folded at the foot.
+## Laid on `bed` (same origin). Nothing solid: it is only seen while the player is held.
+static func _build_memory_bedding(root: Node3D) -> void:
+	var sheet: StandardMaterial3D = material(Color(0.86, 0.82, 0.74), 0.95)
+	# Ochre, not red: nothing in the memory may read as the old red room.
+	var wool: StandardMaterial3D = material(Color(0.62, 0.48, 0.26), 1.0)
+	var pillow: StandardMaterial3D = material(Color(0.9, 0.87, 0.8), 0.95)
+	var throw_color: StandardMaterial3D = material(Color(0.32, 0.36, 0.28), 1.0)
+
+	add_box(root, "Sheet", Vector3(1.36, 0.012, 1.88), Vector3(0.0, 0.506, 0.02), sheet)
+	# The blanket, turned down at the top, hanging a little over each side.
+	add_box(root, "Blanket", Vector3(1.4, 0.03, 1.3), Vector3(0.0, 0.525, 0.3), wool)
+	add_box(root, "BlanketFold", Vector3(1.4, 0.035, 0.18), Vector3(0.0, 0.55, -0.32), sheet, Vector3(4.0, 0.0, 0.0))
+	for side: float in [-1.0, 1.0]:
+		add_box(root, "BlanketSide", Vector3(0.02, 0.18, 1.3), Vector3(side * 0.71, 0.44, 0.3), wool)
+	for x: float in [-0.33, 0.33]:
+		add_box(root, "Pillow", Vector3(0.58, 0.11, 0.36), Vector3(x, 0.57, -0.7), pillow, Vector3(-6.0, x * 8.0, 0.0))
+	add_box(root, "Throw", Vector3(1.0, 0.05, 0.3), Vector3(0.0, 0.57, 0.78), throw_color, Vector3(0.0, 3.0, 0.0))
+
+
+## A kitchen chair with clothes thrown over it: a shirt over the back, jeans folded on the seat. Origin on the floor, the seat
+## at 0.45, its back at -Z. Nothing solid.
+static func _build_memory_chair(root: Node3D) -> void:
+	var wood: StandardMaterial3D = material(Color(0.4, 0.26, 0.15), 0.8)
+	var shirt: StandardMaterial3D = material(Color(0.62, 0.66, 0.72), 1.0)
+	var denim: StandardMaterial3D = material(Color(0.2, 0.26, 0.4), 1.0)
+
+	add_box(root, "Seat", Vector3(0.42, 0.03, 0.4), Vector3(0.0, 0.45, 0.0), wood)
+	for x: float in [-0.18, 0.18]:
+		for z: float in [-0.17, 0.17]:
+			add_box(root, "Leg", Vector3(0.035, 0.45, 0.035), Vector3(x, 0.225, z), wood)
+		add_box(root, "BackPost", Vector3(0.035, 0.45, 0.035), Vector3(x, 0.68, -0.18), wood)
+	add_box(root, "BackRail", Vector3(0.4, 0.07, 0.025), Vector3(0.0, 0.85, -0.18), wood)
+
+	add_box(root, "ShirtBack", Vector3(0.46, 0.34, 0.012), Vector3(0.0, 0.72, -0.205), shirt, Vector3(-4.0, 0.0, 2.0))
+	add_box(root, "ShirtFront", Vector3(0.44, 0.22, 0.012), Vector3(0.0, 0.79, -0.155), shirt, Vector3(8.0, 0.0, -3.0))
+	add_box(root, "Sleeve", Vector3(0.09, 0.3, 0.012), Vector3(0.24, 0.6, -0.19), shirt, Vector3(0.0, 0.0, 14.0))
+	add_box(root, "Jeans", Vector3(0.3, 0.05, 0.34), Vector3(0.02, 0.49, 0.02), denim, Vector3(0.0, 9.0, 0.0))
+
+
+## Two enamel cups left on the floor by the bed, one still with a little coffee. Origin on the floor.
+static func _build_memory_cups(root: Node3D) -> void:
+	var enamel: StandardMaterial3D = material(Color(0.86, 0.84, 0.78), 0.4)
+	var rim: StandardMaterial3D = material(Color(0.12, 0.16, 0.3), 0.4)
+	var coffee: StandardMaterial3D = material(Color(0.16, 0.09, 0.05), 0.2)
+	for i: int in 2:
+		var at: Vector3 = Vector3(-0.07 + i * 0.15, 0.0, 0.03 * float(i))
+		add_cylinder(root, "Cup%d" % i, 0.04, 0.085, at + Vector3(0.0, 0.0425, 0.0), enamel)
+		add_cylinder(root, "Rim%d" % i, 0.0405, 0.006, at + Vector3(0.0, 0.083, 0.0), rim)
+		add_ring(root, "Handle%d" % i, 0.018, 0.026, at + Vector3(0.045, 0.045, 0.0), enamel)
+	add_cylinder(root, "Coffee", 0.036, 0.002, Vector3(-0.07, 0.07, 0.0), coffee)
+
+
+## A small bedside lamp with a cloth shade, lit (the light itself is a sibling node, above it, standing in for the bulb: so the
+## lamp casts no shadow of its own, or its shade would throw a wedge of dark over everything beside it). Origin on the surface
+## it stands on.
+static func _build_bedside_lamp(root: Node3D) -> void:
+	var base: StandardMaterial3D = material(Color(0.3, 0.2, 0.12), 0.6)
+	add_cylinder(root, "Base", 0.06, 0.03, Vector3(0.0, 0.015, 0.0), base).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_cylinder(root, "Stem", 0.01, 0.22, Vector3(0.0, 0.14, 0.0), base).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var shade_mesh: CylinderMesh = CylinderMesh.new()
+	shade_mesh.top_radius = 0.07
+	shade_mesh.bottom_radius = 0.11
+	shade_mesh.height = 0.14
+	shade_mesh.cap_top = false
+	shade_mesh.cap_bottom = false
+	var cloth: StandardMaterial3D = material(Color(0.95, 0.82, 0.6), 0.9)
+	cloth.cull_mode = BaseMaterial3D.CULL_DISABLED
+	cloth.emission_enabled = true
+	cloth.emission = Color(1.0, 0.7, 0.4)
+	cloth.emission_energy_multiplier = 0.9
+	_add_mesh(root, "Shade", shade_mesh, Vector3(0.0, 0.27, 0.0), cloth, Vector3.ZERO).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 # ============================================================

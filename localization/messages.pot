@@ -447,9 +447,6 @@ msgstr ""
 msgid "LOCK_VIEW_HINT"
 msgstr ""
 
-msgid "CAPTION_JULIANA_RECIPE"
-msgstr ""
-
 msgid "ITEM_NOTE_CAPSULE_NAME"
 msgstr ""
 
@@ -503,18 +500,6 @@ msgid "AD_HEADLINE"
 msgstr ""
 
 msgid "AD_SOPHIA_NOTE"
-msgstr ""
-
-msgid "AD_ROOM_LIVING"
-msgstr ""
-
-msgid "AD_ROOM_KITCHEN"
-msgstr ""
-
-msgid "AD_ROOM_BEDROOM"
-msgstr ""
-
-msgid "AD_ROOM_PANTRY"
 msgstr ""
 
 msgid "AD_OURS"
@@ -1153,3 +1138,86 @@ msgstr ""
 msgid "LOCKBOX_VIEW_HINT"
 msgstr ""
 
+msgid "AD_BODY"
+msgstr ""
+
+msgid "AD_LUCAS_SIGNATURE"
+msgstr ""
+
+msgid "BUS_TICKET_PASSENGER_SOPHIA"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_01"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_02"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_03"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_04"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_05"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_06"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_07"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_08"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_09"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_10"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_11"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_12"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_13"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_14"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_15"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_16"
+msgstr ""
+
+msgid "CAPTION_HOUSE_BED_17"
+msgstr ""
+
+msgid "CAPTION_HOUSE_SHH"
+msgstr ""
+
+msgid "CAPTION_SPEAKER_LUCAS"
+msgstr ""
+
+msgid "ITEM_CAPSULE_KEY_DESCRIPTION"
+msgstr ""
+
+msgid "ITEM_CAPSULE_KEY_NAME"
+msgstr ""
+
+msgid "ITEM_POSTCARD_NAME"
+msgstr ""
+
+msgid "ITEM_POSTCARD_DESCRIPTION"
+msgstr ""
+
+msgid "POSTCARD_TEXT"
+msgstr ""
+
+msgid "READABLE_POSTCARD"
+msgstr ""

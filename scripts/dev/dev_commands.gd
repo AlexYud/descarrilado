@@ -70,9 +70,10 @@ func _build() -> void:
 	_add("speed", "speed <factor>", "Multiplies the player's walking speed (1 = normal).", _speed)
 	_add("time_scale", "time_scale <factor>", "Sets the game's time scale (1 = normal).", _time_scale)
 	_add("flashlight", "flashlight <on|off>", "Switches the flashlight on or off.", _flashlight)
-	_add("state_get", "state_get <section> <key>", "Reads a value of the save state (e.g. puzzles house_stage).", _state_get)
+	_add("state_get", "state_get <section> <key>", "Reads a value of the save state (e.g. puzzles house_recipe_done).", _state_get)
 	_add("state_set", "state_set <section> <key> <value>", "Writes a value of the save state (true, false, a number or text).", _state_set)
-	_add("house_unstick", "house_unstick", "If the unfinished house's scare is stuck (the figure stands there and nothing happens): puts the house right at once (the figure goes, the red light goes, the capsule opens).", _house_unstick)
+	_add("house_unstick", "house_unstick", "If the unfinished house is stuck: ends the bedroom scene at once (the cameras and the player are given back, the capsule key lies on the nightstand) and unlocks the pantry and the bedroom.", _house_unstick)
+	_add("house_postcard", "house_postcard", "Plays the bedroom's postcard scene again from where the player stands (best beside the nightstand). Nothing else is reset.", _house_postcard)
 	_add("scene", "scene <res://path.tscn>", "Changes to a scene.", _scene)
 	_add("reload", "reload", "Reloads the current scene.", func(_a: PackedStringArray) -> String:
 		_console.call("close")
@@ -302,8 +303,19 @@ func _house_unstick(_args: PackedStringArray) -> String:
 	if found.is_empty():
 		return "[color=%s]There is no unfinished house in this scene.[/color]" % _bad_colour()
 
-	(found[0] as UnfinishedHouseSequence).force_resolve()
+	(found[0] as UnfinishedHouseSequence).force_finish_memory()
 	return "The house is put right."
+
+
+func _house_postcard(_args: PackedStringArray) -> String:
+	var found: Array[Node] = _console.get_tree().root.find_children("*", "UnfinishedHouseSequence", true, false)
+	if found.is_empty():
+		return "[color=%s]There is no unfinished house in this scene.[/color]" % _bad_colour()
+
+	if not (found[0] as UnfinishedHouseSequence).replay_bedroom_scene():
+		return "[color=%s]The scene is already playing, or there is no player to show it to.[/color]" % _bad_colour()
+
+	return "The postcard scene plays (close the console)."
 
 
 func _state_get(args: PackedStringArray) -> String:

@@ -3,7 +3,6 @@
 [ext_resource type="Script" uid="uid://cl7j3gckmljj4" path="res://scripts/levels/unfinished_house_sequence.gd" id="1_sequence"]
 [ext_resource type="Script" uid="uid://ju7cxj3t7nya" path="res://scripts/environment/unfinished_house_builder.gd" id="2_builder"]
 [ext_resource type="Script" uid="uid://cgn0ftce8wn3l" path="res://scripts/environment/procedural_prop.gd" id="3_prop"]
-[ext_resource type="Script" uid="uid://v4ncxexc1eqp" path="res://scripts/interactions/inspect_reaction.gd" id="4_reaction"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/house_door.tscn" id="5_door"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/time_capsule.tscn" id="6_capsule"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/note_capsule.tscn" id="7_note"]
@@ -11,21 +10,29 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/pantry_note.tscn" id="9_note"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/master_key.tscn" id="10_key"]
 [ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/nightstand_drawer.tscn" id="15_drawer"]
+[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/postcard.tscn" id="16_postcard"]
 [ext_resource type="Script" path="res://scripts/audio/ambience_zone.gd" id="90_ambience_zone"]
+[ext_resource type="Script" path="res://scripts/environment/house_door_lighting.gd" id="17_door_lighting"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_trap"]
-size = Vector3(3.4, 2.0, 2.0)
-
-[node name="UnfinishedHouse" type="Node3D" node_paths=PackedStringArray("doors_root", "pantry_door", "capsule", "argument_voices", "run_steps", "bedroom_light", "silhouette", "hallway_trap")]
+[node name="UnfinishedHouse" type="Node3D" node_paths=PackedStringArray("doors_root", "pantry_door", "bedroom_door", "capsule", "night_only", "pantry_light", "pantry_lamp", "argument_voices", "postcard", "memory_root", "memory_light", "memory_eye", "memory_aim", "postcard_stand", "door_front_wide", "door_front_tight", "door_lighting", "memory_voice_player")]
 script = ExtResource("1_sequence")
 doors_root = NodePath("Doors")
 pantry_door = NodePath("Doors/PantryDoor")
+bedroom_door = NodePath("Doors/BedroomDoor")
 capsule = NodePath("Furniture/TimeCapsule")
-argument_voices = NodePath("Scares/ArguingVoices")
-run_steps = NodePath("Scares/RunSteps")
-bedroom_light = NodePath("Scares/BedroomRed")
-silhouette = NodePath("Scares/Silhouette")
-hallway_trap = NodePath("Scares/HallwayTrap")
+pantry_light = NodePath("Furniture/PantryLight")
+pantry_lamp = NodePath("Furniture/PantryLamp")
+argument_voices = NodePath("Sounds/ArguingVoices")
+postcard = NodePath("Furniture/Postcard")
+memory_root = NodePath("Memory")
+memory_light = NodePath("Memory/MemoryLight")
+memory_eye = NodePath("Markers/PostcardMemoryEye")
+memory_aim = NodePath("Markers/PostcardMemoryAim")
+postcard_stand = NodePath("Markers/PostcardStand")
+door_front_wide = NodePath("Markers/DoorFrontWide")
+door_front_tight = NodePath("Markers/DoorFrontTight")
+door_lighting = NodePath("DoorLighting")
+memory_voice_player = NodePath("Memory/MemoryVoice")
 
 [node name="Shell" type="Node3D" parent="." unique_id=1898375199]
 script = ExtResource("2_builder")
@@ -70,8 +77,13 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.4,
 script = ExtResource("3_prop")
 kind = &"kitchen_sink"
 
+[node name="KitchenCounter" type="Node3D" parent="Furniture"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.38, 0, 2.59)
+script = ExtResource("3_prop")
+kind = &"kitchen_counter"
+
 [node name="KitchenRecipe" parent="Furniture" unique_id=504894709 instance=ExtResource("8_recipe")]
-transform = Transform3D(0.9396926, -0.34202012, -1.4950174e-08, 0, -4.371139e-08, 1, -0.34202012, -0.9396926, -4.1075268e-08, 0.4, 0.7525, 3.41)
+transform = Transform3D(0, -1, 0, 0, 0, 1, -1, 0, 0, 0.4, 0.9015, 2.59)
 
 [node name="PantryShelves" type="Node3D" parent="Furniture" unique_id=2135406905]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.535, 0, 7.75)
@@ -114,60 +126,98 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.85, 0, 8.92)
 script = ExtResource("3_prop")
 kind = &"sack"
 
+[node name="PantryLamp" type="Node3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.4, 2.6, 7.75)
+script = ExtResource("3_prop")
+kind = &"pantry_lamp"
+
+[node name="PantryLight" type="OmniLight3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.4, 2.1, 7.75)
+visible = false
+light_color = Color(1, 0.72, 0.45, 1)
+light_energy = 0.0
+shadow_enabled = true
+omni_range = 3.2
+
+[node name="Bed" type="Node3D" parent="Furniture"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.25, 0, 1.08)
+script = ExtResource("3_prop")
+kind = &"bed"
+
 [node name="Nightstand" type="Node3D" parent="Furniture" unique_id=1311972603]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 0, 0.30789375)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2675, 0, 0.30789375)
 script = ExtResource("3_prop")
 kind = &"nightstand"
 
 [node name="NightstandDrawer" parent="Furniture" unique_id=569816700 instance=ExtResource("15_drawer")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1375, 0.43, 0.30789375)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2675, 0.43, 0.30789375)
 persistent_id = &"house_nightstand_drawer"
 
-[node name="AlarmClock" type="Node3D" parent="Furniture" unique_id=1294429724]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.1875, 0.575, 0.25789356)
+[node name="Postcard" parent="Furniture" instance=ExtResource("16_postcard")]
+transform = Transform3D(0.9848078, -0.17364818, 0, 0, 0, 1, -0.17364818, -0.9848078, 0, 7.33, 0.5758, 0.29)
+
+[node name="Memory" type="Node3D" parent="."]
+visible = false
+
+[node name="MemoryBedding" type="Node3D" parent="Memory"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.25, 0, 1.08)
 script = ExtResource("3_prop")
-kind = &"alarm_clock"
+kind = &"memory_bedding"
 
-[node name="Scares" type="Node3D" parent="." unique_id=1510714190]
+[node name="MemoryChair" type="Node3D" parent="Memory"]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 5.13, 0, 2.75)
+script = ExtResource("3_prop")
+kind = &"memory_chair"
 
-[node name="ArguingVoices" type="AudioStreamPlayer3D" parent="Scares"]
-position = Vector3(8.2, 1.4, 7.36)
+[node name="MemoryCups" type="Node3D" parent="Memory"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.33, 0, 0.55)
+script = ExtResource("3_prop")
+kind = &"memory_cups"
+
+[node name="BedsideLamp" type="Node3D" parent="Memory"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.11, 0.575, 0.25)
+script = ExtResource("3_prop")
+kind = &"bedside_lamp"
+
+[node name="MemoryLight" type="OmniLight3D" parent="Memory"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.11, 0.95, 0.4)
+light_color = Color(1, 0.74, 0.5, 1)
+light_energy = 0.0
+shadow_enabled = true
+omni_range = 6.0
+
+[node name="MemoryVoice" type="AudioStreamPlayer3D" parent="Memory"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.43, 1.0, 1.2)
+unit_size = 3.0
+max_distance = 15.0
+
+[node name="DoorLighting" type="Node3D" parent="."]
+script = ExtResource("17_door_lighting")
+
+[node name="Markers" type="Node3D" parent="."]
+
+[node name="PostcardStand" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.43, 0.0, 0.95)
+
+[node name="PostcardMemoryEye" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.51, 0.8, 0.66)
+
+[node name="PostcardMemoryAim" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.26, 0.6, 0.26)
+
+[node name="DoorFrontWide" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.43, 1.05, 1.3)
+
+[node name="DoorFrontTight" type="Marker3D" parent="Markers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.43, 1.05, 2.85)
+
+[node name="Sounds" type="Node3D" parent="." unique_id=1510714190]
+
+[node name="ArguingVoices" type="AudioStreamPlayer3D" parent="Sounds"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.2, 1.4, 7.36)
 volume_db = -9.0
 unit_size = 4.0
 max_distance = 16.0
-
-[node name="RunSteps" type="AudioStreamPlayer3D" parent="Scares"]
-position = Vector3(6.0, 0.1, 3.0)
-unit_size = 5.0
-max_distance = 30.0
-
-[node name="BedroomRed" type="OmniLight3D" parent="Scares"]
-position = Vector3(8.0, 2.0, 3.0)
-visible = false
-light_color = Color(1, 0.04, 0.03, 1)
-light_energy = 0.0
-shadow_enabled = true
-omni_range = 9.0
-
-[node name="Silhouette" type="Node3D" parent="Scares"]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 8.3, 0, 12.19)
-visible = false
-script = ExtResource("3_prop")
-kind = &"standing_silhouette"
-
-[node name="HallwayTrap" type="Area3D" parent="Scares"]
-position = Vector3(2.0, 1.0, 7.35)
-collision_layer = 0
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Scares/HallwayTrap"]
-shape = SubResource("BoxShape3D_trap")
-
-[node name="RecipeReaction" type="Node" parent="." unique_id=1136011188]
-script = ExtResource("4_reaction")
-inspect_id = &"kitchen_recipe"
-open_line = "CAPTION_JULIANA_RECIPE"
-open_line_delay = 1.2
-persistent_id = &"house_recipe"
 
 [node name="AmbienceInteriorNorth" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.8125, 1.4, 4.65)

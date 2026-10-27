@@ -103,9 +103,11 @@ const NO_CELL: Vector2i = Vector2i(2147483647, 0)
 @export var transition_seconds: float = 0.6
 ## A cut to another place moves the listener at least this far in one frame.
 @export var teleport_distance: float = 4.0
-## How muffled the world is while the game is paused, and during a cutscene that freezes the player.
+## How muffled the world is while the game is paused, and during a cutscene that freezes the player. The cutscene's is slight: the
+## muffle is a low pass, and the night chorus (crickets, leaves) is high, so a heavy one silences it and leaves only the wind (the
+## dream intro's head lift sounded like that until the cutscene ended).
 @export_range(0.0, 1.0, 0.05) var pause_muffle: float = 0.75
-@export_range(0.0, 1.0, 0.05) var cutscene_muffle: float = 0.75
+@export_range(0.0, 1.0, 0.05) var cutscene_muffle: float = 0.15
 
 ## The current amount (0 outside, 1 shut in), and the one it is moving towards.
 var interior: float = 0.0

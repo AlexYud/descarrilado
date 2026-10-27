@@ -525,75 +525,60 @@ msgstr "Time capsule"
 msgid "LOCK_VIEW_HINT"
 msgstr "Click the arrows or scroll over a wheel to turn it. Right click or Esc to step back."
 
-msgid "CAPTION_JULIANA_RECIPE"
-msgstr "I remember her telling me about that soup months ago... she couldn't stop laughing."
-
 msgid "ITEM_NOTE_CAPSULE_NAME"
-msgstr "Note on the Time Capsule"
+msgstr "Note on the Capsule"
 
 msgid "ITEM_NOTE_CAPSULE_DESCRIPTION"
-msgstr "A hasty letter pinned under the brass padlock."
+msgstr "A folded note on the lid of the box."
 
 msgid "NOTE_CAPSULE_TEXT"
-msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— Lucas"
+msgstr "To be opened in five years.\n\nSophia,\n\nI kept the advertisement with the other things.\n\nI called again. They still haven't sold it. I'll ask for the bedroom measurements.\n\nLucas"
 
 msgid "ITEM_KITCHEN_RECIPE_NAME"
-msgstr "Market Wrapper and Recipe"
+msgstr "Potato Soup Recipe"
 
 msgid "ITEM_KITCHEN_RECIPE_DESCRIPTION"
-msgstr "A grease-stained market paper wrapper with handwritten notes on the back."
+msgstr "A grease-stained sheet of wrapping paper. There is a recipe on one side and a written memory on the back."
 
 msgid "RECIPE_TEXT"
-msgstr "The very first time we tried to cook a real meal together. You insisted on making your mother's potato soup to impress me, but you spilled water and oil all over the floorboards.\n\nBefore I could grab a rag, you slipped hard and cracked your head against the counter. You sat on the floor bleeding from your temple, staring past me at the concrete sink right where someone would stand to wash the dishes.\n\nYou swore Juliana was standing there in the dark, holding a note in her hands and reading it in silence. I turned around, but the space was empty. I told you that you were just delirious from the knock on your head. Pff... You only saw her because you hated how close we were.\n\nS."
+msgstr "POTATO SOUP\n\nFour potatoes, one small onion, two cloves of garlic, and a spoonful of butter.\n\nCover with water and cook until the potatoes fall apart. Mash a few in the pan to thicken the soup.\n\nAdd the salt at the end. Your mother was right."
 
 msgid "ITEM_PANTRY_NOTE_NAME"
 msgstr "Folded Note"
 
 msgid "ITEM_PANTRY_NOTE_DESCRIPTION"
-msgstr "A note left on the pantry shelf."
+msgstr "A sheet of paper folded twice. Only one side has been written on."
 
 msgid "JAR_NOTE_TEXT"
-msgstr "Trapped inside this tiny dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\nS."
+msgstr "I'd gone to get a glass. You came in after me and left the door almost closed.\n\nOn the other side, your family started again.\n\nYou kept pushing the cans to the back of the shelf, one by one. I took the last one out of your hand. You held mine.\n\nI don't remember who moved closer.\n\nI remember you bumping into the shelf when we kissed. A can fell, and we went quiet, waiting for someone to come and ask what had happened.\n\nNobody came.\n\nYou opened the door a little to look into the hallway. I caught your shirt before you could leave.\n\nThe glass stayed on the shelf.\n\nSophia"
 
 msgid "ITEM_MASTER_KEY_NAME"
 msgstr "Rusty Key"
 
 msgid "ITEM_MASTER_KEY_DESCRIPTION"
-msgstr "A rusty, well-used key."
+msgstr "A rusty key for the bedroom door."
 
 msgid "ITEM_LUCAS_DIARY_NAME"
 msgstr "Lucas's Notebook"
 
 msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
-msgstr "An entry in a leather-bound diary."
+msgstr "A worn notebook. One page has its corner folded down."
 
 msgid "DIARY_TEXT"
-msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute.\n\nSophia was lying beside me on the floorboards, staring up at the unfinished rafters. She suddenly grabbed my arm, shaking, and whispered that the red stain on the ceiling wood was dripping onto her chest. I looked up. There was no water, no blood, no stain, just dry pine.\n\nBut when I touched her face, her skin was burning hot, and her eyes were reflecting a crimson light that wasn't in the room. She scrambled backward in total panic, her boots scratching the floorboards as she sprinted out into the hallway toward the front door. She kept screaming that the room was bleeding.\n\nBut when the sun finally broke through the trees at 06:00 AM, she was still here in town. That was the exact moment I knew she would never leave. She is mine forever."
+msgstr "She asked if I was comfortable. Half my body was hanging off the bed and one arm had gone numb. I said yes.\n\nSophia laughed and pulled me toward the middle.\n\nWhen it started getting light, she sat up. She ran a hand over her shoulder and looked up. Then did it again.\n\nShe said something was dripping.\n\nI looked at the ceiling. I couldn't see anything wet. I put my hand on the sheet beside her. That was dry too.\n\nShe asked me to stop looking at her and look up.\n\nThat was when she said the room was bleeding.\n\nShe picked her clothes up off the floor. I was still trying to understand when she went out into the hallway.\n\nI found Sophia by the front door, barefoot. I went to get her shoes. When I came back, she'd sat down on the doorstep.\n\nWe stayed there until it was properly light.\n\nThen I went to buy bread. I brought enough for two, but she'd already gone home when I got back.\n\nLucas"
 
 
 msgid "ITEM_HOUSE_AD_NAME"
 msgstr "House Advertisement"
 
 msgid "ITEM_HOUSE_AD_DESCRIPTION"
-msgstr "The advertisement expired two years ago. Lucas circled every room. Sophia wrote only beneath the photograph."
+msgstr "An advertisement folded many times, with notes in two different hands."
 
 msgid "AD_HEADLINE"
-msgstr "HOUSE FOR SALE\nTown centre"
+msgstr "HOUSE FOR SALE"
 
 msgid "AD_SOPHIA_NOTE"
-msgstr "The blue windows are beautiful."
-
-msgid "AD_ROOM_LIVING"
-msgstr "Living room"
-
-msgid "AD_ROOM_KITCHEN"
-msgstr "Kitchen"
-
-msgid "AD_ROOM_BEDROOM"
-msgstr "Bedroom"
-
-msgid "AD_ROOM_PANTRY"
-msgstr "Pantry"
+msgstr "The blue windows are beautiful.\n\nSophia"
 
 msgid "AD_OURS"
 msgstr "OURS?"
@@ -602,16 +587,16 @@ msgid "ITEM_BUS_TICKET_SOPHIA_NAME"
 msgstr "Sophia's Bus Ticket"
 
 msgid "ITEM_BUS_TICKET_SOPHIA_DESCRIPTION"
-msgstr "A one-way ticket to São Paulo. Sophia wrote her name on it."
+msgstr "A one-way ticket to São Paulo in Sophia's name."
 
 msgid "ITEM_BUS_TICKET_UNCLAIMED_NAME"
 msgstr "Unclaimed Bus Ticket"
 
 msgid "ITEM_BUS_TICKET_UNCLAIMED_DESCRIPTION"
-msgstr "Two tickets for the same departure. Sophia claimed one and left the other for someone to choose."
+msgstr "The same destination and departure time as the other ticket. The passenger field was filled in by hand."
 
 msgid "BUS_TICKET_PRINT"
-msgstr "BUS TICKET\nRailway village / São Paulo\nOne way"
+msgstr "TICKET\n\nDestination: São Paulo\nOne way"
 
 msgid "BUS_TICKET_PASSENGER"
 msgstr "Passenger:"
@@ -623,7 +608,7 @@ msgid "BUS_TICKET_IF_YOU_WANT"
 msgstr "If you want."
 
 msgid "DIARY_HEADING"
-msgstr "May 14th, 6:00 AM."
+msgstr "6 a.m."
 
 # Waiting shed and signal box
 msgid "LEVER_UP"
@@ -926,16 +911,16 @@ msgstr "Drag: tilt    Wheel: zoom    {inspect_flip}: turn over"
 
 # Readable documents: the writing shown as an overlay when the art is in another language
 msgid "READABLE_RECIPE"
-msgstr "The very first time we tried to cook a real meal together. You insisted on making your mother's potato soup to impress me, but you spilled water and oil all over the floorboards.\n\nBefore I could grab a rag, you slipped hard and cracked your head against the counter. You sat on the floor bleeding from your temple, staring past me at the concrete sink right where someone would stand to wash the dishes.\n\nYou swore Juliana was standing there in the dark, holding a note in her hands and reading it in silence. I turned around, but the space was empty. I told you that you were just delirious from the knock on your head. Pff... You only saw her because you hated how close we were.\n\nS."
+msgstr "[b]POTATO SOUP[/b]\n\nFour potatoes, one small onion, two cloves of garlic, and a spoonful of butter.\n\nCover with water and cook until the potatoes fall apart. Mash a few in the pan to thicken the soup.\n\nAdd the salt at the end. Your mother was right.\n\n* * *\n\nYou didn't want me to help. You said I'd spoil the surprise.\n\nI ended up peeling the potatoes while you watched the stove. Every time you tasted it, you made that face. I'd ask what was missing and you'd say you didn't know. It just wasn't the same.\n\nI had a second helping. That was when you finally stopped apologizing for the soup.\n\nThen you spilled water on the floor carrying the pan to the sink. You slipped before I could reach the cloth.\n\nWhen I crouched down to look at the cut on your forehead, you were looking over my shoulder.\n\nYou asked why I'd invited Juliana.\n\nYou said she was standing at the sink with a sheet of paper open in her hands. That she wouldn't look up, even when you spoke to her.\n\nI turned around. There was nobody there.\n\nI went to get another cloth from the pantry. When I came back, you'd stood up. You didn't want to sit with your back to the sink anymore.\n\nThe next day, all you asked was whether I'd really liked the soup.\n\nSophia"
 
 msgid "READABLE_PANTRY_NOTE"
 msgstr "Trapped inside this tiny dark pantry while your family yelled at each other in the dining room.\n\nThe air was dusty and smelled like old wood. Your hands were shaking in mine while we held our breath, terrified someone would pull the door open and catch us.\n\nWhen you finally leaned down and kissed me in the pitch dark, the shouting outside just faded away into nothing. I remember thinking right then that I never wanted to step back out into that hallway.\n\nS."
 
 msgid "READABLE_DIARY"
-msgstr "The birds were starting in the trees outside, and the room was cold, damp, and grey. We hadn't slept a single minute.\n\nSophia was lying beside me on the floorboards, staring up at the unfinished rafters. She suddenly grabbed my arm, shaking, and whispered that the red stain on the ceiling wood was dripping onto her chest. I looked up. There was no water, no blood, no stain, just dry pine.\n\nBut when I touched her face, her skin was burning hot, and her eyes were reflecting a crimson light that wasn't in the room. She scrambled backward in total panic, her boots scratching the floorboards as she sprinted out into the hallway toward the front door. She kept screaming that the room was bleeding.\n\nBut when the sun finally broke through the trees at 06:00 AM, she was still here in town. That was the exact moment I knew she would never leave. She is mine forever."
+msgstr "[b]6 a.m.[/b]\n\nShe asked if I was comfortable. Half my body was hanging off the bed and one arm had gone numb. I said yes.\n\nSophia laughed and pulled me toward the middle.\n\nWhen it started getting light, she sat up. She ran a hand over her shoulder and looked up. Then did it again.\n\nShe said something was dripping.\n\nI looked at the ceiling. I couldn't see anything wet. I put my hand on the sheet beside her. That was dry too.\n\nShe asked me to stop looking at her and look up.\n\nThat was when she said the room was bleeding.\n\nShe picked her clothes up off the floor. I was still trying to understand when she went out into the hallway.\n\nI found Sophia by the front door, barefoot. I went to get her shoes. When I came back, she'd sat down on the doorstep.\n\nWe stayed there until it was properly light.\n\nThen I went to buy bread. I brought enough for two, but she'd already gone home when I got back.\n\nLucas"
 
 msgid "READABLE_NOTE_CAPSULE"
-msgstr "To be opened in 5 years.\n\nSophia, my love. Inside this box lies everything we are building toward. It holds our goal, our house, and the future we promised each other in secret.\n\nIf you ever forget the code to open it, you don't need a key. You only need to trace the steps of how we began, in the exact order our story unfolded.\n\n— Lucas"
+msgstr "To be opened in five years.\n\nSophia,\n\nI kept the advertisement with the other things.\n\nI called again. They still haven't sold it. I'll ask for the bedroom measurements.\n\nLucas"
 
 msgid "READABLE_FICHA_NOTE"
 msgstr "I knew you'd find it, Juli. You're the only one who actually pays attention.\n\nTake the token to the top of the hill — let's make that call."
@@ -944,13 +929,13 @@ msgid "READABLE_JOURNAL"
 msgstr "Lucas thinks he can force his way through everything with a wrench.\n\nHe doesn't get that this old junction box follows a sequence. Remember our secret code for catching the night train, Juli?\n\n[b]First, you light the track.[/b]\n[b]Then, you punch the ticket.[/b]\n[b]Finally, you blow the signal.[/b]"
 
 msgid "READABLE_HOUSE_AD"
-msgstr "[b]HOUSE FOR SALE[/b]\nTown centre\n\nLiving room · Kitchen · Bedroom · Bedroom · Pantry\n\n[i]The blue windows are beautiful.[/i]\n\n[b]OURS?[/b]"
+msgstr "[b]HOUSE FOR SALE[/b]\n\nLiving room, kitchen, two bedrooms, and pantry.\n\nFinishing work required.\n\n[b][i]OURS?\nLucas[/i][/b]\n\n[i]The blue windows are beautiful.\nSophia[/i]"
 
 msgid "READABLE_BUS_TICKET_SOPHIA"
-msgstr "[b]BUS TICKET[/b]\nRailway village / São Paulo\nOne way\n\nPassenger: [i]Sophia[/i]"
+msgstr "[b]TICKET[/b]\n\nDestination: São Paulo\nOne way\n\nPassenger: [i]Sophia[/i]"
 
 msgid "READABLE_BUS_TICKET_UNCLAIMED"
-msgstr "[b]BUS TICKET[/b]\nRailway village / São Paulo\nOne way\n\nPassenger: [i]If you want.[/i]"
+msgstr "[b]TICKET[/b]\n\nDestination: São Paulo\nOne way\n\nPassenger: [i]If you want.[/i]"
 
 # Readable spots on inspected items
 msgid "INSPECT_PROMPT_READ"
@@ -1239,3 +1224,86 @@ msgstr "An old railway transmitter marked HQ."
 msgid "LOCKBOX_VIEW_HINT"
 msgstr "Click the arrows or scroll over a wheel to turn it."
 
+msgid "AD_BODY"
+msgstr "Living room, kitchen, two bedrooms, and pantry.\n\nFinishing work required."
+
+msgid "AD_LUCAS_SIGNATURE"
+msgstr "Lucas"
+
+msgid "BUS_TICKET_PASSENGER_SOPHIA"
+msgstr "Passenger:"
+
+msgid "CAPTION_HOUSE_BED_01"
+msgstr "Did you write this when you got here?"
+
+msgid "CAPTION_HOUSE_BED_02"
+msgstr "I think it was the first day."
+
+msgid "CAPTION_HOUSE_BED_03"
+msgstr "Had your mother already died?"
+
+msgid "CAPTION_HOUSE_BED_04"
+msgstr "Yes."
+
+msgid "CAPTION_HOUSE_BED_05"
+msgstr "“You don't need to worry about me.”"
+
+msgid "CAPTION_HOUSE_BED_06"
+msgstr "I know what it says."
+
+msgid "CAPTION_HOUSE_BED_07"
+msgstr "I just didn't know you wrote to her."
+
+msgid "CAPTION_HOUSE_BED_08"
+msgstr "I didn't. Just this one."
+
+msgid "CAPTION_HOUSE_BED_09"
+msgstr "And it's still here."
+
+msgid "CAPTION_HOUSE_BED_10"
+msgstr "I keep electricity bills too."
+
+msgid "CAPTION_HOUSE_BED_11"
+msgstr "All right."
+
+msgid "CAPTION_HOUSE_BED_12"
+msgstr "Are you upset?"
+
+msgid "CAPTION_HOUSE_BED_13"
+msgstr "No."
+
+msgid "CAPTION_HOUSE_BED_14"
+msgstr "Then come back to bed."
+
+msgid "CAPTION_HOUSE_BED_15"
+msgstr "In a moment."
+
+msgid "CAPTION_HOUSE_BED_16"
+msgstr "Do you want me to put it away?"
+
+msgid "CAPTION_HOUSE_BED_17"
+msgstr "No. Leave it where it was."
+
+msgid "CAPTION_HOUSE_SHH"
+msgstr "Shh."
+
+msgid "CAPTION_SPEAKER_LUCAS"
+msgstr "Lucas"
+
+msgid "ITEM_CAPSULE_KEY_DESCRIPTION"
+msgstr "A small key for the capsule in the living room."
+
+msgid "ITEM_CAPSULE_KEY_NAME"
+msgstr "Capsule Key"
+
+msgid "ITEM_POSTCARD_NAME"
+msgstr "Postcard"
+
+msgid "ITEM_POSTCARD_DESCRIPTION"
+msgstr "A postcard of the town, written by Lucas. No address or stamp."
+
+msgid "POSTCARD_TEXT"
+msgstr "Mom,\n\nI arrived safely. It's quiet here.\nYou don't need to worry about me.\n\nLucas"
+
+msgid "READABLE_POSTCARD"
+msgstr "Mom,\n\nI arrived safely. It's quiet here.\nYou don't need to worry about me.\n\nLucas"

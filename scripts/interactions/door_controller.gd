@@ -89,6 +89,11 @@ const KEY_TURN_DEGREES: float = -90.0
 var is_open: bool = false
 var is_locked: bool = false
 
+## A script can hold a shut door a crack open (degrees, towards `swing_sign`'s side), as if someone were testing it from
+## the other side; 0 is shut. The door stays shut as far as its state goes (nothing saved, the prompt is unchanged). The
+## leaf follows the value exactly (no easing), so the script that animates it is in control of the movement.
+var ajar_degrees: float = 0.0
+
 ## Set by `slam_shut()`: the speed of the next swing, 0 for the normal one.
 var _swing_speed_override: float = 0.0
 
@@ -186,6 +191,11 @@ func _process(delta: float) -> void:
 		_step_choreo(delta)
 		return
 
+	if not is_open and ajar_degrees > 0.0:
+		_set_collision_suspended(false)
+		hinge.rotation_degrees = closed_rotation_degrees + Vector3(0.0, ajar_degrees * float(swing_sign), 0.0)
+		return
+
 	var target_rotation: Vector3 = closed_rotation_degrees
 	if is_open:
 		target_rotation = current_open_rotation_degrees
@@ -273,19 +283,37 @@ func interact(player: Node) -> void:
 
 
 ## Opens the door by itself, with no player involved. `swing_override` (+1 or -1 around the
-## hinge) picks the side it swings towards; 0 uses the door's own `swing_sign`. A locked door
-## stays shut.
-func force_open(swing_override: float = 0.0) -> void:
+## hinge) picks the side it swings towards; 0 uses the door's own `swing_sign`. `degrees` above 0
+## opens it only that far (part way); it is saved like any open door. A locked door stays shut.
+func force_open(swing_override: float = 0.0, degrees: float = 0.0) -> void:
 	if hinge == null or is_locked or is_open:
 		return
 
 	_cancel_choreo(true)
-	current_open_rotation_degrees = (
-		_fixed_open_rotation() if swing_override == 0.0
-		else closed_rotation_degrees + Vector3(0.0, absf(open_angle_degrees) * signf(swing_override), 0.0)
-	)
+	var angle: float = absf(degrees) if degrees > 0.0 else absf(open_angle_degrees)
+	var side: float = signf(swing_override) if swing_override != 0.0 else float(swing_sign)
+	current_open_rotation_degrees = closed_rotation_degrees + Vector3(0.0, angle * side, 0.0)
 	is_open = true
 	_remember_persistent_state()
+
+
+## A script turns the handle itself (0 at rest, 1 pressed all the way down), on both faces: someone on the other side.
+func set_handle_turn(amount: float) -> void:
+	_set_levers(clampf(amount, 0.0, 1.0))
+
+
+## The handle sound (see `handle_sound_enabled`) played by a script, at the handle, a little slower or faster with `pitch`.
+func play_handle_sound(pitch: float = 1.0) -> void:
+	_play_handle_sound(_sound_position(), pitch)
+
+
+## Where the handle is on the face turned towards `point` (the leaf's middle on a door with no hardware).
+func get_handle_position_facing(point: Vector3) -> Vector3:
+	var side: int = 1 if to_local(point).z >= 0.0 else -1
+	if _hardware.has(side):
+		return (_hardware[side] as DoorHardware).get_handle_global()
+
+	return door_root.global_position
 
 
 ## Swings the door shut hard and fast, with no player involved. Does nothing to
@@ -297,6 +325,21 @@ func slam_shut(speed: float = 16.0) -> void:
 	_cancel_choreo(true)
 	_swing_speed_override = speed
 	is_open = false
+	_remember_persistent_state()
+
+
+## Puts the door shut at once, its handle at rest and no crack left, with no sound and no swing: for a scene that does it
+## while nobody can see the door.
+func close_instantly() -> void:
+	if hinge == null:
+		return
+
+	_cancel_choreo(true)
+	_swing_speed_override = 0.0
+	ajar_degrees = 0.0
+	is_open = false
+	hinge.rotation_degrees = closed_rotation_degrees
+	_set_levers(0.0)
 	_remember_persistent_state()
 
 
@@ -1159,7 +1202,7 @@ func _cue(id: StringName) -> bool:
 
 ## The handle turning, as the door is opened by the player: one of the two recordings, picked at random, at `at`
 ## (the handle, where the hand is). Independent of `door_sounds_enabled` (see `handle_sound_enabled`).
-func _play_handle_sound(at: Vector3) -> void:
+func _play_handle_sound(at: Vector3, pitch: float = 1.0) -> void:
 	if not handle_sound_enabled or not is_inside_tree():
 		return
 
@@ -1170,7 +1213,7 @@ func _play_handle_sound(at: Vector3) -> void:
 	var player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
 	player.stream = stream
 	player.volume_db = -6.0 + _rand(-1.5, 0.5)
-	player.pitch_scale = _rand(0.94, 1.06)
+	player.pitch_scale = pitch * _rand(0.94, 1.06)
 	player.unit_size = 5.0
 	player.max_distance = 30.0
 	add_child(player)

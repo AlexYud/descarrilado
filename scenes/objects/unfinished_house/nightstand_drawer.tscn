@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/interactions/drawer_interactable.gd" id="1_drawer"]
 
-[ext_resource type="PackedScene" path="res://scenes/objects/unfinished_house/lucas_diary.tscn" id="2_diary"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_wood"]
 albedo_color = Color(0.58, 0.46, 0.29, 1)
@@ -65,10 +64,6 @@ surface_material_override/0 = SubResource("Mat_wood")
 
 [node name="ItemAnchor" type="Node3D" parent="DrawerRoot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.048, 0)
-
-[node name="LucasDiary" parent="DrawerRoot/ItemAnchor" instance=ExtResource("2_diary")]
-position = Vector3(0, 0.008, 0)
-rotation_degrees = Vector3(-90, 0, 0)
 
 [node name="InteractArea" type="Area3D" parent="DrawerRoot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.15)

@@ -40,6 +40,9 @@ const BREATH_RATE: float = 0.22
 const BREATH_VERTICAL: float = 0.004
 const BREATH_PITCH_DEGREES: float = 0.12
 const GESTURE_SMOOTHING: float = 12.0
+## How fast the body's own motion fades out and back in around `view_motion_still` (per second).
+const VIEW_STILL_RATE: float = 4.0
+const VIEW_UNSTILL_RATE: float = 0.6
 
 # Variety, so a thousand steps are never the same step. Every footfall rolls its
 # own strength; slow drifts in stride, balance and cadence come from smooth noise;
@@ -147,8 +150,12 @@ var gesture_roll_degrees: float = 0.0
 ## True when a scene animates the view frame by frame itself (a fall, a crawl): the gesture values are then applied as they are,
 ## not eased towards.
 var gesture_direct: bool = false
+## A scene that frames a shot through the player's eyes stills the body (`view_motion_still`): the sway, the breathing and the
+## small unprompted movements fade out quickly, and fade back in slowly when it lets go, so that the hand back never jolts.
+var view_motion_still: bool = false
 
 var _gesture_offset_applied: Vector3 = Vector3.ZERO
+var _motion_weight: float = 1.0
 var _gesture_pitch_applied: float = 0.0
 var _gesture_roll_applied: float = 0.0
 
@@ -946,7 +953,12 @@ func _apply_view_motion(
 	_gesture_roll_applied = lerpf(_gesture_roll_applied, gesture_roll_degrees, gesture_weight)
 
 	# With head bobbing off only the scripted gestures (a door being opened) move the view.
-	var motion: float = 1.0 if GameSettings.get_head_bob_enabled() else 0.0
+	_motion_weight = move_toward(
+		_motion_weight,
+		0.0 if view_motion_still else 1.0,
+		delta * (VIEW_STILL_RATE if view_motion_still else VIEW_UNSTILL_RATE)
+	)
+	var motion: float = (1.0 if GameSettings.get_head_bob_enabled() else 0.0) * smoothstep(0.0, 1.0, _motion_weight)
 
 	var procedural: Vector3 = Vector3(
 		(
