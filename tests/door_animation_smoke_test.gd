@@ -264,7 +264,7 @@ func _check_unlocking_with_the_key() -> void:
 
 	await _until_still(door)
 	_expect(is_equal_approx(_swing_degrees(door), 85.0), "the door ends wide open")
-	_expect(is_equal_approx(_key_twist(door), -90.0), "the key stays in the lock, turned a quarter")
+	_expect(is_equal_approx(_key_twist(door), 90.0), "the key stays in the lock, turned a quarter")
 
 	door.queue_free()
 	await get_tree().physics_frame

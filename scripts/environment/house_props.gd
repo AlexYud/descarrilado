@@ -682,9 +682,9 @@ static func _build_postcard(root: Node3D) -> void:
 	var card: StandardMaterial3D = material(Color(0.83, 0.79, 0.67), 0.95)
 	add_box(root, "Card", Vector3(POSTCARD_SIZE.x, POSTCARD_SIZE.y, 0.0006), Vector3.ZERO, card)
 
-	# The message, in the middle of the written side (it is what fills the picture when it is read close).
+	# The message, smaller and centred on the written side with wide margins (it is what fills the picture when it is read close).
 	add_paragraphs(
-		root, "Text", "POSTCARD_TEXT", Vector3(-0.05, 0.027, 0.0004), 26, 0.00022, INK_BLUE, 500.0, 0.004
+		root, "Text", "POSTCARD_TEXT", Vector3(-0.0275, 0.0178, 0.0004), 26, 0.000176, INK_BLUE, 500.0, 0.0032
 	)
 
 	# The picture side: a white margin round a faded print.

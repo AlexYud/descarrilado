@@ -10,6 +10,11 @@ var interaction_prompt: Label = null
 ## The prompt as the player sees it: a key cap and a word on a panel, like every other prompt of the game.
 var prompt_view: InteractionPromptView = null
 
+## The marks on the usable things and the dot in the middle (see `InteractionReticle`).
+var reticle: InteractionReticle = null
+
+## The key legend ("[E] Inspect") is shown over a usable thing only until the player has used one thing; after that the marks alone say
+## what can be used (the inspect view keeps its own prompts).
 var current_interactable: Interactable = null
 
 
@@ -23,11 +28,17 @@ func setup(player_node: CharacterBody3D) -> void:
 	# White text over the flashlight's white circle cannot be read: the prompt sits on a panel (see `InteractionPromptView`).
 	prompt_view = InteractionPromptView.new()
 	player.get_node("InteractionUI").add_child(prompt_view)
+	reticle = InteractionReticle.new()
+	player.get_node("InteractionUI").add_child(reticle)
+	reticle.setup(player, player.get_node("Head/Camera3D") as Camera3D, self)
 
 	_setup_interact_ray()
 
 
 func update_state(dialogue_frozen: bool, inventory_open: bool) -> void:
+	if reticle != null:
+		reticle.set_active(not dialogue_frozen and not inventory_open)
+
 	if dialogue_frozen or inventory_open:
 		clear_prompt()
 		return
@@ -52,7 +63,10 @@ func update_state(dialogue_frozen: bool, inventory_open: bool) -> void:
 		var text: String = InputBindings.format_text(_with_key(tr(interactable.get_prompt_text())))
 		interaction_prompt.text = text
 		if prompt_view != null:
-			prompt_view.show_prompt(text)
+			if prompt_seen():
+				prompt_view.hide_prompt()
+			else:
+				prompt_view.show_prompt(text)
 	else:
 		clear_prompt()
 
@@ -66,8 +80,17 @@ func _with_key(text: String) -> String:
 	return "[{interact}] " + text
 
 
+## True once the player has used a thing for the first time (kept with the settings, for good).
+func prompt_seen() -> bool:
+	return GameSettings.interaction_prompt_seen
+
+
 func try_interact(player_node: Node) -> void:
 	if is_instance_valid(current_interactable):
+		if not prompt_seen():
+			GameSettings.set_interaction_prompt_seen(true)
+			if prompt_view != null:
+				prompt_view.hide_prompt()
 		current_interactable.interact(player_node)
 
 

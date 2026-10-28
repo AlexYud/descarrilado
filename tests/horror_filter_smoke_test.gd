@@ -34,7 +34,7 @@ func _run(player: CharacterBody3D) -> void:
 	var material: ShaderMaterial = (filter.get("horror_rect") as ColorRect).material as ShaderMaterial
 	var bloom: float = float(material.get_shader_parameter("bloom_strength"))
 	var gain: float = float(material.get_shader_parameter("highlight_gain"))
-	_expect(bloom > 0.2 and gain > 0.1, "the glare is on in the usual picture (bloom %.2f, push %.2f)" % [bloom, gain])
+	_expect(bloom < 0.01 and gain > 0.1, "the wide bloom is off (as on Low) and the push toward white stays (bloom %.2f, push %.2f)" % [bloom, gain])
 	_expect(float(material.get_shader_parameter("vhs_line_jitter")) > 0.0 and not material.shader.code.contains("vhs_dropouts"), "the tape wobble is there, the white dropout dashes are not")
 	_expect(not material.shader.code.contains("vhs_head_switch"), "and the torn band along the bottom is gone")
 	var fisheye: float = float(material.get_shader_parameter("fisheye_strength"))

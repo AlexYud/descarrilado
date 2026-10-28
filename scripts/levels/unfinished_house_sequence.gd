@@ -88,6 +88,16 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var open_after_latch_seconds: float = 0.7
 ## The pantry door opens only this far by itself.
 @export var pantry_ajar_degrees: float = 55.0
+## When the pantry has opened and the player turns for the corridor, their flashlight goes out by itself (a little before the corridor), so
+## the pantry's bulb and the open door are what they see: `kitchen_exit` is the corridor's arch (house local), `kitchen_light_off_distance`
+## how close to it, in metres.
+@export var kitchen_exit: Vector3 = Vector3(2.33, 0.0, 6.2)
+@export var kitchen_light_off_distance: float = 2.4
+## The living room's light, on once the bedroom door has opened (the way to the time capsule): it fades in over `living_light_fade_seconds`,
+## and out when the capsule is opened.
+@export var living_light: OmniLight3D
+@export var living_light_energy: float = 2.2
+@export var living_light_fade_seconds: float = 2.0
 
 @export_category("Pantry: the door and the arguing")
 ## The door closes behind the player once they are in the pantry and at least this far from its hinge (out of its swing).
@@ -129,12 +139,18 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 ## cut over `door_light_in_seconds`, out over the walk back to her eyes.
 @export var door_lighting: HouseDoorLighting
 @export var door_light_in_seconds: float = 0.4
-## Her flashlight in the door shot. She is standing at the nightstand, so at the cut the beam points back there (`beam_start_height`
-## above the postcard), away from the door; `beam_delay_seconds` later (a few steps) it comes slowly round to the door
-## (`beam_end_offset`, from its middle) over `beam_sweep_seconds`, the way a hand brings it up (an arc, never a straight line, slow
-## at both ends); before and after it sways and trembles a little (`beam_sway`, metres at the door).
-@export var beam_delay_seconds: float = 1.0
-@export var beam_sweep_seconds: float = 2.5
+## Her flashlight: when she turns to the door it points back at the nightstand (`beam_start_height` above the postcard); `beam_delay_seconds`
+## after the head starts, the hand brings it round to the door (`beam_end_offset`, from its middle) over `beam_sweep_seconds` (an arc, never a
+## straight line); it is on the door when the picture cuts to the door shot, and sways and trembles a little all the while (`beam_sway`).
+## Her flashlight at the door shot is this fraction of its usual strength, so the master room is darker.
+@export_range(0.05, 1.0, 0.05) var door_flashlight_strength: float = 0.2
+## ...and it flickers, never the same twice: a dip to `flicker_depth` of its strength for `flicker_length` seconds, `flicker_every` seconds
+## apart, sometimes twice in a row, and it is never quite steady in between.
+@export var flicker_every: Vector2 = Vector2(0.3, 2.4)
+@export var flicker_depth: Vector2 = Vector2(0.0, 0.6)
+@export var flicker_length: Vector2 = Vector2(0.03, 0.45)
+@export var beam_delay_seconds: float = 0.12
+@export var beam_sweep_seconds: float = 0.62
 @export var beam_start_height: float = 0.3
 @export var beam_end_offset: Vector3 = Vector3(0.0, 0.05, 0.0)
 @export var beam_arc: float = 0.3
@@ -146,8 +162,8 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export_group("The postcard in her hands")
 ## The postcard is picked up in one movement, the putting down of it played backwards (`lift_seconds`): she bows to the nightstand,
 ## the hand takes it up with a small arc (`held_arc`), the head rises, and the card comes close (`fill_distance`) while her lens
-## narrows, until the paper covers the whole picture (`fill_margin` of the card's width or height is all the picture shows,
-## whichever is tighter for the screen), tipped `fill_tilt_degrees` towards her. A moment still (`fill_hold_seconds`), and the
+## narrows, until the paper is most of the picture (`fill_width` of the screen's width: a little of the room still shows at its edges),
+## tipped `fill_tilt_degrees` towards her. A moment still (`fill_hold_seconds`), and the
 ## matched change of time under the paper (`paper_dissolve_seconds`, the paper only).
 @export var lift_seconds: float = 3.0
 @export var held_arc: float = 0.05
@@ -162,7 +178,12 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var zoom_seconds: float = 2.0
 @export var fill_distance: float = 0.26
 @export var fill_tilt_degrees: float = 12.0
-@export_range(0.5, 1.0, 0.01) var fill_margin: float = 0.86
+@export_range(0.4, 1.0, 0.01) var fill_width: float = 0.78
+## While she reads it, her flashlight is out and the card has a soft natural light of its own, a little in front of it (the light fades in
+## when it is picked up and out as it is put back down).
+@export var read_light_energy: float = 0.9
+@export var read_light_range: float = 1.4
+@export var read_light_color: Color = Color(1.0, 0.94, 0.82)
 @export var fill_hold_seconds: float = 2.3
 @export var paper_dissolve_seconds: float = 0.8
 ## From the paper the camera draws slowly back to the memory shot; the voices begin `conversation_after_seconds` into it.
@@ -176,7 +197,21 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var push_hold_seconds: float = 0.3
 @export var return_hold_seconds: float = 0.4
 @export var lower_seconds: float = 3.0
-@export var night_seconds: float = 2.0
+## The postcard touches the nightstand and she hears the steps: a beat of stillness (`scare_hesitation_seconds`), a wind-up the other way
+## (`scare_windup_seconds`), then the head whips round to the door (`scare_whip_seconds`, fast from the first moment, slowing as it
+## arrives), settles a little past and back (`scare_settle_seconds`), the head ducking as it goes; the flashlight, brought up by the hand a
+## moment after the head, follows and finds the door. She stares `night_seconds` and the picture cuts to the door shot, the flashlight
+## already on the door.
+@export var night_seconds: float = 0.25
+@export var scare_hesitation_seconds: float = 0.25
+@export var scare_windup_seconds: float = 0.09
+@export var scare_whip_seconds: float = 0.5
+@export var scare_settle_seconds: float = 0.25
+@export var scare_windup_degrees: float = 3.0
+@export var scare_overshoot_degrees: float = 1.5
+@export_range(0.0, 1.0, 0.05) var scare_flinch: float = 0.45
+## The postcard is on the nightstand this far through its lowering: the cut to the door comes then.
+@export_range(0.5, 1.0, 0.01) var lower_land_share: float = 0.84
 
 @export_group("The door")
 ## The door camera's one lens (degrees); its slow approach from the cut to the open door (`door_approach_seconds`).
@@ -189,7 +224,7 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var footstep_path: Array[Vector3] = [Vector3(1.4, 0.08, 8.0), Vector3(2.6, 0.08, 7.35), Vector3(6.0, 0.08, 7.3), Vector3(7.45, 0.08, 6.9)]
 @export var step_stride: float = 0.8
 ## The run begins this long before the cut to the door, while the postcard is being put away (heard far off, from her eyes).
-@export var steps_lead_seconds: float = 3.6
+@export var steps_lead_seconds: float = 5.0
 @export var step_interval_seconds: float = 0.62
 @export var step_interval_end_seconds: float = 0.7
 ## How uneven the running is (a share of the interval, either way), so it is never a metronome.
@@ -202,7 +237,7 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 ## The outside (wind, night) is pushed back this much while the steps and the door play (`OutdoorAmbience.set_muffle`).
 @export_range(0.0, 1.0, 0.05) var footsteps_duck: float = 0.6
 ## From the cut to the handle moving; the press; held down; the latch; the door opening, slowly, to `crack_degrees` (about 45:
-## wide open, and no one on the other side); held open `open_hold_seconds`. The whole runs about `door_approach_seconds`.
+## wide open, and no one on the other side); the view starts back to her eyes `eyes_lead_seconds` before it has finished. The whole runs about `door_approach_seconds`.
 ## The handle moves this long after the steps stop (a breath), quickly: only the door's opening is slow.
 @export var handle_after_steps_seconds: float = 0.4
 ## The tension recording (`placeholder_string_tension`): in as the door begins to open over `tension_in_seconds`, out over the walk to her eyes.
@@ -216,9 +251,10 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var handle_press_seconds: float = 0.7
 @export var handle_hold_seconds: float = 0.4
 @export var latch_pause_seconds: float = 0.15
-@export var crack_degrees: float = 45.0
+@export var crack_degrees: float = 60.0
 @export var crack_seconds: float = 13.0
-@export var open_hold_seconds: float = 2.0
+## The view goes back to her eyes this long before the door has finished opening.
+@export var eyes_lead_seconds: float = 2.0
 
 @export_group("Back to her eyes")
 ## The door camera goes slowly to where her own camera is (`eyes_blend_seconds`), turning and widening to her lens as it goes, the
@@ -300,11 +336,23 @@ var _approach_save_block: bool = false
 var _held_gesture_direct: bool = false
 ## The flashlight's sweep to the door.
 var _beam_on: bool = false
+## The postcard is being read (her flashlight is out, the card has its own light) and how strong that light is.
+var _reading: bool = false
+var _read_level: float = 0.0
+var _read_light: OmniLight3D = null
+var _flash_strength: float = 1.0
+var _flicker_wait: float = 1.0
+var _flicker_left: float = 0.0
+var _flicker_level: float = 1.0
+var _flicker_repeat: bool = false
+var _flicker_drift: float = 1.0
 ## The walker has stopped outside the door: the handle goes at once.
 var _steps_done: bool = false
 var _tension: AudioStreamPlayer = null
 const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3"
 var _beam_time: float = 0.0
+var _kitchen_exit_watch: bool = false
+var _living_light_on: bool = false
 var _beam_from: Vector3 = Vector3.ZERO
 var _beam_to: Vector3 = Vector3.ZERO
 
@@ -323,6 +371,8 @@ func _ready() -> void:
 
 	if postcard != null:
 		postcard.scene_requested.connect(_on_postcard_scene_requested)
+	if capsule != null:
+		capsule.opened.connect(_on_capsule_opened)
 
 	_restore()
 	_connect_to_player.call_deferred()
@@ -330,7 +380,7 @@ func _ready() -> void:
 
 ## Puts the house as the saved story left it.
 func _restore() -> void:
-	_set_pantry_lamp(_recipe_done, false)
+	_set_pantry_lamp(_recipe_done and not _memory_done, false)
 	# The kitchen beat was cut short (a save in the second between reading and the latch): the pantry opens now.
 	if _recipe_done and pantry_door != null and pantry_door.is_locked:
 		pantry_door.unlock()
@@ -338,6 +388,7 @@ func _restore() -> void:
 
 	_set_room(false)
 	_unlock_capsule()
+	_set_living_light(_memory_done and not _capsule_open(), 0.0)
 	if postcard != null:
 		postcard.plays_scene = not _memory_done
 
@@ -419,6 +470,27 @@ func _process(delta: float) -> void:
 
 func _physics_process(_delta: float) -> void:
 	_update_pantry()
+	_update_kitchen_exit()
+
+
+## The flashlight goes out as the player, with the pantry open, comes within `kitchen_light_off_distance` of the corridor's arch (inside the
+## kitchen), once; they can switch it on again.
+func _update_kitchen_exit() -> void:
+	if not _kitchen_exit_watch or _kitchen_running or memory_running:
+		return
+
+	var body: Node3D = _get_player()
+	if body == null:
+		return
+
+	var local: Vector3 = to_local(body.global_position)
+	if local.z >= kitchen_exit.z or Vector2(local.x - kitchen_exit.x, local.z - kitchen_exit.z).length() > kitchen_light_off_distance:
+		return
+
+	_kitchen_exit_watch = false
+	var light: Node = body.get("flashlight_controller") as Node
+	if light != null and light.has_method("turn_off"):
+		light.call("turn_off")
 
 
 # ============================================================
@@ -466,6 +538,7 @@ func _run_kitchen_beat() -> void:
 		pantry_door.force_open(0.0, pantry_ajar_degrees)
 	_set_pantry_lamp(true, true)
 	_kitchen_running = false
+	_kitchen_exit_watch = true
 
 
 ## Behind the player, on the kitchen floor: a foot slipping, a body hitting the boards, something small rolling away.
@@ -700,6 +773,7 @@ func _walk_to_nightstand(run: int, target: Node, movement: PlayerMovementControl
 ## room. The bedroom door is shut while the paper covers everything.
 func _shot_read(run: int) -> bool:
 	_log(&"lift")
+	_set_reading(true, 0.8)
 	var card: Transform3D = postcard.get_visual_node().global_transform
 	_fill_at = _fill_camera()
 	_fill_fov = _fill_lens()
@@ -718,6 +792,7 @@ func _shot_read(run: int) -> bool:
 		return false
 
 	_log(&"dissolve_in")
+	_read_level = 0.0
 	_fill_fov_used = _get_camera().fov
 	_dissolve(paper_dissolve_seconds)
 	_set_room(true)
@@ -726,6 +801,10 @@ func _shot_read(run: int) -> bool:
 	_show_camera(_fill_at, _fill_fov_used)
 	if bedroom_door != null:
 		bedroom_door.close_instantly()
+	# The pantry too: its door shut and its bulb out (nothing seen, nothing heard).
+	if pantry_door != null:
+		pantry_door.close_instantly()
+	_set_pantry_lamp(false, false)
 	_log(&"door_closed")
 	await _wait(paper_dissolve_seconds)
 	if not _still(run):
@@ -749,12 +828,12 @@ func _fill_camera() -> Transform3D:
 	return Transform3D(Basis.looking_at(card.origin - eye, up), eye)
 
 
-## The lens (vertical field of view, degrees) at which the paper, `fill_distance` away, covers the whole picture with a margin.
+## The lens (vertical field of view, degrees) at which the paper, `fill_distance` away, is `fill_width` of the picture's width.
 func _fill_lens() -> float:
 	var size: Vector2 = get_viewport().get_visible_rect().size
 	var aspect: float = size.x / maxf(size.y, 1.0)
-	var tilt: float = deg_to_rad(fill_tilt_degrees)
-	var height: float = minf(HouseProps.POSTCARD_SIZE.y * cos(tilt), HouseProps.POSTCARD_SIZE.x / aspect) * fill_margin
+	# The card's width is `fill_width` of the picture's width.
+	var height: float = HouseProps.POSTCARD_SIZE.x / (aspect * fill_width)
 	return rad_to_deg(2.0 * atan(height * 0.5 / fill_distance))
 
 
@@ -804,6 +883,7 @@ func _place_held_card() -> void:
 		# scene's camera will have it).
 		if near > 0.0 and movement.camera != null:
 			movement.camera.fov = movement.scripted_fov
+	_place_read_light(eye, pose.origin)
 
 
 ## The bow: the head sinks to the nightstand and tips down, as a gesture the movement controller applies as it is (direct).
@@ -858,6 +938,7 @@ func _shot_return(run: int) -> bool:
 	_log(&"dissolve_out")
 	_dissolve(paper_dissolve_seconds)
 	_set_room(false)
+	_read_level = 1.0
 	postcard.visible = false
 	_held_weight = 1.0
 	_held_near = 1.0
@@ -873,17 +954,72 @@ func _shot_return(run: int) -> bool:
 		return false
 
 	_log(&"lower")
-	_steps_after(run, maxf(lower_seconds + night_seconds - steps_lead_seconds, 0.0))
+	_steps_after(run, maxf(lower_seconds * lower_land_share + _scare_seconds() + night_seconds - steps_lead_seconds, 0.0))
+	_tween_held(&"_read_level", 0.0, lower_seconds * 0.8, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_held_near", 0.0, lower_seconds * 0.34, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_held_weight", 0.0, lower_seconds * 0.62, lower_seconds * 0.2, Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)
 	_tween_held(&"_bow", 1.0, lower_seconds * 0.58, lower_seconds * 0.12, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_bow", 0.0, lower_seconds * 0.3, lower_seconds * 0.7, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
-	await _wait(lower_seconds)
+	# The postcard touches the nightstand; she hears the steps and turns to the door, scared, her flashlight finding it.
+	await _wait(lower_seconds * lower_land_share)
 	if not _still(run):
 		return false
 	_drop_held_card()
+	_read_level = 0.0
+	if _read_light != null:
+		_read_light.visible = false
 	_log(&"settled")
-	await _wait(night_seconds)
+	if not await _scared_turn(run):
+		return false
+	if night_seconds > 0.0:
+		await _wait(night_seconds)
+	return _still(run)
+
+
+## How long the frightened turn takes, from the postcard landing to her looking at the door.
+func _scare_seconds() -> float:
+	return scare_hesitation_seconds + scare_windup_seconds + scare_whip_seconds + scare_settle_seconds
+
+
+## She hears someone coming and turns back to the door, afraid, the way a person does: a beat of stillness (the sound registers), a small
+## wind-up the other way, then the head whips round (fast from the first moment, slowing as it arrives), a little past and back, the head
+## ducking as it goes and rising to the door; the flashlight is brought up by the hand a moment after the head starts and swings after it
+## (a hand-held beam lags and tremors), finding the door as the head arrives. Ends with her looking at the door, the beam on it.
+func _scared_turn(run: int) -> bool:
+	var movement: PlayerMovementController = _get_movement()
+	if movement == null:
+		return _still(run)
+
+	var angles: Vector2 = _look_angles(_door_middle() + beam_end_offset)
+	var from_yaw: float = movement.look_yaw
+	var to_yaw: float = from_yaw + wrapf(angles.x - from_yaw, -180.0, 180.0)
+	var from_pitch: float = movement.look_pitch
+	var to_pitch: float = clampf(angles.y, -35.0, 75.0)
+	var side: float = signf(to_yaw - from_yaw) if absf(to_yaw - from_yaw) > 0.01 else 1.0
+
+	await _wait(scare_hesitation_seconds)
+	if not _still(run):
+		return false
+
+	# The hand has the flashlight on (weak, and unsteady), pointing back where it was, and brings it round after the head.
+	_reading = false
+	_flash_strength = door_flashlight_strength
+	_flash_apply()
+	_beam_start()
+	_tween_held(&"_bow", scare_flinch, scare_windup_seconds + scare_whip_seconds * 0.3, 0.0, Tween.TRANS_SINE, Tween.EASE_OUT)
+	_tween_held(&"_bow", 0.0, scare_whip_seconds + scare_settle_seconds, scare_windup_seconds + scare_whip_seconds * 0.3, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+
+	var look: Tween = _track(create_tween())
+	look.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	var wound: float = from_yaw - side * scare_windup_degrees
+	var past: float = to_yaw + side * scare_overshoot_degrees
+	look.tween_method(func(yaw: float) -> void: movement.look_yaw = yaw, from_yaw, wound, scare_windup_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	look.tween_method(func(yaw: float) -> void: movement.look_yaw = yaw, wound, past, scare_whip_seconds).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	look.tween_method(func(yaw: float) -> void: movement.look_yaw = yaw, past, to_yaw, scare_settle_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var rise: Tween = _track(create_tween())
+	rise.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
+	rise.tween_method(func(pitch: float) -> void: movement.look_pitch = pitch, from_pitch, to_pitch, scare_windup_seconds + scare_whip_seconds + scare_settle_seconds * 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await look.finished
 	return _still(run)
 
 
@@ -902,20 +1038,14 @@ func _steps_after(run: int, delay: float) -> void:
 ## The steps come along the hallway and stop, the light under the door is broken, the handle goes down once and stays down, the
 ## latch gives, a crack opens slowly, and an edge begins to come in.
 func _shot_door(run: int) -> bool:
-	# Her eyes turn to the door unseen (her flashlight lights it for the door shot), and settle before the cut.
-	_look_at_point(_door_middle(), 0.0)
-	await get_tree().physics_frame
-	if not _still(run):
-		return false
-
+	# A plain cut from her eyes, which are on the door, her flashlight on it already (`_scared_turn`); the door's light comes on with it.
 	_duck_outside(true)
-	if door_lighting != null:
-		door_lighting.fade_to(1.0, door_light_in_seconds)
 	var facing: Basis = _door_facing(door_front_wide.global_position)
 	_show_camera(Transform3D(facing, door_front_wide.global_position), door_fov)
 	_move_camera(Transform3D(facing, door_front_tight.global_position), door_approach_seconds)
 	_log(&"door")
-	_beam_start()
+	if door_lighting != null:
+		door_lighting.fade_to(1.0, 0.0)
 
 	while not _steps_done and _still(run):
 		await get_tree().process_frame
@@ -953,20 +1083,26 @@ func _shot_door(run: int) -> bool:
 	bedroom_door.play_handle_sound(handle_sound_pitch * 0.9)
 	var release: Tween = _track(create_tween())
 	release.tween_method(bedroom_door.set_handle_turn, 1.0, 0.0, handle_release_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	# The camera starts back to her eyes `eyes_lead_seconds` before the door has finished opening; the door finishes by itself.
+	await _wait(maxf(crack_seconds - handle_release_delay_seconds - eyes_lead_seconds, 0.0))
+	if not _still(run):
+		return false
+
+	_finish_door(run, crack)
+	return true
+
+
+## Wide open, and no one there: the door is an ordinary open door from here on, and the living room's light (the way to the capsule)
+## comes on with it.
+func _finish_door(run: int, crack: Tween) -> void:
 	await crack.finished
 	if not _still(run):
-		return false
+		return
 
-	# Wide open, and no one there.
 	_log(&"open")
-	# The door stays as it is: an ordinary open door from here on.
-	await _wait(open_hold_seconds)
-	if not _still(run):
-		return false
-
+	_set_living_light(not _capsule_open(), living_light_fade_seconds)
 	bedroom_door.ajar_degrees = 0.0
 	bedroom_door.force_open(0.0, crack_degrees)
-	return true
 
 
 ## Square on to the shut door from `eye`: looking along the door's normal, towards it.
@@ -1068,10 +1204,13 @@ func _drive_beam(delta: float) -> void:
 		return
 
 	_beam_time += delta
+	_flicker_flashlight(delta)
+	var sweeping: bool = _beam_from.distance_to(_beam_to) > 0.01
 	var s: float = clampf((_beam_time - beam_delay_seconds) / maxf(beam_sweep_seconds, 0.01), 0.0, 1.0)
 	var eased: float = s * s * s * (s * (s * 6.0 - 15.0) + 10.0)
 	var point: Vector3 = _beam_from.lerp(_beam_to, eased)
-	point += Vector3.UP * sin(PI * eased) * beam_arc
+	if sweeping:
+		point += Vector3.UP * sin(PI * eased) * beam_arc
 	var t: float = _beam_time
 	var moving: float = 1.0 + 1.2 * sin(PI * eased)
 	var sway: Vector3 = Vector3(
@@ -1082,6 +1221,25 @@ func _drive_beam(delta: float) -> void:
 	point += sway * beam_sway * moving
 	var hand: Vector3 = (_flashlight as Node3D).global_position
 	_flashlight.set("scripted_aim_direction", (point - hand).normalized())
+
+
+## Her flashlight in the door shot: weak, and now and then it stutters (a quick dip, some of it unsteady), as a failing battery does.
+func _flicker_flashlight(delta: float) -> void:
+	_flicker_wait -= delta
+	if _flicker_left <= 0.0 and _flicker_wait <= 0.0:
+		_flicker_left = randf_range(flicker_length.x, flicker_length.y)
+		_flicker_level = randf_range(flicker_depth.x, flicker_depth.y)
+		# Sometimes a second, quicker dip follows at once.
+		_flicker_repeat = not _flicker_repeat and randf() < 0.35
+		_flicker_wait = randf_range(0.05, 0.18) if _flicker_repeat else randf_range(flicker_every.x, flicker_every.y)
+	# Never quite steady: the strength wanders a little by itself.
+	_flicker_drift = clampf(_flicker_drift + randf_range(-0.06, 0.06), 0.8, 1.1)
+	var factor: float = _flicker_drift
+	if _flicker_left > 0.0:
+		_flicker_left -= delta
+		factor = _flicker_level * randf_range(0.4, 1.6)
+	_flash_strength = door_flashlight_strength * clampf(factor, 0.0, 1.0)
+	_flash_apply()
 
 
 func _beam_stop() -> void:
@@ -1117,6 +1275,8 @@ func _shot_to_eyes(run: int) -> bool:
 	_show_eyes()
 	_log(&"cut_to_eyes")
 	_beam_stop()
+	_flash_strength = 1.0
+	_flash_apply()
 	_duck_outside(false)
 	_log(&"glance_end")
 	return true
@@ -1177,6 +1337,7 @@ func _finish_memory_state() -> void:
 	_set_flag(KEY_MEMORY_DONE, true)
 	_set_room(false)
 	_unlock_capsule()
+	_set_living_light(not _capsule_open(), 0.0)
 	if postcard != null:
 		postcard.plays_scene = false
 
@@ -1226,6 +1387,8 @@ func _cancel_memory() -> void:
 		CaptionManager.clear()
 	_duck_outside(false)
 	_tension_stop(0.0)
+	_set_reading(false, 0.0)
+	_flash_strength = 1.0
 	if door_lighting != null:
 		door_lighting.fade_to(0.0, 0.0)
 	_set_room(false)
@@ -1254,8 +1417,77 @@ func _set_room(memory: bool) -> void:
 	for node: Node3D in night_only:
 		if node != null and is_instance_valid(node):
 			node.visible = not memory
+	# What is only in the memory (the bed, the bedding, the lamp) is not solid in the night either.
+	if memory_root != null:
+		for shape: Node in memory_root.find_children("*", "CollisionShape3D", true, false):
+			(shape as CollisionShape3D).set_deferred("disabled", not memory)
+	_flash_apply()
+
+
+## Her flashlight as the scene wants it: on in the night (at `_flash_strength`), out in the memory and while the postcard is read.
+func _flash_apply() -> void:
 	if _flashlight_scripted and _flashlight != null and is_instance_valid(_flashlight):
-		_flashlight.call("set_scripted_light", _flashlight_available and not memory, 1.0)
+		_flashlight.call("set_scripted_light", _flashlight_available and not in_memory and not _reading, _flash_strength)
+
+
+## The postcard is read (or not): her flashlight goes out and the card's own light fades in over `seconds`, or the reverse.
+func _set_reading(on: bool, seconds: float) -> void:
+	_reading = on
+	if on and _read_light == null:
+		_read_light = OmniLight3D.new()
+		_read_light.name = "ReadLight"
+		_read_light.light_color = read_light_color
+		_read_light.omni_range = read_light_range
+		_read_light.omni_attenuation = 1.2
+		_read_light.light_specular = 0.0
+		_read_light.shadow_enabled = false
+		_read_light.visible = false
+		add_child(_read_light)
+	_flash_apply()
+	if on:
+		_read_level = 0.0
+		if seconds > 0.0:
+			_tween_held(&"_read_level", 1.0, seconds, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+		else:
+			_read_level = 1.0
+	else:
+		_read_level = 0.0
+		if _read_light != null:
+			_read_light.visible = false
+
+
+## The card's natural light: a little in front of it, towards her eyes.
+func _place_read_light(eye: Transform3D, card_at: Vector3) -> void:
+	if _read_light == null:
+		return
+
+	_read_light.visible = _reading and _read_level > 0.01
+	_read_light.light_energy = read_light_energy * clampf(_read_level, 0.0, 1.0)
+	_read_light.global_position = card_at + eye.basis.z * 0.16 + eye.basis.y * 0.04
+
+
+## The living room's light, on or off (fading over `seconds`): the capsule's room.
+func _set_living_light(on: bool, seconds: float) -> void:
+	_living_light_on = on
+	if living_light == null or not is_instance_valid(living_light):
+		return
+
+	var target: float = living_light_energy if on else 0.0
+	if seconds <= 0.0:
+		living_light.light_energy = target
+		living_light.visible = on
+		return
+
+	if on:
+		living_light.visible = true
+	var fade: Tween = _track(create_tween())
+	fade.tween_property(living_light, "light_energy", target, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if not on:
+		fade.tween_callback(func() -> void: living_light.visible = false)
+
+
+func _on_capsule_opened() -> void:
+	_set_living_light(false, living_light_fade_seconds)
 
 
 ## Once the bedroom scene is done the capsule opens to the player, with no key.
@@ -1301,7 +1533,7 @@ func _hold_player(target: Node) -> void:
 		_flashlight_available = bool(_flashlight.get("flashlight_input_enabled")) and bool(_flashlight.call("_player_has_flashlight"))
 		_flashlight.call("begin_scripted_light")
 		_flashlight_scripted = true
-		_flashlight.call("set_scripted_light", _flashlight_available, 1.0)
+		_flash_apply()
 
 
 ## Gives the player back: their own eyes (the view already where the scene left it, so the first mouse movement turns from

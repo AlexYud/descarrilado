@@ -23,14 +23,14 @@ class_name HouseDoorLighting
 @export var door_position: Vector3 = Vector3(7.43, 2.4, 1.2)
 @export var door_target: Vector3 = Vector3(7.43, 0.9, 6.2)
 @export var door_color: Color = Color(0.78, 0.84, 0.95)
-@export var door_energy: float = 1.5
+@export var door_energy: float = 0.7
 @export var door_angle: float = 34.0
 
 @export_group("Air and frame")
 @export var haze_center: Vector3 = Vector3(8.1, 1.3, 3.1)
 @export var haze_size: Vector3 = Vector3(6.9, 2.6, 6.0)
 @export var haze_density: float = 0.04
-@export_range(0.0, 1.0, 0.01) var vignette_strength: float = 0.7
+@export_range(0.0, 1.0, 0.01) var vignette_strength: float = 0.8
 
 var level: float = 0.0
 

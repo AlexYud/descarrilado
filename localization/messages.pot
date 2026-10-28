@@ -891,6 +891,9 @@ msgstr ""
 msgid "OPTIONS_MOTION_BLUR"
 msgstr ""
 
+msgid "OPTIONS_VHS_FILTER"
+msgstr ""
+
 # The overlook payphone
 msgid "FICHA_NUMBER_1"
 msgstr ""

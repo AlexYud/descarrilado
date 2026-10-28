@@ -258,7 +258,8 @@ func _scenario() -> void:
 	_expect(absf(sophia_at.x - finale.aisle_x) < 0.1, "in the middle of it (x %.2f)" % sophia_at.x)
 	_expect(sophia_at.z < -5.0 and sophia_at.z > -6.1, "right against the far (north) wall, so the whole wagon has to be walked (z %.2f)" % sophia_at.z)
 	_facing_check(sophia.global_basis.z, player, sophia)
-	_expect(sophia.find_children("*", "AudioStreamPlayer3D", true, false).is_empty(), "and no crying that can be heard")
+	var cry: AudioStreamPlayer3D = sophia.get_node_or_null("Crying") as AudioStreamPlayer3D
+	_expect(cry != null and cry.playing and cry.stream != null and cry.max_distance > 20.0 and cry.unit_size < 6.0, "and her crying is heard, in 3D, from her (looped, louder as the player nears)")
 	var movement: PlayerMovementController = player.movement_controller
 	_expect(movement.is_corridor_locked(), "the player can only walk along the aisle")
 	_expect(bool(flashlight.get("flashlight_input_enabled")), "the flashlight can be used again")
@@ -431,11 +432,11 @@ func _scenario() -> void:
 	await get_tree().process_frame
 
 
-## Whether any sound is playing under `node`.
+## Whether any sound is playing under `node` (the girl's crying, which has its own check, is not counted).
 func _any_sound(node: Node) -> bool:
 	for kind: String in ["AudioStreamPlayer", "AudioStreamPlayer3D"]:
 		for child: Node in node.find_children("*", kind, true, false):
-			if bool(child.get("playing")):
+			if child.name != &"Crying" and bool(child.get("playing")):
 				return true
 
 	return false

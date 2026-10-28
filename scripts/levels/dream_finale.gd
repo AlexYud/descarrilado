@@ -26,8 +26,9 @@ class_name DreamFinale
 ##    plain like the menu's, and back to the main menu. The save is marked `demo_complete` and keeps the player at the overlook
 ##    with the three fichas in the slot, so Continue lets them make the call again.
 ##
-## Everything is placeholder art (the girl, the head and the hands are made in code). The wagon has no sound of its own: the
-## rain, the crying and the whisper are text only, and the only sounds are the player's footsteps and the sting of the head.
+## Everything is placeholder art (the girl, the head and the hands are made in code). The girl's crying (`placeholder_crying_woman`)
+## loops from her own place, in 3D, so it grows as the player nears her and stops when she is gone; besides it the rain and the whisper
+## are text only, and the other sounds are the player's footsteps and the sting of the head.
 
 ## The title card has been shown and the game is about to return to the menu.
 signal finished
@@ -53,6 +54,11 @@ const STATE_SECTION: StringName = &"puzzles"
 const KEY_DEMO_COMPLETE: StringName = &"demo_complete"
 const KEY_CALL_DONE: StringName = &"orelhao_call_done"
 const LINE_WHISPER: String = "CAPTION_WAGON_WHISPER"
+## The girl's crying, looped, from where she sits (3D: louder the nearer the player is).
+const CRYING_PATH: String = "res://assets/audios/placeholder_crying_woman.mp3"
+const CRYING_DB: float = -3.0
+const CRYING_UNIT_SIZE: float = 3.0
+const CRYING_MAX_DISTANCE: float = 45.0
 ## A lit box of the town's lit-windows mesh is 12 triangles of 3 vertices.
 const VERTICES_PER_BOX: int = 36
 ## Before a light goes out for good it stutters for this much of the whole blackout.
@@ -151,6 +157,7 @@ void fragment() {
 @export var title_fade_out_seconds: float = 1.0
 
 var stage: Stage = Stage.IDLE
+var _cry: AudioStreamPlayer3D = null
 
 var _player: Node3D = null
 var _snapshot: Dictionary = {}
@@ -760,6 +767,7 @@ func _prepare_wagon() -> void:
 	# She faces the wall at the end of the wagon, her back to the aisle.
 	_sophia.rotation_degrees.y = 180.0
 	wagon.add_child(_sophia)
+	_start_crying()
 
 
 ## A girl sitting on the floor with her arms round her knees and her head down, built from primitives.
@@ -1186,8 +1194,29 @@ func _breathe(movement: Node, seconds: float) -> void:
 	movement.set("gesture_offset", Vector3.ZERO)
 
 
+## The girl's crying, a loop in 3D at her head (so it gets louder as the player comes closer to her).
+func _start_crying() -> void:
+	var stream: AudioStream = load(CRYING_PATH) as AudioStream
+	if stream == null or _sophia == null:
+		return
+
+	if stream is AudioStreamMP3:
+		(stream as AudioStreamMP3).loop = true
+	_cry = AudioStreamPlayer3D.new()
+	_cry.name = "Crying"
+	_cry.stream = stream
+	_cry.volume_db = CRYING_DB
+	_cry.unit_size = CRYING_UNIT_SIZE
+	_cry.max_distance = CRYING_MAX_DISTANCE
+	_cry.position = Vector3(0.0, 0.45, 0.0)
+	_sophia.add_child(_cry)
+	_cry.play()
+
+
 ## The girl is gone, and the lights stutter out and in as it happens.
 func _vanish_sophia() -> void:
+	if _cry != null and is_instance_valid(_cry):
+		_cry.stop()
 	for light: OmniLight3D in _wagon_lights:
 		light.visible = false
 

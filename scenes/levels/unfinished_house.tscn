@@ -14,7 +14,7 @@
 [ext_resource type="Script" path="res://scripts/audio/ambience_zone.gd" id="90_ambience_zone"]
 [ext_resource type="Script" path="res://scripts/environment/house_door_lighting.gd" id="17_door_lighting"]
 
-[node name="UnfinishedHouse" type="Node3D" node_paths=PackedStringArray("doors_root", "pantry_door", "bedroom_door", "capsule", "night_only", "pantry_light", "pantry_lamp", "argument_voices", "postcard", "memory_root", "memory_light", "memory_eye", "memory_aim", "postcard_stand", "door_front_wide", "door_front_tight", "door_lighting", "memory_voice_player")]
+[node name="UnfinishedHouse" type="Node3D" node_paths=PackedStringArray("doors_root", "pantry_door", "bedroom_door", "capsule", "night_only", "pantry_light", "pantry_lamp", "argument_voices", "postcard", "memory_root", "memory_light", "memory_eye", "memory_aim", "postcard_stand", "door_front_wide", "door_front_tight", "door_lighting", "living_light", "memory_voice_player")]
 script = ExtResource("1_sequence")
 doors_root = NodePath("Doors")
 pantry_door = NodePath("Doors/PantryDoor")
@@ -32,6 +32,7 @@ postcard_stand = NodePath("Markers/PostcardStand")
 door_front_wide = NodePath("Markers/DoorFrontWide")
 door_front_tight = NodePath("Markers/DoorFrontTight")
 door_lighting = NodePath("DoorLighting")
+living_light = NodePath("LivingLight")
 memory_voice_player = NodePath("Memory/MemoryVoice")
 
 [node name="Shell" type="Node3D" parent="." unique_id=1898375199]
@@ -139,11 +140,6 @@ light_energy = 0.0
 shadow_enabled = true
 omni_range = 3.2
 
-[node name="Bed" type="Node3D" parent="Furniture"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.25, 0, 1.08)
-script = ExtResource("3_prop")
-kind = &"bed"
-
 [node name="Nightstand" type="Node3D" parent="Furniture" unique_id=1311972603]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2675, 0, 0.30789375)
 script = ExtResource("3_prop")
@@ -163,6 +159,11 @@ visible = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.25, 0, 1.08)
 script = ExtResource("3_prop")
 kind = &"memory_bedding"
+
+[node name="Bed" type="Node3D" parent="Memory"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.25, 0, 1.08)
+script = ExtResource("3_prop")
+kind = &"bed"
 
 [node name="MemoryChair" type="Node3D" parent="Memory"]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 5.13, 0, 2.75)
@@ -190,6 +191,14 @@ omni_range = 6.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.43, 1.0, 1.2)
 unit_size = 3.0
 max_distance = 15.0
+
+[node name="LivingLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 2.3, 11.2)
+visible = false
+light_color = Color(1, 0.78, 0.5, 1)
+light_energy = 0.0
+shadow_enabled = true
+omni_range = 9.5
 
 [node name="DoorLighting" type="Node3D" parent="."]
 script = ExtResource("17_door_lighting")

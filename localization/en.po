@@ -975,6 +975,9 @@ msgstr "Depth of field"
 msgid "OPTIONS_MOTION_BLUR"
 msgstr "Motion blur"
 
+msgid "OPTIONS_VHS_FILTER"
+msgstr "VHS filter"
+
 # The overlook payphone
 msgid "FICHA_NUMBER_1"
 msgstr "1"

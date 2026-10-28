@@ -83,7 +83,7 @@ metadata/_tab_index = 1
 [node name="GraphicsVBox" type="VBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics" unique_id=1572830477]
 layout_mode = 2
 size_flags_vertical = 0
-theme_override_constants/separation = 8
+theme_override_constants/separation = 4
 
 [node name="UIScaleRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox"]
 layout_mode = 2
@@ -187,6 +187,17 @@ size_flags_horizontal = 3
 text = "OPTIONS_MOTION_BLUR"
 
 [node name="MotionBlurCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/MotionBlurRow"]
+layout_mode = 2
+
+[node name="VhsFilterRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox"]
+layout_mode = 2
+
+[node name="VhsFilterLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/VhsFilterRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OPTIONS_VHS_FILTER"
+
+[node name="VhsFilterCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/VhsFilterRow"]
 layout_mode = 2
 
 [node name="Controls" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=155467256]

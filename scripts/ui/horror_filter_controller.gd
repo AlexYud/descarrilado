@@ -37,6 +37,11 @@ func _ready() -> void:
 			_on_quality_preset_changed
 		)
 
+	if not GameSettings.vhs_filter_changed.is_connected(_on_vhs_filter_changed):
+		GameSettings.vhs_filter_changed.connect(_on_vhs_filter_changed)
+	# The player can take the whole look off (the options): the layer is hidden, and the picture is the game's own.
+	visible = GameSettings.get_vhs_filter_enabled()
+
 	_apply_quality_preset(GameSettings.get_quality_preset())
 
 	var filter_material: ShaderMaterial = horror_rect.material as ShaderMaterial
@@ -81,6 +86,10 @@ func _exit_tree() -> void:
 		)
 
 
+func _on_vhs_filter_changed(enabled: bool) -> void:
+	visible = enabled
+
+
 func _on_quality_preset_changed(preset: int) -> void:
 	_apply_quality_preset(preset)
 
@@ -94,6 +103,12 @@ func _apply_quality_preset(preset: int) -> void:
 			"HorrorFilter: HorrorRect requires a ShaderMaterial."
 		)
 		return
+
+	# The wide bloom (the halo round every bright thing, which burns an item's details out up close) is off on every preset: the
+	# Low picture, which has none, is the one players read items in. (The shader skips it on Low anyway.)
+	filter_material.set_shader_parameter("bloom_strength", 0.0)
+	_glare_base[&"bloom_strength"] = 0.0
+	_applied_amount = -1.0
 
 	match preset:
 		QUALITY_LOW:

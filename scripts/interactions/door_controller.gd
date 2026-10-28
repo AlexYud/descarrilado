@@ -29,8 +29,8 @@ class_name DoorController
 ## when the door starts to swing open, not when the button is pressed.
 signal opened_by_player
 
-## How far the key turns in the lock (negative is clockwise, seen from the face).
-const KEY_TURN_DEGREES: float = -90.0
+## How far the key turns in the lock (positive is counter-clockwise, to the left, seen from the face).
+const KEY_TURN_DEGREES: float = 90.0
 
 @export var hinge: Node3D
 @export var door_root: Node3D

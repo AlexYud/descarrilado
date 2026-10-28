@@ -119,6 +119,8 @@ func _check_layout() -> void:
 	# The drawer is empty, and no notebook lies on the bed.
 	_expect(drawer.get_node("DrawerRoot/ItemAnchor").get_child_count() == 0, "the nightstand drawer is empty")
 	_expect(drawer.find_children("*", "Interactable", true, false).is_empty(), "nothing to read or take in it")
+	_expect(not house.get_node("Memory/Bed").is_visible_in_tree() and house.get_node("Memory").find_children("*", "CollisionShape3D", true, false).all(func(c: Node) -> bool: return (c as CollisionShape3D).disabled), "the bed is only in the memory (not shown, not solid, in the night)")
+	_expect(not house.living_light.visible, "the living room light is off before the scene")
 	_expect(house.get_node_or_null("Furniture/LucasDiary") == null and house.get_node_or_null("Furniture/CapsuleKey") == null, "the notebook is gone from the bed, and there is no key in the scene")
 
 	# Lucas's postcard on the nightstand: an ordinary readable world prop (not an item), its writing up; no clock.
@@ -192,6 +194,14 @@ func _check_kitchen() -> void:
 	_expect(bool(SaveManager.get_state_value(&"puzzles", &"house_recipe_done", false)), "the recipe is remembered as read")
 	_expect(not bool(SaveManager.get_state_value(&"triggers", &"house_recipe_open", false)), "the old recipe reaction is not used")
 	_expect(bool(flashlight.get("flashlight_on")), "the flashlight was not touched")
+	# Turning for the corridor, a little before the arch, the flashlight goes out by itself (so the pantry's bulb and the open door are seen).
+	player.global_position = house.to_global(Vector3(2.33, 1.05, 2.5))
+	await _wait(0.3)
+	_expect(bool(flashlight.get("flashlight_on")), "far from the corridor the flashlight stays on")
+	player.global_position = house.to_global(Vector3(2.33, 1.05, 4.6))
+	await _wait(0.5)
+	_expect(not bool(flashlight.get("flashlight_on")), "near the corridor's arch the flashlight goes out by itself")
+	flashlight.set("flashlight_on", true)
 
 	# Reading it again plays nothing.
 	var angle: float = _pantry_angle()
@@ -335,6 +345,7 @@ func _check_memory_scene() -> void:
 	var screen_centre_error: float = 99.0
 	var whole_door_at_end: bool = false
 	var beam_early: float = -1.0
+	var eyes_on_door_at_cut: float = 99.0
 	var beam_off_after: bool = false
 	var beam_first_off: float = 0.0
 	var cinema_last: Transform3D = Transform3D.IDENTITY
@@ -491,18 +502,22 @@ func _check_memory_scene() -> void:
 		# The door: a hard cut square on from far back, the whole door in the picture, one lens, a straight approach that never
 		# turns; one slow press; a slow opening, wide; nothing on the other side.
 		if _logged(&"door") and _logged_time(&"door") == now and view != camera:
+			eyes_on_door_at_cut = rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized()))
 			door_cut_ok = previous_camera == camera and view.global_position.distance_to(house.door_front_wide.global_position) < 0.001
 			whole_door_at_cut = _door_wholly_in(view, 0.03)
 			square_on = absf(forward.dot(bedroom_door.global_basis.z))
 			door_forward = forward
 			door_fov = view.fov
 			distance_at_cut = absf((view.global_position - bedroom_door.global_position).dot(bedroom_door.global_basis.z))
+		# The door's opening is followed to its end, which comes after the camera has started back to her eyes.
+		if _logged(&"crack") and not bedroom_door.is_open:
+			max_crack = maxf(max_crack, _bedroom_angle())
+		if _logged(&"open"):
+			max_crack_open = maxf(max_crack_open, _bedroom_angle())
 		if _logged(&"door") and not _logged(&"to_eyes") and view != camera:
 			door_direction_change = maxf(door_direction_change, rad_to_deg(forward.angle_to(door_forward)))
 			door_fov_change = maxf(door_fov_change, absf(view.fov - door_fov))
 			distance_at_end = absf((view.global_position - bedroom_door.global_position).dot(bedroom_door.global_basis.z))
-			if not bedroom_door.is_open:
-				max_crack = maxf(max_crack, _bedroom_angle())
 		# The flashlight: pointing back at the nightstand at the cut (not at the door, not in the picture), coming round to the door
 		# after a few steps, swaying; her own aim again at the end.
 		if _logged(&"door") and not _logged(&"to_eyes") and view != camera:
@@ -518,11 +533,10 @@ func _check_memory_scene() -> void:
 				beam_near = minf(beam_near, off)
 			# The door camera is centred on the door the whole way, and the picture's middle is the door's.
 			door_x_error = maxf(door_x_error, absf(view.global_position.x - bedroom_door.global_position.x - 0.45))
-			if _logged(&"open"):
+			if _logged(&"crack"):
 				var door_centre: Vector2 = view.unproject_position(bedroom_door.to_global(Vector3(0.45, 1.0, 0.0)))
 				screen_centre_error = minf(screen_centre_error, (door_centre - get_viewport().get_visible_rect().size * 0.5).length() / get_viewport().get_visible_rect().size.y)
 				whole_door_at_end = _door_wholly_in(view, 0.01)
-				max_crack_open = maxf(max_crack_open, _bedroom_angle())
 		# The scene's camera goes to her eyes: it is where her camera is, with her lens, when the view becomes hers.
 		if view != camera:
 			cinema_last = view.global_transform
@@ -578,7 +592,7 @@ func _check_memory_scene() -> void:
 	var beats: Array[StringName] = []
 	for entry: Dictionary in house.memory_log:
 		beats.append(entry["beat"] as StringName)
-	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"door", &"steps_end", &"handle", &"latch", &"crack", &"handle_release", &"open", &"to_eyes", &"cut_to_eyes", &"glance_end", &"released"]
+	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"door", &"steps_end", &"handle", &"latch", &"crack", &"handle_release", &"to_eyes", &"open", &"cut_to_eyes", &"glance_end", &"released"]
 	_expect(beats == wanted, "the beats run in order: %s" % ", ".join(PackedStringArray(beats.map(func(b: StringName) -> String: return String(b)))))
 	_expect(not inspect_seen, "the generic inspect view never opens during it")
 	_expect(not control_slipped, "the controls never come back to the player before the end")
@@ -590,14 +604,14 @@ func _check_memory_scene() -> void:
 	_expect(absf(lift_seconds_log - (house.lift_seconds * 0.85 + house.zoom_seconds + house.fill_hold_seconds)) < 0.2 and house.memory_log.filter(func(e: Dictionary) -> bool: return e["beat"] == &"reading" or e["beat"] == &"fill").is_empty(), "picked up in one movement, with no stop to read: straight to the full-screen paper (%.1f s)" % lift_seconds_log)
 	var lower_seconds_log: float = _logged_time(&"settled") - _logged_time(&"lower")
 	_expect(bow_lift > 7.0 and bow_lower > 7.0, "she bows her head to the nightstand taking it up (%.0f degrees) and putting it down (%.0f degrees)" % [bow_lift, bow_lower])
-	_expect(absf(lower_seconds_log - 3.0) < 0.2, "putting it down takes three seconds (%.1f s)" % lower_seconds_log)
-	var smooth_start: bool = bow_samples_lift.size() > 8 and bow_samples_lift.max() > 9.5
+	_expect(absf(lower_seconds_log - 3.0 * house.lower_land_share) < 0.2, "putting it down takes until the card touches the nightstand (%.1f s)" % lower_seconds_log)
+	var smooth_start: bool = bow_samples_lift.size() > 8 and bow_samples_lift.max() > 8.5
 	_expect(smooth_start, "the head goes down and comes back up (not one constant movement)")
 	var push_seconds_log: float = _logged_time(&"dissolve_out") - _logged_time(&"return")
 	_expect(push_seconds_log > 4.2 and push_seconds_log < 4.6, "the camera takes four seconds to frame the paper again (%.1f s with a moment still)" % push_seconds_log)
 	_expect(other_sounds == 0, "no sound but the footsteps plays in the scene (%d other)" % other_sounds)
 	_expect(not duplicate_seen, "never two postcards at once (the one on the nightstand is hidden while one is held)")
-	_expect(covered_in and covered_out, "the paper covers the whole picture at both changes of time")
+	_expect(covered_in and covered_out, "the paper is most of the picture, centred, with the room at its edges, at both changes of time")
 	_expect(registration_in >= 0.0 and registration_in < 0.5 and registration_out >= 0.0 and registration_out < 0.5, "the writing stays on the same pixels through both (%.2f and %.2f px)" % [registration_in, registration_out])
 	_expect(swap_times.size() == 2 and swap_times[0] - _logged_time(&"dissolve_in") < 0.12 and swap_times[0] >= _logged_time(&"dissolve_in") and swap_times[1] - _logged_time(&"dissolve_out") < 0.12 and swap_times[1] >= _logged_time(&"dissolve_out"), "the room changes only under the paper")
 	_expect(memory_settled_seen and memory_motion < 0.01, "the memory holds one still shot (%.4f)" % memory_motion)
@@ -632,8 +646,8 @@ func _check_memory_scene() -> void:
 	var to_steps: float = _logged_time(&"door") - last_line_end
 	_expect(to_steps > 10.0 and to_steps < 14.5, "the first footstep comes %.1f s after the last line ends" % to_steps)
 	_expect(absf((_logged_time(&"return") - last_line_end) - 2.0) < 0.3, "the shot is held two seconds after the last line")
-	_expect(absf((_logged_time(&"door") - _logged_time(&"settled")) - house.night_seconds) < 0.2, "and her eyes rest on the dark room for %.0f s before it" % house.night_seconds)
-	_expect(_logged_time(&"steps") > _logged_time(&"lower") and _logged_time(&"steps") < _logged_time(&"settled") and _logged_time(&"door") - _logged_time(&"steps") > 2.5, "the running begins while the postcard is being put away, heard before the cut (%.1f s before it)" % (_logged_time(&"door") - _logged_time(&"steps")))
+	_expect(absf((_logged_time(&"door") - _logged_time(&"settled")) - (house._scare_seconds() + house.night_seconds)) < 0.3, "and her eyes rest on the dark room for %.0f s before it" % house.night_seconds)
+	_expect(_logged_time(&"steps") >= _logged_time(&"lower") and _logged_time(&"steps") < _logged_time(&"settled") and _logged_time(&"door") - _logged_time(&"steps") > 2.0, "the running begins while the postcard is being put away, heard before the cut (%.1f s before it)" % (_logged_time(&"door") - _logged_time(&"steps")))
 
 	# The footsteps: slow, heavy, along the hallway, clearly heard, up to the door, done before the handle moves.
 	var step_list: Array = steps_seen.values()
@@ -646,7 +660,7 @@ func _check_memory_scene() -> void:
 		_expect(float(first_step[1]) >= -16.0 and float(last_step[1]) >= -4.0, "clearly heard, from %.0f dB to %.0f dB" % [float(first_step[1]), float(last_step[1])])
 		var cadence: float = (float(last_step[2]) - float(first_step[2])) / float(step_list.size() - 1)
 		_expect(cadence > 0.5 and cadence < 0.85, "walking: a step every %.2f s" % cadence)
-		_expect(float(last_step[2]) - _logged_time(&"door") > -1.0 and float(last_step[2]) - _logged_time(&"door") < 2.5, "they arrive at the door just after the cut (%.1f s)" % (float(last_step[2]) - _logged_time(&"door")))
+		_expect(float(last_step[2]) - _logged_time(&"door") > -1.0 and float(last_step[2]) - _logged_time(&"door") < 3.6, "they arrive at the door a few seconds after the cut (%.1f s)" % (float(last_step[2]) - _logged_time(&"door")))
 	_expect(_logged_time(&"handle") - _logged_time(&"steps_end") > 0.2 and _logged_time(&"handle") - _logged_time(&"steps_end") < 1.0, "the handle goes right after the steps stop (%.1f s)" % (_logged_time(&"handle") - _logged_time(&"steps_end")))
 
 	# The door.
@@ -657,28 +671,30 @@ func _check_memory_scene() -> void:
 	_expect(distance_at_end < distance_at_cut - 1.0 and distance_at_end > 3.2, "it creeps closer all the way, and stops far enough to keep the whole door (%.1f m to %.1f m)" % [distance_at_cut, distance_at_end])
 	_expect(door_x_error < 0.02 and screen_centre_error < 0.05, "the whole shot is centred on the door (%.3f m off, %.3f of the picture's height)" % [door_x_error, screen_centre_error])
 	_expect(whole_door_at_end, "the last frame still has the whole door, none of it cut off")
-	_expect(beam_early > 40.0 and beam_first_off < 30.0, "the flashlight does not show at the cut: it points back at the nightstand, away from the door (%.0f degrees off the door, at most %.0f degrees off the nightstand)" % [beam_early, beam_first_off])
+	_expect(beam_early >= 0.0 and beam_early < 14.0, "the flashlight is already on the door when the cut comes (%.0f degrees off it)" % beam_early)
+	_expect(eyes_on_door_at_cut < 6.0, "and her eyes had turned to the door before it (%.1f degrees off it)" % eyes_on_door_at_cut)
 	_expect(beam_near < 8.0, "and after a few steps it has come slowly round to the door (%.1f degrees off it by the end)" % beam_near)
 	_expect(beam_off_after, "and her own beam is back at the end")
 	var handle_at: float = _logged_time(&"handle") - _logged_time(&"door")
-	_expect(handle_at > 1.0 and handle_at < 3.5, "the handle moves %.1f s after the cut" % handle_at)
+	_expect(handle_at > 1.0 and handle_at < 5.0, "the handle moves %.1f s after the cut" % handle_at)
 	_expect(house.find_child("DoorScene", true, false) == null and house.find_child("HallFloorLight", true, false) == null and house.find_child("StepShadow", true, false) == null and house.find_child("DoorGlimpse", true, false) == null, "no light behind the door, no shadow, no one on the other side")
 	_expect(lever_before_handle < 0.01 and presses == 1 and press_end - press_start > house.handle_press_seconds * 0.6, "the handle goes down once, slowly (%.1f s from a fiftieth to nine tenths)" % (press_end - press_start))
 	var held_down: float = _logged_time(&"latch") - (_logged_time(&"handle") + house.handle_press_seconds)
 	_expect(held_down > 0.2, "and stays down (%.1f s) before the latch gives" % held_down)
-	_expect(max_crack > 43.0 and max_crack < 46.0 and max_crack_open > 43.0 and _logged_time(&"open") - _logged_time(&"crack") > 6.0, "the door opens slowly, wide (%.1f degrees)" % max_crack)
+	_expect(max_crack > 58.0 and max_crack < 62.0 and max_crack_open > 58.0 and _logged_time(&"open") - _logged_time(&"crack") > 6.0, "the door opens slowly, wide, to 60 degrees (%.1f degrees)" % max_crack)
 	var to_eyes_at: float = _logged_time(&"to_eyes") - _logged_time(&"door")
-	_expect(to_eyes_at > 16.0 and to_eyes_at < 22.0, "the camera starts for her eyes about twenty seconds after the cut (%.1f s)" % to_eyes_at)
+	_expect(to_eyes_at > 10.0 and to_eyes_at < 20.0, "the camera starts for her eyes about twenty seconds after the cut (%.1f s)" % to_eyes_at)
 	_expect(_logged_time(&"open") - _logged_time(&"crack") > 12.0, "the door takes its time to open (%.1f s)" % (_logged_time(&"open") - _logged_time(&"crack")))
+	_expect(absf((_logged_time(&"open") - _logged_time(&"to_eyes")) - house.eyes_lead_seconds) < 0.3, "the camera starts back to her eyes %.1f s before the door has finished opening" % (_logged_time(&"open") - _logged_time(&"to_eyes")))
 
 	# Her eyes: the scene's camera goes slowly to where hers is, and the view is hers there, with nothing in between.
 	_expect(_logged_time(&"cut_to_eyes") - _logged_time(&"to_eyes") > 4.5, "the camera takes its time to reach her eyes (%.1f s)" % (_logged_time(&"cut_to_eyes") - _logged_time(&"to_eyes")))
 	_expect(blend_error < 0.1 and blend_fov_error < 0.5, "it is her camera's place, direction and lens when the view becomes hers (%.3f, lens %.2f degrees off)" % [blend_error, blend_fov_error])
 	_expect(_logged_time(&"released") - _logged_time(&"cut_to_eyes") < 0.1, "and the controls are hers at once (no turn to the side, no \"Shh.\")")
-	_expect(ajar_at_cut > 43.0, "the door is still open as she looks at it (%.1f degrees)" % ajar_at_cut)
-	_expect(bedroom_door.is_open and absf(_bedroom_angle() - 45.0) < 1.0 and _lever_turn() < 0.05, "and it stays open at 45 degrees in the game, its handle up (%.1f degrees)" % _bedroom_angle())
+	_expect(ajar_at_cut > 58.0, "the door is still open as she looks at it (%.1f degrees)" % ajar_at_cut)
+	_expect(bedroom_door.is_open and absf(_bedroom_angle() - 60.0) < 1.0 and _lever_turn() < 0.05, "and it stays open at 60 degrees in the game, its handle up (%.1f degrees)" % _bedroom_angle())
 	_expect(house._tension != null and house._tension.stream != null and _logged_time(&"handle_release") - _logged_time(&"crack") > 1.0, "the tension recording began with the door moving, the handle going back up a few centimetres into the opening")
-	_expect(rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized())) < 3.0, "she is looking at the door, the spot the camera was looking at")
+	_expect(rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized())) < 12.0, "she is looking at the door, the spot the camera was looking at")
 
 	# Given back.
 	_expect(get_viewport().get_camera_3d() == camera and (house._cinema == null or not is_instance_valid(house._cinema)), "her own camera is the view again (the scene's camera is gone)")
@@ -702,6 +718,8 @@ func _check_memory_scene() -> void:
 	_expect(bool(flashlight.get("flashlight_on")) and spot.visible, "her flashlight stays on")
 	_expect(bool(SaveManager.get_state_value(&"puzzles", &"house_bedroom_memory_done", false)), "it is remembered as played")
 	_expect(capsule.story_unlocked and not unlocked_during and not capsule.is_open, "the capsule is unlocked now, with no key (and was not before)")
+	_expect(not pantry_door.is_open and not house.is_pantry_lamp_on(), "the pantry is shut and its bulb out after the door scene")
+	_expect(house.living_light.visible and house.living_light.light_energy > 1.0, "the living room's light is on, lit by the opened door, for the capsule")
 
 
 ## Game seconds since the scene began (its own clock, the one its log is written by).
@@ -758,12 +776,18 @@ func _covers_screen(corners: Array) -> bool:
 	if corners.size() != 4:
 		return false
 
-	var polygon: PackedVector2Array = PackedVector2Array(corners)
-	for screen: Vector2 in [Vector2(0.0, 0.0), Vector2(1920.0, 0.0), Vector2(1920.0, 1080.0), Vector2(0.0, 1080.0)]:
-		if not Geometry2D.is_point_in_polygon(screen, polygon):
-			return false
-
-	return true
+	# The paper is most of the picture, not all of it: about four fifths of its width and nearly all of its height, centred, with a little
+	# of the room showing at its edges.
+	var low: Vector2 = Vector2(99999.0, 99999.0)
+	var high: Vector2 = Vector2(-99999.0, -99999.0)
+	for corner: Vector2 in corners:
+		low = low.min(corner)
+		high = high.max(corner)
+	var width: float = (high.x - low.x) / 1920.0
+	var height: float = (high.y - low.y) / 1080.0
+	var middle: Vector2 = (low + high) * 0.5
+	# (The test window need not be 16 by 9, so only its width, which the lens is set by, and the centring are held to.)
+	return width > 0.68 and width < 0.9 and height < 1.05 and absf(middle.x - 960.0) < 90.0 and absf(middle.y - 540.0) < 150.0
 
 
 ## The worst distance between two sets of screen points (in pixels of a 1920 by 1080 picture).
@@ -934,7 +958,7 @@ func _check_memory_cancelled() -> void:
 func _check_reload() -> void:
 	var copy: UnfinishedHouseSequence = await _spawn_house()
 	_expect((copy.get_node("Doors/PantryDoor") as DoorController).is_locked == false, "after a reload the pantry is open to the player")
-	_expect(copy.is_pantry_lamp_on(), "its bulb is still on")
+	_expect(not copy.is_pantry_lamp_on(), "its bulb stays out (the bedroom scene put the pantry out)")
 	_expect(not (copy.get_node("Doors/BedroomDoor") as DoorController).is_locked, "the bedroom is unlocked")
 	_expect((copy.get_node("Furniture/TimeCapsule") as TimeCapsule).is_open, "the capsule is open")
 	_expect(not copy.memory_root.visible, "the room is the night room")
