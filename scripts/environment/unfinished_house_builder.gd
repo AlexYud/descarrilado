@@ -42,6 +42,15 @@ var _floor_material: StandardMaterial3D
 var _frame_material: StandardMaterial3D
 var _wall_body: StaticBody3D
 
+## The wall between the kitchen and the master bedroom is the one wall of the house that can change: built solid (as the plan has it) and, hidden and
+## without collision, built again with a doorway in it (`ESCAPE_DOORWAY_CENTER` metres from its north end) and its casing. `set_escape_doorway` swaps them,
+## the pictures and the collision together, for the scene that opens the passage while nobody can see the wall.
+const ESCAPE_WALL_INDEX: int = 7
+const ESCAPE_DOORWAY_CENTER: float = 2.32
+var _escape_solid: Array[Node] = []
+var _escape_open: Array[Node] = []
+var escape_doorway_open: bool = false
+
 
 func _ready() -> void:
 	if get_child_count() > 0:
@@ -162,8 +171,46 @@ func _build_walls() -> void:
 
 	var index: int = 0
 	for wall: Dictionary in _walls():
+		var meshes_before: int = get_child_count()
+		var shapes_before: int = _wall_body.get_child_count()
 		_build_wall(index, wall)
+		if index == ESCAPE_WALL_INDEX:
+			_escape_solid = _new_pieces(meshes_before, shapes_before)
 		index += 1
+
+	# The same wall again with the doorway in it, kept out of the world until it is asked for.
+	var open_meshes: int = get_child_count()
+	var open_shapes: int = _wall_body.get_child_count()
+	var doorway: Dictionary = {"from": Vector2(3.0, 0.0), "to": Vector2(3.0, 4.0), "openings": [_door(ESCAPE_DOORWAY_CENTER / PLAN_SCALE)]}
+	_build_wall(ESCAPE_WALL_INDEX + 100, doorway)
+	_escape_open = _new_pieces(open_meshes, open_shapes)
+	set_escape_doorway(false)
+
+
+## What was added to the house (pictures) and to the wall body (shapes) since the given counts.
+func _new_pieces(meshes_before: int, shapes_before: int) -> Array[Node]:
+	var found: Array[Node] = []
+	for i: int in range(meshes_before, get_child_count()):
+		found.append(get_child(i))
+	for i: int in range(shapes_before, _wall_body.get_child_count()):
+		found.append(_wall_body.get_child(i))
+	return found
+
+
+## The kitchen-bedroom wall solid (false) or with its doorway (true): the solid pieces and the doorway's, each its picture and its collision.
+func set_escape_doorway(open: bool) -> void:
+	escape_doorway_open = open
+	for piece: Node in _escape_solid:
+		_show_piece(piece, not open)
+	for piece: Node in _escape_open:
+		_show_piece(piece, open)
+
+
+func _show_piece(piece: Node, shown: bool) -> void:
+	if piece is CollisionShape3D:
+		(piece as CollisionShape3D).set_deferred("disabled", not shown)
+	elif piece is Node3D:
+		(piece as Node3D).visible = shown
 
 
 func _build_wall(index: int, wall: Dictionary) -> void:

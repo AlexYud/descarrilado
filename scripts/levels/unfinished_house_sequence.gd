@@ -24,14 +24,21 @@ class_name UnfinishedHouseSequence
 ##         postcard, the lamp and a little of the bed; Lucas and Sophia talk, unseen (subtitles, `HOUSE_BEDROOM_MEMORY`);
 ##       - after the last line the camera pushes back into the paper; under it, her eyes again, in the cold room; she lowers
 ##         the postcard back onto the nightstand; a while on the dark room;
-##       - a hard cut, with the first footstep, to a camera far back, on the door's middle line and square on to the shut
-##         bedroom door, which starts a slow, straight approach (the whole door always in the picture); slow, heavy steps come
-##         along the hallway and stop outside; her flashlight, which points back at the nightstand where she stands, comes
-##         slowly round to the door after a few steps; the handle goes down once, slowly, and stays down; the latch gives; the
-##         door opens slowly, wide (about 45 degrees), and no one is there;
-##       - the door camera then goes slowly to where her own camera is, turning and widening to her lens, looking at the same
-##         spot, and when it is there the view is hers and the controls with it. The time capsule is unlocked from then
-##         on (no key); the door is put back shut the first moment none of it is in her view.
+##       - a hard cut, with the first footstep, to a camera far back, on the door's middle line and square on to the shut bedroom door, which
+##         starts a slow, straight approach that goes on to the shush (the whole door always in the picture); slow, heavy steps come along the hallway
+##         and stop outside; her flashlight, which points back at the nightstand where she stands, comes slowly round to the door; the handle goes down and
+##         meets the lock, and comes back; a pause; it goes down again and again fails (the door never opens, never shows a gap, a head or an edge);
+##         then the voice on the other side (`HOUSE_DOOR_THREAT`: Juliana asks who is there, and a voice with Sophia's, light at first and then afraid,
+##         sharper, impatient, asks her to open it; nobody answers). Meanwhile, out of this camera's sight, the wall between the kitchen and the bedroom
+##         becomes a doorway (`UnfinishedHouseBuilder.set_escape_doorway`), with a door (`EscapeDoor`, shut);
+##       - the shush (`HOUSE_DOOR_SHUSH`) at her right ear and a HARD CUT to her own eyes at the bedside (her normal lens, looking at the original door,
+##         her flashlight following her view); she turns to the right over about 0.85 s: the new door is opening, the kitchen's warm light in it; one look
+##         back at the original door (the next plea, `HOUSE_DOOR_COLD`), and she walks, her own body, through the doorway (`HOUSE_DOOR_HELP`); only when all
+##         of her is in the kitchen the door slams and locks behind her, the pleas stop, the two outside exits are shut and locked, the living room's light
+##         comes up; a moment in the kitchen looking down the way, and the controls are hers (the capsule is unlocked then, as before);
+##       - the pantry's door is open and its bulb on: a completely black head looks round the frame (`PantryWatcher`), only a partial shape; when her
+##         view finds it from the corridor it goes back into the room and the bulb goes out with it. It never blocks anything. Taking Lucas's token (the
+##         pickup, not the inspecting of it) unlocks the two exits again. An older game that only has the bedroom scene done is not changed by any of it.
 ##     Saving is blocked throughout.
 ##  4. Living room: the time capsule, unlocked by the scene (its own interaction): the advertisement, the two tickets and
 ##     Lucas's Ficha. Taking the Ficha raises `sequence_completed`. No door is ever locked by the story.
@@ -50,6 +57,11 @@ const KEY_ARGUMENT_ACTIVE: StringName = &"house_argument_active"
 const KEY_MEMORY_DONE: StringName = &"house_bedroom_memory_done"
 const KEY_FICHA_TAKEN: StringName = &"house_ficha_taken"
 const KEY_MIGRATED: StringName = &"house_migrated"
+## The extended escape (the voice at the door, the new doorway, the kitchen) was played; the outside exits are locked until Lucas's token is taken; the black head
+## in the pantry has been noticed. A legacy game that has only `house_bedroom_memory_done` never went through the escape: none of these is set for it.
+const KEY_ESCAPE_DONE: StringName = &"house_escape_done"
+const KEY_EXITS_LOCKED: StringName = &"house_exits_locked"
+const KEY_WATCHER_DONE: StringName = &"house_watcher_done"
 ## Written by the old sequence (read once, by `_migrate_legacy`).
 const LEGACY_KEY_STAGE: StringName = &"house_stage"
 const LEGACY_KEY_PANTRY_BEAT: StringName = &"house_pantry_beat"
@@ -57,6 +69,8 @@ const LEGACY_KEY_PANTRY_BEAT: StringName = &"house_pantry_beat"
 ## The rooms, in the house's own frame (metres; see UnfinishedHouseBuilder).
 const KITCHEN_AREA: AABB = AABB(Vector3(0.3, -1.0, 0.3), Vector3(4.1, 4.0, 5.7))
 const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.92))
+## The corridor the watcher is seen from (house local): from the kitchen's arch to the pantry door.
+const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 
 @export_category("Clues")
 ## `inspect_id` metadata of the Visual of each clue.
@@ -230,9 +244,9 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export_range(0.5, 1.0, 0.01) var lower_land_share: float = 0.84
 
 @export_group("The door")
-## The door camera's one lens (degrees); its slow approach from the cut to the open door (`door_approach_seconds`).
+## The door camera's one lens (degrees); its slow approach from the cut to the shush (`door_approach_seconds`: it never stops before, and never goes through the door).
 @export var door_fov: float = 40.0
-@export var door_approach_seconds: float = 20.0
+@export var door_approach_seconds: float = 44.0
 ## The footsteps in the hallway, house-local points: towards the bedroom door, a step every `step_interval_seconds` (slowing
 ## to `step_interval_end_seconds` at the door), `step_stride` metres apart, louder as they come. The first is heard with the cut.
 ## The sound is the player's own indoor step (`walk.wav`), lower and heavier. They are heard from the door camera
@@ -252,44 +266,100 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var step_pitch: Vector2 = Vector2(0.8, 0.9)
 ## The outside (wind, night) is pushed back this much while the steps and the door play (`OutdoorAmbience.set_muffle`).
 @export_range(0.0, 1.0, 0.05) var footsteps_duck: float = 0.6
-## From the cut to the handle moving; the press; held down; the latch; the door opening, slowly, to `crack_degrees` (about 45:
-## wide open, and no one on the other side); the view starts back to her eyes `eyes_lead_seconds` before it has finished. The whole runs about `door_approach_seconds`.
-## The handle moves this long after the steps stop (a breath), quickly: only the door's opening is slow.
-## The door starts to open this long after the cut to the door shot: the steps arrive quicker (their pace is fitted so they end in time,
-## never faster than `steps_fastest_scale` of their own intervals) and the handle goes a moment after them.
-@export var door_opens_after_cut_seconds: float = 1.0
+## The steps are fitted to end `steps_end_after_cut_seconds` after the cut (never faster than `steps_fastest_scale` of their own intervals); the first
+## handle attempt comes `handle_after_steps_seconds` after the last step. The handle's sound is a little slower and heavier than usual.
 @export_range(0.3, 1.0, 0.05) var steps_fastest_scale: float = 0.55
 @export var handle_after_steps_seconds: float = 0.3
-## The tension recording (`placeholder_string_tension`): in as the door begins to open over `tension_in_seconds`, out over the walk to her eyes.
-@export var tension_db: float = 0.0
-@export var tension_in_seconds: float = 3.0
-## The handle's sound at the press (a little slower, heavier) and when it is let go.
 @export var handle_sound_pitch: float = 0.75
-@export var handle_release_seconds: float = 1.2
-## The handle comes back up (and the tension begins) this long into the opening, once the door has moved a few centimetres: it is unlocked, and only needs pushing.
-@export var handle_release_delay_seconds: float = 1.6
-@export var handle_press_seconds: float = 0.5
-@export var handle_hold_seconds: float = 0.2
-@export var latch_pause_seconds: float = 0.1
-@export var crack_degrees: float = 60.0
-@export var crack_seconds: float = 13.0
-## The view goes back to her eyes this long before the door has finished opening.
-@export var eyes_lead_seconds: float = 2.0
 
-@export_group("Back to her eyes")
-## The door camera goes slowly to where her own camera is (`eyes_blend_seconds`), turning and widening to her lens as it goes, the
-## two looking at the same spot (the open door). When it is there the view is hers, and the controls with it.
-@export var eyes_blend_seconds: float = 5.0
-## The master room's light (the door shot's rig) only dims to this level while the camera travels back (0 to 1)...
-@export_range(0.0, 1.0, 0.05) var eyes_room_light: float = 0.5
-## ...and when the view is hers her flashlight, still weak, flickers twice: each flick (a quick dip, then up) leaves it stronger, the
-## last at its usual strength (`return_flick_levels`, a fraction of it), `return_flick_gap_seconds` apart; the room's light goes out
-## smoothly over the whole of it.
-@export var return_flick_levels: PackedFloat32Array = PackedFloat32Array([0.55, 1.0])
-@export var return_flick_gap_seconds: float = 0.7
-@export var return_flick_dip_seconds: float = 0.07
-@export var return_flick_rise_seconds: float = 0.1
-@export var return_flick_end_seconds: float = 0.4
+@export_group("The voice at the door and the impossible exit")
+## The wall between the kitchen and the master bedroom (it can be built with a doorway: `UnfinishedHouseBuilder.set_escape_doorway`), the door that goes in
+## the doorway (one of the house's own doors, kept out of the world until the doorway is made), the two outside exits, the light that makes the kitchen
+## readable from the bedroom, and the black head that watches from the pantry (optional).
+@export var shell: UnfinishedHouseBuilder
+@export var escape_door: DoorController
+@export var back_door: DoorController
+@export var front_door: DoorController
+@export var kitchen_light: OmniLight3D
+@export var kitchen_light_energy: float = 1.8
+## The kitchen's light after she has gone through: it stays, dimmer (the living room's is the one that calls).
+@export_range(0.0, 1.0, 0.05) var kitchen_light_after: float = 0.35
+@export var watcher: PantryWatcher
+## The source of the voice beyond the original bedroom door (the one door, in the hallway). The other two sources are made on the player's own head.
+@export var door_voice_player: AudioStreamPlayer3D
+## Optional recordings, one per cue (1 to 8, in the order of the approved dialogue; empty: the subtitles alone carry the line, and nothing waits for a
+## stream). Cue 1 is Juliana's, at the player; 2 to 5, 7 and 8 come from the original door; 6 is the shush at her right ear.
+@export var cue_voices: Array[AudioStream] = []
+## How far to the right of her head, and how far in front of it, the shush is (metres).
+@export var shush_ear_offset: Vector3 = Vector3(0.2, -0.03, -0.05)
+
+@export_subgroup("The door shot: the steps, two attempts, the voice")
+## The steps end this long after the cut to the door shot (they are fitted to it; the first is heard before the cut).
+@export var steps_end_after_cut_seconds: float = 3.0
+## An attempt at the handle: the press, the strain against the lock, the release (seconds). Then a pause, the second attempt, and a breath before she speaks.
+@export var attempt_one: Vector3 = Vector3(0.9, 2.2, 1.1)
+@export var attempt_two: Vector3 = Vector3(0.8, 1.3, 0.9)
+@export var pause_before_speak_seconds: float = 0.85
+## The second attempt is made as the voice says "Open the door. I think it's stuck.": this long after the voice begins (cue 05, "Open the door.", begins 12.8 s in;
+## the handle is meant to be down by then).
+@export var second_attempt_after_voice_seconds: float = 12.2
+## While the handle strains the door is pushed a little (it gives by this much and comes back), as someone pushing against a door that will not open.
+@export var door_nudge_degrees: float = 2.2
+## After the last unanswered question, before the shush.
+@export var unanswered_beat_seconds: float = 1.2
+
+@export_subgroup("Her own view: the shush, the doorway, one look back")
+## She stands this long looking at the original door after the cut to her own eyes; then the turn to the right (`turn_right_seconds`, decisive and braking).
+@export var pov_beat_seconds: float = 0.2
+@export var turn_right_seconds: float = 0.85
+## The look to the doorway is not direct: her light goes over the opening and on past it by `pass_overshoot_degrees`, drifting on for `pass_drift_seconds`, and only
+## then, with a start, does the mind catch up and the view come back to it (`realize_seconds`, a half second at most).
+@export var pass_overshoot_degrees: float = 38.0
+@export var pass_drift_seconds: float = 1.0
+@export var realize_seconds: float = 0.4
+## The flashback (from the postcard being taken up to the paper that brings her back to the night) can be skipped by holding the intro cinematic key (the prompt shows only once the
+## player has pressed something): the picture goes dark for skip_fade_seconds and comes back in the night room, the horror about to begin.
+@export var skip_fade_seconds: float = 0.3
+## The new door opens to `escape_door_open_degrees` over `escape_door_open_seconds` (it begins as she begins to turn, out of her view), and she looks at it for
+## `reveal_hold_seconds` after the turn.
+@export var escape_door_open_degrees: float = 130.0
+@export var escape_door_open_seconds: float = 5.5
+@export var reveal_hold_seconds: float = 0.6
+## The one look back at the original door and the turn to the passage again.
+@export var glance_seconds: float = 0.55
+@export var glance_hold_seconds: float = 0.35
+@export var turn_back_seconds: float = 0.5
+## Her flashlight in her own view (a share of its usual strength).
+@export_range(0.05, 1.0, 0.05) var escape_flashlight_strength: float = 0.55
+## The walk through the new door, in the house's own frame: where her body goes, one point after the other (she walks on through the first ones without
+## slowing). She looks at the next point (at `escape_eye_height`); at the last she looks at `escape_final_look`, down the kitchen to the arch and the lit
+## rooms beyond it. The door slams when her whole body is west of `escape_clear_x` (the wall's face, her body's width and a margin).
+@export var escape_path: Array[Vector3] = [Vector3(6.1, 0.0, 1.6), Vector3(5.2, 0.0, 2.2), Vector3(4.65, 0.0, 2.32), Vector3(3.9, 0.0, 2.45), Vector3(3.35, 0.0, 2.9)]
+@export var escape_final_look: Vector3 = Vector3(2.33, 1.3, 6.2)
+@export var escape_eye_height: float = 1.35
+@export var escape_clear_x: float = 4.2
+@export var escape_pass_radius: float = 0.3
+@export var escape_walk_timeout_seconds: float = 6.0
+## Reluctant: the pace on each leg as a share of her walking pace (slow at first, slowest at the threshold, quicker once she is through). She walks to the new door
+## (the safe one) looking back at the original one (the unsafe one), almost backwards and slowly (`escape_look_back_pace` of that pace), and turns to the front, as
+## one does, when the open leaf is about to come between her eyes and it, or when she is at the doorway (house x at most `escape_look_back_until_x`), or after
+## `escape_look_back_max_seconds` at the latest.
+@export var escape_speeds: PackedFloat32Array = PackedFloat32Array([0.45, 0.55, 0.4, 0.8, 0.9])
+@export var escape_look_back_pace: float = 0.8
+@export var escape_look_back_until_x: float = 4.85
+@export var escape_look_back_max_seconds: float = 7.0
+@export var slam_speed: float = 14.0
+## She stands a moment in the kitchen before the view is hers.
+@export var settle_seconds: float = 0.8
+
+@export_subgroup("The pantry watcher")
+## It is armed this long after the scene is over, and waits there, the pantry's bulb on, as long as it takes: it goes when the player's FLASHLIGHT (on, and
+## pointing where the view does) comes within `watcher_look_degrees` of it, from the corridor (`WATCHER_AREA`), within `watcher_range` metres and with nothing between.
+@export var watcher_arm_delay_seconds: float = 0.8
+@export var watcher_look_degrees: float = 30.0
+@export var watcher_range: float = 11.0
+## When the light finds it, the head goes back into the room, and the pantry's bulb goes out with it, over this long.
+@export var watcher_retreat_seconds: float = 1.0
 
 ## Set when the player is not the node found by group "player".
 @export var player: Node3D
@@ -383,11 +453,24 @@ var _flicker_drift: float = 1.0
 var _steps_done: bool = false
 var _steps_end_clock: float = 0.0
 var _cut_clock: float = 0.0
-var _tension: AudioStreamPlayer = null
-const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3"
 var _beam_time: float = 0.0
 var _kitchen_exit_watch: bool = false
 var _living_light_on: bool = false
+var _escape_done: bool = false
+var _exits_locked: bool = false
+var _watcher_done: bool = false
+var _watcher_clock: float = 0.0
+var _escape_door_home_y: float = 0.0
+## Her flashlight follows her view exactly (from the cut to her own eyes at the shush until the view is given back), and she is being walked.
+var _pov_follow: bool = false
+var _walking: bool = false
+var _head_voices: Dictionary = {}
+## The flashback's skip: the prompt (made the first time), whether the skip can be asked for now, whether it was asked for, whether it was done, and the black it goes through.
+var _skip_ui: HoldToSkip = null
+var _skip_open: bool = false
+var _skip_requested: bool = false
+var _skipped: bool = false
+var _skip_black: CanvasLayer = null
 var _beam_from: Vector3 = Vector3.ZERO
 var _beam_to: Vector3 = Vector3.ZERO
 
@@ -399,6 +482,11 @@ func _ready() -> void:
 	_argument_active = _get_flag(KEY_ARGUMENT_ACTIVE)
 	_memory_done = _get_flag(KEY_MEMORY_DONE)
 	_ficha_taken = _get_flag(KEY_FICHA_TAKEN)
+	_escape_done = _get_flag(KEY_ESCAPE_DONE)
+	_exits_locked = _get_flag(KEY_EXITS_LOCKED)
+	_watcher_done = _get_flag(KEY_WATCHER_DONE)
+	if escape_door != null:
+		_escape_door_home_y = escape_door.position.y
 
 	if argument_voices != null:
 		argument_voices.stream = PlaceholderAudio.make_muffled_argument()
@@ -415,7 +503,7 @@ func _ready() -> void:
 
 ## Puts the house as the saved story left it.
 func _restore() -> void:
-	_set_pantry_lamp(_recipe_done and not _memory_done, false)
+	_set_pantry_lamp(_pantry_lamp_wanted(), false)
 	# The kitchen beat was cut short (a save in the second between reading and the latch): the pantry opens now.
 	if _recipe_done and pantry_door != null and pantry_door.is_locked:
 		pantry_door.unlock()
@@ -426,6 +514,27 @@ func _restore() -> void:
 	_set_living_light(_memory_done and not _capsule_open(), 0.0)
 	if postcard != null:
 		postcard.plays_scene = not _memory_done
+
+	# The new passage and what came with it, only for a game that went through the escape (an older game with the bedroom scene done never did: it keeps its
+	# wall, and nothing is locked round it).
+	_apply_doorway(_escape_done)
+	if _escape_done:
+		if escape_door != null:
+			escape_door.ajar_degrees = 0.0
+			escape_door.close_instantly()
+			escape_door.lock()
+		_set_kitchen_light(kitchen_light_energy * kitchen_light_after, 0.0)
+		if _token_owned():
+			if _exits_locked:
+				_release_exits()
+		elif _exits_locked:
+			_close_exits()
+			for door: DoorController in [back_door, front_door]:
+				if door != null:
+					door.lock()
+		_arm_watcher.call_deferred()
+	elif _exits_locked and _token_owned():
+		_release_exits()
 
 
 ## Games saved by the old sequence (`house_stage`, `house_pantry_beat`) are converted once: what was reached is kept,
@@ -499,13 +608,21 @@ func _process(delta: float) -> void:
 		_apply_bow()
 		if _beam_on:
 			_drive_beam(delta)
+		if _pov_follow:
+			_follow_view_with_the_beam()
 	if _door_reset_pending:
 		_settle_pending(false)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_update_pantry()
 	_update_kitchen_exit()
+	# The exits open the moment Lucas's token is collected (not inspected, not read about): the pickup records it before anything is shown.
+	if _exits_locked and _token_owned():
+		_release_exits()
+	_update_watcher(delta)
+	if _walking:
+		_hold_the_walker()
 
 
 ## The flashlight goes out as the player, with the pantry open, comes within `kitchen_light_off_distance` of the corridor's arch (inside the
@@ -746,6 +863,9 @@ func _play_memory() -> void:
 	memory_running = true
 	memory_log.clear()
 	scene_clock = 0.0
+	_skip_open = false
+	_skip_requested = false
+	_skipped = false
 	# Walked to the nightstand first, as the doors walk her to the handle (before she is held: a held view does not walk).
 	if not await _walk_to_nightstand(run, target, movement):
 		return
@@ -756,14 +876,18 @@ func _play_memory() -> void:
 	if not await _shot_conversation(run): return
 	if not await _shot_return(run): return
 	if not await _shot_door(run): return
-	if not await _shot_to_eyes(run): return
+	if not await _shot_escape(run): return
 
 	# What the scene leaves behind is settled before the player can save again.
 	memory_running = false
 	_tweens.clear()
+	_close_skip_window()
+	_complete_escape_state()
 	_finish_memory_state()
 	_release_player()
 	_log(&"released")
+	# The head in the pantry, only now that the controls are hers: the scene's own looks back cannot spend it.
+	_arm_watcher()
 
 
 # ---- Walking up to the nightstand ---------------------------------------------------------------------------------
@@ -808,6 +932,7 @@ func _walk_to_nightstand(run: int, target: Node, movement: PlayerMovementControl
 ## room. The bedroom door is shut while the paper covers everything.
 func _shot_read(run: int) -> bool:
 	_log(&"lift")
+	_open_skip_window()
 	_set_reading(true, 0.8)
 	var card: Transform3D = postcard.get_visual_node().global_transform
 	_fill_at = _fill_camera()
@@ -832,9 +957,10 @@ func _shot_read(run: int) -> bool:
 	at += show_seconds
 	# Held at the reading distance, the picture then zooms in on it until the paper fills the picture.
 	_tween_held(&"_held_near", 1.0, zoom_seconds, at, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
-	await _wait(at + zoom_seconds + fill_hold_seconds)
-	if not _still(run):
+	if not await _flash_wait(run, at + zoom_seconds + fill_hold_seconds):
 		return false
+	if _skipped:
+		return true
 
 	_log(&"dissolve_in")
 	_read_level = 0.0
@@ -851,15 +977,17 @@ func _shot_read(run: int) -> bool:
 		pantry_door.close_instantly()
 	_set_pantry_lamp(false, false)
 	_log(&"door_closed")
-	await _wait(paper_dissolve_seconds)
-	if not _still(run):
+	if not await _flash_wait(run, paper_dissolve_seconds):
 		return false
+	if _skipped:
+		return true
 
 	_log(&"pullback")
 	_move_camera(_memory_shot(), pullback_seconds)
 	_change_lens(memory_fov, pullback_seconds)
-	await _wait(conversation_after_seconds)
-	return _still(run)
+	if not await _flash_wait(run, conversation_after_seconds):
+		return false
+	return true
 
 
 ## The camera that has the postcard on the nightstand fill the picture: straight over its written side, tipped
@@ -982,11 +1110,24 @@ func _drop_held_card() -> void:
 
 ## The voices, over the one held shot of the postcard (the track ends with a held silence after the last line).
 func _shot_conversation(run: int) -> bool:
+	if _skipped:
+		return _still(run)
+
 	_log(&"conversation")
 	if memory_voice != null and memory_voice_player != null:
 		memory_voice_player.stream = memory_voice
 		memory_voice_player.play()
-	await CaptionManager.play_scripted_and_wait(CaptionTracks.HOUSE_BEDROOM_MEMORY)
+	var run_id: int = CaptionManager.play_scripted(CaptionTracks.HOUSE_BEDROOM_MEMORY)
+	var finished: Array[bool] = [false]
+	var on_finished: Callable = func(finished_id: int) -> void:
+		if finished_id == run_id:
+			finished[0] = true
+	CaptionManager.run_finished.connect(on_finished)
+	while not finished[0] and not _skip_requested and _still(run):
+		await get_tree().process_frame
+	CaptionManager.run_finished.disconnect(on_finished)
+	if _skip_requested and not _skipped and _still(run):
+		await _perform_skip(run)
 	return _still(run)
 
 
@@ -995,38 +1136,30 @@ func _shot_conversation(run: int) -> bool:
 ## The camera pushes slowly back into the paper; under it the time changes back (her eyes, the postcard in her hands, close, in
 ## the cold room); she lowers it back onto the nightstand; her eyes rest on the dark room a while.
 func _shot_return(run: int) -> bool:
-	_log(&"return")
-	if memory_voice_player != null:
-		memory_voice_player.stop()
-	_move_camera(_fill_at, push_seconds)
-	_change_lens(_fill_fov_used, push_seconds)
-	await _wait(push_seconds + push_hold_seconds)
-	if not _still(run):
-		return false
+	if not _skipped:
+		_log(&"return")
+		if memory_voice_player != null:
+			memory_voice_player.stop()
+		_move_camera(_fill_at, push_seconds)
+		_change_lens(_fill_fov_used, push_seconds)
+		if not await _flash_wait(run, push_seconds + push_hold_seconds):
+			return false
 
-	_log(&"dissolve_out")
-	_dissolve(paper_dissolve_seconds)
-	_set_room(false)
-	_read_level = 1.0
-	postcard.visible = false
-	_held_weight = 1.0
-	_held_near = 1.0
-	held_card.visible = true
-	var camera: Camera3D = _get_camera()
-	_get_movement().scripted_fov = _fill_fov_used
-	camera.fov = _fill_fov_used
-	_place_held_card()
-	_show_eyes()
-	_log(&"night")
+	if not _skipped:
+		_log(&"dissolve_out")
+		_close_skip_window()
+		_dissolve(paper_dissolve_seconds)
+		_back_to_the_night()
+	_close_skip_window()
 	await _wait(paper_dissolve_seconds + return_hold_seconds)
 	if not _still(run):
 		return false
 
 	_log(&"lower")
-	# The steps are fitted to end just before the door starts to open, `door_opens_after_cut_seconds` after the cut.
+	# The steps are fitted to end `steps_end_after_cut_seconds` after the cut.
 	var to_cut: float = lower_seconds * lower_land_share + _scare_seconds() + night_seconds
 	var steps_delay: float = maxf(to_cut - steps_lead_seconds, 0.0)
-	_steps_after(run, steps_delay, to_cut + door_opens_after_cut_seconds - _handle_seconds() - steps_delay - STEPS_MARGIN_SECONDS)
+	_steps_after(run, steps_delay, to_cut + steps_end_after_cut_seconds - steps_delay - STEPS_MARGIN_SECONDS)
 	_tween_held(&"_read_level", 0.0, lower_seconds * 0.8, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_held_near", 0.0, lower_seconds * 0.34, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_held_weight", 0.0, lower_seconds * 0.62, lower_seconds * 0.2, Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)
@@ -1046,6 +1179,119 @@ func _shot_return(run: int) -> bool:
 	if night_seconds > 0.0:
 		await _wait(night_seconds)
 	return _still(run)
+
+
+## The time changes back to the night under the paper: the cold room, the postcard in her hands close, her own eyes. (Also where a skip lands.)
+func _back_to_the_night() -> void:
+	_set_room(false)
+	_read_level = 1.0
+	postcard.visible = false
+	_held_weight = 1.0
+	_held_near = 1.0
+	held_card.visible = true
+	var camera: Camera3D = _get_camera()
+	_get_movement().scripted_fov = _fill_fov_used
+	camera.fov = _fill_fov_used
+	_place_held_card()
+	_show_eyes()
+	_log(&"night")
+
+
+# ---- Skipping the flashback -------------------------------------------------------------------------------------------
+
+## From the postcard's being taken up: the prompt can be shown (when the player presses something) and the skip asked for.
+func _open_skip_window() -> void:
+	if _skip_ui == null:
+		_skip_ui = HoldToSkip.new()
+		_skip_ui.name = "HoldToSkip"
+		add_child(_skip_ui)
+		_skip_ui.skipped.connect(func() -> void: _skip_requested = true)
+	_skip_open = true
+	_skip_requested = false
+	_skip_ui.arm()
+
+
+func _close_skip_window() -> void:
+	_skip_open = false
+	if _skip_ui != null:
+		_skip_ui.disarm()
+
+
+## A wait inside the flashback that a skip cuts short (and performs): false if the scene was cancelled, true otherwise (check `_skipped` after it).
+func _flash_wait(run: int, seconds: float) -> bool:
+	var left: float = seconds
+	while left > 0.0 and _still(run) and not _skip_requested:
+		await get_tree().process_frame
+		left -= get_process_delta_time() if not get_tree().paused else 0.0
+	if _skip_requested and not _skipped and _still(run):
+		await _perform_skip(run)
+	return _still(run)
+
+
+## The skip: the picture goes dark, the flashback's work is stopped where it is, the room is the night again with the postcard in her hands (the same state the change
+## of time back to the night leaves), and the picture comes back. The scene goes on from there: the postcard put down, the steps, the door.
+func _perform_skip(run: int) -> void:
+	_skipped = true
+	_close_skip_window()
+	_log(&"skipped")
+	await _skip_fade(1.0, skip_fade_seconds * 0.6)
+	if not _still(run):
+		return
+
+	for tween: Tween in _tweens:
+		if tween != null and tween.is_valid():
+			tween.kill()
+	_tweens.clear()
+	_clear_freeze()
+	CaptionManager.clear()
+	if memory_voice_player != null:
+		memory_voice_player.stop()
+	# What the change of time into the memory did to the house (the original door shut, the pantry shut and its bulb out), if it had not happened yet.
+	if bedroom_door != null:
+		bedroom_door.close_instantly()
+	if pantry_door != null:
+		pantry_door.close_instantly()
+	_set_pantry_lamp(false, false)
+	if _fill_fov_used <= 0.0 or not _logged_beat(&"dissolve_in"):
+		_fill_fov_used = _fill_fov
+	_bow = 0.0
+	_held_show = 0.0
+	_held_flip = 0.0
+	_free_cinema_camera()
+	_cam = null
+	_back_to_the_night()
+	await _skip_fade(0.0, skip_fade_seconds)
+
+
+func _logged_beat(beat: StringName) -> bool:
+	for entry: Dictionary in memory_log:
+		if entry["beat"] == beat:
+			return true
+	return false
+
+
+## The black over the picture (under the subtitles and the menus), to `alpha` over `seconds`; gone at 0.
+func _skip_fade(alpha: float, seconds: float) -> void:
+	if _skip_black == null:
+		_skip_black = CanvasLayer.new()
+		_skip_black.name = "SkipBlack"
+		_skip_black.layer = 2
+		var cover: ColorRect = ColorRect.new()
+		cover.name = "Cover"
+		cover.color = Color.BLACK
+		cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+		cover.modulate.a = 0.0
+		_skip_black.add_child(cover)
+		add_child(_skip_black)
+
+	var cover_rect: ColorRect = _skip_black.get_node("Cover") as ColorRect
+	var fade: Tween = create_tween()
+	fade.tween_property(cover_rect, "modulate:a", alpha, maxf(seconds, 0.01))
+	await fade.finished
+	if alpha <= 0.0 and _skip_black != null:
+		_skip_black.queue_free()
+		_skip_black = null
 
 
 ## How long the frightened turn takes, from the postcard landing to her looking at the door.
@@ -1108,16 +1354,11 @@ func _steps_after(run: int, delay: float, fit_seconds: float = 0.0) -> void:
 	_walk_to_door(run, fit_seconds)
 
 
-## From the last step to the crack of the door: the wait, the handle going down, held, the latch.
-func _handle_seconds() -> float:
-	return handle_after_steps_seconds + handle_press_seconds + handle_hold_seconds + latch_pause_seconds
-
-
 # ---- The door -----------------------------------------------------------------------------------------------------
 
-## A hard cut, with the first footstep, to the door square on from far back; the camera starts its slow, straight approach at once.
-## The steps come along the hallway and stop, the light under the door is broken, the handle goes down once and stays down, the
-## latch gives, a crack opens slowly, and an edge begins to come in.
+## A hard cut, with the first footstep, to the door square on from far back; the camera starts its slow, straight approach at once and never stops
+## until the shush. The steps come along the hallway and stop outside; the handle is tried twice and the door does not open (it stays shut, with no gap, for
+## the whole scene); then the voice (`HOUSE_DOOR_THREAT`, cues 1 to 5). The doorway to the kitchen is made meanwhile, out of this camera's sight.
 func _shot_door(run: int) -> bool:
 	# A plain cut from her eyes, which are on the door, her flashlight on it already (`_scared_turn`); the door's light comes on with it.
 	_duck_outside(true)
@@ -1128,66 +1369,166 @@ func _shot_door(run: int) -> bool:
 	_cut_clock = scene_clock
 	if door_lighting != null:
 		door_lighting.fade_to(1.0, 0.0)
+	_prepare_doorway()
 
 	while not _steps_done and _still(run):
 		await get_tree().process_frame
 	if not _still(run):
 		return false
-	# The handle goes just after the last step, and never so early that the door opens before `door_opens_after_cut_seconds`.
-	var handle_at: float = maxf(_steps_end_clock + handle_after_steps_seconds, _cut_clock + door_opens_after_cut_seconds - (handle_press_seconds + handle_hold_seconds + latch_pause_seconds))
-	if handle_at > scene_clock:
-		await _wait(handle_at - scene_clock)
+
+	await _wait(handle_after_steps_seconds)
 	if not _still(run):
 		return false
-	_log(&"handle")
-	bedroom_door.play_handle_sound(handle_sound_pitch, 0)
+	if not await _handle_attempt(run, attempt_one, 0):
+		return false
+	await _wait(pause_before_speak_seconds)
+	if not _still(run):
+		return false
 
+	_log(&"voice")
+	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_THREAT, 1)
+	_second_attempt(run)
+	await CaptionManager.play_scripted_and_wait(CaptionTracks.HOUSE_DOOR_THREAT)
+	if not _still(run):
+		return false
+	await _wait(unanswered_beat_seconds)
+	return _still(run)
+
+
+## The second try at the handle comes as the voice says to open the door because it must be stuck.
+func _second_attempt(run: int) -> void:
+	await _wait(second_attempt_after_voice_seconds)
+	if _still(run):
+		await _handle_attempt(run, attempt_two, 1)
+
+
+## One try at the handle from the other side: it goes down (`timing.x`), meets the lock and strains there (`timing.y`, a little shudder and one rattle of the
+## lock), and comes back up (`timing.z`). The door does not move.
+func _handle_attempt(run: int, timing: Vector3, variant: int) -> bool:
+	_log(&"handle")
+	bedroom_door.play_handle_sound(handle_sound_pitch, variant)
 	var press: Tween = _track(create_tween())
-	press.tween_method(bedroom_door.set_handle_turn, 0.0, 1.0, handle_press_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	press.tween_method(bedroom_door.set_handle_turn, 0.0, 1.0, timing.x).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await press.finished
 	if not _still(run):
 		return false
-	await _wait(handle_hold_seconds)
+
+	# It meets the lock; the door is pushed a little (it gives by `door_nudge_degrees` and comes back), the handle held down and shuddering. No sound but the
+	# handle's own.
+	_log(&"resist")
+	var strain: Tween = _track(create_tween())
+	strain.tween_method(func(t: float) -> void:
+		bedroom_door.set_handle_turn(1.0 - 0.04 * absf(sin(t * PI * 3.0)))
+		var push: float = smoothstep(0.0, 0.16, t) * (1.0 - smoothstep(0.7, 1.0, t)) * (0.92 + 0.08 * sin(t * PI * 6.0))
+		bedroom_door.ajar_degrees = door_nudge_degrees * push, 0.0, 1.0, timing.y)
+	await strain.finished
+	bedroom_door.ajar_degrees = 0.0
 	if not _still(run):
 		return false
 
-	_log(&"latch")
-
-	await _wait(latch_pause_seconds)
-	if not _still(run):
-		return false
-
-	_log(&"crack")
-	var crack: Tween = _track(create_tween())
-	crack.tween_property(bedroom_door, "ajar_degrees", crack_degrees, crack_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	await _wait(handle_release_delay_seconds)
-	if not _still(run):
-		return false
-	_log(&"handle_release")
-	_tension_start()
-	bedroom_door.play_handle_sound(handle_sound_pitch * 0.9, 1)
+	_log(&"release")
+	bedroom_door.play_handle_sound(handle_sound_pitch * 0.9, 1 - variant)
 	var release: Tween = _track(create_tween())
-	release.tween_method(bedroom_door.set_handle_turn, 1.0, 0.0, handle_release_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	# The camera starts back to her eyes `eyes_lead_seconds` before the door has finished opening; the door finishes by itself.
-	await _wait(maxf(crack_seconds - handle_release_delay_seconds - eyes_lead_seconds, 0.0))
-	if not _still(run):
-		return false
-
-	_finish_door(run, crack)
-	return true
+	release.tween_method(bedroom_door.set_handle_turn, 1.0, 0.0, timing.z).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await release.finished
+	return _still(run)
 
 
-## Wide open, and no one there: the door is an ordinary open door from here on, and the living room's light (the way to the capsule)
-## comes on with it.
-func _finish_door(run: int, crack: Tween) -> void:
-	await crack.finished
-	if not _still(run):
+## The wall between the kitchen and the bedroom becomes a doorway, with the door in it (shut), while the camera is on the original door: the doorway is
+## far outside its picture (this is checked and logged), and the pictures and the collision change together.
+func _prepare_doorway() -> void:
+	var camera: Camera3D = _cam
+	var seen: bool = false
+	if camera != null:
+		for corner: Vector3 in _doorway_corners():
+			seen = seen or camera.is_position_in_frustum(corner)
+	_apply_doorway(true)
+	if escape_door != null:
+		escape_door.unlock()
+		escape_door.close_instantly()
+	_log(&"doorway_in_view" if seen else &"doorway_prepared")
+
+
+## The corners and the middle of the doorway (house local points made world): what the camera must not see when the wall changes.
+func _doorway_corners() -> Array[Vector3]:
+	var wall_x: float = 3.0 * UnfinishedHouseBuilder.PLAN_SCALE
+	var middle: float = UnfinishedHouseBuilder.ESCAPE_DOORWAY_CENTER
+	var half: float = UnfinishedHouseBuilder.DOOR_WIDTH * 0.5
+	var corners: Array[Vector3] = []
+	for along: float in [middle - half, middle, middle + half]:
+		for height: float in [0.0, 1.0, UnfinishedHouseBuilder.DOOR_HEIGHT]:
+			corners.append(to_global(Vector3(wall_x, height, along)))
+	return corners
+
+
+## The doorway (or the plain wall) and the door in it, kept far under the world while there is none.
+func _apply_doorway(on: bool) -> void:
+	if shell != null:
+		shell.set_escape_doorway(on)
+	if escape_door != null:
+		escape_door.position.y = _escape_door_home_y if on else -60.0
+		escape_door.visible = on
+
+
+## Where the doorway is, at the height of her eyes (what she looks at to see the new door).
+func _doorway_view_point() -> Vector3:
+	return to_global(Vector3(3.0 * UnfinishedHouseBuilder.PLAN_SCALE, escape_eye_height, UnfinishedHouseBuilder.ESCAPE_DOORWAY_CENTER))
+
+
+# ---- The voices (optional recordings) ------------------------------------------------------------------------------
+
+## Starts the recording of each cue of a track (numbers from `first_number`) at its time, if one is assigned; the subtitles never wait for a stream.
+func _schedule_cue_voices(track: StringName, first_number: int) -> void:
+	var cues: Array = CaptionTracks.get_cues(track)
+	for index: int in cues.size():
+		_play_cue_voice(first_number + index, float((cues[index] as Dictionary)["start"]), _run)
+
+
+func _play_cue_voice(number: int, delay: float, run: int) -> void:
+	await _wait(delay)
+	if not _still(run) or number < 1 or number > cue_voices.size() or cue_voices[number - 1] == null:
 		return
 
-	_log(&"open")
-	_set_living_light(not _capsule_open(), living_light_fade_seconds)
-	bedroom_door.ajar_degrees = 0.0
-	bedroom_door.force_open(0.0, crack_degrees)
+	var voice: AudioStreamPlayer3D = _voice_for_cue(number)
+	if voice != null:
+		voice.stream = cue_voices[number - 1]
+		voice.play()
+
+
+## Cue 1 is Juliana's, at her own head; cue 6 is the shush, at her right ear; the others are beyond the original door.
+func _voice_for_cue(number: int) -> AudioStreamPlayer3D:
+	if number == 1:
+		return _head_voice(&"question", Vector3(0.0, 0.0, -0.1))
+	if number == 13:
+		return _head_voice(&"shush", shush_ear_offset)
+	return door_voice_player
+
+
+## A voice source on her real head (a child of her camera), made the first time and freed with the scene.
+func _head_voice(slot: StringName, offset: Vector3) -> AudioStreamPlayer3D:
+	if _head_voices.has(slot) and is_instance_valid(_head_voices[slot]):
+		return _head_voices[slot] as AudioStreamPlayer3D
+
+	var camera: Camera3D = _get_camera()
+	if camera == null:
+		return null
+
+	var voice: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+	voice.name = "Voice_%s" % slot
+	voice.unit_size = 1.5
+	voice.max_distance = 8.0
+	camera.add_child(voice)
+	voice.position = offset
+	_head_voices[slot] = voice
+	return voice
+
+
+func _free_head_voices() -> void:
+	for slot: Variant in _head_voices.keys():
+		var voice: Variant = _head_voices[slot]
+		if voice != null and is_instance_valid(voice):
+			(voice as Node).queue_free()
+	_head_voices.clear()
 
 
 ## Square on to the shut door from `eye`: looking along the door's normal, towards it.
@@ -1230,29 +1571,6 @@ func _walk_to_door(run: int, fit_seconds: float = 0.0) -> void:
 	_log(&"steps_end")
 	_steps_end_clock = scene_clock
 	_steps_done = true
-
-
-## The tension recording, a flat (not placed) sound that comes in from the last step and goes out as the view goes back to her.
-func _tension_start() -> void:
-	if _tension == null:
-		_tension = AudioStreamPlayer.new()
-		_tension.stream = load(TENSION_PATH) as AudioStream
-		add_child(_tension)
-	_tension.volume_db = -60.0
-	_tension.play()
-	var rise: Tween = _track(create_tween())
-	rise.tween_property(_tension, "volume_db", tension_db, tension_in_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-
-
-func _tension_stop(seconds: float) -> void:
-	if _tension == null or not _tension.playing:
-		return
-	if seconds <= 0.0:
-		_tension.stop()
-		return
-	var fall: Tween = _track(create_tween())
-	fall.tween_property(_tension, "volume_db", -60.0, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	fall.tween_callback(_tension.stop)
 
 
 ## The player's own indoor footstep (the default of their `sfx_walk`), for the walker in the hallway.
@@ -1350,56 +1668,438 @@ func _door_middle() -> Vector3:
 
 # ---- Back to her eyes ---------------------------------------------------------------------------------------------
 
-## The door camera goes slowly to her eyes: it travels to where her own camera is, turning and widening to her own lens, and looks at
-## the same spot (the open door, which her view was set on when the shot began). When it is there the view is hers, with no cut, and
-## the controls come back at once. The capsule is unlocked (no key), and the door put back the first moment none of it is in her view.
-func _shot_to_eyes(run: int) -> bool:
-	_log(&"to_eyes")
-	_tension_stop(eyes_blend_seconds)
-	if door_lighting != null:
-		door_lighting.fade_to(eyes_room_light, eyes_blend_seconds)
-	_move_camera(_get_camera().global_transform.orthonormalized(), eyes_blend_seconds)
-	_change_lens(_base_fov, eyes_blend_seconds)
-	await _wait(eyes_blend_seconds)
+## The shush at her right ear, and the hard cut to her own eyes at the bedside (her normal lens, looking at the original door, her flashlight and her view
+## together); the turn to the right, to the doorway that was a wall, whose new door is already opening; one look back at the original door (the pleas
+## go on); the walk, in her own body, through the doorway into the kitchen; the slam behind her, the lock; a moment in the kitchen, looking down the way to
+## the lit rooms. The view is hers again only after all of it (`_play_memory` hands it back).
+func _shot_escape(run: int) -> bool:
+	var movement: PlayerMovementController = _get_movement()
+	var camera: Camera3D = _get_camera()
+	if movement == null or camera == null:
+		return false
+
+	# Off camera (the picture is still the door camera's): the exits are shut, her view is turned to the original door as the cut will show it.
+	_close_exits()
+	_duck_outside(false)
+	_beam_on = false
+	movement.scripted_fov = 0.0
+	camera.fov = _base_fov
+	_aim_now(_door_middle())
+	_flash_strength = escape_flashlight_strength
+	_flash_apply()
+	await get_tree().physics_frame
 	if not _still(run):
 		return false
 
+	# The hard cut. The beam follows her view from here on (never a lagging beam that misses what she turns to).
+	_pov_follow = true
+	_follow_view_with_the_beam()
 	_show_eyes()
 	_log(&"cut_to_eyes")
-	_beam_stop()
-	_duck_outside(false)
-	if not await _light_returns(run):
+	if door_lighting != null:
+		door_lighting.fade_to(0.0, 0.4)
+	CaptionManager.clear()
+	await _wait(pov_beat_seconds)
+	if not _still(run):
+		return false
+
+	# Then the shush, at her right ear; she turns to the right, to the new door, which is opening (it began out of her sight): her light goes over the
+	# opening and on past it, drifting; and only then, with a start, does she see it and come back to it.
+	_log(&"shush")
+	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_SHUSH, 13)
+	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_SHUSH)
+	_set_kitchen_light(kitchen_light_energy, 1.8)
+	_open_escape_door()
+	_log(&"turn_right")
+	var doorway: Vector2 = _look_angles(_doorway_view_point())
+	var side: float = signf(wrapf(doorway.x - _get_movement().look_yaw, -180.0, 180.0))
+	if side == 0.0:
+		side = 1.0
+	var past: Vector2 = Vector2(doorway.x + side * pass_overshoot_degrees, doorway.y + 1.0)
+	_turn_view(past, turn_right_seconds, Tween.TRANS_QUART, Tween.EASE_OUT)
+	await _wait(turn_right_seconds)
+	if not _still(run):
+		return false
+	_log(&"passed")
+	_turn_view(Vector2(past.x + side * 7.0, past.y), pass_drift_seconds, Tween.TRANS_SINE, Tween.EASE_OUT)
+	await _wait(pass_drift_seconds)
+	if not _still(run):
+		return false
+	_log(&"realized")
+	_turn_view(doorway, realize_seconds, Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)
+	await _wait(realize_seconds)
+	if not _still(run):
+		return false
+	_log(&"noticed")
+	await _wait(reveal_hold_seconds)
+	if not _still(run):
+		return false
+
+	# One look back at the original door, as she hears the next plea from it, and back to the passage.
+	_log(&"look_back")
+	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_COLD, 14)
+	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_COLD)
+	_turn_view(_look_angles(_door_middle()), glance_seconds)
+	await _wait(glance_seconds + glance_hold_seconds)
+	if not _still(run):
+		return false
+	_turn_view(_look_angles(_doorway_view_point()), turn_back_seconds)
+	await _wait(turn_back_seconds)
+	if not _still(run):
+		return false
+
+	_log(&"go")
+	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_HELP, 16)
+	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_HELP)
+	if not await _escape_walk(run):
+		# She could not be walked (nothing cancelled the scene): the scene is cancelled here, not left holding the player. The postcard offers it again, the doorway
+		# stays open as an ordinary door, and nothing was locked or recorded.
+		if _still(run):
+			_cancel_memory()
+		return false
+
+	# In the kitchen, her view settling on the way to the lit rooms.
+	_log(&"arrived")
+	_turn_view(_look_angles(to_global(escape_final_look)), 0.5)
+	await _wait(maxf(settle_seconds, 0.5))
+	if not _still(run):
 		return false
 	_log(&"glance_end")
 	return true
 
 
-## In her own view the flashlight, still weak, flickers (a quick dip, then up) once for each of `return_flick_levels`, each leaving it
-## stronger than before and the last at its usual strength, while the room's light goes out smoothly over the whole of it.
-func _light_returns(run: int) -> bool:
-	_flash_strength = door_flashlight_strength
-	_flash_apply()
-	var total: float = return_flick_end_seconds + (return_flick_gap_seconds + return_flick_dip_seconds + return_flick_rise_seconds) * return_flick_levels.size()
-	if door_lighting != null:
-		door_lighting.fade_to(0.0, total)
-	var flicks: Tween = _track(create_tween())
-	var level: float = door_flashlight_strength
-	for peak: float in return_flick_levels:
-		flicks.tween_interval(return_flick_gap_seconds)
-		flicks.tween_method(_set_flash_level, level, level * 0.1, return_flick_dip_seconds)
-		flicks.tween_method(_set_flash_level, level * 0.1, peak, return_flick_rise_seconds).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		flicks.tween_callback(_log.bind(&"flick"))
-		level = peak
-	flicks.tween_interval(return_flick_end_seconds)
-	await flicks.finished
-	_flash_strength = 1.0
-	_flash_apply()
+## Her own body goes through the passage: a chain of guided walks (the game's ordinary walk, footsteps and all, driven by the scene instead of the keys)
+## that carries on through every point but the last without slowing, so there is no stop at the doorway. The mouse and the keys are the scene's meanwhile.
+## The door slams when all of her is in the kitchen. False if she cannot be walked (the scene is then cancelled and the player given back, where they are).
+func _escape_walk(run: int) -> bool:
+	var target: Node3D = _get_player()
+	var movement: PlayerMovementController = _get_movement()
+	if target == null or movement == null or escape_path.is_empty():
+		return false
+
+	# The held view does not walk: it is let go for the walk, and held again after it (saving stays blocked all the time).
+	target.call("set_view_locked", false)
+	_walking = true
+	_show_reticle(false)
+	var slammed: bool = false
+	var walk_clock: float = 0.0
+	var glancing: bool = true
+	_log(&"glance_over_shoulder")
+	for index: int in escape_path.size():
+		var last: bool = index == escape_path.size() - 1
+		var stand: Vector3 = to_global(escape_path[index])
+		stand.y = target.global_position.y
+		var ahead: Vector3 = to_global(escape_final_look) if last else to_global(Vector3(escape_path[index + 1].x, escape_eye_height, escape_path[index + 1].z))
+		var share: float = escape_speeds[index] if index < escape_speeds.size() else 1.0
+		var speed: float = PlayerMovementController.WALK_SPEED * share
+		# Looking back at the original door (the walk goes on, slower) until the open one is about to be in the way, then ahead.
+		glancing = glancing and not _looking_back_is_over(walk_clock)
+		var tries: int = 0
+		while not movement.begin_guided_walk(stand, _door_middle() if glancing else ahead, speed * (escape_look_back_pace if glancing else 1.0), escape_walk_timeout_seconds):
+			tries += 1
+			await get_tree().physics_frame
+			if tries > 40 or not _still(run):
+				_walking = false
+				return false
+
+		while movement.is_guided_walking():
+			await get_tree().physics_frame
+			if not _still(run):
+				_walking = false
+				return false
+			walk_clock += get_physics_process_delta_time()
+			if not slammed and _body_clear_of_door():
+				slammed = true
+				_slam_and_lock(run)
+			var flat: Vector3 = target.global_position - stand
+			flat.y = 0.0
+			if not last and flat.length() < escape_pass_radius:
+				break
+			if glancing and _looking_back_is_over(walk_clock):
+				glancing = false
+				_log(&"glance_over")
+				movement.begin_guided_walk(stand, ahead, speed, escape_walk_timeout_seconds)
+
+	_walking = false
+	_show_reticle(true)
+	if not slammed:
+		slammed = true
+		_slam_and_lock(run)
+	target.call("set_view_locked", true)
 	return _still(run)
 
 
-func _set_flash_level(level: float) -> void:
-	_flash_strength = level
-	_flash_apply()
+## She has looked back long enough: the open leaf is about to come between her eyes and the original door (a ray from her eyes to it meets the new door's
+## leaf), or she is at the doorway, or it has been long enough.
+func _looking_back_is_over(walk_clock: float) -> bool:
+	var target: Node3D = _get_player()
+	var camera: Camera3D = _get_camera()
+	if target == null or camera == null or walk_clock >= escape_look_back_max_seconds:
+		return true
+	if to_local(target.global_position).x <= escape_look_back_until_x:
+		return true
+
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(camera.global_position, _door_middle())
+	query.exclude = [target.get_rid()]
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	return not hit.is_empty() and escape_door != null and escape_door.is_ancestor_of(hit["collider"] as Node)
+
+
+## All of her (her body's width and a margin) is west of the wall's face: the leaf, which swings in the bedroom, cannot touch her.
+func _body_clear_of_door() -> bool:
+	var target: Node3D = _get_player()
+	return target != null and to_local(target.global_position).x < escape_clear_x
+
+
+## The new door opens, slowly, to `escape_door_open_degrees` (into the bedroom, so that the leaf is never in her way), and is then an ordinary open door.
+func _open_escape_door() -> void:
+	if escape_door == null:
+		return
+
+	escape_door.unlock()
+	_log(&"escape_door_opening")
+	var open: Tween = _track(create_tween())
+	# A shove and then nothing: the leaf is thrown open and coasts, slowing all the way, creeping the last of its way.
+	open.tween_property(escape_door, "ajar_degrees", escape_door_open_degrees, escape_door_open_seconds).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	open.tween_callback(func() -> void:
+		escape_door.ajar_degrees = 0.0
+		escape_door.force_open(0.0, escape_door_open_degrees)
+		_log(&"escape_door_open")
+	)
+
+
+## The slam, only once she is clear: the door swings shut fast and hard, the pleas stop where they are, the two outside exits are locked, the door itself
+## locks as it meets the frame; the living room's light comes up (the way on).
+func _slam_and_lock(run: int) -> void:
+	if escape_door == null:
+		return
+
+	_log(&"slam")
+	if door_voice_player != null:
+		door_voice_player.stop()
+	CaptionManager.clear()
+	escape_door.slam_shut(slam_speed)
+	_lock_exits()
+	_set_living_light(not _capsule_open(), living_light_fade_seconds)
+	var thud_played: bool = false
+	var waited: float = 0.0
+	while waited < 2.5 and _still(run):
+		var offset: float = _door_offset_degrees(escape_door)
+		if not thud_played and offset < 12.0:
+			thud_played = true
+			_play_at(PlaceholderAudio.make_door_thud(), escape_door.global_position + Vector3(0.0, 1.0, 0.5), 4.0, 0.85, 6.0, 40.0)
+		if offset < 1.0 and not escape_door.is_open:
+			break
+		await get_tree().physics_frame
+		waited += get_physics_process_delta_time()
+
+	if not thud_played:
+		_play_at(PlaceholderAudio.make_door_thud(), escape_door.global_position + Vector3(0.0, 1.0, 0.5), 4.0, 0.85, 6.0, 40.0)
+	_play_at(PlaceholderAudio.make_door_latch_close(), escape_door.global_position + Vector3(0.0, 1.0, 0.5), -2.0, 0.9, 6.0, 30.0)
+	escape_door.lock()
+	_log(&"escape_door_locked")
+
+
+## Her view at once to look at `point` (the controller's own yaw and pitch, so that the mouse never snaps back to an older orientation).
+func _aim_now(point: Vector3) -> void:
+	var movement: PlayerMovementController = _get_movement()
+	var angles: Vector2 = _look_angles(point)
+	movement.look_yaw = movement.look_yaw + wrapf(angles.x - movement.look_yaw, -180.0, 180.0)
+	movement.look_pitch = angles.y
+
+
+## The kitchen's light (the escape's destination), faded to `energy` over `seconds`.
+func _set_kitchen_light(energy: float, seconds: float) -> void:
+	if kitchen_light == null or not is_instance_valid(kitchen_light):
+		return
+
+	kitchen_light.visible = energy > 0.0
+	if seconds <= 0.0:
+		kitchen_light.light_energy = energy
+		return
+
+	var fade: Tween = _track(create_tween())
+	fade.tween_property(kitchen_light, "light_energy", energy, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+# ---- The exits, the escape's outcome, the watcher --------------------------------------------------------------------
+
+## The two outside exits shut (at once, with no sound) when they were left open, for the scene to lock them while nobody is looking at them.
+func _close_exits() -> void:
+	for door: DoorController in [back_door, front_door]:
+		if door != null and (door.is_open or door.is_busy()):
+			door.close_instantly()
+
+
+## The back and front doors locked, for as long as Lucas's token is not taken: not when it already is (an owned, collected or inserted token never re-locks).
+func _lock_exits() -> void:
+	if _token_owned():
+		return
+
+	for door: DoorController in [back_door, front_door]:
+		if door != null:
+			door.lock()
+	_exits_locked = true
+	_set_flag(KEY_EXITS_LOCKED, true)
+
+
+## Both exits usable again (idempotent).
+func _release_exits() -> void:
+	for door: DoorController in [back_door, front_door]:
+		if door != null and door.is_locked:
+			door.unlock()
+	_exits_locked = false
+	_set_flag(KEY_EXITS_LOCKED, false)
+
+
+## Lucas's token is in the player's hands, or was (collected: the pickup records it before anything is shown), or is in the payphone.
+func _token_owned() -> bool:
+	if bool(SaveManager.get_state_value(&"collectibles", ficha_id, false)):
+		return true
+
+	var target: Node = _get_player()
+	if target != null and target.has_method("has_inventory_item") and bool(target.call("has_inventory_item", String(ficha_id))):
+		return true
+
+	var inserted: Variant = SaveManager.get_state_value(STATE_SECTION, &"orelhao_fichas", [])
+	return inserted is Array and (inserted as Array).has(String(ficha_id))
+
+
+## What the escape leaves behind, before the player can save again: the doorway for good, its door shut and locked, the exits locked (until the token),
+## the kitchen's light low, the watcher waiting.
+func _complete_escape_state() -> void:
+	_escape_done = true
+	_set_flag(KEY_ESCAPE_DONE, true)
+	_apply_doorway(true)
+	if escape_door != null:
+		escape_door.ajar_degrees = 0.0
+		if not escape_door.is_locked:
+			escape_door.close_instantly()
+			escape_door.lock()
+	_set_kitchen_light(kitchen_light_energy * kitchen_light_after, 0.0)
+	_lock_exits()
+	# The pantry: its door open and its bulb on again (the paper had them shut and out), done where she cannot see: she is in the kitchen.
+	if pantry_door != null and not _watcher_done:
+		pantry_door.unlock()
+		pantry_door.force_open(0.0, pantry_ajar_degrees)
+	_set_pantry_lamp(not _watcher_done, false)
+
+
+## The black head looks round the pantry door's frame (from the end of the scene, once the controls are back, until the player's view finds it).
+func _arm_watcher() -> void:
+	if watcher == null or _watcher_done or not _escape_done:
+		return
+
+	_watcher_clock = 0.0
+	watcher.peek()
+
+
+func _update_watcher(delta: float) -> void:
+	if watcher == null or not watcher.is_peeking or _watcher_done or memory_running or not _escape_done:
+		return
+
+	_watcher_clock += delta
+	if _watcher_clock < watcher_arm_delay_seconds:
+		return
+
+	var target: Node3D = _get_player()
+	var camera: Camera3D = _get_camera()
+	if target == null or camera == null:
+		return
+
+	# Not while the view is anyone else's: a panel, the inventory, a held view, an inspected thing.
+	if bool(target.get("view_locked")) or bool(target.get("modal_ui_open")) or bool(target.get("cutscene_frozen")) or bool(target.get("dialogue_frozen")):
+		return
+	if bool(target.call("is_inventory_open")):
+		return
+
+	# Only a light finds it: the head waits, in the lit pantry, for as long as the flashlight is off.
+	var light: Node = target.get("flashlight_controller") as Node
+	if light == null or not bool(light.get("flashlight_on")):
+		return
+
+	if not WATCHER_AREA.has_point(to_local(target.global_position)):
+		return
+
+	var head: Vector3 = watcher.head_point()
+	var way: Vector3 = head - camera.global_position
+	if way.length() > watcher_range or way.length() < 0.5:
+		return
+	if (-camera.global_basis.z).dot(way.normalized()) < cos(deg_to_rad(watcher_look_degrees)):
+		return
+
+	# With nothing between her eyes and the head (the head itself has no collision).
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(camera.global_position, head)
+	query.exclude = [target.get_rid()]
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	if not hit.is_empty() and (hit["position"] as Vector3).distance_to(head) > 0.45:
+		return
+
+	_consume_watcher()
+
+
+## Found by the light: the head goes back into the room and the pantry's lamp goes out with it, together, over `watcher_retreat_seconds`; it will not look again (saved).
+func _consume_watcher() -> void:
+	_watcher_done = true
+	_set_flag(KEY_WATCHER_DONE, true)
+	_log(&"watcher_noticed")
+	var seconds: float = watcher.retreat(watcher_retreat_seconds)
+	_fade_pantry_lamp_out(maxf(seconds, 0.2))
+
+
+func _fade_pantry_lamp_out(seconds: float) -> void:
+	var glass: StandardMaterial3D = _bulb_material()
+	var fade: Tween = _track(create_tween())
+	fade.set_parallel(true)
+	if pantry_light != null:
+		fade.tween_property(pantry_light, "light_energy", 0.0, seconds)
+	if glass != null:
+		fade.tween_property(glass, "emission_energy_multiplier", 0.0, seconds)
+	fade.chain().tween_callback(func() -> void: _set_pantry_lamp(false, false))
+
+
+## Whether the pantry's bulb is on in a game as the story left it: lit from the recipe on; after the old scene it was out; after the new one it stays on until the
+## watcher has been noticed.
+func _pantry_lamp_wanted() -> bool:
+	if not _recipe_done:
+		return false
+	if _escape_done:
+		return not _watcher_done
+	return not _memory_done
+
+
+## The marks of the things she could use (and the dot) hidden while she is walked by the scene, and back after.
+func _show_reticle(on: bool) -> void:
+	var target: Node3D = _get_player()
+	var interaction: Object = target.get("interaction_controller") as Object if target != null else null
+	var reticle: Control = interaction.get("reticle") as Control if interaction != null else null
+	if reticle != null and is_instance_valid(reticle):
+		reticle.visible = on
+
+
+## Every physics frame while she is walked: nothing else can be done with the hands (no prompt, no inventory, no map).
+func _hold_the_walker() -> void:
+	var target: Node3D = _get_player()
+	if target == null:
+		return
+
+	var interaction: Object = target.get("interaction_controller") as Object
+	if interaction != null:
+		interaction.call("clear_prompt")
+	var map: Object = target.get("map_controller") as Object
+	if map != null and bool(map.get("is_open")):
+		map.call("close")
+
+
+## Her flashlight points where her view does, every frame (and follows it fast), so that the beam is on whatever she turns to.
+func _follow_view_with_the_beam() -> void:
+	var camera: Camera3D = _get_camera()
+	if camera == null or _flashlight == null or not is_instance_valid(_flashlight) or not _flashlight_scripted:
+		return
+
+	_flashlight.set("scripted_aim_on", true)
+	_flashlight.set("scripted_aim_speed", 14.0)
+	_flashlight.set("scripted_aim_direction", -camera.global_basis.z)
 
 
 ## The door put back shut when none of it can be seen from her eyes (`now`: at once, whatever is seen).
@@ -1485,6 +2185,17 @@ func _cancel_memory() -> void:
 
 	_run += 1
 	memory_running = false
+	_walking = false
+	var mover: PlayerMovementController = _get_movement()
+	if mover != null:
+		mover.cancel_guided_walk()
+	if door_voice_player != null:
+		door_voice_player.stop()
+	# A passage that was made and not finished stays open (an ordinary, unlocked door) rather than closing on whoever is in it.
+	if not _escape_done and shell != null and shell.escape_doorway_open and escape_door != null:
+		escape_door.ajar_degrees = 0.0
+		escape_door.close_instantly()
+		escape_door.unlock()
 	if _approaching:
 		_approaching = false
 		var walker: PlayerMovementController = _get_movement()
@@ -1506,7 +2217,6 @@ func _cancel_memory() -> void:
 	if is_inside_tree():
 		CaptionManager.clear()
 	_duck_outside(false)
-	_tension_stop(0.0)
 	_set_reading(false, 0.0)
 	_flash_strength = 1.0
 	if door_lighting != null:
@@ -1675,6 +2385,10 @@ func _hold_player(target: Node) -> void:
 ## Gives the player back: their own eyes (the view already where the scene left it, so the first mouse movement turns from
 ## there), their flashlight (left on if it lit the scene), and whatever was held before.
 func _release_player() -> void:
+	_pov_follow = false
+	_walking = false
+	_show_reticle(true)
+	_free_head_voices()
 	_clear_freeze()
 	_cam = null
 	_bow = 0.0
@@ -1711,7 +2425,7 @@ func _look_at_point(point: Vector3, seconds: float) -> void:
 	_turn_view(_look_angles(point), seconds)
 
 
-func _turn_view(angles: Vector2, seconds: float) -> void:
+func _turn_view(angles: Vector2, seconds: float, trans: Tween.TransitionType = Tween.TRANS_SINE, ease_kind: Tween.EaseType = Tween.EASE_IN_OUT) -> void:
 	var movement: PlayerMovementController = _get_movement()
 	if movement == null:
 		return
@@ -1730,7 +2444,7 @@ func _turn_view(angles: Vector2, seconds: float) -> void:
 			movement.look_yaw = value.x
 			movement.look_pitch = value.y,
 		from, to, seconds
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	).set_trans(trans).set_ease(ease_kind)
 
 
 ## Yaw and pitch (the movement controller's degrees) that look from the player's eye at `point`.

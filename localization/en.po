@@ -1310,3 +1310,57 @@ msgstr "Mom,\n\nI arrived safely. It's quiet here.\nYou don't need to worry abou
 
 msgid "READABLE_POSTCARD"
 msgstr "Mom,\n\nI arrived safely. It's quiet here.\nYou don't need to worry about me.\n\nLucas"
+
+msgid "CAPTION_SPEAKER_JULIANA"
+msgstr "Juliana"
+
+msgid "CAPTION_HOUSE_ESC_01"
+msgstr "Who's there?"
+
+msgid "CAPTION_HOUSE_ESC_02"
+msgstr "Juli?"
+
+msgid "CAPTION_HOUSE_ESC_03"
+msgstr "Is that you?"
+
+msgid "CAPTION_HOUSE_ESC_04"
+msgstr "I've been looking for you all night."
+
+msgid "CAPTION_HOUSE_ESC_05"
+msgstr "Open the door."
+
+msgid "CAPTION_HOUSE_ESC_06"
+msgstr "I think it's stuck."
+
+msgid "CAPTION_HOUSE_ESC_07"
+msgstr "Please, Juli."
+
+msgid "CAPTION_HOUSE_ESC_08"
+msgstr "I'm scared."
+
+msgid "CAPTION_HOUSE_ESC_09"
+msgstr "This place frightens me."
+
+msgid "CAPTION_HOUSE_ESC_10"
+msgstr "Open the door!"
+
+msgid "CAPTION_HOUSE_ESC_11"
+msgstr "Juli..."
+
+msgid "CAPTION_HOUSE_ESC_12"
+msgstr "Are you there?"
+
+msgid "CAPTION_HOUSE_ESC_13"
+msgstr "Shh."
+
+msgid "CAPTION_HOUSE_ESC_14"
+msgstr "It's so cold."
+
+msgid "CAPTION_HOUSE_ESC_15"
+msgstr "Please."
+
+msgid "CAPTION_HOUSE_ESC_16"
+msgstr "Juli!"
+
+msgid "CAPTION_HOUSE_ESC_17"
+msgstr "Help me!"

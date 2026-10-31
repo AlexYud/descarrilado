@@ -28,7 +28,10 @@ const FIG_EMPTY_SEAT: StringName = &"fig_empty_seat"
 const HOUSE_BEDROOM_MEMORY: StringName = &"house_bedroom_memory"
 
 ## The house's door beat: Sophia, close, at the moment the bedroom door is open a crack (subtitle only for now).
-const HOUSE_DOOR_SHH: StringName = &"house_door_shh"
+const HOUSE_DOOR_THREAT: StringName = &"house_door_threat"
+const HOUSE_DOOR_SHUSH: StringName = &"house_door_shush"
+const HOUSE_DOOR_COLD: StringName = &"house_door_cold"
+const HOUSE_DOOR_HELP: StringName = &"house_door_help"
 
 ## Sophia on the overlook payphone (placeholder timing: one long line, an interruption,
 ## the lure, the warning).
@@ -38,6 +41,7 @@ const SPEAKER_SOPHIA_PHONE: String = "CAPTION_SPEAKER_SOPHIA_PHONE"
 const SPEAKER_SOPHIA_RECORDING: String = "CAPTION_SPEAKER_SOPHIA_RECORDING"
 const SPEAKER_JULIANA_RECORDING: String = "CAPTION_SPEAKER_JULIANA_RECORDING"
 const SPEAKER_SOPHIA: String = "CAPTION_SPEAKER_SOPHIA"
+const SPEAKER_JULIANA: String = "CAPTION_SPEAKER_JULIANA"
 const SPEAKER_LUCAS: String = "CAPTION_SPEAKER_LUCAS"
 
 const TRACKS: Dictionary = {
@@ -84,8 +88,35 @@ const TRACKS: Dictionary = {
 		# The same shot held, in silence, before the camera goes back into the paper.
 		{"start": 49.8, "end": 51.8, "key": ""},
 	],
-	HOUSE_DOOR_SHH: [
-		{"start": 0.0, "end": 1.6, "key": "CAPTION_HOUSE_SHH", "speaker": SPEAKER_SOPHIA},
+	# The voice at the bedroom door (cues 01 to 12), from Juliana's question on, at the pace of someone listening between the lines: Juliana asks, and nobody answers
+	# for a long moment; then a voice with Sophia's, in short pieces with silences between them: warm and unsure (02 to 04), asking (05 and 06, as the handle is
+	# tried again), afraid (07 to 09), sharper (10), and at the end the slow, long wait for a reply (11 and 12). Nobody answers.
+	HOUSE_DOOR_THREAT: [
+		{"start": 0.0, "end": 1.8, "key": "CAPTION_HOUSE_ESC_01", "speaker": SPEAKER_JULIANA},
+		{"start": 4.0, "end": 4.9, "key": "CAPTION_HOUSE_ESC_02", "speaker": SPEAKER_SOPHIA},
+		{"start": 6.0, "end": 7.3, "key": "CAPTION_HOUSE_ESC_03", "speaker": SPEAKER_SOPHIA},
+		{"start": 8.7, "end": 11.4, "key": "CAPTION_HOUSE_ESC_04", "speaker": SPEAKER_SOPHIA},
+		{"start": 12.8, "end": 13.9, "key": "CAPTION_HOUSE_ESC_05", "speaker": SPEAKER_SOPHIA},
+		{"start": 14.2, "end": 16.0, "key": "CAPTION_HOUSE_ESC_06", "speaker": SPEAKER_SOPHIA},
+		{"start": 17.8, "end": 18.8, "key": "CAPTION_HOUSE_ESC_07", "speaker": SPEAKER_SOPHIA},
+		{"start": 19.6, "end": 20.6, "key": "CAPTION_HOUSE_ESC_08", "speaker": SPEAKER_SOPHIA},
+		{"start": 21.8, "end": 23.8, "key": "CAPTION_HOUSE_ESC_09", "speaker": SPEAKER_SOPHIA},
+		{"start": 25.6, "end": 26.6, "key": "CAPTION_HOUSE_ESC_10", "speaker": SPEAKER_SOPHIA},
+		{"start": 28.8, "end": 29.6, "key": "CAPTION_HOUSE_ESC_11", "speaker": SPEAKER_SOPHIA},
+		{"start": 31.4, "end": 33.2, "key": "CAPTION_HOUSE_ESC_12", "speaker": SPEAKER_SOPHIA},
+	],
+	# Cue 13: the shush at her right ear (its own track, played once, at the cut to her own view).
+	HOUSE_DOOR_SHUSH: [
+		{"start": 0.0, "end": 1.4, "key": "CAPTION_HOUSE_ESC_13", "speaker": SPEAKER_SOPHIA},
+	],
+	# Cues 14 to 17: from the original door again, while she looks back and while she goes through the new one.
+	HOUSE_DOOR_COLD: [
+		{"start": 0.0, "end": 1.4, "key": "CAPTION_HOUSE_ESC_14", "speaker": SPEAKER_SOPHIA},
+		{"start": 1.9, "end": 2.8, "key": "CAPTION_HOUSE_ESC_15", "speaker": SPEAKER_SOPHIA},
+	],
+	HOUSE_DOOR_HELP: [
+		{"start": 0.0, "end": 0.7, "key": "CAPTION_HOUSE_ESC_16", "speaker": SPEAKER_SOPHIA},
+		{"start": 1.0, "end": 2.0, "key": "CAPTION_HOUSE_ESC_17", "speaker": SPEAKER_SOPHIA},
 	],
 	# Two voices on the one line, both captioned as Sophia: the warm one (turns 1 and 3, slow and soft) and the
 	# desperate one (2 and 4, high and fast). `voice` says which one the placeholder audio plays. Each turn is

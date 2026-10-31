@@ -1310,3 +1310,57 @@ msgstr "Mãe,\n\nCheguei bem. Aqui é tranquilo.\nNão precisa se preocupar comi
 
 msgid "READABLE_POSTCARD"
 msgstr "Mãe,\n\nCheguei bem. Aqui é tranquilo.\nNão precisa se preocupar comigo.\n\nLucas"
+
+msgid "CAPTION_SPEAKER_JULIANA"
+msgstr "Juliana"
+
+msgid "CAPTION_HOUSE_ESC_01"
+msgstr "Quem está aí?"
+
+msgid "CAPTION_HOUSE_ESC_02"
+msgstr "Juli?"
+
+msgid "CAPTION_HOUSE_ESC_03"
+msgstr "É você?"
+
+msgid "CAPTION_HOUSE_ESC_04"
+msgstr "Estava te procurando a noite toda."
+
+msgid "CAPTION_HOUSE_ESC_05"
+msgstr "Abra a porta."
+
+msgid "CAPTION_HOUSE_ESC_06"
+msgstr "Acho que ela está emperrada."
+
+msgid "CAPTION_HOUSE_ESC_07"
+msgstr "Por favor, Juli."
+
+msgid "CAPTION_HOUSE_ESC_08"
+msgstr "Estou com medo."
+
+msgid "CAPTION_HOUSE_ESC_09"
+msgstr "Esse lugar me assusta."
+
+msgid "CAPTION_HOUSE_ESC_10"
+msgstr "Abra a porta!"
+
+msgid "CAPTION_HOUSE_ESC_11"
+msgstr "Juli..."
+
+msgid "CAPTION_HOUSE_ESC_12"
+msgstr "Você está aí?"
+
+msgid "CAPTION_HOUSE_ESC_13"
+msgstr "Shhh."
+
+msgid "CAPTION_HOUSE_ESC_14"
+msgstr "Está tão frio."
+
+msgid "CAPTION_HOUSE_ESC_15"
+msgstr "Por favor."
+
+msgid "CAPTION_HOUSE_ESC_16"
+msgstr "Juli!"
+
+msgid "CAPTION_HOUSE_ESC_17"
+msgstr "Me ajuda!"

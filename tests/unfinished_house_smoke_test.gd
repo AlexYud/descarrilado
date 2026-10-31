@@ -83,6 +83,7 @@ func _run() -> void:
 	await _check_capsule_and_ficha()
 	await _check_memory_without_captions()
 	await _check_memory_cancelled()
+	await _check_flashback_skip()
 	await _check_reload()
 	await _check_legacy_saves()
 	_check_copy()
@@ -354,6 +355,7 @@ func _check_memory_scene() -> void:
 	var blend_fov_error: float = 99.0
 	var max_crack_open: float = 0.0
 
+	_expect(house.is_pantry_lamp_on(), "the pantry's bulb is on as the scene begins (%s, %.2f)" % [house.pantry_light.visible, house.pantry_light.light_energy])
 	card.interact(player)
 	await get_tree().process_frame
 	_expect(house.memory_running, "reading the postcard starts the scene")
@@ -419,6 +421,23 @@ func _check_memory_scene() -> void:
 	var paused_checked: bool = false
 	var last_forward: Vector3 = Vector3.ZERO
 	var previous_camera: Camera3D = null
+	var escape_views: int = 0
+	var door_angle_at_cut: float = 99.0
+	var doorway_angle: float = 99.0
+	var beam_lag: float = 0.0
+	var beam_lag_sum: float = 0.0
+	var beam_lag_at: String = ""
+	var beam_following: bool = true
+	var back_angle: float = 99.0
+	var pass_angle: float = 0.0
+	var walk_glance: float = 99.0
+	var glance_first: float = -1.0
+	var glance_over_x: float = 99.0
+	var glance_last: float = -1.0
+	var body_steps: Array[Vector3] = []
+	var slam_x: float = -99.0
+	var slam_door_deg: float = -1.0
+	var door_opening_samples: Array[float] = []
 	var waited: float = 0.0
 	while house.memory_running and waited < 260.0:
 		await get_tree().process_frame
@@ -432,7 +451,7 @@ func _check_memory_scene() -> void:
 		max_eye_change = maxf(max_eye_change, absf(camera.global_position.y - eye_height))
 		inspect_seen = inspect_seen or player.inspect_controller.is_open()
 		if house.memory_running:
-			control_slipped = control_slipped or not bool(player.get("view_locked")) or not player.manual_save_blocked
+			control_slipped = control_slipped or (not bool(player.get("view_locked")) and not _logged(&"go")) or not player.manual_save_blocked
 		# The head bows to the nightstand taking the postcard up and putting it down, and is up for the reading.
 		var bow: float = -movement.gesture_pitch_degrees
 		if _logged(&"lift") and not _logged(&"dissolve_in"):
@@ -441,7 +460,7 @@ func _check_memory_scene() -> void:
 		if _logged(&"lower") and not _logged(&"settled"):
 			bow_lower = maxf(bow_lower, bow)
 		# Nothing but the steps is heard: no other sound of the house's is playing during the scene.
-		if _logged(&"lift") and not _logged(&"released"):
+		if _logged(&"lift") and not _logged(&"handle"):
 			for sound: Node in house.find_children("*", "AudioStreamPlayer3D", true, false):
 				var other: AudioStreamPlayer3D = sound as AudioStreamPlayer3D
 				if other.playing and other.stream != house._step_sound and not other.has_meta(&"footfall") and not bedroom_door.is_ancestor_of(other) and other != house.argument_voices:
@@ -509,18 +528,16 @@ func _check_memory_scene() -> void:
 			door_forward = forward
 			door_fov = view.fov
 			distance_at_cut = absf((view.global_position - bedroom_door.global_position).dot(bedroom_door.global_basis.z))
-		# The door's opening is followed to its end, which comes after the camera has started back to her eyes.
-		if _logged(&"crack") and not bedroom_door.is_open:
+		# The original door never opens, not by a degree, in the whole scene.
+		if _logged(&"door_closed"):
 			max_crack = maxf(max_crack, _bedroom_angle())
-		if _logged(&"open"):
-			max_crack_open = maxf(max_crack_open, _bedroom_angle())
-		if _logged(&"door") and not _logged(&"to_eyes") and view != camera:
+		if _logged(&"door") and not _logged(&"cut_to_eyes") and view != camera:
 			door_direction_change = maxf(door_direction_change, rad_to_deg(forward.angle_to(door_forward)))
 			door_fov_change = maxf(door_fov_change, absf(view.fov - door_fov))
 			distance_at_end = absf((view.global_position - bedroom_door.global_position).dot(bedroom_door.global_basis.z))
 		# The flashlight: pointing back at the nightstand at the cut (not at the door, not in the picture), coming round to the door
 		# after a few steps, swaying; her own aim again at the end.
-		if _logged(&"door") and not _logged(&"to_eyes") and view != camera:
+		if _logged(&"door") and not _logged(&"cut_to_eyes") and view != camera:
 			var hand: Vector3 = (flashlight as Node3D).global_position
 			var aim: Vector3 = flashlight.get("scripted_aim_direction")
 			var to_door: Vector3 = (house._door_middle() - hand).normalized()
@@ -533,7 +550,7 @@ func _check_memory_scene() -> void:
 				beam_near = minf(beam_near, off)
 			# The door camera is centred on the door the whole way, and the picture's middle is the door's.
 			door_x_error = maxf(door_x_error, absf(view.global_position.x - bedroom_door.global_position.x - 0.45))
-			if _logged(&"crack"):
+			if _logged(&"voice"):
 				var door_centre: Vector2 = view.unproject_position(bedroom_door.to_global(Vector3(0.45, 1.0, 0.0)))
 				screen_centre_error = minf(screen_centre_error, (door_centre - get_viewport().get_visible_rect().size * 0.5).length() / get_viewport().get_visible_rect().size.y)
 				whole_door_at_end = _door_wholly_in(view, 0.01)
@@ -549,7 +566,7 @@ func _check_memory_scene() -> void:
 		var lever: float = _lever_turn()
 		if not _logged(&"handle"):
 			lever_before_handle = maxf(lever_before_handle, lever)
-		elif not _logged(&"to_eyes"):
+		elif not _logged(&"cut_to_eyes"):
 			if press_start < 0.0 and lever > 0.02:
 				press_start = now
 			if lever > 0.9 and not pressed:
@@ -558,6 +575,40 @@ func _check_memory_scene() -> void:
 				press_end = now
 			if lever < 0.05:
 				pressed = false
+		# Her own view, and what is seen from it.
+		if _logged(&"cut_to_eyes") and view == camera and not _logged(&"released"):
+			escape_views += 1
+			if not _logged(&"turn_right"):
+				door_angle_at_cut = minf(door_angle_at_cut, rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized())))
+			if _logged(&"look_back") and doorway_angle > 98.0:
+				doorway_angle = rad_to_deg((-camera.global_basis.z).angle_to((house._doorway_view_point() - camera.global_position).normalized()))
+			var aim_now: Vector3 = flashlight.get("scripted_aim_direction")
+			var lag_now: float = rad_to_deg(aim_now.angle_to(-camera.global_basis.z)) if bool(flashlight.get("scripted_aim_on")) else 0.0
+			beam_lag_sum += lag_now
+			if lag_now > beam_lag:
+				beam_lag = lag_now
+				beam_lag_at = String(house.memory_log[house.memory_log.size() - 1]["beat"])
+			beam_following = beam_following and bool(flashlight.get("scripted_aim_on"))
+			if _logged(&"passed") and not _logged(&"realized"):
+				pass_angle = maxf(pass_angle, rad_to_deg((-camera.global_basis.z).angle_to((house._doorway_view_point() - camera.global_position).normalized())))
+			if _logged(&"glance_over") and glance_over_x > 90.0:
+				glance_over_x = house.to_local(player.global_position).x
+			if _logged(&"go") and not _logged(&"arrived"):
+				if rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized())) < 40.0:
+					if glance_first < 0.0:
+						glance_first = now
+					glance_last = now
+			if _logged(&"go") and not _logged(&"slam"):
+				walk_glance = minf(walk_glance, rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized())))
+			if _logged(&"look_back") and not _logged(&"go"):
+				back_angle = minf(back_angle, rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized())))
+			if _logged(&"go") and not _logged(&"slam"):
+				body_steps.append(player.global_position)
+			if _logged(&"slam") and slam_x < -90.0:
+				slam_x = house.to_local(player.global_position).x
+				slam_door_deg = _escape_angle()
+		if _logged(&"turn_right") and not _logged(&"escape_door_open"):
+			door_opening_samples.append(_escape_angle())
 
 		# The subtitles.
 		if CaptionManager.panel.visible:
@@ -592,8 +643,10 @@ func _check_memory_scene() -> void:
 	var beats: Array[StringName] = []
 	for entry: Dictionary in house.memory_log:
 		beats.append(entry["beat"] as StringName)
-	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"steps_end", &"door", &"handle", &"latch", &"crack", &"handle_release", &"to_eyes", &"open", &"cut_to_eyes", &"flick", &"flick", &"glance_end", &"released"]
-	_expect(beats == wanted, "the beats run in order: %s" % ", ".join(PackedStringArray(beats.map(func(b: StringName) -> String: return String(b)))))
+	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"door", &"handle", &"resist", &"release", &"voice", &"handle", &"resist", &"release", &"cut_to_eyes", &"shush", &"turn_right", &"passed", &"realized", &"noticed", &"look_back", &"go", &"slam", &"arrived", &"glance_end", &"released"]
+	var main_beats: Array[StringName] = beats.filter(func(b: StringName) -> bool: return wanted.has(b))
+	_expect(main_beats == wanted, "the beats run in order: %s" % ", ".join(PackedStringArray(beats.map(func(b: StringName) -> String: return String(b)))))
+	_expect(beats.has(&"doorway_prepared") and not beats.has(&"doorway_in_view"), "the doorway is made while the camera is on the original door and cannot see it")
 	_expect(not inspect_seen, "the generic inspect view never opens during it")
 	_expect(not control_slipped, "the controls never come back to the player before the end")
 
@@ -620,17 +673,18 @@ func _check_memory_scene() -> void:
 	_expect(card.global_transform.is_equal_approx(card_home), "exactly where it was")
 
 	# The subtitles: the seventeen lines in order, with the right speakers (no voice playing, and no "Shh.").
-	var speakers: String = "SLSLSLSLSLSLSLSSL"
+	var speakers: String = "SLSLSLSLSLSLSLSSLJSSSSSSSSSSSSSSSS"
 	var expected: Array[String] = []
 	for i: int in range(1, 18):
 		expected.append(tr("CAPTION_HOUSE_BED_%02d" % i))
+	for i: int in range(1, 18):
+		expected.append(tr("CAPTION_HOUSE_ESC_%02d" % i))
 	var order_ok: bool = captions.size() == expected.size()
 	for i: int in mini(captions.size(), expected.size()):
 		order_ok = order_ok and captions[i].ends_with(expected[i])
-		if i < 17:
-			var who: String = tr("CAPTION_SPEAKER_SOPHIA") if speakers[i] == "S" else tr("CAPTION_SPEAKER_LUCAS")
-			order_ok = order_ok and captions[i].begins_with(who + ":")
-	_expect(order_ok, "the seventeen lines (and nothing after them) are subtitled in order, each by its speaker (%d shown)" % captions.size())
+		var who: String = tr("CAPTION_SPEAKER_SOPHIA") if speakers[i] == "S" else (tr("CAPTION_SPEAKER_JULIANA") if speakers[i] == "J" else tr("CAPTION_SPEAKER_LUCAS"))
+		order_ok = order_ok and captions[i].begins_with(who + ":")
+	_expect(order_ok, "the seventeen lines of the memory, then the seventeen of the door, each by its speaker, in order and nothing more (%d shown)" % captions.size())
 	_expect(house.memory_voice == null and house.memory_voice_player.stream == null, "no voice: subtitles only")
 	# The silences between lines (from the end of one to the start of the next), from the track itself.
 	var silence: Dictionary = {}
@@ -663,51 +717,70 @@ func _check_memory_scene() -> void:
 		_expect(float(last_step[2]) - _logged_time(&"door") > -1.0 and float(last_step[2]) - _logged_time(&"door") < 3.6, "they arrive at the door a few seconds after the cut (%.1f s)" % (float(last_step[2]) - _logged_time(&"door")))
 	_expect(_logged_time(&"handle") - _logged_time(&"steps_end") > 0.2 and _logged_time(&"handle") - _logged_time(&"steps_end") < 1.0, "the handle goes right after the steps stop (%.1f s)" % (_logged_time(&"handle") - _logged_time(&"steps_end")))
 
-	# The door.
+	# The door: a hard cut, square on, the whole door in the picture, one lens, a straight approach.
 	_expect(door_cut_ok, "a hard cut from her eyes to the door camera")
 	_expect(square_on > 0.999, "square on to the shut door (%.4f)" % square_on)
 	_expect(whole_door_at_cut and distance_at_cut > 4.0, "far back, the whole door in the first frame (%.1f m away)" % distance_at_cut)
 	_expect(door_direction_change < 0.01 and door_fov_change < 0.01, "one lens, and a camera that only ever looks along the door's normal")
 	_expect(distance_at_end < distance_at_cut - 1.0 and distance_at_end > 3.2, "it creeps closer all the way, and stops far enough to keep the whole door (%.1f m to %.1f m)" % [distance_at_cut, distance_at_end])
 	_expect(door_x_error < 0.02 and screen_centre_error < 0.05, "the whole shot is centred on the door (%.3f m off, %.3f of the picture's height)" % [door_x_error, screen_centre_error])
-	_expect(whole_door_at_end, "the last frame still has the whole door, none of it cut off")
+	_expect(whole_door_at_end, "the last frame before the shush still has the whole door, none of it cut off")
 	_expect(beam_early >= 0.0 and beam_early < 14.0, "the flashlight is already on the door when the cut comes (%.0f degrees off it)" % beam_early)
 	_expect(eyes_on_door_at_cut < 6.0, "and her eyes had turned to the door before it (%.1f degrees off it)" % eyes_on_door_at_cut)
-	_expect(beam_near < 8.0, "and after a few steps it has come slowly round to the door (%.1f degrees off it by the end)" % beam_near)
-	_expect(beam_off_after, "and her own beam is back at the end")
-	var handle_at: float = _logged_time(&"handle") - _logged_time(&"door")
-	_expect(handle_at > -0.5 and handle_at < 1.0, "the handle moves %.1f s after the cut" % handle_at)
-	var crack_at: float = _logged_time(&"crack") - _logged_time(&"door")
-	_expect(absf(crack_at - house.door_opens_after_cut_seconds) < 0.3, "the door starts to open %.1f s after the cut" % crack_at)
 	_expect(house.find_child("DoorScene", true, false) == null and house.find_child("HallFloorLight", true, false) == null and house.find_child("StepShadow", true, false) == null and house.find_child("DoorGlimpse", true, false) == null, "no light behind the door, no shadow, no one on the other side")
-	_expect(lever_before_handle < 0.01 and presses == 1 and press_end - press_start > house.handle_press_seconds * 0.6, "the handle goes down once, slowly (%.1f s from a fiftieth to nine tenths)" % (press_end - press_start))
-	var held_down: float = _logged_time(&"latch") - (_logged_time(&"handle") + house.handle_press_seconds)
-	_expect(held_down > 0.2, "and stays down (%.1f s) before the latch gives" % held_down)
-	_expect(max_crack > 58.0 and max_crack < 62.0 and max_crack_open > 58.0 and _logged_time(&"open") - _logged_time(&"crack") > 6.0, "the door opens slowly, wide, to 60 degrees (%.1f degrees)" % max_crack)
-	var to_eyes_at: float = _logged_time(&"to_eyes") - _logged_time(&"door")
-	_expect(to_eyes_at > 10.0 and to_eyes_at < 20.0, "the camera starts for her eyes about twenty seconds after the cut (%.1f s)" % to_eyes_at)
-	_expect(_logged_time(&"open") - _logged_time(&"crack") > 12.0, "the door takes its time to open (%.1f s)" % (_logged_time(&"open") - _logged_time(&"crack")))
-	_expect(absf((_logged_time(&"open") - _logged_time(&"to_eyes")) - house.eyes_lead_seconds) < 0.3, "the camera starts back to her eyes %.1f s before the door has finished opening" % (_logged_time(&"open") - _logged_time(&"to_eyes")))
 
-	# Her eyes: the scene's camera goes slowly to where hers is, and the view is hers there, with nothing in between.
-	_expect(_logged_time(&"cut_to_eyes") - _logged_time(&"to_eyes") > 4.5, "the camera takes its time to reach her eyes (%.1f s)" % (_logged_time(&"cut_to_eyes") - _logged_time(&"to_eyes")))
-	_expect(blend_error < 0.1 and blend_fov_error < 0.5, "it is her camera's place, direction and lens when the view becomes hers (%.3f, lens %.2f degrees off)" % [blend_error, blend_fov_error])
-	_expect(_logged_time(&"released") - _logged_time(&"glance_end") < 0.1, "and the controls are hers once her flashlight has flickered back (no turn to the side, no \"Shh.\")")
-	_expect(_logged_time(&"glance_end") - _logged_time(&"cut_to_eyes") < 3.0 and house.memory_log.filter(func(e: Dictionary) -> bool: return e["beat"] == &"flick").size() == house.return_flick_levels.size(), "her flashlight flickers twice in her own view, each time stronger")
-	_expect(ajar_at_cut > 58.0, "the door is still open as she looks at it (%.1f degrees)" % ajar_at_cut)
-	_expect(bedroom_door.is_open and absf(_bedroom_angle() - 60.0) < 1.0 and _lever_turn() < 0.05, "and it stays open at 60 degrees in the game, its handle up (%.1f degrees)" % _bedroom_angle())
-	_expect(house._tension != null and house._tension.stream != null and _logged_time(&"handle_release") - _logged_time(&"crack") > 1.0, "the tension recording began with the door moving, the handle going back up a few centimetres into the opening")
-	_expect(rad_to_deg((-camera.global_basis.z).angle_to((house._door_middle() - camera.global_position).normalized())) < 12.0, "she is looking at the door, the spot the camera was looking at")
+	# Two slow attempts at the handle, both failed; the door never moves.
+	var handles: Array[float] = []
+	for entry: Dictionary in house.memory_log:
+		if entry["beat"] == &"handle":
+			handles.append(float(entry["time"]))
+	_expect(handles.size() == 2, "the handle is tried twice (%d)" % handles.size())
+	_expect(handles.size() == 2 and handles[0] - _logged_time(&"steps_end") > 0.2 and handles[0] - _logged_time(&"steps_end") < 1.0, "the first attempt comes right after the steps stop")
+	_expect(handles.size() == 2 and handles[1] - _logged_time(&"voice") > 11.8 and handles[1] - _logged_time(&"voice") < 13.2, "the second attempt comes with 'Open the door.' (%.1f s into the voice, which says it from 12.8 s)" % (handles[1] - _logged_time(&"voice") if handles.size() == 2 else 0.0))
+	_expect(lever_before_handle < 0.01 and presses >= 1, "the handle goes down and meets the lock")
+	_expect(max_crack > 1.0 and max_crack < 3.0 and not bedroom_door.is_open and _logged(&"door_closed"), "the original door only gives a little where it is pushed, and never opens (%.2f degrees at most)" % max_crack)
+	var voice_at: float = _logged_time(&"voice") - handles[0] if handles.size() == 2 else 0.0
+	_expect(voice_at > 4.4 and voice_at < 6.2, "Juliana speaks a breath after the first attempt (%.1f s after it began)" % voice_at)
+	_expect(_logged_time(&"shush") - _logged_time(&"voice") > 32.5 and _logged_time(&"shush") - _logged_time(&"voice") < 37.0, "the twelve lines at the door take their time (%.1f s)" % (_logged_time(&"shush") - _logged_time(&"voice")))
 
-	# Given back.
+	# The shush: a hard cut to her own eyes, looking at the original door, then the turn to the right, to the new doorway, which is opening.
+	_expect(escape_views > 60, "from the shush the view is her own camera, to the end")
+	_expect(_logged_time(&"shush") - _logged_time(&"cut_to_eyes") > 0.1 and _logged_time(&"shush") - _logged_time(&"cut_to_eyes") < 0.5, "the view is hers for 0.2 s before the shush (%.2f s)" % (_logged_time(&"shush") - _logged_time(&"cut_to_eyes")))
+	_expect(door_angle_at_cut < 3.0, "the cut shows the original bedroom door (%.1f degrees off its middle), not the old postcard view" % door_angle_at_cut)
+	_expect(beam_following and beam_lag < 32.0 and beam_lag_sum / maxf(float(escape_views), 1.0) < 3.0, "her flashlight points where her view does (%.1f degrees on average, %.1f at most, during %s, which is the fastest turn, a frame or two behind)" % [beam_lag_sum / maxf(float(escape_views), 1.0), beam_lag, beam_lag_at])
+	_expect(pass_angle > 20.0 and _logged_time(&"realized") - _logged_time(&"passed") > 0.8 and _logged_time(&"realized") - _logged_time(&"passed") < 1.5, "her light goes over the doorway and on past it (%.0f degrees past) and stays away a second before she notices (%.1f s)" % [pass_angle, _logged_time(&"realized") - _logged_time(&"passed")])
+	_expect(_logged_time(&"noticed") - _logged_time(&"realized") > 0.2 and _logged_time(&"noticed") - _logged_time(&"realized") < 0.65, "and the realisation, the view coming back to it, lasts half a second at most (%.2f s)" % (_logged_time(&"noticed") - _logged_time(&"realized")))
+	_expect(_logged_time(&"escape_door_open") - _logged_time(&"escape_door_opening") > 5.0, "the new door takes its time to open, thrown and coasting (%.1f s)" % (_logged_time(&"escape_door_open") - _logged_time(&"escape_door_opening")))
+	_expect(glance_first >= 0.0 and glance_last - glance_first > 2.0 and _logged(&"glance_over"), "she keeps her eyes on it for a good while on the way, and then looks ahead (%.1f s)" % (glance_last - glance_first))
+	_expect(_logged_time(&"glance_over") - _logged_time(&"go") > 2.0 and glance_over_x < 5.6, "looking back until the open door is about to be in the way (the view turns to the front at house x %.2f, the wall at 4.65)" % glance_over_x)
+	_expect(walk_glance < 45.0 and _logged(&"glance_over_shoulder"), "walking to it she looks back at the original door for a moment (%.0f degrees off it at the nearest)" % walk_glance)
+	_expect(_logged_time(&"look_back") - _logged_time(&"turn_right") > 1.6 and doorway_angle < 6.0, "after the turn the new doorway is what she looks at (%.1f degrees off it)" % doorway_angle)
+	_expect(door_opening_samples.size() > 10 and door_opening_samples.max() > 30.0, "the new door opens slowly while she looks (%.0f degrees at most before the look back)" % (door_opening_samples.max() if not door_opening_samples.is_empty() else 0.0))
+	_expect(back_angle < 15.0, "one look back at the original door (%.0f degrees off it at the nearest), which is shut" % back_angle)
+	_expect(not bedroom_door.is_open, "and still shut")
+
+	# Her body goes through the passage, and the door slams only when all of her is in the kitchen.
+	var farthest: float = 0.0
+	for index: int in range(1, body_steps.size()):
+		farthest = maxf(farthest, body_steps[index].distance_to(body_steps[index - 1]))
+	_expect(body_steps.size() > 20 and farthest < 0.2, "she walks it in her own body, a step at a time (the largest move in one frame is %.3f m)" % farthest)
+	_expect(slam_x > -90.0 and slam_x < house.escape_clear_x, "the door slams when she is in the kitchen (her middle is at x %.2f, the wall at 4.65)" % slam_x)
+	_expect(slam_door_deg > 5.0, "the door is still open as the slam begins (%.0f degrees)" % slam_door_deg)
+	_expect(house.escape_door.is_locked and not house.escape_door.is_open and _escape_angle() < 1.0, "it is shut and locked behind her")
+	_expect(house.to_local(player.global_position).x < 4.2 and house.to_local(player.global_position).z > 2.0, "and the player is in the kitchen, where the walk left them")
+	_expect(house.back_door.is_locked and house.front_door.is_locked and not house.back_door.is_open and not house.front_door.is_open, "the back and the front doors are shut and locked")
+	_expect(house.is_pantry_lamp_on(), "the pantry's bulb is on (the black head looks from there) (visible %s, energy %.2f, noticed %s, last beats %s)" % [house.pantry_light.visible, house.pantry_light.light_energy, beats.has(&"watcher_noticed"), str(beats.slice(-6))])
+	_expect(house.watcher != null and house.watcher.is_peeking, "and the head is looking round its frame, armed only now that the controls are hers")
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"house_escape_done", false)) and bool(SaveManager.get_state_value(&"puzzles", &"house_exits_locked", false)) and not bool(SaveManager.get_state_value(&"puzzles", &"house_watcher_done", false)), "the escape is remembered, the exits locked and the watcher pending")
+
+	# Given back, in the kitchen.
 	_expect(get_viewport().get_camera_3d() == camera and (house._cinema == null or not is_instance_valid(house._cinema)), "her own camera is the view again (the scene's camera is gone)")
 	_expect(not bool(player.get("view_locked")) and not player.manual_save_blocked, "the player is let go and can save again")
 	_expect(not movement.view_motion_still and movement.scripted_fov == 0.0, "her camera's own motion and lens are hers")
-	_expect(max_drift < 0.02 and absf(camera.global_position.y - eye_height) < 0.02, "the player is not moved (%.3f m), nor is her head (%.3f m)" % [max_drift, max_eye_change])
 	await get_tree().process_frame
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	_expect(rad_to_deg((-camera.global_basis.z).angle_to(last_forward)) < 0.3, "the hand back does not move the view")
+	_expect(rad_to_deg((-camera.global_basis.z).angle_to(last_forward)) < 0.6, "the hand back does not move the view")
 	var nudge: InputEventMouseMotion = InputEventMouseMotion.new()
 	nudge.relative = Vector2(4.0, 0.0)
 	var before_nudge: Vector3 = -camera.global_basis.z
@@ -718,11 +791,15 @@ func _check_memory_scene() -> void:
 	_expect(nudged > 0.05 and nudged < 2.0, "the first mouse movement turns from there, with no snap (%.2f degrees)" % nudged)
 	await _wait(1.0)
 	_expect(absf(camera.fov - gameplay_fov) < 1.0, "the field of view is the player's own (%.1f, was %.1f)" % [camera.fov, gameplay_fov])
-	_expect(bool(flashlight.get("flashlight_on")) and spot.visible, "her flashlight stays on")
+	_expect(bool(flashlight.get("flashlight_on")) and spot.visible, "her flashlight is on")
 	_expect(bool(SaveManager.get_state_value(&"puzzles", &"house_bedroom_memory_done", false)), "it is remembered as played")
 	_expect(capsule.story_unlocked and not unlocked_during and not capsule.is_open, "the capsule is unlocked now, with no key (and was not before)")
-	_expect(not pantry_door.is_open and not house.is_pantry_lamp_on(), "the pantry is shut and its bulb out after the door scene")
-	_expect(house.living_light.visible and house.living_light.light_energy > 1.0, "the living room's light is on, lit by the opened door, for the capsule")
+	_expect(house.living_light.visible and house.living_light.light_energy > 1.0, "the living room's light is on, for the capsule")
+
+
+## The new door's opening, in degrees (0: shut).
+func _escape_angle() -> float:
+	return house._door_offset_degrees(house.escape_door)
 
 
 ## Game seconds since the scene began (its own clock, the one its log is written by).
@@ -858,12 +935,18 @@ func _check_capsule_and_ficha() -> void:
 
 	ficha.interact(player)
 	_expect(player.has_inventory_item("lucas_ficha"), "the Ficha goes in the inventory")
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_expect(not house.back_door.is_locked and not house.front_door.is_locked and not bool(SaveManager.get_state_value(&"puzzles", &"house_exits_locked", true)), "taking the token (not inspecting it, not closing its view) unlocks both outside exits")
 	await _wait(0.6)
 	_close_view()
 	await _wait(0.6)
 	_expect(completed_count == 1, "closing the Ficha raises sequence_completed once")
 	for door: DoorController in house._doors():
-		_expect(not door.is_locked, "%s is not locked" % door.name)
+		if door == house.escape_door:
+			_expect(door.is_locked and not door.is_open, "the new door stays shut and locked: only the two outside exits were released")
+		else:
+			_expect(not door.is_locked, "%s is not locked" % door.name)
 	front_door.interact(player)
 	await _until(func() -> bool: return front_door._choreo == &"", "the front door opening", 10.0)
 	_expect(front_door.is_open, "the front door opens: no exit is held back")
@@ -880,7 +963,7 @@ func _check_memory_without_captions() -> void:
 	player.global_position = Vector3(7.58, 1.05, 1.45)
 	player.velocity = Vector3.ZERO
 	await _aim_player_at(card.global_position)
-	var eyes_before: float = _logged_time(&"to_eyes")
+	var eyes_before: float = _logged_time(&"cut_to_eyes")
 	var door_before: float = _logged_time(&"door")
 	card.interact(player)
 	var any_caption: bool = false
@@ -891,7 +974,7 @@ func _check_memory_without_captions() -> void:
 		any_caption = any_caption or CaptionManager.panel.visible
 	_expect(not house.memory_running and _logged(&"released"), "with subtitles off the scene still plays to the end")
 	_expect(not any_caption, "and shows no text")
-	_expect(absf(_logged_time(&"to_eyes") - eyes_before) < 1.0 and absf(_logged_time(&"door") - door_before) < 0.5, "with the same timing, the door's too (back to her eyes at %.1f s, %.1f s with subtitles)" % [_logged_time(&"to_eyes"), eyes_before])
+	_expect(absf(_logged_time(&"cut_to_eyes") - eyes_before) < 1.0 and absf(_logged_time(&"door") - door_before) < 0.5, "with the same timing, the door's too (back to her eyes at %.1f s, %.1f s with subtitles)" % [_logged_time(&"to_eyes"), eyes_before])
 	_expect(not bool(player.get("view_locked")) and get_viewport().get_camera_3d() == player.get_node("Head/Camera3D"), "and gives the player back")
 	_expect(capsule.story_unlocked or capsule.is_open, "the capsule stays unlocked")
 	GameSettings.set_captions_enabled(true, false)
@@ -957,11 +1040,55 @@ func _check_memory_cancelled() -> void:
 	await get_tree().process_frame
 
 
+## The flashback can be skipped by holding the intro cinematic's key; the prompt is hidden until the player presses something, shows for a few seconds after, and the
+## skip lands in the night room with the horror about to begin (the scene then plays on as ever).
+func _check_flashback_skip() -> void:
+	SaveManager.set_state_value(&"puzzles", &"house_bedroom_memory_done", false)
+	house._memory_done = false
+	card.plays_scene = true
+	player.global_position = Vector3(7.58, 1.05, 1.45)
+	player.velocity = Vector3.ZERO
+	await _aim_player_at(card.global_position)
+	card.interact(player)
+	await _until(func() -> bool: return _logged(&"lift"), "a scene begun once more, to skip the flashback of", 30.0)
+	var prompt: HoldToSkip = house._skip_ui
+	_expect(prompt != null and prompt.is_armed() and not prompt.panel.visible, "the skip prompt is armed, and not shown until the player presses something")
+	prompt.visible_seconds = 0.4
+	var key: InputEventKey = InputEventKey.new()
+	key.keycode = KEY_W
+	key.pressed = true
+	Input.parse_input_event(key)
+	await _wait(0.3)
+	_expect(prompt.panel.visible, "a key press shows it: \"%s\"" % prompt.label.text)
+	var release: InputEventKey = InputEventKey.new()
+	release.keycode = KEY_W
+	release.pressed = false
+	Input.parse_input_event(release)
+	await get_tree().create_timer(0.9, true, false, true).timeout
+	_expect(not prompt.panel.visible and not _logged(&"skipped"), "and it goes again a few seconds after the last press, with nothing skipped")
+	# Hold the key: the bar fills, and at the end the flashback is gone.
+	Input.action_press(&"skip_cinematic")
+	await _wait(0.5)
+	_expect(prompt.panel.visible and prompt.bar.value > 0.05 and prompt.bar.value < 1.0, "holding the key fills the bar (%.2f)" % prompt.bar.value)
+	await _until(func() -> bool: return _logged(&"skipped"), "held long enough, the flashback is skipped", 6.0)
+	Input.action_release(&"skip_cinematic")
+	await _until(func() -> bool: return _logged(&"night"), "the room is the night again", 6.0)
+	_expect(not _logged(&"conversation") and not house.in_memory and not house.memory_root.visible, "with no conversation played, and the warm room gone")
+	_expect(not prompt.is_armed() and not prompt.panel.visible, "the prompt is gone")
+	await _until(func() -> bool: return not house.memory_running, "the scene plays on to the end after the skip", 200.0)
+	_expect(_logged(&"released") and _logged(&"door") and _logged(&"voice") and _logged(&"slam"), "the horror plays as ever (the steps, the door, the voice, the escape)")
+	_expect(card.visible and card.global_transform.is_equal_approx(card_home), "and the postcard lies back on the nightstand")
+	_expect(house.escape_door.is_locked and not house.escape_door.is_open, "the new door is shut and locked behind her, as after a full run")
+
+
 ## A second copy of the house built from the saved state: everything is where the story left it.
 func _check_reload() -> void:
 	var copy: UnfinishedHouseSequence = await _spawn_house()
 	_expect((copy.get_node("Doors/PantryDoor") as DoorController).is_locked == false, "after a reload the pantry is open to the player")
-	_expect(not copy.is_pantry_lamp_on(), "its bulb stays out (the bedroom scene put the pantry out)")
+	_expect(copy.is_pantry_lamp_on() and not (copy.get_node("Doors/PantryDoor") as DoorController).is_locked, "its bulb is on and its door open, as the escape left them (the head has not been seen)")
+	_expect(copy.shell.escape_doorway_open and copy.escape_door.is_locked and copy.escape_door.position.y > -1.0, "the new doorway is there after a reload, its door shut and locked")
+	_expect(not copy.back_door.is_locked and not copy.front_door.is_locked, "the exits stay free once the token has been taken")
+	_expect(copy.watcher.is_peeking, "and the head still waits in the pantry")
 	_expect(not (copy.get_node("Doors/BedroomDoor") as DoorController).is_locked, "the bedroom is unlocked")
 	_expect((copy.get_node("Furniture/TimeCapsule") as TimeCapsule).is_open, "the capsule is open")
 	_expect(not copy.memory_root.visible, "the room is the night room")
@@ -1078,20 +1205,21 @@ func _spawn_house() -> UnfinishedHouseSequence:
 
 
 func _clear_house_state() -> void:
-	for key: StringName in [&"house_recipe_done", &"house_pantry_closed_on_entry", &"house_argument_active", &"house_bedroom_memory_done", &"house_migrated", &"house_ficha_taken", &"time_capsule_open"]:
+	for key: StringName in [&"house_recipe_done", &"house_pantry_closed_on_entry", &"house_argument_active", &"house_bedroom_memory_done", &"house_migrated", &"house_ficha_taken", &"time_capsule_open", &"house_escape_done", &"house_exits_locked", &"house_watcher_done"]:
 		SaveManager.set_state_value(&"puzzles", key, false)
+	SaveManager.set_state_value(&"collectibles", &"lucas_ficha", false)
 	SaveManager.set_state_value(&"puzzles", &"house_stage", 0)
 	SaveManager.set_state_value(&"puzzles", &"house_pantry_beat", 0)
 	SaveManager.set_state_value(&"triggers", &"house_recipe_open", false)
 	SaveManager.set_state_value(&"collectibles", &"capsule_key", false)
 	SaveManager.set_state_value(&"drawers", &"house_nightstand_drawer", {})
-	for door: StringName in [&"house_front_door", &"house_back_door", &"house_pantry_door", &"house_bedroom_door"]:
+	for door: StringName in [&"house_front_door", &"house_back_door", &"house_pantry_door", &"house_bedroom_door", &"house_escape_door"]:
 		SaveManager.set_state_value(&"doors", door, {})
 
 
 func _house_state() -> Dictionary:
 	var state: Dictionary = {}
-	for key: StringName in [&"house_recipe_done", &"house_pantry_closed_on_entry", &"house_argument_active", &"house_bedroom_memory_done", &"house_migrated"]:
+	for key: StringName in [&"house_recipe_done", &"house_pantry_closed_on_entry", &"house_argument_active", &"house_bedroom_memory_done", &"house_migrated", &"house_escape_done", &"house_exits_locked", &"house_watcher_done"]:
 		state[key] = _flag(key)
 	for door: StringName in [&"house_front_door", &"house_back_door", &"house_pantry_door", &"house_bedroom_door"]:
 		state[door] = SaveManager.get_state_value(&"doors", door, {})
