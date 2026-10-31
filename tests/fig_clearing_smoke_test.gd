@@ -212,12 +212,16 @@ func _run() -> void:
 	_expect(player.has_inventory_item("photo_recent") and album.arrangement == ["photo_childhood", "photo_adolescence", ""], "which goes back to the hands")
 	var before_last: int = wrong_count
 
-	# The right order: the chronological one.
+	# The right order: the chronological one. The player stands at Table A, on the fire's side, as someone using the album does.
+	player.global_position = clearing.to_global(Vector3(0.5, 0.1, -1.35))
+	player.velocity = Vector3.ZERO
+	await get_tree().physics_frame
+	await get_tree().physics_frame
 	_expect(view.drop_on_slot(2, _from_hand("photo_recent")), "the last space gets its photograph")
 	_expect(album.arrangement == ["photo_childhood", "photo_adolescence", "photo_recent"], "in chronological order")
 	_expect(wrong_count == before_last, "the right order is not a wrong arrangement")
 	_expect(album.locked, "the right order locks the album")
-	_expect(clearing.stage >= FigClearingSequence.Stage.FINALE, "the memory starts")
+	_expect(clearing.stage >= FigClearingSequence.Stage.FINALE, "the sequence starts by itself")
 	_expect(not view.can_drop_on_slot(0, _from_hand("photo_childhood")), "a locked album refuses changes")
 
 	# The album took only what was put in it.
@@ -240,24 +244,25 @@ func _run() -> void:
 	_expect(not clearing.fire.is_lit and not clearing.fire.flames.visible and not clearing.fire.light.visible, "the campfire is out, no flame lingers and its light is off")
 	_expect(ash != null and ash.visible, "the fire pit is cold ash")
 	var camp: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
-	_expect(not camp.lights_out and camp.lantern_light.visible and camp.lantern_glass_material.emission_energy_multiplier > 1.0 and camp.lantern_flame.visible, "the lantern on the memory table is still lit")
-	_expect(camp.radio_static.playing and camp.radio_lamp_material.emission_energy_multiplier > 0.3, "and the railway radio still hisses, its lamp still red")
+	_expect(camp.lights_out and not camp.lantern_light.visible and camp.lantern_glass_material.emission_energy_multiplier < 0.01 and not camp.lantern_flame.visible, "the lantern on the memory table is out")
+	_expect(not camp.radio_static.playing and camp.radio_lamp_material.emission_energy_multiplier < 0.01, "and the railway radio is silent, its lamp dark")
 	_expect(clearing.rain_player != null and not clearing.rain_player.playing, "the rain has stopped")
 	_expect(not clearing.recorder.is_turning(), "and so have the reels")
-	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight is as the player left it (they switched it off during the memory)")
+	_expect(bool(flashlight.get("flashlight_on")), "the flashlight is on, as she was using it")
 	_expect(player.can_manual_save(), "saving is allowed again")
 	_expect(clearing.stage == FigClearingSequence.Stage.DONE, "and the scene is over")
 
-	# Juliana's Ficha lies on the empty seat's log, in reach of a standing player.
+	# Juliana's Ficha lies on Table B.
 	var ficha: Collectible = clearing._ficha as Collectible
-	_expect(ficha != null and ficha.item_id == "juliana_ficha", "Juliana's Ficha lies where nobody sat")
-	await _check_the_empty_seat(ficha)
+	_expect(ficha != null and ficha.item_id == "juliana_ficha", "Juliana's Ficha lies on Table B")
+	await _check_table_b(ficha)
 	var scratch: ReadableSpot = ficha.get_node("Visual").find_child("ScratchSpot", true, false) as ReadableSpot
 	_expect(scratch != null and not scratch.obvious and tr(scratch.text_key) == "CALL HER", "its back is scratched with CALL HER, read as an overlay")
 	_expect(_ficha_scene_path() == str(OverlookPhoneSequence.FICHA_SCENES["juliana_ficha"]) and OverlookPhoneSequence.FICHA_IDS.has(ficha.item_id), "it is the Ficha the payphone takes (%s)" % ficha.item_id)
 
-	# Loaded again before the Ficha is taken: the memory is not played again, the fire is cold, the lantern lit, one Ficha on the log.
+	# Loaded again before the Ficha is taken: nothing is played again, the fire is cold, the lights out, one Ficha on Table B.
 	await _check_loaded_again(true)
+	await _check_resumed_sequence()
 
 	_expect(album.can_interact(player), "the album can be used after the memory")
 	_expect(album.get_prompt_text() == "PROMPT_OPEN_ALBUM", "it only opens to look: no photograph can be taken from it")
@@ -298,62 +303,204 @@ func _run() -> void:
 	view.close()
 
 
-## The memory, watched frame by frame: the tape's six lines with the fire burning, the reels and the rain stopping, Sophia's last line once
-## under her own name, then a creak from the empty seat, and the fire cold and the Ficha down together. Saving is never allowed before the
-## Ficha lies on the log. Halfway the player switches the flashlight off themselves: nothing switches it back.
+## The directed sequence, watched frame by frame: one take from the last photograph to the token on Table B. The player is held from the first
+## frame; the cinematic camera is above Table A, then the black, then Juliana's own camera for the last line, the weak flashlight, the figure
+## with its back to her for two seconds, the quarter second blink, the token falling with one clink, and the handoff. Saving is never allowed
+## before the token lies on the table. Halfway the player's flashlight key is pressed: it does nothing.
 func _watch_the_memory(flashlight: Node) -> void:
-	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.RECORDING)
-	_expect(not player.can_manual_save(), "saving is blocked during the memory")
-	_expect(clearing.fire.is_lit, "the fire still burns while the tape plays")
-	_expect(clearing.rain_player.playing, "rain plays round the recording")
-	var tape_voice: AudioStreamPlayer3D = clearing.recording_voice_player
-	_expect(tape_voice != null and tape_voice.get_parent() == clearing.recorder, "the recorder has a voice source of its own")
-	_expect(tape_voice != null and tape_voice.stream == null and not tape_voice.playing, "with no clip yet: the conversation is captions only")
-	_expect(not player.modal_ui_open and not player.view_locked and not player.cutscene_frozen, "and the player is free to move and look")
+	var head_camera: Camera3D = player.get_node("Head/Camera3D") as Camera3D
+	var dressing: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
+	await _until(func() -> bool: return clearing._running or clearing.stage >= FigClearingSequence.Stage.RECORDING, 10.0)
+	_expect(not player.can_manual_save(), "saving is blocked from the last photograph")
+	_expect(player.view_locked and clearing.fire.is_lit, "the player is held from the first moment and the fire still burns")
 
 	var shown: Array[String] = []
 	var elapsed: float = 0.0
-	var line_at: float = -1.0
-	var creak_at: float = -1.0
-	var fire_out_at: float = -1.0
-	var ficha_at: float = -1.0
-	var reels_at_line: bool = true
-	var rain_at_line: bool = true
-	var fire_at_line: bool = false
+	var t: Dictionary = {}
+	var seen: Dictionary = {}
+	var lantern_min_before_rec: float = 1.0
+	var lantern_reversals: int = 0
+	var lantern_last: float = 1.0
+	var lantern_dir: int = 0
 	var save_window: bool = false
-	var torch_on_at_seat: bool = false
-	var torch_switched: bool = false
-	while clearing.stage != FigClearingSequence.Stage.DONE and elapsed < 60.0:
+	var key_pressed: bool = false
+	# The flashlight's own strength: the sequence has already taken the light by now, so it is read from the controller's saved base.
+	var base_energy: float = float(flashlight.get("_base_energy"))
+	var held_samples: int = 0
+	var held_last: float = -1.0
+	var went_down_slowly: bool = false
+	var clinks: int = 0
+	var counted: Dictionary = {}
+	var paused_checked: bool = false
+	var yaws: Array = []
+	var yaws_all: Array = []
+	var torch_low: float = 1.0e9
+	var torch_high: float = 0.0
+	var fov_min: float = 200.0
+	var stare_yaws: Array = []
+	var end_dark: int = 0
+	var last_bow: float = 0.0
+	var album_view: AlbumView = clearing.album.view
+	while clearing.stage != FigClearingSequence.Stage.DONE and elapsed < 90.0:
 		await get_tree().process_frame
 		elapsed += get_process_delta_time()
 		var key: String = CaptionManager._shown_key
 		if not key.is_empty() and (shown.is_empty() or shown[shown.size() - 1] != key):
 			shown.append(key)
+			if not t.has(key):
+				t[key] = elapsed
 
 		if clearing.stage != FigClearingSequence.Stage.DONE and player.can_manual_save():
 			save_window = true
 
-		if clearing.stage == FigClearingSequence.Stage.EMPTY_SEAT and not torch_switched:
-			torch_on_at_seat = bool(flashlight.get("flashlight_on"))
+		var camera_now: Camera3D = get_viewport().get_camera_3d()
+		var cinema: Camera3D = clearing._cinema
+		if cinema != null and not t.has("cinema_on"):
+			t["cinema_on"] = elapsed
+			seen["cinema_current"] = camera_now == cinema
+			seen["album_closed_at_cut"] = not album_view.is_open() and not player.modal_ui_open
+			seen["fov"] = cinema.fov
+			seen["cinema_over_table_a"] = cinema.global_position.y > clearing.album.global_position.y + 0.2 and cinema.global_position.distance_to(clearing.album.global_position) < 1.0
+			seen["cinema_looks_down"] = (-cinema.global_basis.z).dot(Vector3.DOWN) > 0.25 and (-cinema.global_basis.z).dot(Vector3.DOWN) < 0.9
+		if cinema != null and not t.has("rewind") and clearing.recorder.has_method("is_rewinding") and clearing.recorder.call("is_rewinding"):
+			t["rewind"] = elapsed
+		if cinema != null:
+			seen["cinema_fov_last"] = cinema.fov
+			seen["cinema_pos_last"] = cinema.global_position
+
+		# The lantern: dips in the last seconds of the tape only, in more than one direction.
+		if clearing.stage == FigClearingSequence.Stage.RECORDING and t.has("recording") and elapsed - float(t["recording"]) < _track_length_for_test() - clearing.lamp_failure_seconds - 0.3:
+			lantern_min_before_rec = minf(lantern_min_before_rec, dressing.lantern_level)
+		if clearing.stage == FigClearingSequence.Stage.RECORDING:
+			var level: float = dressing.lantern_level
+			var direction: int = 1 if level > lantern_last + 0.005 else (-1 if level < lantern_last - 0.005 else 0)
+			if direction != 0 and lantern_dir != 0 and direction != lantern_dir:
+				lantern_reversals += 1
+			if direction != 0:
+				lantern_dir = direction
+			lantern_last = level
+			if not t.has("recording"):
+				t["recording"] = elapsed
+				seen["recorder_shot"] = cinema != null and cinema.global_position.distance_to(clearing.recorder.global_position) < 0.7 and cinema.global_position.y - clearing.recorder.global_position.y > 0.2 and cinema.global_position.y - clearing.recorder.global_position.y < 0.5 and _looks_at(cinema, clearing.recorder.global_position, 30.0)
+			if not paused_checked and key.begins_with("CAPTION_REC_02") and cinema != null:
+				paused_checked = true
+				var before: Transform3D = cinema.global_transform
+				var keyed: String = CaptionManager._shown_key
+				get_tree().paused = true
+				for _i: int in 12:
+					await get_tree().process_frame
+				var after: Transform3D = cinema.global_transform
+				var still_keyed: String = CaptionManager._shown_key
+				get_tree().paused = false
+				seen["pause_holds_camera"] = before.origin.is_equal_approx(after.origin)
+				seen["pause_holds_caption"] = keyed == still_keyed
+
+		if not key_pressed and key.begins_with("CAPTION_REC_03"):
+			key_pressed = true
 			flashlight.call("player_toggle")
-			torch_switched = true
+			flashlight.call("player_toggle")
+			seen["key_ignored_in_hold"] = true
+		if key.begins_with("CAPTION_REC_06") and not t.has("REC_06_start"):
+			t["REC_06_start"] = elapsed
 
-		if line_at < 0.0 and key.begins_with("CAPTION_REC_07"):
-			line_at = elapsed
-			reels_at_line = clearing.recorder.is_turning()
-			rain_at_line = clearing.rain_player.playing
-			fire_at_line = clearing.fire.is_lit
+		# After the tape the lamp keeps its level for a moment and then goes out at once (it never goes down by degrees).
+		if t.has("REC_06_start") and not t.has("dark") and clearing._lamp_dips != null and not clearing._lamp_dips.is_valid() and dressing.lantern_level < 0.37:
+			if dressing.lantern_level > 0.005:
+				held_samples += 1
+				went_down_slowly = went_down_slowly or (held_last >= 0.0 and dressing.lantern_level < held_last - 0.01)
+				held_last = dressing.lantern_level
+		if not t.has("dark") and dressing.lights_out:
+			t["dark"] = elapsed
+			seen["fire_out_with_dark"] = not clearing.fire.is_lit
+			seen["lamp_out"] = dressing.lantern_level == 0.0 and not dressing.lantern_light.visible
+			seen["reels_stopped_at_dark"] = not clearing.recorder.is_turning() and not clearing.rain_player.playing
+			seen["flashlight_off_at_dark"] = not flashlight.visible
+			seen["still_on_recorder_shot"] = clearing._cinema != null and get_viewport().get_camera_3d() == clearing._cinema
+			seen["no_black_screen"] = clearing.find_child("SequenceBlack", true, false) == null
 
-		if creak_at < 0.0 and _stand_up_sounds() > 0:
-			creak_at = elapsed
+		if key.begins_with("CAPTION_REC_07") and not t.has("line"):
+			t["line"] = elapsed
+			seen["line_after_dark"] = dressing.lights_out and not flashlight.visible
+			seen["line_on_recorder_shot"] = clearing._cinema != null and camera_now == clearing._cinema
 
-		if fire_out_at < 0.0 and not clearing.fire.is_lit:
-			fire_out_at = elapsed
+		if t.has("line") and not key.begins_with("CAPTION_REC_07") and not t.has("turn_start"):
+			t["turn_start"] = elapsed
+			seen["target_yaw"] = clearing._look_angles(player, player.movement_controller, clearing._reveal_point()).x
 
-		if ficha_at < 0.0 and clearing._ficha != null:
-			ficha_at = elapsed
+		var figure: SeatedFigure = clearing._figure
+		if figure != null:
+			last_bow = figure.head_bow_degrees
+		var ficha: Collectible = clearing._ficha
+		if t.has("dark") and not t.has("pov") and camera_now == head_camera and clearing._cinema == null:
+			t["pov"] = elapsed
+			seen["pov_listener"] = get_viewport().get_camera_3d() == head_camera
+			seen["pov_look_on_table_a"] = _looks_at(head_camera, clearing._table_a_point(), 25.0)
+			seen["pov_before_torch"] = not flashlight.visible and t.has("turn_start")
+		if t.has("turn_start") and not t.has("torch_on") and flashlight.visible:
+			t["torch_on"] = elapsed
+		if t.has("torch_on") and not t.has("figure_gone"):
+			yaws_all.append([elapsed, float(player.movement_controller.get("look_yaw"))])
+			fov_min = minf(fov_min, head_camera.fov)
+			torch_low = minf(torch_low, float(flashlight.get("light_energy")))
+			torch_high = maxf(torch_high, float(flashlight.get("light_energy")))
+		if clearing._staring and not t.has("figure_gone"):
+			stare_yaws.append(float(player.movement_controller.get("look_yaw")))
+		if clearing._returning_to_normal and float(flashlight.get("light_energy")) < base_energy * 0.03:
+			end_dark += 1
+		if figure != null and figure.visible and not t.has("figure"):
+			t["figure"] = elapsed
+		if figure != null and figure.visible and not t.has("figure_seen_ok") and t.has("figure") and elapsed - float(t["figure"]) > 1.0:
+			t["figure_seen_ok"] = elapsed
+			var eye: Vector3 = head_camera.global_position
+			var forward: Vector3 = figure.global_basis.z
+			var to_eye: Vector3 = (eye - figure.global_position)
+			to_eye.y = 0.0
+			seen["figure_back_to_juliana"] = forward.dot(to_eye.normalized()) < -0.7
+			seen["figure_in_view"] = _looks_at(head_camera, figure.to_global(figure.head_point), 30.0)
+			seen["view_on_figure_and_table"] = _looks_at(head_camera, clearing.token_landing(), 30.0)
+			seen["camera_still_head"] = camera_now == head_camera and player.view_locked
+			seen["torch_weak"] = flashlight.visible and bool(flashlight.get("toggle_locked")) and float(flashlight.get("light_energy")) < base_energy * 0.4
+			seen["token_in_hand"] = ficha != null and not ficha.pickup_enabled and ficha.global_position.y > FigClearingProps.TABLE_TOP_Y + 0.03 and ficha.global_position.distance_to(clearing.token_landing()) < 0.15
+			seen["token_cannot_be_taken"] = ficha != null and not ficha.can_interact(player)
+			var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(eye, figure.to_global(figure.head_point))
+			query.exclude = [player.get_rid()]
+			var hit: Dictionary = clearing.get_world_3d().direct_space_state.intersect_ray(query)
+			seen["figure_line_of_sight"] = hit.is_empty() or (hit["position"] as Vector3).distance_to(figure.to_global(figure.head_point)) < 0.4
+			seen["figure_blocker"] = "" if hit.is_empty() else str((hit["collider"] as Node).get_path())
+			seen["held_tabletop_visible"] = absf(figure.hold_error) < 0.12
+		if t.has("figure") and not t.has("figure_gone") and (figure == null or not figure.visible):
+			t["figure_gone"] = elapsed
+			seen["head_bowed"] = last_bow > 10.0
+			seen["search_length"] = clearing._focus_started_at - clearing._search_started_at
+		if t.has("figure_gone") and ficha != null and is_instance_valid(ficha) and not counted.has("clink"):
+			for child: Node in clearing.get_children():
+				var sound: AudioStreamPlayer3D = child as AudioStreamPlayer3D
+				if sound != null and sound != clearing.recording_voice_player and sound.playing and sound.stream != null and sound.global_position.distance_to(clearing.token_landing()) < 0.05:
+					counted["clink"] = true
+					clinks += 1
+					t["clink"] = elapsed
+		if ficha != null and is_instance_valid(ficha) and ficha.pickup_enabled and not t.has("landed") and t.has("figure_gone"):
+			t["landed"] = elapsed
+			seen["landed_flat"] = ficha.global_position.distance_to(clearing.token_landing()) < 0.005 and ficha.global_basis.z.dot(Vector3.UP) > 0.99
+			seen["mark_reaches_player"] = ficha.mark_while_held and ficha.mark_notice_distance > head_camera.global_position.distance_to(ficha.global_position)
+		if t.has("landed") and not t.has("marked") and elapsed - float(t["landed"]) > 1.0 and ficha != null and is_instance_valid(ficha):
+			t["marked"] = elapsed
+			var reticle: Node = player.interaction_controller.get("reticle") as Node
+			seen["mark_drawn_while_held"] = reticle != null and (reticle.get("_seen") as Array).has(ficha) and player.view_locked
 
-	_expect(clearing.stage == FigClearingSequence.Stage.DONE, "the memory plays to its end, with no clip to wait for (%.1f s of game time)" % elapsed)
+	_expect(clearing.stage == FigClearingSequence.Stage.DONE, "the sequence plays to its end, with no clip to wait for (%.1f s of game time)" % elapsed)
+	_expect(not save_window, "the game could not be saved at any moment before the token lay on the table")
+
+	# The cinematic camera.
+	_expect(t.has("cinema_on") and bool(seen.get("cinema_current", false)), "a separate camera takes over after the album closes")
+	_expect(bool(seen.get("album_closed_at_cut", false)), "the album view was closed properly before the cut (no modal left)")
+	_expect(bool(seen.get("cinema_over_table_a", false)) and bool(seen.get("cinema_looks_down", false)), "it starts low and oblique over Table A, looking down at the album")
+	_expect(bool(seen.get("recorder_shot", false)), "and the glide ends close on the recorder, low, the recorder in the middle of the frame")
+	_expect(float(seen.get("fov", 0.0)) >= 50.0 and float(seen.get("fov", 0.0)) <= 60.0 and is_equal_approx(float(seen.get("cinema_fov_last", 0.0)), float(seen.get("fov", 0.0))), "with one lens all through the take (fov %.0f)" % float(seen.get("fov", 0.0)))
+	_expect(t.has("recording") and t.has("cinema_on") and float(t["recording"]) - float(t["cinema_on"]) > 3.5 and float(t["recording"]) - float(t["cinema_on"]) < 9.0, "album hold, glide and rewind take %.1f s before the tape speaks" % (float(t.get("recording", 0.0)) - float(t.get("cinema_on", 0.0))))
+	_expect(bool(seen.get("pause_holds_camera", false)) and bool(seen.get("pause_holds_caption", false)), "pausing the game pauses the camera and the captions")
+
+	# The tape.
 	var lines: Array[String] = []
 	for entry: String in shown:
 		if entry.begins_with("CAPTION_REC_"):
@@ -362,99 +509,121 @@ func _watch_the_memory(flashlight: Node) -> void:
 	for i: int in 6:
 		expected.append("CAPTION_REC_%02d|%s" % [i + 1, CaptionTracks.SPEAKER_SOPHIA_RECORDING if i % 2 == 0 else CaptionTracks.SPEAKER_JULIANA_RECORDING])
 	expected.append("CAPTION_REC_07|" + CaptionTracks.SPEAKER_SOPHIA)
-	_expect(lines == expected, "the tape's six lines, then Sophia's last line once, under her own name and not the recording's (%s)" % str(lines))
-	var on_tape: bool = false
-	for cue: Dictionary in CaptionTracks.get_cues(CaptionTracks.FIG_RECORDING):
-		on_tape = on_tape or str(cue["key"]) == "CAPTION_REC_07"
-	_expect(not on_tape, "the last line is not on the tape's track")
-	_expect(CaptionTracks.get_cues(CaptionTracks.FIG_RECORDING).back()["key"] == "CAPTION_REC_06", "which ends on Juliana's \"Good.\", with no silent tail")
-	_expect(line_at > 0.0 and not reels_at_line and not rain_at_line, "the reels and the rain had stopped before the last line")
-	_expect(fire_at_line, "the fire was still burning while it was said")
-	_expect(creak_at > line_at, "someone seems to get up from the seat after the line (%.2f s after it)" % (creak_at - line_at))
-	_expect(fire_out_at > creak_at and absf(fire_out_at - ficha_at) < 0.001, "then the fire is cold and the Ficha is down, in the same moment (%.2f s after the creak)" % (fire_out_at - creak_at))
-	_expect(not save_window, "the game could not be saved at any moment before the Ficha lay on the log")
-	_expect(torch_on_at_seat, "the flashlight the player had on was never put out by the memory")
+	_expect(lines == expected, "the tape's six lines, then Sophia's last line once, under her own name (%s)" % str(lines))
+	_expect(lantern_min_before_rec >= 0.99, "the lantern burns steadily until the end of the tape")
+	_expect(lantern_reversals >= 3, "and then it dips irregularly (%d reversals)" % lantern_reversals)
+	_expect(held_samples >= 1 and not went_down_slowly, "after 'Good.' the lamp keeps its level, it does not fade (%d frames)" % held_samples)
+	_expect(bool(seen.get("lamp_out", false)) and bool(seen.get("fire_out_with_dark", false)), "and then it is out at once, the fire cold with it")
+	_expect(bool(seen.get("no_black_screen", false)), "with no black screen: the forest is as dark as it is")
+	_expect(bool(seen.get("reels_stopped_at_dark", false)), "the reels and the rain had stopped before it")
+	_expect(t.has("dark") and t.has("REC_06_start") and float(t["dark"]) - float(t["REC_06_start"]) > 1.9 and float(t["dark"]) - float(t["REC_06_start"]) < 3.4, "the lights go out about a second after 'Good.' ends (%.1f s after it began)" % (float(t.get("dark", 0.0)) - float(t.get("REC_06_start", 0.0))))
+	_expect(bool(seen.get("flashlight_off_at_dark", false)), "her flashlight is off")
+
+	# Juliana's own camera.
+	_expect(bool(seen.get("line_after_dark", false)) and bool(seen.get("line_on_recorder_shot", false)) and bool(seen.get("still_on_recorder_shot", false)), "the lights go out and the whisper is said over the dark recorder shot: the camera does not cut")
+	_expect(bool(seen.get("pov_before_torch", false)) and bool(seen.get("pov_listener", false)) and bool(seen.get("pov_look_on_table_a", false)), "then it cuts to her own camera, her look on Table A, before the flashlight is on")
+	_expect(t.has("pov") and t.has("torch_on") and float(t["torch_on"]) - float(t["pov"]) > 0.05 and float(t["torch_on"]) - float(t["pov"]) < 0.6, "the cut comes about 0.2 s before the flashlight (%.2f s measured in frames of a sped up game)" % (float(t.get("torch_on", 0.0)) - float(t.get("pov", 0.0))))
+	_expect(t.has("pov") and t.has("turn_start") and float(t["pov"]) - float(t["turn_start"]) > 0.6, "after a beat of dark on the recorder shot (%.2f s after the whisper)" % (float(t.get("pov", 0.0)) - float(t.get("turn_start", 0.0))))
+	_expect(t.has("line") and t.has("dark") and float(t["line"]) - float(t["dark"]) > 0.1 and float(t["line"]) - float(t["dark"]) < 0.8, "the whisper comes 0.3 s after the lights are out (%.2f s measured in frames of a sped up game)" % (float(t.get("line", 0.0)) - float(t.get("dark", 0.0))))
+	_expect(t.has("turn_start") and t.has("line") and float(t["turn_start"]) - float(t["line"]) > 1.2 and float(t["turn_start"]) - float(t["line"]) < 2.2, "the line is on screen 1.5 s (%.1f s)" % (float(t.get("turn_start", 0.0)) - float(t.get("line", 0.0))))
+
+	# The light, Table A, the turn, the figure.
+	_expect(t.has("torch_on") and t.has("turn_start") and float(t["torch_on"]) - float(t["turn_start"]) > 1.2 and float(t["torch_on"]) - float(t["turn_start"]) < 2.2, "1.5 s after the whisper's end the flashlight comes on (%.2f s)" % (float(t.get("torch_on", 0.0)) - float(t.get("turn_start", 0.0))))
+	_expect(t.has("figure") and t.has("torch_on") and float(t["figure"]) - float(t["torch_on"]) > 0.8 and float(t["figure"]) - float(t["torch_on"]) < 2.4, "the shadow comes into view as the beam goes over it, well into the search (%.2f s)" % (float(t.get("figure", 0.0)) - float(t.get("torch_on", 0.0))))
+	_expect(float(seen.get("search_length", 0.0)) > 2.0 and float(seen.get("search_length", 0.0)) < 3.2, "she searches about 2.3 s before she realises (%.2f s of game time)" % float(seen.get("search_length", 0.0)))
+	# She does not stop on it: the search carries her past, then the view snaps back and stops exactly on it, the lens zooming in.
+	if yaws_all.size() >= 6:
+		var first_yaw: float = float((yaws_all[0] as Array)[1])
+		var goal: float = first_yaw + wrapf(float(seen.get("target_yaw", 0.0)) - first_yaw, -180.0, 180.0)
+		var way: float = 1.0 if goal >= first_yaw else -1.0
+		var peak: float = 0.0
+		var peak_at: float = 0.0
+		for sample: Array in yaws_all:
+			var gone: float = (float(sample[1]) - first_yaw) * way
+			if gone > peak:
+				peak = gone
+				peak_at = float(sample[0])
+		var last_yaw: float = float((yaws_all[yaws_all.size() - 1] as Array)[1])
+		var away: float = 0.0
+		for sample: Array in yaws_all:
+			away = minf(away, (float(sample[1]) - first_yaw) * way)
+		_expect(away < -6.0, "she first jerks the other way, away from the voice (%.0f degrees)" % away)
+		_expect(peak > absf(goal - first_yaw) + 8.0, "she looks past the figure before she finds it (%.0f degrees past it)" % (peak - absf(goal - first_yaw)))
+		_expect(absf(last_yaw - goal) < 2.0 and float((yaws_all[yaws_all.size() - 1] as Array)[0]) - peak_at > 0.5, "then the view snaps back and stops on it (%.1f degrees off, %.1f s after the peak)" % [absf(last_yaw - goal), float((yaws_all[yaws_all.size() - 1] as Array)[0]) - peak_at])
+	else:
+		_expect(false, "the search was sampled (%d samples)" % yaws_all.size())
+	_expect(fov_min < 58.0, "the lens punches in on it (down to %.0f degrees)" % fov_min)
+	var shake_low: float = 1.0e9
+	var shake_high: float = -1.0e9
+	for yaw_sample: Variant in stare_yaws:
+		shake_low = minf(shake_low, float(yaw_sample))
+		shake_high = maxf(shake_high, float(yaw_sample))
+	_expect(stare_yaws.size() >= 3 and shake_high - shake_low > 0.05 and shake_high - shake_low < 1.5, "and she trembles a little while she stares (%.2f degrees of shake)" % (shake_high - shake_low))
+	_expect(float(player.movement_controller.get("scripted_fov")) == 0.0, "and gives the lens back at the end")
+	_expect(bool(seen.get("figure_back_to_juliana", false)), "the figure sits on Table B's bench with its back squarely to her (within 45 degrees)")
+	_expect(bool(seen.get("figure_in_view", false)) and bool(seen.get("view_on_figure_and_table", false)), "its head and shoulders are in view, the tabletop beside it too")
+	_expect(bool(seen.get("figure_line_of_sight", false)), "nothing stands between her eyes and the figure (%s)" % str(seen.get("figure_blocker", "")))
+	_expect(bool(seen.get("camera_still_head", false)) and bool(seen.get("torch_weak", false)), "the view is still her own and her flashlight is on, very weak, its key locked")
+	_expect(torch_high > torch_low * 3.0 and torch_high < base_energy * 0.4, "and it flickers (%.2f to %.2f of its usual %.2f)" % [torch_low, torch_high, base_energy])
+	_expect(clearing._light_when_shadow_left >= 0.0 and clearing._light_when_shadow_left < 0.01, "the shadow is gone when the flashlight flickers out")
+	_expect(end_dark >= 1, "at the end the light flickers (%d dark frames) on its way back to normal strength" % end_dark)
+	_expect(bool(seen.get("head_bowed", false)), "the shadow has lowered its head as her beam passed over it")
+	_expect(bool(seen.get("token_in_hand", false)) and bool(seen.get("token_cannot_be_taken", false)), "the token is in its hand above the tabletop and cannot be taken yet")
+	_expect(bool(seen.get("held_tabletop_visible", false)), "the hand actually holds the token (hold error under 12 cm)")
+	_expect(t.has("figure_gone") and t.has("figure") and float(t["figure_gone"]) - float(t["figure"]) > 2.3 and float(t["figure_gone"]) - float(t["figure"]) < 3.9, "it is in view as the beam sweeps over it and then for her two seconds of staring (%.1f s in all)" % (float(t.get("figure_gone", 0.0)) - float(t.get("figure", 0.0))))
+
+	# The token.
+	_expect(clinks == 1, "the token lands with exactly one clink (%d)" % clinks)
+	_expect(t.has("landed") and t.has("figure_gone") and float(t["landed"]) - float(t["figure_gone"]) > 0.4 and float(t["landed"]) - float(t["figure_gone"]) < 2.2, "the shadow flickers out and the token falls right after (%.2f s)" % (float(t.get("landed", 0.0)) - float(t.get("figure_gone", 0.0))))
+	_expect(bool(seen.get("landed_flat", false)), "and lands flat, face up, at the landing anchor")
+	_expect(bool(seen.get("mark_reaches_player", false)), "its mark is visible from where she stands while she is held")
+	_expect(bool(seen.get("mark_drawn_while_held", false)), "and the reticle really draws it while the view is held")
+	_expect(t.has("landed") and elapsed - float(t["landed"]) > 2.0, "it lies there for at least two seconds before the handoff (%.1f s)" % (elapsed - float(t.get("landed", 0.0))))
+
+	# The handoff.
+	_expect(get_viewport().get_camera_3d() == head_camera and not player.view_locked and not player.scripted_flashlight and not bool(flashlight.get("toggle_locked")), "the player has the view, the flashlight and its key again")
+	_expect(flashlight.visible == bool(flashlight.get("flashlight_on")) and absf(float(flashlight.get("light_energy")) - base_energy) < base_energy * 0.05, "the flashlight is as the player had it, at its normal strength")
+	_expect(clearing._cinema == null and clearing._figure == null, "no camera or figure is left behind")
 	var seat_voice: AudioStreamPlayer3D = clearing.seat_voice_player
-	_expect(seat_voice != null and seat_voice.stream == null and not seat_voice.playing, "the empty seat has no clip yet either: the line is a caption")
+	_expect(seat_voice != null and seat_voice.stream == null and not seat_voice.playing, "no voice clips exist yet: the lines are captions only")
 
 
-## The empty seat is one of the logs round the fire. The Ficha lies on the top of that log (not floating, not sunk, clear of its branch
-## stub and its ends), the seat's voice source is at the seat (not on the player, and not heard everywhere), and a player standing by the
-## log can reach the Ficha with the interaction ray.
-func _check_the_empty_seat(ficha: Collectible) -> void:
+## The recorded part's length, in seconds.
+func _track_length_for_test() -> float:
+	return clearing._track_length(CaptionTracks.FIG_RECORDING)
+
+
+## Whether the camera looks at `point` within `degrees` of its axis.
+func _looks_at(camera: Camera3D, point: Vector3, degrees: float) -> bool:
+	var direction: Vector3 = (point - camera.global_position).normalized()
+	return rad_to_deg(acos(clampf((-camera.global_basis.z).dot(direction), -1.0, 1.0))) <= degrees
+
+
+## The token lies on Table B (the narrow log table by the fire), flat and face up on its tabletop at the landing anchor: not on the log seats,
+## not on Table A, nothing over it; the thermos and the lockbox are gone from the table, and Table A keeps its album, recorder and lantern.
+func _check_table_b(ficha: Collectible) -> void:
 	var dressing: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
-	var seat_anchor: Node3D = clearing.empty_seat
-	var index: int = -1
-	for i: int in dressing.seats.size():
-		var seat: Node3D = dressing.seats[i]
-		if seat.global_position.distance_to(seat_anchor.global_position) < 0.01 and seat.global_basis.x.dot(seat_anchor.global_basis.x) > 0.999:
-			index = i
-	_expect(index >= 0, "the empty seat is one of the three logs round the fire (%s)" % (dressing.seats[index].name if index >= 0 else "none"))
-	if index < 0:
-		return
-
-	var seat_log: Node3D = dressing.seats[index]
-	var voice: AudioStreamPlayer3D = clearing.seat_voice_player
-	_expect(voice != null and voice.get_parent() == seat_anchor and not player.is_ancestor_of(voice), "its voice source is at the seat, not on the player")
-	var voice_at: Vector3 = seat_log.to_local(voice.global_position)
-	_expect(Vector2(voice_at.x, voice_at.z).length() < 0.3 and voice_at.y > 0.7 and voice_at.y < 1.2, "where a seated head would be (%s)" % str(voice_at))
-	_expect(voice.unit_size <= 4.0 and voice.max_distance > 0.0 and voice.max_distance <= 25.0, "and it is heard round the camp, not everywhere (%.0f m)" % voice.max_distance)
-
-	_expect(ficha.global_position.distance_to(clearing.ficha_spot.global_position) < 0.01 and ficha.get_parent() == seat_anchor, "the Ficha lies at the seat's spot")
+	var landing: Vector3 = clearing.token_landing()
+	_expect(ficha.global_position.distance_to(landing) < 0.01, "the Ficha lies at the landing anchor")
 	_expect(ficha.global_basis.z.dot(Vector3.UP) > 0.99, "flat, face up")
-	var in_seat: Vector3 = seat_log.to_local(ficha.global_position)
-	var log_top: float = 2.0 * FigClearingProps.seat_radius(index) - FigClearingProps.SEAT_SINK
-	var bottom: float = in_seat.y - 0.003
-	_expect(absf(in_seat.z) < 0.005 and bottom < log_top + 0.0005 and bottom > log_top - 0.002, "on the top line of the log's bark, neither floating nor sunk (its underside %.1f mm from the top)" % ((bottom - log_top) * 1000.0))
-	_expect(absf(in_seat.x) < FigClearingProps.seat_length(index) * 0.5 - 0.1, "well inside the log's ends (%.2f m from the middle)" % in_seat.x)
-	_expect(absf(in_seat.x - FigClearingProps.seat_stub_x(index)) > 0.1, "and clear of its branch stub")
-	_expect(clearing.to_global(FigClearingProps.seat_top(index, in_seat.x)).distance_to(ficha.global_position - Vector3(0.0, 0.003, 0.0)) < 0.002, "where the camp's own geometry says the log's top is")
-	# Nothing lies over it: a ray straight down meets the Ficha first.
+	var on_table: Vector3 = dressing.log_table.to_local(ficha.global_position)
+	_expect(absf(on_table.y - (FigClearingProps.TABLE_TOP_Y + 0.003)) < 0.005, "on the tabletop (%.1f mm over it)" % ((on_table.y - FigClearingProps.TABLE_TOP_Y) * 1000.0))
+	_expect(absf(on_table.x) < FigClearingProps.TABLE_LENGTH * 0.5 - 0.05 and absf(on_table.z) < FigClearingProps.TABLE_DEPTH * 0.5 - 0.05, "well inside the table's edges")
+	_expect(ficha.global_position.distance_to(clearing.album.global_position) > 3.0, "not on Table A")
+	for seat: Node3D in dressing.seats:
+		_expect(ficha.global_position.distance_to(seat.global_position) > 1.0, "and not on the log %s" % seat.name)
+	_expect(dressing.thermos == null and dressing.lockbox == null, "the thermos and the J & S lockbox are gone from Table B")
+	for prop_name: String in ["Thermos", "JSLockbox"]:
+		var left: Node = dressing.log_table.find_child(prop_name, true, false)
+		_expect(left == null or left.is_queued_for_deletion(), "%s is not left on the table" % prop_name)
+	_expect(clearing.album.is_visible_in_tree() and clearing.recorder.is_visible_in_tree() and dressing.lantern_light != null, "Table A keeps its album, recorder and lantern")
+	_expect(ficha.mark_notice_distance > 0.0, "the token's mark has a reach of its own (%.1f m)" % ficha.mark_notice_distance)
 	await _ray_finds(ficha, ficha.global_position + Vector3(0.0, 1.5, 0.0), ficha.global_position, "the Ficha, from straight above")
 
-	# A player standing by the log, on the fire's side, reaches it: the capsule fits there, and the eyes are within the ray's reach.
-	var body_shape: CollisionShape3D = player.get_node("CollisionShape3D") as CollisionShape3D
-	var capsule: CapsuleShape3D = body_shape.shape as CapsuleShape3D
-	var standing: CapsuleShape3D = CapsuleShape3D.new()
-	standing.radius = capsule.radius * body_shape.global_basis.get_scale().x
-	standing.height = capsule.height * body_shape.global_basis.get_scale().y
-	var query: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
-	query.shape = standing
-	var space: PhysicsDirectSpaceState3D = clearing.get_world_3d().direct_space_state
-	var fire_side: float = signf(seat_log.to_local(clearing.fire.global_position).z)
-	var home: Vector3 = player.global_position
-	var spot: Vector3 = Vector3.ZERO
-	var found: bool = false
-	for step: int in 40:
-		var out: float = FigClearingProps.seat_radius(index) + standing.radius + 0.02 + 0.01 * float(step)
-		spot = seat_log.to_global(Vector3(in_seat.x, 0.0, fire_side * out))
-		spot.y = body_shape.global_position.y
-		query.transform = Transform3D(Basis.IDENTITY, spot)
-		var blocked: bool = false
-		for info: Dictionary in space.intersect_shape(query, 8):
-			var hit: Node = info.get("collider") as Node
-			blocked = blocked or (hit != null and hit != player and hit.name != &"Ground")
-		if not blocked:
-			found = true
-			break
 
-	_expect(found, "a player can stand right by the log, on the fire's side")
-	player.velocity = Vector3.ZERO
-	player.global_position = Vector3(spot.x, home.y, spot.z)
-	await get_tree().physics_frame
-	await get_tree().physics_frame
-	var camera: Camera3D = player.get_node("Head/Camera3D") as Camera3D
-	var reach: float = camera.global_position.distance_to(ficha.global_position)
-	_expect(reach < player.interaction_controller.interaction_distance - 0.3, "standing there, the Ficha is %.2f m from the player's eyes (the ray reaches %.1f m): no crouching" % [reach, player.interaction_controller.interaction_distance])
-	await _ray_finds(ficha, camera.global_position, ficha.global_position, "the Ficha, from a standing player's eyes by the log")
-	player.velocity = Vector3.ZERO
-	player.global_position = home
-	await get_tree().physics_frame
-
-
-## The clearing loaded again with the saved state: the memory is over and stays over (no stage plays, no caption is queued, the reels
-## stand still), the fire is cold ash, the lantern and the radio are as they always are, and Juliana's Ficha lies on the empty seat once,
-## or not at all once it has been taken.
+## The clearing loaded again with the saved state: the sequence is over and stays over (no stage plays, no caption is queued, the reels stand
+## still), the fire is cold ash, the camp's lights are out, Table B is clear and Juliana's Ficha lies at the landing anchor once, or not at all
+## once it has been taken.
 func _check_loaded_again(with_ficha: bool) -> void:
 	var again: FigClearingSequence = (load(CLEARING_SCENE_PATH) as PackedScene).instantiate() as FigClearingSequence
 	again.position = Vector3(0.0, 0.0, 60.0)
@@ -462,11 +631,13 @@ func _check_loaded_again(with_ficha: bool) -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	var when: String = "loaded again %s the Ficha is taken" % ("before" if with_ficha else "after")
-	_expect(again.stage == FigClearingSequence.Stage.DONE and not again.recorder.is_turning() and again.album.locked, when + ": the memory stays over, the reels still, the album solved")
+	_expect(again.stage == FigClearingSequence.Stage.DONE and not again.recorder.is_turning() and again.album.locked, when + ": the scene stays over, the reels still, the album solved")
+	_expect(not again._running and again._cinema == null and not player.view_locked, when + ": no cinematic replays")
 	_expect(CaptionManager._active_run.is_empty() and CaptionManager._runs.is_empty(), when + ": nothing is said again")
 	_expect(not again.fire.is_lit and (again.fire.get_node("ColdAsh") as Node3D).visible, when + ": the fire is cold ash")
 	var dressing: FigClearingProps = again.get_node("CampDressing") as FigClearingProps
-	_expect(not dressing.lights_out and dressing.lantern_light.visible and dressing.radio_static.playing, when + ": the lantern is lit and the radio hisses")
+	_expect(dressing.lights_out and not dressing.lantern_light.visible and not dressing.radio_static.playing, when + ": the camp's lights stay out")
+	_expect(dressing.thermos == null and dressing.lockbox == null, when + ": Table B stays clear")
 	var fichas: Array[Collectible] = []
 	for node: Node in again.find_children("*", "Collectible", true, false):
 		var item: Collectible = node as Collectible
@@ -474,18 +645,66 @@ func _check_loaded_again(with_ficha: bool) -> void:
 			fichas.append(item)
 	_expect(fichas.size() == (1 if with_ficha else 0), when + ": %d Ficha lies in the clearing" % fichas.size())
 	if with_ficha and fichas.size() == 1:
-		_expect(fichas[0].global_position.distance_to(again.ficha_spot.global_position) < 0.01, when + ": on the empty seat's log")
+		_expect(fichas[0].global_position.distance_to(again.token_landing()) < 0.01, when + ": on Table B, at the same anchor")
+		_expect(fichas[0].pickup_enabled, when + ": and it can be taken")
 	again.queue_free()
 	await get_tree().process_frame
 
 
-## The stand up sounds playing at the empty seat (its one shot players; the seat's own voice source is not one).
-func _stand_up_sounds() -> int:
-	var count: int = 0
-	for child: Node in clearing.empty_seat.get_children():
-		if child is AudioStreamPlayer3D and child != clearing.seat_voice_player:
-			count += 1
-	return count
+## A game left with the album solved and the scene unfinished (saved mid sequence): loaded again, the sequence waits until the player is free and
+## at the album, then plays once, without taking the photographs again, and ends with exactly one token on Table B and the scene saved as over.
+func _check_resumed_sequence() -> void:
+	SaveManager.set_state_value(&"puzzles", &"fig_clearing_recording_done", false)
+	var home: Vector3 = player.global_position
+	var had_recent: bool = player.has_inventory_item("photo_recent")
+	var again: FigClearingSequence = (load(CLEARING_SCENE_PATH) as PackedScene).instantiate() as FigClearingSequence
+	again.position = Vector3(0.0, 0.0, 120.0)
+	level.add_child(again)
+	# A floor of its own, for the player to stand on there.
+	var floor_body: StaticBody3D = StaticBody3D.new()
+	var floor_shape: CollisionShape3D = CollisionShape3D.new()
+	var slab: BoxShape3D = BoxShape3D.new()
+	slab.size = Vector3(40.0, 1.0, 40.0)
+	floor_shape.shape = slab
+	floor_body.add_child(floor_shape)
+	level.add_child(floor_body)
+	floor_body.global_position = again.position + Vector3(0.0, -0.5, 0.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_expect(again.album.locked and again.stage == FigClearingSequence.Stage.EXPLORING and again.fire.is_lit, "album solved, scene unfinished: nothing has played yet")
+	await _wait_seconds(1.0)
+	_expect(not again._running and not player.view_locked and player.can_manual_save(), "it waits while the player is far from the album (saving stays allowed meanwhile)")
+
+	# Near the album but with a panel open: the view is not taken from under it.
+	var spot: Vector3 = again.album.global_position + Vector3(0.7, 0.0, 0.8)
+	player.global_position = Vector3(spot.x, again.position.y + 0.1, spot.z)
+	player.velocity = Vector3.ZERO
+	player.modal_ui_open = true
+	await _wait_seconds(1.0)
+	_expect(not again._running and not player.view_locked, "and while a panel is open")
+	player.modal_ui_open = false
+	await _until(func() -> bool: return again.stage == FigClearingSequence.Stage.DONE, 90.0)
+	var fichas: int = 0
+	for node: Node in again.find_children("*", "Collectible", true, false):
+		var item: Collectible = node as Collectible
+		if item.item_id == "juliana_ficha" and not item.is_queued_for_deletion():
+			fichas += 1
+	_expect(fichas == 1 and not again.fire.is_lit and again.dressing.lights_out, "then it plays: exactly one token, the fire and the camp's lights out")
+	_expect(again.album.arrangement == ["photo_childhood", "photo_adolescence", "photo_recent"] and player.has_inventory_item("photo_recent") == had_recent, "the photographs were not consumed again")
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"fig_clearing_recording_done", false)) and not player.view_locked and player.can_manual_save(), "the scene is saved as over and the player is free")
+	again.queue_free()
+	floor_body.queue_free()
+	await get_tree().process_frame
+	player.global_position = home
+	await get_tree().physics_frame
+	_expect(true, "resume done")
+
+
+func _wait_seconds(seconds: float) -> void:
+	var waited: float = 0.0
+	while waited < seconds:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
 
 
 func _ficha_scene_path() -> String:
@@ -536,7 +755,7 @@ func _check_the_camp_and_the_hq() -> void:
 	# The log table next to the campfire, with a bench, the thermos at one end and the lockbox at the other.
 	var table: Node3D = dressing.log_table
 	var fire_spot: Vector3 = clearing.get_node("Scenery/Campfire").global_position
-	_expect(table != null and Vector2(table.global_position.x - fire_spot.x, table.global_position.z - fire_spot.z).length() < 3.0, "a log table stands next to the campfire")
+	_expect(table != null and Vector2(table.global_position.x - fire_spot.x, table.global_position.z - fire_spot.z).length() < 4.2, "a log table stands near the campfire, a little apart from it")
 	_expect(dressing.log_bench != null and dressing.log_bench.global_position.distance_to(table.global_position) < 1.2, "with a log bench beside it")
 	_expect(table.find_child("Solid", false, false) != null and dressing.log_bench.find_child("Solid", false, false) != null, "both are solid")
 	var thermos: Inspectable = dressing.thermos

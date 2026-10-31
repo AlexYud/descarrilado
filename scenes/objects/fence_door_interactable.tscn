@@ -73,6 +73,7 @@ shape = SubResource("ConcavePolygonShape3D_kj7wt")
 
 [node name="KnobInteractable" type="Node3D" parent="Hinge/DoorRoot" unique_id=208744690]
 script = ExtResource("2_tt8bx")
+mark_offset = Vector3(0, 0.4, 0.7)
 
 [node name="InteractArea" type="Area3D" parent="Hinge/DoorRoot/KnobInteractable" unique_id=548323006]
 

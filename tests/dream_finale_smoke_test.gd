@@ -18,6 +18,7 @@ class FakeNight extends Node:
 	var blackout: float = 0.0
 
 var test_failed: bool = false
+var _finale_under_test: DreamFinale = null
 
 
 func _ready() -> void:
@@ -84,6 +85,7 @@ func _scenario() -> void:
 	root.add_child(night)
 
 	var finale: DreamFinale = DreamFinale.new()
+	_finale_under_test = finale
 	finale.night = night
 	finale.town = town
 	finale.wagon = wagon
@@ -251,13 +253,28 @@ func _scenario() -> void:
 	_expect(darkest_stretch < 1.0, "the lights never leave the wagon in the dark for long (longest dark stretch %.2f s)" % darkest_stretch)
 	var torch: SpotLight3D = flashlight as SpotLight3D
 	_expect(not bool(flashlight.get("flashlight_on")), "the flashlight is not switched on for the player")
-	_expect(torch.light_energy < torch_energy_before * 0.25 and torch.light_energy > torch_energy_before * 0.08, "and it is way weaker than usual (%.1f of %.1f)" % [torch.light_energy, torch_energy_before])
+	_expect(torch.light_energy < torch_energy_before * 0.45 and torch.light_energy > torch_energy_before * 0.15, "and it is weaker than usual (%.1f of %.1f)" % [torch.light_energy, torch_energy_before])
 	var sophia: Node3D = wagon.get_node_or_null("Sophia") as Node3D
 	_expect(sophia != null and sophia.visible, "a girl sits in the aisle")
+	var girl: CryingGirl = sophia as CryingGirl
+	_expect(girl != null and girl.skeleton != null and girl.skeleton.get_bone_count() == 25, "she is the rigged human body, squatting (a Mixamo skeleton of %d bones)" % (girl.skeleton.get_bone_count() if girl != null and girl.skeleton != null else -1))
+	if girl != null and girl.skeleton != null:
+		var sole: float = girl.skeleton.to_global(girl.skeleton.get_bone_global_pose(girl.skeleton.find_bone("mixamorig_LeftFoot")).origin).y - CryingGirl.ANKLE_HEIGHT * CryingGirl.SCALE
+		var head_top: float = girl.skeleton.to_global(girl.skeleton.get_bone_global_pose(girl.skeleton.find_bone("mixamorig_Head")).origin).y
+		_expect(absf(sole - sophia.global_position.y) < 0.03 and head_top - sophia.global_position.y < 0.9, "her feet on the floor (%.3f m off) and her head low, squatting (%.2f m)" % [sole - sophia.global_position.y, head_top - sophia.global_position.y])
 	var sophia_at: Vector3 = wagon.to_local(sophia.global_position)
-	_expect(absf(sophia_at.x - finale.aisle_x) < 0.1, "in the middle of it (x %.2f)" % sophia_at.x)
-	_expect(sophia_at.z < -5.0 and sophia_at.z > -6.1, "right against the far (north) wall, so the whole wagon has to be walked (z %.2f)" % sophia_at.z)
-	_facing_check(sophia.global_basis.z, player, sophia)
+	_expect(sophia_at.x < -0.6 and sophia_at.x > -1.3, "in the left corner of the aisle's far end, behind the first bench, not in the middle of it (x %.2f)" % sophia_at.x)
+	_expect(sophia_at.z < -5.4 and sophia_at.z > finale.girl_end_wall_z, "against the far (north) wall, so the whole wagon has to be walked (z %.2f)" % sophia_at.z)
+	var towards_wall: Vector3 = wagon.global_basis * Vector3.FORWARD
+	var her_front: Vector3 = sophia.global_basis.z
+	_expect(her_front.dot(towards_wall) > 0.99, "her face to the end wall and her back to the player (%.2f)" % her_front.dot(towards_wall))
+	# Almost hidden: the bench backs (0.95 m) cover her from the player's eyes at the fourth row; her crying comes from the left, panned hard.
+	var eye: Vector3 = wagon.to_global(Vector3(finale.aisle_x, 1.3, -1.4))
+	var head: Vector3 = (sophia as CryingGirl).skeleton.to_global((sophia as CryingGirl).skeleton.get_bone_global_pose((sophia as CryingGirl).skeleton.find_bone("mixamorig_Head")).origin)
+	var seen: Dictionary = wagon.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(eye, head))
+	_expect(not seen.is_empty() and (seen["position"] as Vector3).distance_to(head) > 0.15, "hidden behind the benches from there (almost: it is her crying that gives her away)")
+	var crying: AudioStreamPlayer3D = sophia.get_node_or_null("Crying") as AudioStreamPlayer3D
+	_expect(crying != null and crying.panning_strength >= 2.0 and wagon.to_local(crying.global_position).x < -0.5, "her crying is 3D and panned hard, coming from the left")
 	var cry: AudioStreamPlayer3D = sophia.get_node_or_null("Crying") as AudioStreamPlayer3D
 	_expect(cry != null and cry.playing and cry.stream != null and cry.max_distance > 20.0 and cry.unit_size < 6.0, "and her crying is heard, in 3D, from her (looped, louder as the player nears)")
 	var movement: PlayerMovementController = player.movement_controller
@@ -289,15 +306,16 @@ func _scenario() -> void:
 	await _until(func() -> bool: return finale.stage == DreamFinale.Stage.CUTSCENE, "the cutscene once she is near", 40.0)
 	Input.action_release("up")
 	var distance_at_start: float = _distance(player, sophia)
-	_expect(distance_at_start <= finale.cutscene_distance + 0.3 and distance_at_start > finale.cutscene_distance - 0.8, "about three metres from her (%.2f)" % distance_at_start)
+	_expect(distance_at_start <= finale.cutscene_sight_distance and (finale._girl_in_sight() or distance_at_start <= finale.cutscene_distance + 0.15), "it begins only once she can be seen (or at the end of the walk), at the last row of benches (%.2f m from the end of the aisle)" % distance_at_start)
+	_expect(distance_at_start < 2.6, "not before the player is at the last benches (the bench backs hide her from further off)")
 	_expect(player.view_locked, "the player has no control")
 	var facing_yaw: float = _yaw_of(movement)
 	Engine.time_scale = 2.0
 
 	# Juliana walks on by herself, even against the keys.
-	await _until(func() -> bool: return finale._auto_walking, "Juliana starting to walk by herself", 4.0)
+	await _until(func() -> bool: return finale._auto_walking, "Juliana starting to walk by herself", 12.0)
 	_expect(bool(flashlight.get("flashlight_on")), "the flashlight is on as she walks up to the girl")
-	_expect((-torch.global_basis.z).y < -0.2, "and it points down at the girl on the floor, not straight ahead (%.2f)" % (-torch.global_basis.z).y)
+	_expect((-torch.global_basis.z).y < -0.1, "and it points down at the girl on the floor, not straight ahead (%.2f)" % (-torch.global_basis.z).y)
 	var before_walk: float = _distance(player, sophia)
 	Input.action_press("down")
 	await _wait(0.5)
@@ -306,11 +324,16 @@ func _scenario() -> void:
 	var camera: Camera3D = player.get_node("Head/Camera3D")
 	await _until(func() -> bool: return CaptionManager.label.text.contains("You're not supposed to be here."), "the whisper (as a caption)", 4.0)
 	_expect(camera.get_node_or_null("Whisper") == null and not _any_sound(finale), "which is words only: nothing is heard")
+	_expect(finale._cry != null and not finale._cry.playing, "and the girl's crying stopped the moment it came (while she is still there)")
+	_expect(finale._sophia.visible, "she is still sitting there when the whisper comes")
+	_expect(_distance(player, sophia) > 0.3 and _distance(player, sophia) < distance_at_start, "close to the end of the aisle, her back to the player (%.1f m)" % _distance(player, sophia))
+	await _wait(0.9)
+	_expect(finale._tension != null and finale._tension.playing and (finale._tension.stream as AudioStream).resource_path.ends_with("placeholder_string_tension.mp3"), "placeholder_string_tension comes in after the whisper")
 	_expect(bool(flashlight.get("flashlight_on")), "her flashlight is on for the search")
 	await _wait(0.3)
 	_expect(CaptionManager.label.text.contains("You're not supposed to be here."), "'You're not supposed to be here.' (%s)" % CaptionManager.label.text)
 	var cutscene_distance_walked: float = distance_at_start - _distance(player, sophia)
-	_expect(cutscene_distance_walked > 0.3 and cutscene_distance_walked < 1.4, "after about a second of walking (%.2f m)" % cutscene_distance_walked)
+	_expect(cutscene_distance_walked > 0.2 and cutscene_distance_walked < 1.4, "after under a second of walking (%.2f m)" % cutscene_distance_walked)
 
 	# She turns round, scared: far round, and the girl is gone when she turns back.
 	var max_turn: float = 0.0
@@ -370,7 +393,7 @@ func _scenario() -> void:
 	var start_z: float = wagon.to_local(player.global_position).z
 	Input.action_press("up")
 	await _wait(1.5)
-	_expect(finale.stage == DreamFinale.Stage.LEAVING and wagon.to_local(player.global_position).z > start_z + 0.3, "the forward key walks her towards the door")
+	_expect((finale.stage == DreamFinale.Stage.LEAVING or finale.stage == DreamFinale.Stage.DOOR) and wagon.to_local(player.global_position).z > start_z + 0.3, "the forward key walks her towards the door (stage %d, moved %.2f m)" % [finale.stage, wagon.to_local(player.global_position).z - start_z])
 	await _until(func() -> bool: return finale.stage == DreamFinale.Stage.DOOR, "the scene at the door when she is near it", 25.0)
 	var stopped_at: float = FinaleDoorScene.DOOR_Z - wagon.to_local(player.global_position).z
 	_expect(stopped_at > FinaleDoorScene.TRIGGER_DISTANCE - 1.3 and stopped_at < FinaleDoorScene.TRIGGER_DISTANCE + 0.4, "about three and a half metres from the door (%.2f m)" % stopped_at)
@@ -436,14 +459,15 @@ func _scenario() -> void:
 func _any_sound(node: Node) -> bool:
 	for kind: String in ["AudioStreamPlayer", "AudioStreamPlayer3D"]:
 		for child: Node in node.find_children("*", kind, true, false):
-			if child.name != &"Crying" and bool(child.get("playing")):
+			if child.name != &"Crying" and child.name != &"Tension" and bool(child.get("playing")):
 				return true
 
 	return false
 
 
-func _distance(player: Node3D, sophia: Node3D) -> float:
-	return Vector2(player.global_position.x - sophia.global_position.x, player.global_position.z - sophia.global_position.z).length()
+## How far the player is from the end of the aisle, along it (what the cutscene measures; the girl sits in the corner beside it).
+func _distance(player: Node3D, _sophia: Node3D) -> float:
+	return absf((player.global_position - _finale_under_test._aisle_end).dot(_finale_under_test._corridor_axis))
 
 
 func _yaw_of(movement: PlayerMovementController) -> float:

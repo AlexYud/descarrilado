@@ -35,6 +35,8 @@ signal sequence_completed
 signal line_cut
 ## The call is about to end (`seconds_left` before its last caption does): the town's lights start going out.
 signal call_ending(seconds_left: float)
+## The picture has cut to the view of the city for the call (the town is in the shot, with its lights still on).
+signal call_view_started
 
 enum Stage {
 	IDLE,
@@ -77,10 +79,11 @@ const STEP_AWAY_GRACE_SECONDS: float = 0.7
 
 @export_category("Transition sound")
 ## The horror sound under the end of the call, when the finale takes the call over (the town goes dark, then the wagon).
-## It is played so that its LAST moment is the last moment of the dialogue: it starts this long before the last caption
-## ends (its own length), so the end of the sound meets the end of the dialogue, just before the cut to the wagon.
+## It starts the moment the lights begin to go out (`call_ending`), and its sound proper lasts `transition_sound_seconds` (the file is
+## longer, with silence after): the last light of the town is left on for a moment and goes out as the sound ends.
 @export var transition_audio: AudioStream = preload("res://assets/audios/placeholder_horror_transition.mp3")
 @export var transition_volume_db: float = 0.0
+@export var transition_sound_seconds: float = 8.5
 
 @export_category("Timing")
 @export var camera_seconds: float = 1.1
@@ -631,9 +634,9 @@ func pick_up_receiver() -> void:
 	_view_camera.global_transform = _call_base
 	_view_camera.fov = shot_fov
 	_in_call_view = true
+	call_view_started.emit()
 	_start_zoom()
 	_announce_the_end()
-	_play_transition_audio()
 
 	await CaptionManager.play_scripted_and_wait(call_track)
 
@@ -679,31 +682,24 @@ func pick_up_receiver() -> void:
 		release_player()
 
 
-## How long after the call starts the transition sound starts, so that it ends with the dialogue: the end of the last
-## caption less the sound's own length (at once, when the dialogue is shorter than the sound).
+## How long after the call starts the transition sound starts: when the lights begin to go out, `call_ending_lead_seconds` before the
+## end of the last caption (at once, when the dialogue is shorter than that).
 func get_transition_delay() -> float:
-	if transition_audio == null:
-		return 0.0
-
 	var last_end: float = 0.0
 	for cue: Dictionary in CaptionTracks.get_cues(call_track):
 		last_end = maxf(last_end, float(cue["end"]))
 
-	return maxf(last_end - transition_audio.get_length(), 0.0)
+	return maxf(last_end - minf(call_ending_lead_seconds, last_end), 0.0)
 
 
-## Starts the transition sound at the moment that makes it end with the dialogue (only for the call the finale takes
-## over: the one that ends with the town going dark and the cut to the wagon).
+## Starts the transition sound (only for the call the finale takes over: the one that ends with the town going dark and the cut to
+## the wagon), the moment the lights begin to go out.
 func _play_transition_audio() -> void:
 	if not finale_takes_over or transition_audio == null:
 		return
 
-	var delay: float = get_transition_delay()
-	if delay > 0.0:
-		await get_tree().create_timer(delay, false).timeout
-
-	if stage != Stage.CALL or not _in_call_view:
-		return
+	if transition_player != null and is_instance_valid(transition_player):
+		transition_player.queue_free()
 
 	transition_player = AudioStreamPlayer.new()
 	transition_player.name = "TransitionSound"
@@ -723,6 +719,7 @@ func _announce_the_end() -> void:
 	await get_tree().create_timer(maxf(last_end - lead, 0.0), false).timeout
 	if stage == Stage.CALL and _in_call_view:
 		call_ending.emit(lead)
+		_play_transition_audio()
 
 
 ## Pushes the wind outside back while she speaks, or lets it come back (see `call_muffle`).

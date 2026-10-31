@@ -60,6 +60,8 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_kitchen_counter(root)
 		&"pantry_lamp":
 			_build_pantry_lamp(root)
+		&"ceiling_lamp":
+			_build_ceiling_lamp(root)
 		&"bed":
 			_build_bed(root)
 		&"memory_bedding":
@@ -776,6 +778,31 @@ static func _build_pantry_lamp(root: Node3D) -> void:
 	glass.emission = Color(1.0, 0.72, 0.42)
 	glass.emission_energy_multiplier = 0.0
 	_add_mesh(root, "Bulb", bulb_mesh, Vector3(0.0, -0.46, 0.0), glass, Vector3.ZERO)
+	# An enamel shade over the bulb (open below, seen from both sides; it throws no shadow, or it would shut the light in).
+	var shade_mesh: CylinderMesh = CylinderMesh.new()
+	shade_mesh.top_radius = 0.035
+	shade_mesh.bottom_radius = 0.16
+	shade_mesh.height = 0.14
+	shade_mesh.cap_bottom = false
+	var enamel: StandardMaterial3D = material(Color(0.78, 0.77, 0.7), 0.45, 0.2)
+	enamel.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_add_mesh(root, "Shade", shade_mesh, Vector3(0.0, -0.41, 0.0), enamel, Vector3.ZERO).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## A plain ceiling lamp for a room: a round rose on the ceiling, a short stem and an opal globe. Origin at the ceiling; the globe hangs
+## 0.3 below it (the room's light is a sibling node at its middle). The glass is `Bulb` (the house makes it glow when the room is lit).
+static func _build_ceiling_lamp(root: Node3D) -> void:
+	add_cylinder(root, "Rose", 0.1, 0.03, Vector3(0.0, -0.015, 0.0), material(Color(0.82, 0.8, 0.74), 0.7))
+	add_cylinder(root, "Stem", 0.012, 0.14, Vector3(0.0, -0.1, 0.0), material(Color(0.2, 0.19, 0.17), 0.6, 0.4))
+	add_cylinder(root, "Collar", 0.045, 0.05, Vector3(0.0, -0.2, 0.0), material(Color(0.2, 0.19, 0.17), 0.6, 0.4))
+	var globe_mesh: SphereMesh = SphereMesh.new()
+	globe_mesh.radius = 0.13
+	globe_mesh.height = 0.26
+	var opal: StandardMaterial3D = material(Color(0.93, 0.9, 0.82), 0.3)
+	opal.emission_enabled = true
+	opal.emission = Color(1.0, 0.74, 0.45)
+	opal.emission_energy_multiplier = 0.0
+	_add_mesh(root, "Bulb", globe_mesh, Vector3(0.0, -0.33, 0.0), opal, Vector3.ZERO).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 ## A plain double bed against the wall: a pine frame, a headboard and a bare striped mattress (no bedding: the house is

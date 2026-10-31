@@ -57,7 +57,7 @@ const TRACKS: Dictionary = {
 		{"start": 21.2, "end": 22.4, "key": "CAPTION_REC_06", "speaker": SPEAKER_JULIANA_RECORDING},
 	],
 	FIG_EMPTY_SEAT: [
-		{"start": 0.0, "end": 3.0, "key": "CAPTION_REC_07", "speaker": SPEAKER_SOPHIA},
+		{"start": 0.0, "end": 1.5, "key": "CAPTION_REC_07", "speaker": SPEAKER_SOPHIA},
 	],
 	HOUSE_BEDROOM_MEMORY: [
 		{"start": 0.8, "end": 3.4, "key": "CAPTION_HOUSE_BED_01", "speaker": SPEAKER_SOPHIA},

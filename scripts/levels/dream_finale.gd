@@ -55,6 +55,11 @@ const KEY_DEMO_COMPLETE: StringName = &"demo_complete"
 const KEY_CALL_DONE: StringName = &"orelhao_call_done"
 const LINE_WHISPER: String = "CAPTION_WAGON_WHISPER"
 ## The girl's crying, looped, from where she sits (3D: louder the nearer the player is).
+## How long the last light takes to stutter out (five steps of 0.09 s).
+const LAST_LIGHT_OUT_SECONDS: float = 0.45
+## The highest moment (of the blackout, 0 to 1) at which any light but the last goes out (`_light_rank`).
+const LAST_ORDINARY_RANK: float = 0.92
+const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3"
 const CRYING_PATH: String = "res://assets/audios/placeholder_crying_woman.mp3"
 const CRYING_DB: float = -3.0
 const CRYING_UNIT_SIZE: float = 3.0
@@ -69,6 +74,7 @@ uniform float out_progress = 0.0;
 uniform float energy = 4.5;
 uniform float stutter = 0.05;
 uniform float last_on = 1.0;
+uniform float last_boost = 1.0;
 varying float v_rank;
 void vertex() {
 	v_rank = COLOR.a;
@@ -81,7 +87,7 @@ void fragment() {
 	// The one window left to the end (its moment is 1.0) is on as long as `last_on` says.
 	on = mix(on, last_on, step(0.99, v_rank));
 	ALBEDO = COLOR.rgb * on;
-	EMISSION = COLOR.rgb * energy * on;
+	EMISSION = COLOR.rgb * energy * on * mix(1.0, last_boost, step(0.99, v_rank));
 	ROUGHNESS = 1.0;
 }
 "
@@ -113,6 +119,15 @@ void fragment() {
 ## One window light of the town is left lit (the one nearest the middle of the shot) this long after the call ends,
 ## then it goes out like the others and everything is black.
 @export var last_light_seconds: float = 1.5
+## The one window left lit is drawn this many times bigger and glows this many times stronger than the others (and its halo this many times
+## bigger), from the cut to the call's view on, so it can still be seen on the lowest quality.
+@export var last_light_scale: float = 4.0
+@export var last_light_glow: float = 2.2
+@export var last_halo_scale: float = 1.8
+## Seconds into the horror transition's sound when only the last window is left lit.
+@export var transition_others_out_seconds: float = 6.0
+## With the horror transition playing (it starts with the blackout), the last light is left on until its sound has run
+## `OverlookPhoneSequence.transition_sound_seconds` and goes out then, whatever `last_light_seconds` says.
 ## Pitch black, before the player is moved.
 @export var dark_hold_seconds: float = 2.0
 ## The wagon fades in from black this slowly (with heavy lids: it opens, droops, opens again).
@@ -133,16 +148,36 @@ void fragment() {
 ## How far back the player can walk (the locked door) and how close to her (the walk ends there; the cutscene
 ## starts before).
 @export var back_limit: float = 0.5
-@export var stop_before_sophia: float = 2.0
-## The cutscene begins when the player is this near her (then Juliana walks on for `cutscene_walk_seconds`).
-@export var cutscene_distance: float = 2.9
-@export var cutscene_walk_seconds: float = 1.0
+@export var stop_before_sophia: float = 0.9
+## Where she sits at the end of the aisle (wagon-local): the X of her middle (the aisle is 1.08 m wide, the benches' ends at -0.54 and 0.54, so
+## this is a little past its left edge, in the corner behind the first bench, almost hidden: the player hears her to the left before seeing her), the end wall's Z, and how far from the wall she sits.
+@export var girl_x: float = -0.85
+@export var girl_end_wall_z: float = -6.068
+@export var girl_wall_gap: float = 0.03
+## The cutscene begins the moment the player can see her (the bench backs hide her from the aisle until the last row of benches, about
+## 1.5 m from the end of the aisle), if they are within `cutscene_sight_distance` of the end of the aisle; at the latest when they are within
+## `cutscene_distance` of it (where the walk ends, `stop_before_sophia`). Juliana stands and looks at her back, then walks on for
+## `cutscene_walk_seconds` and hears the whisper.
+@export var cutscene_distance: float = 1.1
+@export var cutscene_sight_distance: float = 3.5
+@export var cutscene_walk_seconds: float = 0.8
+## `placeholder_string_tension` comes in this long after the whisper, fading in over `tension_in_seconds` to `tension_db`, and goes out as the
+## controls come back (`tension_out_seconds`).
+@export var tension_after_whisper_seconds: float = 0.5
+@export var tension_in_seconds: float = 1.5
+@export var tension_db: float = -3.0
+@export var tension_out_seconds: float = 3.0
+## The shot of her back: the view settles on her (`reveal_turn_seconds`) and holds quite still `reveal_hold_seconds`, her back heaving in a
+## weak light that keeps failing (`reveal_torch_level` of its strength, dipping and cutting out), before she walks on and hears the whisper.
+@export var reveal_turn_seconds: float = 1.3
+@export var reveal_hold_seconds: float = 2.8
+@export_range(0.05, 1.0, 0.05) var reveal_torch_level: float = 0.5
 ## The ceiling lights are dim, cold and always stuttering (the wagon is dark and the girl is not lit by anything
 ## of her own). The flashlight is a fraction of its usual strength.
 @export var wagon_light_color: Color = Color(0.72, 0.82, 1.0)
 @export var wagon_light_energy: float = 0.1
-@export_range(0.05, 1.0, 0.05) var flashlight_strength: float = 0.16
-@export var flashlight_range: float = 7.0
+@export_range(0.05, 1.0, 0.05) var flashlight_strength: float = 0.3
+@export var flashlight_range: float = 9.0
 ## How fast the player walks in the aisle, as a fraction of the usual pace (and no sprinting): slowly, to build the tension.
 @export_range(0.2, 1.0, 0.05) var wagon_walk_scale: float = 0.45
 ## The player is wider than the aisle between the benches (the capsule is 1 m across, the aisle about 1 m with
@@ -158,13 +193,14 @@ void fragment() {
 
 var stage: Stage = Stage.IDLE
 var _cry: AudioStreamPlayer3D = null
+var _tension: AudioStreamPlayer = null
 
 var _player: Node3D = null
 var _snapshot: Dictionary = {}
 var _master_db: float = 0.0
 var _master_saved: bool = false
 var _sophia: Node3D = null
-var _rock: Node3D = null
+var _girl: CryingGirl = null
 var _wagon_lights: Array[OmniLight3D] = []
 var _light_time: float = 0.0
 var _light_timers: Array[float] = []
@@ -174,6 +210,7 @@ var _player_radius_before: float = -1.0
 var _corridor_length: float = 0.0
 var _corridor_start: Vector3 = Vector3.ZERO
 var _corridor_axis: Vector3 = Vector3.FORWARD
+var _aisle_end: Vector3 = Vector3.ZERO
 var _auto_walking: bool = false
 var _beam_shaking: bool = false
 var _beam_fear: float = 0.4
@@ -203,6 +240,13 @@ var _glow_rank: PackedFloat32Array = PackedFloat32Array()
 var _window_materials: Array[ShaderMaterial] = []
 var _last_light_world: Vector3 = Vector3.ZERO
 var _has_last_light: bool = false
+var _lights_out_msec: int = 0
+var _torch_failing: bool = false
+var _dip_wait: float = 0.5
+var _dip_left: float = 0.0
+var _dip_level: float = 1.0
+var _dip_drift: float = 1.0
+var _town_prepared: bool = false
 var _last_on: float = 1.0
 var _windows: Array[Dictionary] = []
 
@@ -214,10 +258,14 @@ func _ready() -> void:
 		# The phone keeps its view on the city, zooming, until this finale ends it in the dark.
 		phone.finale_takes_over = true
 		phone.call_ending.connect(begin_lights_out)
+		phone.call_view_started.connect(_on_call_view_started)
 		phone.line_cut.connect(_on_line_cut)
 
 
 func _exit_tree() -> void:
+	_stop_failing_the_torch()
+	_stop_tension(0.0)
+	_silence_outside(false)
 	_set_filter_darkness(0.0)
 	_stop_beam_script()
 	_restore_master()
@@ -235,17 +283,23 @@ func start() -> void:
 	if stage != Stage.IDLE:
 		return
 
-	begin_lights_out(blackout_seconds)
+	begin_lights_out(blackout_seconds, false)
 	await _lights_tween.finished
 	_on_line_cut()
 
 
-## The town's lights start going out, one by one, so that the last one dies `seconds` from now.
-func begin_lights_out(seconds: float) -> void:
+## The town's lights start going out, one by one, so that the last one dies `seconds` from now. With the call's horror transition (which
+## starts with this) all the others are out `transition_others_out_seconds` into its sound, whatever `seconds` says, and one window is
+## left lit from then on.
+func begin_lights_out(seconds: float, fit_to_transition: bool = true) -> void:
 	if _lights_out_started or stage != Stage.IDLE:
 		return
 
+	if fit_to_transition and phone != null and phone.finale_takes_over and phone.transition_audio != null:
+		seconds = transition_others_out_seconds / LAST_ORDINARY_RANK
+
 	_lights_out_started = true
+	_lights_out_msec = Time.get_ticks_msec()
 	stage = Stage.BLACKOUT
 	_player = _get_player()
 	if _player != null and _player.has_method("get_manual_save_state"):
@@ -270,17 +324,28 @@ func _on_line_cut() -> void:
 		return
 
 	if stage == Stage.IDLE:
-		begin_lights_out(0.05)
+		begin_lights_out(0.05, false)
 
 	if _lights_tween != null and _lights_tween.is_valid():
 		_lights_tween.kill()
 
 	_set_blackout_progress(1.0)
-	var quiet: Tween = create_tween()
-	quiet.tween_method(_set_master_db, AudioServer.get_bus_volume_db(0), -80.0, 0.25)
-	# One window stays lit for a few seconds, alone in the dark, and then it goes out like the others.
+	# The horror transition (started with the blackout) is not cut off: the world outside goes quiet at once, and everything once it ends.
+	var transition: AudioStreamPlayer = phone.transition_player if phone != null else null
+	var transition_on: bool = transition != null and is_instance_valid(transition) and transition.playing
+	if transition_on:
+		_silence_outside(true)
+		transition.finished.connect(_quiet_master)
+	else:
+		_quiet_master()
+	# One window stays lit for a moment, alone in the dark, and then it goes out like the others: with the transition sound's end
+	# (`transition_sound_seconds` after it began with the blackout), or `last_light_seconds` after the call when there is none.
 	if _has_last_light:
-		await _wait(last_light_seconds)
+		var hold: float = last_light_seconds
+		if transition_on:
+			var sound_elapsed: float = float(Time.get_ticks_msec() - _lights_out_msec) / 1000.0
+			hold = maxf(phone.transition_sound_seconds - sound_elapsed - LAST_LIGHT_OUT_SECONDS, 0.3)
+		await _wait(hold * Engine.time_scale)
 		await _put_out_the_last_light()
 		await _wait(0.7)
 
@@ -290,7 +355,14 @@ func _on_line_cut() -> void:
 	_enter_wagon()
 
 
-## The last window light stutters and goes out for good.
+func _quiet_master() -> void:
+	if stage == Stage.IDLE:
+		return
+	var quiet: Tween = create_tween()
+	quiet.tween_method(_set_master_db, AudioServer.get_bus_volume_db(0), -80.0, 0.25)
+
+
+## The last window light stutters and goes out for good (`LAST_LIGHT_OUT_SECONDS`).
 func _put_out_the_last_light() -> void:
 	for level: float in [0.0, 1.0, 0.0, 1.0, 0.0]:
 		_last_on = level
@@ -344,6 +416,11 @@ func _set_filter_darkness(amount: float) -> void:
 		filter.call("set_darkness", amount)
 
 
+func _silence_outside(on: bool) -> void:
+	if is_inside_tree():
+		get_tree().call_group(OutdoorAmbience.GROUP, "set_silenced", &"finale_wagon", on)
+
+
 func _restore_master() -> void:
 	if _master_saved:
 		AudioServer.set_bus_volume_db(0, _master_db)
@@ -377,13 +454,24 @@ func _halo_on(progress: float, rank: float) -> float:
 ## Gets the town's lights ready to go out: the halo billboards (one multimesh, each with its own colour, switched
 ## off at its own moment) and the lit windows and lamps (one mesh whose boxes get the same moments in their
 ## vertex alpha, drawn by a shader that cuts each one at its moment). Nothing shared is ever changed: both are copied.
+## The picture has cut to the call's view of the town: its lights are made ready now, so the last window is in the shot from the first
+## moment, a little bigger and brighter than the others, as it will be to the end (the cut hides the change).
+func _on_call_view_started() -> void:
+	await get_tree().process_frame
+	_prepare_town_dimmer()
+
+
 func _prepare_town_dimmer() -> void:
-	if town == null:
+	if town == null or _town_prepared:
 		return
 
+	_town_prepared = true
+	if _player == null:
+		_player = _get_player()
 	var viewer: Vector3 = _player.global_position if _player != null else Vector3.ZERO
 	_prepare_glow(viewer)
 	_prepare_windows(viewer)
+	_dim_town(0.0)
 
 
 func _prepare_windows(viewer: Vector3) -> void:
@@ -472,15 +560,34 @@ func _ranked_lit_material(mesh_instance: MeshInstance3D, surface: int, standard:
 			colors[best_box * VERTICES_PER_BOX + k] = colour
 
 	if _has_last_light and boxes > 10:
-		# The lonely window is made a little bigger, so it can be seen from this far.
+		# The lonely window is made bigger, so it can be seen from this far, and square: its two long sides (a window's face; the third is its
+		# thickness) both become the geometric mean of the two, times `last_light_scale`; the thickness is scaled the same.
 		var local_centre: Vector3 = Vector3.ZERO
+		var low: Vector3 = vertices[best_box * VERTICES_PER_BOX]
+		var high: Vector3 = low
 		for k: int in VERTICES_PER_BOX:
-			local_centre += vertices[best_box * VERTICES_PER_BOX + k]
+			var corner: Vector3 = vertices[best_box * VERTICES_PER_BOX + k]
+			local_centre += corner
+			low = low.min(corner)
+			high = high.max(corner)
 
 		local_centre /= float(VERTICES_PER_BOX)
+		var half: Array[float] = [(high.x - low.x) * 0.5, (high.y - low.y) * 0.5, (high.z - low.z) * 0.5]
+		var thin: int = 0
+		for axis: int in 3:
+			if half[axis] < half[thin]:
+				thin = axis
+		var face: Array[float] = []
+		for axis: int in 3:
+			if axis != thin:
+				face.append(half[axis])
+		var side: float = sqrt(face[0] * face[1]) * last_light_scale
 		for k: int in VERTICES_PER_BOX:
 			var at: int = best_box * VERTICES_PER_BOX + k
-			vertices[at] = local_centre + (vertices[at] - local_centre) * 4.0
+			var offset: Vector3 = vertices[at] - local_centre
+			for axis: int in 3:
+				offset[axis] = offset[axis] * last_light_scale if axis == thin else signf(offset[axis]) * side
+			vertices[at] = local_centre + offset
 
 		arrays[Mesh.ARRAY_VERTEX] = vertices
 
@@ -493,6 +600,7 @@ func _ranked_lit_material(mesh_instance: MeshInstance3D, surface: int, standard:
 	material.shader = shader
 	material.set_shader_parameter("energy", standard.emission_energy_multiplier)
 	material.set_shader_parameter("stutter", STUTTER_SPAN)
+	material.set_shader_parameter("last_boost", last_light_glow)
 	material.set_shader_parameter("out_progress", 0.0)
 	copy_mesh.surface_set_material(0, material)
 	mesh_instance.mesh = copy_mesh
@@ -540,6 +648,10 @@ func _prepare_glow(viewer: Vector3) -> void:
 
 		if nearest >= 0:
 			_glow_rank[nearest] = 1.0
+			# Its halo is made bigger (the basis of its transform in the buffer; the position stays).
+			for row: int in 3:
+				for column: int in 3:
+					_glow_base[nearest * _glow_stride + row * 4 + column] *= last_halo_scale
 
 
 ## 0 (all lit) to 1 (all dark): each light goes out at its own moment.
@@ -553,6 +665,7 @@ func _dim_town(progress: float) -> void:
 
 	for material: ShaderMaterial in _window_materials:
 		material.set_shader_parameter("out_progress", progress)
+		material.set_shader_parameter("last_on", _last_on)
 
 	for window: Dictionary in _windows:
 		(window["material"] as StandardMaterial3D).emission_energy_multiplier = float(window["energy"]) * (1.0 - clampf(progress * 1.5 - 0.2, 0.0, 1.0))
@@ -571,6 +684,8 @@ func _enter_wagon() -> void:
 
 	stage = Stage.APPROACH
 	_restore_master()
+	# Only the girl crying is heard in the wagon: the wind and the night chorus are gone, not just muffled.
+	_silence_outside(true)
 	# The picture is black now: the camcorder look comes back under it.
 	_set_filter_darkness(0.0)
 	_prepare_wagon()
@@ -585,6 +700,7 @@ func _enter_wagon() -> void:
 	along = along.normalized()
 	_corridor_start = aisle_start
 	_corridor_axis = along
+	_aisle_end = sophia_world
 
 	_player.global_position = start_world
 	if _player is CharacterBody3D:
@@ -763,67 +879,22 @@ func _prepare_wagon() -> void:
 	_door_scene.captured.connect(_on_captured)
 
 	_sophia = _build_sophia()
-	_sophia.position = sophia_local
-	# She faces the wall at the end of the wagon, her back to the aisle.
+	# She sits at the far end of the aisle, on the left as the player walks up it (so the benches do not hide her), her knees almost touching
+	# the end wall and her face to it, her back to the player (turned 180 degrees: her front is towards -Z).
 	_sophia.rotation_degrees.y = 180.0
+	var room: Rect2 = _girl.footprint
+	_sophia.position = Vector3(girl_x + room.get_center().x, sophia_local.y, girl_end_wall_z + girl_wall_gap + room.end.y)
 	wagon.add_child(_sophia)
 	_start_crying()
 
 
-## A girl sitting on the floor with her arms round her knees and her head down, built from primitives.
-## Built facing +Z (`_prepare_wagon` turns her to face the wall). `_rock` is what rocks as she cries.
+## The girl: the rigged basic model squatting with her hands over her face (`CryingGirl`). Built facing +Z (`_prepare_wagon` turns her to
+## face the wall); `_girl.sob` shakes her as she cries.
 func _build_sophia() -> Node3D:
-	var root: Node3D = Node3D.new()
-	root.name = "Sophia"
-	_rock = Node3D.new()
-	_rock.name = "Rock"
-	_rock.position = Vector3(0.0, 0.1, 0.0)
-	root.add_child(_rock)
-
-	var cloth: StandardMaterial3D = StandardMaterial3D.new()
-	cloth.albedo_color = Color(0.17, 0.2, 0.32)
-	cloth.roughness = 0.95
-	var skin: StandardMaterial3D = StandardMaterial3D.new()
-	skin.albedo_color = Color(0.55, 0.42, 0.38)
-	skin.roughness = 0.9
-	var hair: StandardMaterial3D = StandardMaterial3D.new()
-	hair.albedo_color = Color(0.05, 0.04, 0.04)
-	hair.roughness = 1.0
-
-	_add_part(_rock, "Torso", _capsule(0.14, 0.52), Vector3(0.0, 0.28, -0.1), Vector3(-28.0, 0.0, 0.0), cloth)
-	_add_part(_rock, "Knees", _capsule(0.085, 0.4), Vector3(0.0, 0.34, 0.2), Vector3(0.0, 0.0, 90.0), cloth)
-	_add_part(_rock, "Shins", _capsule(0.07, 0.42), Vector3(0.0, 0.13, 0.32), Vector3(-80.0, 0.0, 0.0), cloth)
-	for x: float in [-0.13, 0.13]:
-		_add_part(_rock, "Arm%s" % ("L" if x < 0.0 else "R"), _capsule(0.048, 0.42), Vector3(x, 0.4, 0.1), Vector3(62.0, 0.0, 0.0), cloth)
-
-	var head: SphereMesh = SphereMesh.new()
-	head.radius = 0.1
-	head.height = 0.2
-	_add_part(_rock, "Head", head, Vector3(0.0, 0.5, 0.13), Vector3.ZERO, skin)
-	var scalp: SphereMesh = SphereMesh.new()
-	scalp.radius = 0.108
-	scalp.height = 0.216
-	var hair_part: MeshInstance3D = _add_part(_rock, "Hair", scalp, Vector3(0.0, 0.52, 0.11), Vector3.ZERO, hair)
-	hair_part.scale = Vector3(1.05, 1.0, 1.12)
-	return root
-
-
-func _capsule(radius: float, height: float) -> CapsuleMesh:
-	var mesh: CapsuleMesh = CapsuleMesh.new()
-	mesh.radius = radius
-	mesh.height = height
-	return mesh
-
-
-func _add_part(parent: Node3D, part_name: String, mesh: Mesh, at: Vector3, degrees: Vector3, material: Material) -> MeshInstance3D:
-	var part: MeshInstance3D = MeshInstance3D.new()
-	part.name = part_name
-	part.mesh = mesh
-	part.position = at
-	part.rotation_degrees = degrees
-	part.material_override = material
-	parent.add_child(part)
-	return part
+	_girl = CryingGirl.new()
+	_girl.name = "Sophia"
+	_girl.build()
+	return _girl
 
 
 ## While `_beam_shaking` the flashlight shakes in a scared hand (more or less by `_beam_fear`), and goes where the
@@ -948,6 +1019,37 @@ func _flicker_lights(delta: float) -> void:
 			_wagon_lights[i].light_energy = 0.0
 
 
+## While `_torch_failing` the flashlight on the girl is weak and never steady: a level that wanders, dips for a moment now and then (some
+## of them near dark, some in pairs) and cuts out altogether, never twice alike.
+func _fail_the_torch(delta: float) -> void:
+	var torch: Node = _player.get("flashlight_controller") as Node if _player != null else null
+	if torch == null or not torch.has_method("begin_scripted_light") or not bool(torch.get("flashlight_on")):
+		return
+
+	torch.call("begin_scripted_light")
+	_dip_wait -= delta
+	if _dip_left <= 0.0 and _dip_wait <= 0.0:
+		_dip_left = randf_range(0.04, 0.35)
+		_dip_level = 0.0 if randf() < 0.4 else randf_range(0.05, 0.3)
+		_dip_wait = randf_range(0.06, 0.2) if randf() < 0.3 else randf_range(0.25, 1.6)
+	_dip_drift = clampf(_dip_drift + randf_range(-0.07, 0.07), 0.6, 1.15)
+	var level: float = reveal_torch_level * _dip_drift
+	if _dip_left > 0.0:
+		_dip_left -= delta
+		level = reveal_torch_level * _dip_level
+	torch.call("set_scripted_light", level > 0.02, level)
+
+
+func _stop_failing_the_torch() -> void:
+	if not _torch_failing:
+		return
+
+	_torch_failing = false
+	var torch: Node = _player.get("flashlight_controller") as Node if _player != null and is_instance_valid(_player) else null
+	if torch != null and torch.has_method("end_scripted_light"):
+		torch.call("end_scripted_light")
+
+
 ## The flashlight is weak here (its strength and its reach are cut), and given back at the end.
 func _weaken_flashlight() -> void:
 	var flashlight: SpotLight3D = _player.get("flashlight_controller") as SpotLight3D
@@ -1008,28 +1110,43 @@ func _restore_flashlight() -> void:
 
 func _process(delta: float) -> void:
 	_light_time += delta
+	if _torch_failing:
+		_fail_the_torch(delta)
 	_flicker_lights(delta)
 	_drive_beam()
 
 	# She rocks as she sobs.
-	if _rock != null and is_instance_valid(_rock) and _sophia != null and _sophia.visible:
-		_rock.rotation_degrees.x = sin(_light_time * 1.1) * 2.2
-		_rock.scale = Vector3.ONE * (1.0 + 0.012 * sin(_light_time * 7.5))
+	if _girl != null and is_instance_valid(_girl) and _sophia != null and _sophia.visible:
+		_girl.sob(_light_time)
 
 
 func _physics_process(delta: float) -> void:
 	match stage:
 		Stage.APPROACH:
-			if _distance_to_sophia() <= cutscene_distance:
+			var near: float = _distance_to_sophia()
+			if near <= cutscene_distance or (near <= cutscene_sight_distance and _girl_in_sight()):
 				_run_cutscene()
 		Stage.CUTSCENE:
 			_auto_walk(delta)
 
 
+## Whether the player's eyes see the girl (nothing of the wagon, the bench backs, is in the line to her back).
+func _girl_in_sight() -> bool:
+	if _sophia == null or not is_instance_valid(_sophia) or not _sophia.visible:
+		return false
+
+	var eye: Vector3 = _camera().global_position
+	var back: Vector3 = _girl_point(0.45)
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(eye, back)
+	query.exclude = [_player.get_rid()]
+	var hit: Dictionary = _camera().get_world_3d().direct_space_state.intersect_ray(query)
+	return hit.is_empty() or (hit["position"] as Vector3).distance_to(back) < 0.3
+
+
+## How far the player is from the aisle's end (where she would sit in the middle), along the aisle: the cutscene and the whisper are
+## measured by the benches, wherever in the end of the wagon she is.
 func _distance_to_sophia() -> float:
-	var here: Vector3 = _player.global_position
-	var there: Vector3 = _sophia.global_position
-	return Vector2(here.x - there.x, here.z - there.z).length()
+	return absf((_player.global_position - _aisle_end).dot(_corridor_axis))
 
 
 # ============================================================
@@ -1093,7 +1210,15 @@ func _run_cutscene() -> void:
 	_beam_goal_on = true
 	_switch_torch_on()
 	_track_beam(_girl_point(0.3))
-	await _look_to(movement, facing, 7.0, 0.5)
+	# The shot of her back: the view settles on her slowly and then holds still (nothing moves but her), in a weak light that fails and
+	# comes back.
+	var to_girl: Vector3 = _girl_point(0.4) - _camera().global_position
+	var girl_yaw: float = _yaw_towards(Vector3(to_girl.x, 0.0, to_girl.z))
+	girl_yaw += 360.0 * roundf((facing - girl_yaw) / 360.0)
+	var girl_pitch: float = rad_to_deg(atan2(-to_girl.y, Vector2(to_girl.x, to_girl.z).length()))
+	_torch_failing = true
+	await _look_to(movement, girl_yaw, girl_pitch, reveal_turn_seconds)
+	await _wait(reveal_hold_seconds)
 
 	# She walks on by herself.
 	_auto_walking = true
@@ -1103,7 +1228,9 @@ func _run_cutscene() -> void:
 	movement.set("gesture_offset", Vector3.ZERO)
 
 	# The whisper at her ear (a caption); she flinches: the light sputters and jumps back over her shoulder.
+	_stop_failing_the_torch()
 	_whisper()
+	_tension_after_the_whisper()
 	_flicker_torch(0.55)
 	_beam_fear = 1.4
 	_aim_beam(facing + 132.0, 4.0, 0.22, Tween.TRANS_CUBIC, Tween.EASE_OUT)
@@ -1208,15 +1335,22 @@ func _start_crying() -> void:
 	_cry.volume_db = CRYING_DB
 	_cry.unit_size = CRYING_UNIT_SIZE
 	_cry.max_distance = CRYING_MAX_DISTANCE
+	# Heard strongly from the side she is on (the default pans gently), so the player can tell, with her out of sight, that she is on the left.
+	_cry.panning_strength = 2.0
 	_cry.position = Vector3(0.0, 0.45, 0.0)
 	_sophia.add_child(_cry)
 	_cry.play()
 
 
-## The girl is gone, and the lights stutter out and in as it happens.
-func _vanish_sophia() -> void:
+## The crying stops at once (the whisper, or the girl's going).
+func _stop_crying() -> void:
 	if _cry != null and is_instance_valid(_cry):
 		_cry.stop()
+
+
+## The girl is gone, and the lights stutter out and in as it happens.
+func _vanish_sophia() -> void:
+	_stop_crying()
 	for light: OmniLight3D in _wagon_lights:
 		light.visible = false
 
@@ -1231,7 +1365,37 @@ func _vanish_sophia() -> void:
 
 
 ## A whisper from right behind the player's head: its words only (a caption), there is no sound.
+## `placeholder_string_tension` comes in a moment after the whisper and stays until the controls are back (see `_end_cutscene`).
+func _tension_after_the_whisper() -> void:
+	await _wait(tension_after_whisper_seconds)
+	if stage != Stage.CUTSCENE:
+		return
+
+	_tension = AudioStreamPlayer.new()
+	_tension.name = "Tension"
+	_tension.stream = load(TENSION_PATH) as AudioStream
+	_tension.volume_db = -60.0
+	add_child(_tension)
+	_tension.play()
+	create_tween().tween_property(_tension, "volume_db", tension_db, tension_in_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+
+func _stop_tension(seconds: float) -> void:
+	if _tension == null or not is_instance_valid(_tension) or not _tension.playing:
+		return
+
+	if seconds <= 0.0:
+		_tension.stop()
+		return
+
+	var fall: Tween = create_tween()
+	fall.tween_property(_tension, "volume_db", -60.0, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	fall.tween_callback(_tension.stop)
+
+
 func _whisper() -> void:
+	# The crying stops the moment the whisper comes.
+	_stop_crying()
 	CaptionManager.say(LINE_WHISPER)
 
 
@@ -1254,6 +1418,7 @@ func _stop_beam_script() -> void:
 ## the head.
 func _end_cutscene(yaw: float) -> void:
 	stage = Stage.LEAVING
+	_stop_tension(tension_out_seconds)
 	var movement: Node = _player.get("movement_controller") as Node
 	_player.call("set_view_locked", false)
 	_stop_beam_script()
@@ -1365,6 +1530,7 @@ func _finish() -> void:
 
 	_set_filter_darkness(0.0)
 	_restore_master()
+	_silence_outside(false)
 	_restore_flashlight()
 	_restore_player_shape()
 	finished.emit()

@@ -1,8 +1,8 @@
 extends Node
 
-## The horror transition under the end of the overlook call: it ends as the dialogue ends (so that the sound meets the end of
-## the scene just before the cut to the wagon). It only plays for the call the finale takes over. Run it as a scene; it
-## quits by itself with a non-zero exit code on failure. Game time runs faster so the call does not take its 38 seconds.
+## The horror transition under the end of the call: it starts the moment the lights begin to go out (`call_ending`, seven seconds
+## before the last caption ends), and its sound proper lasts `transition_sound_seconds`. It only plays for the call the finale takes over.
+## Run it as a scene; it quits by itself with a non-zero exit code on failure. Game time runs faster so the call does not take its 38 seconds.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_transition_audio_smoke"
 const TEST_SCENE_PATH: String = "res://scenes/levels/overlook_phone_playtest.tscn"
@@ -47,7 +47,8 @@ func _run(phone: OverlookPhoneSequence, player: Node3D) -> void:
 		last_end = maxf(last_end, float(cue["end"]))
 
 	var length: float = audio.get_length()
-	_expect(absf(phone.get_transition_delay() - (last_end - length)) < 0.01 and phone.get_transition_delay() > 20.0, "it is to start %.1f s into the call (the last caption ends at %.1f s, the sound is %.1f s long)" % [phone.get_transition_delay(), last_end, length])
+	_expect(absf(phone.get_transition_delay() - (last_end - phone.call_ending_lead_seconds)) < 0.01 and phone.get_transition_delay() > 20.0, "it is to start %.1f s into the call, with the blackout (the last caption ends at %.1f s, the file is %.1f s long)" % [phone.get_transition_delay(), last_end, length])
+	_expect(absf(phone.transition_sound_seconds - 8.5) < 0.01 and phone.transition_sound_seconds < length, "its sound proper is 8.5 s of the file")
 
 	# The call the finale takes over: the sound plays and ends with the dialogue.
 	phone.finale_takes_over = true
@@ -69,10 +70,9 @@ func _run(phone: OverlookPhoneSequence, player: Node3D) -> void:
 	_expect(started_at[0] > 0.0 and cut_at[0] > 0.0, "the sound started (%.1f) and the call was cut (%.1f)" % [started_at[0], cut_at[0]])
 	var started_after: float = started_at[0] - picked_at[0]
 	_expect(absf(started_after - phone.get_transition_delay()) < 1.0, "it started %.1f s into the call, as planned (%.1f s)" % [started_after, phone.get_transition_delay()])
-	# The line is cut 0.35 s after the last caption ends: the sound's end is the dialogue's end.
-	var sound_end: float = started_at[0] + length
-	var dialogue_end: float = cut_at[0] - 0.35
-	_expect(absf(sound_end - dialogue_end) < 1.0, "the end of the sound (%.1f) meets the end of the dialogue (%.1f)" % [sound_end, dialogue_end])
+	# The line is cut 0.35 s after the last caption ends, `call_ending_lead_seconds` after the blackout began with the sound.
+	var blackout_start: float = cut_at[0] - 0.35 - phone.call_ending_lead_seconds
+	_expect(absf(started_at[0] - blackout_start) < 1.0, "the sound starts (%.1f) as the blackout does (%.1f)" % [started_at[0], blackout_start])
 	_expect(phone.transition_player != null and phone.transition_player.volume_db == phone.transition_volume_db, "it plays at its set volume")
 
 	# A call the finale does not take over (the playtest of the booth alone) has no transition: checked on the delay logic.

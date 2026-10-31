@@ -66,17 +66,22 @@ func _process(delta: float) -> void:
 	if _camera == null or not is_instance_valid(_camera) or _player == null or not is_instance_valid(_player):
 		return
 
-	var suppressed: bool = not _active or bool(_player.get("view_locked")) or _inspecting()
+	# A held view (a cinematic) shows no marks, but those of the things that ask for it (`mark_while_held`).
+	# The controller calls a held view "frozen" and turns the marks off, so a held view alone does not count: a dialogue, a panel or another
+	# cutscene's freeze still does.
+	var held: bool = bool(_player.get("view_locked"))
+	var other_attention: bool = bool(_player.get("dialogue_frozen")) or bool(_player.get("modal_ui_open")) or bool(_player.get("cutscene_frozen"))
+	var suppressed: bool = other_attention or _inspecting() or (not _active and not held)
 	_scan_timer -= delta
 	if _scan_timer <= 0.0:
 		_scan_timer = 0.1
 		if suppressed:
 			_seen.clear()
 		else:
-			_seen = _scan()
+			_seen = _scan(held)
 
 	var aimed: Interactable = null
-	if not suppressed and _controller != null and is_instance_valid(_controller.current_interactable):
+	if not suppressed and not held and _controller != null and is_instance_valid(_controller.current_interactable):
 		aimed = _controller.current_interactable
 
 	# Every mark moves to where its thing is on the screen, and fades towards 1 (in sight) or 0 (not).
@@ -140,7 +145,7 @@ func _draw() -> void:
 # ---- What is in sight --------------------------------------------------------------------------------------------
 
 ## The usable things close enough, in front of the eyes and not behind a wall.
-func _scan() -> Array[Interactable]:
+func _scan(held: bool = false) -> Array[Interactable]:
 	var found: Array[Interactable] = []
 	var eye: Vector3 = _camera.global_position
 	_doors.clear()
@@ -150,10 +155,11 @@ func _scan() -> Array[Interactable]:
 			_doors.append(knob.door_controller)
 	for node: Node in get_tree().get_nodes_in_group(Interactable.GROUP):
 		var item: Interactable = node as Interactable
-		if item == null or not item.is_visible_in_tree():
+		if item == null or not item.is_visible_in_tree() or (held and not item.mark_while_held):
 			continue
 		var at: Vector3 = _point_of(item)
-		if eye.distance_to(at) > notice_distance or _camera.is_position_behind(at) or not _camera.is_position_in_frustum(at):
+		var reach: float = item.mark_notice_distance if item.mark_notice_distance > 0.0 else notice_distance
+		if eye.distance_to(at) > reach or _camera.is_position_behind(at) or not _camera.is_position_in_frustum(at):
 			continue
 		if not item.can_interact(_player) or not _line_clear(item, eye, at):
 			continue
@@ -167,7 +173,7 @@ func _line_clear(item: Interactable, eye: Vector3, at: Vector3) -> bool:
 	if not _on_this_side(item, eye):
 		return false
 	for door: DoorController in _doors:
-		if is_instance_valid(door) and door.door_root != null and _crosses_leaf(door.door_root, eye, at):
+		if is_instance_valid(door) and not door.heavy_gate and door.door_root != null and _crosses_leaf(door.door_root, eye, at):
 			return false
 	return _in_the_open(eye, at)
 
@@ -201,6 +207,9 @@ func _on_this_side(item: Interactable, eye: Vector3) -> bool:
 		return true
 
 	var door: DoorController = knob.door_controller
+	# A gate is open to the eye from both faces (its leaf is turned in its frame, and the occlusion ray does the rest).
+	if door.heavy_gate:
+		return true
 	return door.to_local(knob.global_position).z * door.to_local(eye).z >= 0.0
 
 
@@ -213,7 +222,8 @@ func _point_of(item: Interactable) -> Vector3:
 			shape = child as Node3D
 			break
 		_shapes[item] = shape if shape != null else item
-	return (shape if shape != null else item).global_position
+	var base: Node3D = shape if shape != null else item
+	return base.global_transform * item.mark_offset
 
 
 func _inspecting() -> bool:

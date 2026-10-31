@@ -78,14 +78,14 @@ metallic = 0.2
 roughness = 0.35
 cull_mode = 2
 
-[node name="FigClearing" type="Node3D" unique_id=2095720563 node_paths=PackedStringArray("album", "recorder", "fire", "empty_seat", "ficha_spot", "recording_voice_player", "seat_voice_player", "rain_player")]
+[node name="FigClearing" type="Node3D" unique_id=2095720563 node_paths=PackedStringArray("album", "recorder", "fire", "empty_seat", "recording_voice_player", "seat_voice_player", "rain_player", "dressing")]
 script = ExtResource("1_sequence")
 album = NodePath("Props/PhotoAlbum")
 recorder = NodePath("Props/CassetteRecorder")
 fire = NodePath("Scenery/Campfire/CampfireFire")
 empty_seat = NodePath("Props/EmptySeat")
 ficha_scene = ExtResource("24_ficha")
-ficha_spot = NodePath("Props/EmptySeat/FichaSpot")
+dressing = NodePath("CampDressing")
 recording_voice_player = NodePath("Props/CassetteRecorder/VoicePlayer")
 seat_voice_player = NodePath("Props/EmptySeat/SeatVoice")
 rain_player = NodePath("Recording/RainPlayer")
@@ -300,9 +300,6 @@ transform = Transform3D(0.9063078, 0, 0.42261827, 0, 1, 0, -0.42261827, 0, 0.906
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
 unit_size = 3.0
 max_distance = 20.0
-
-[node name="FichaSpot" type="Marker3D" parent="Props/EmptySeat"]
-transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, 0.32, 0.277, 0)
 
 [node name="CampDressing" type="Node3D" parent="."]
 script = ExtResource("33_dressing")

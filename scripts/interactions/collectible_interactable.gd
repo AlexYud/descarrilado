@@ -7,6 +7,8 @@ class_name Collectible
 @export var pickup_prompt_text: String = "PROMPT_PICK_UP"
 ## A foldable item that is taken open (a map off a board) is shown open as it was taken; it folds when it is put away.
 @export var shown_open_when_taken: bool = false
+## False while a scene is holding it (in a hand, falling): it cannot be taken and offers nothing.
+var pickup_enabled: bool = true
 
 
 func _ready() -> void:
@@ -19,7 +21,7 @@ func _ready() -> void:
 
 
 func can_interact(player: Node) -> bool:
-	if player == null:
+	if player == null or not pickup_enabled:
 		return false
 
 	if player.has_method("has_inventory_space"):

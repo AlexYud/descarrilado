@@ -302,9 +302,10 @@ func set_handle_turn(amount: float) -> void:
 	_set_levers(clampf(amount, 0.0, 1.0))
 
 
-## The handle sound (see `handle_sound_enabled`) played by a script, at the handle, a little slower or faster with `pitch`.
-func play_handle_sound(pitch: float = 1.0) -> void:
-	_play_handle_sound(_sound_position(), pitch)
+## The handle sound (see `handle_sound_enabled`) played by a script, at the handle, a little slower or faster with `pitch`. `variant`
+## 0 or 1 picks the first or the second recording (-1: at random), so a scene can play both and never the same one twice.
+func play_handle_sound(pitch: float = 1.0, variant: int = -1) -> void:
+	_play_handle_sound(_sound_position(), pitch, variant)
 
 
 ## Where the handle is on the face turned towards `point` (the leaf's middle on a door with no hardware).
@@ -1202,11 +1203,12 @@ func _cue(id: StringName) -> bool:
 
 ## The handle turning, as the door is opened by the player: one of the two recordings, picked at random, at `at`
 ## (the handle, where the hand is). Independent of `door_sounds_enabled` (see `handle_sound_enabled`).
-func _play_handle_sound(at: Vector3, pitch: float = 1.0) -> void:
+func _play_handle_sound(at: Vector3, pitch: float = 1.0, variant: int = -1) -> void:
 	if not handle_sound_enabled or not is_inside_tree():
 		return
 
-	var stream: AudioStream = handle_sound_a if _rng.randf() < 0.5 else handle_sound_b
+	var use_first: bool = _rng.randf() < 0.5 if variant < 0 else variant == 0
+	var stream: AudioStream = handle_sound_a if use_first else handle_sound_b
 	if stream == null:
 		return
 

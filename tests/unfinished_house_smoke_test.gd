@@ -592,7 +592,7 @@ func _check_memory_scene() -> void:
 	var beats: Array[StringName] = []
 	for entry: Dictionary in house.memory_log:
 		beats.append(entry["beat"] as StringName)
-	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"door", &"steps_end", &"handle", &"latch", &"crack", &"handle_release", &"to_eyes", &"open", &"cut_to_eyes", &"glance_end", &"released"]
+	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"steps_end", &"door", &"handle", &"latch", &"crack", &"handle_release", &"to_eyes", &"open", &"cut_to_eyes", &"flick", &"flick", &"glance_end", &"released"]
 	_expect(beats == wanted, "the beats run in order: %s" % ", ".join(PackedStringArray(beats.map(func(b: StringName) -> String: return String(b)))))
 	_expect(not inspect_seen, "the generic inspect view never opens during it")
 	_expect(not control_slipped, "the controls never come back to the player before the end")
@@ -601,7 +601,7 @@ func _check_memory_scene() -> void:
 	_expect(held_seen and pov_turn_while_held < 0.2, "the postcard is lifted into her hands while her eyes stay where they were (turned %.2f degrees)" % pov_turn_while_held)
 	_expect(written_side_to_her, "with the written side to her as it comes close")
 	var lift_seconds_log: float = _logged_time(&"dissolve_in") - _logged_time(&"lift")
-	_expect(absf(lift_seconds_log - (house.lift_seconds * 0.85 + house.zoom_seconds + house.fill_hold_seconds)) < 0.2 and house.memory_log.filter(func(e: Dictionary) -> bool: return e["beat"] == &"reading" or e["beat"] == &"fill").is_empty(), "picked up in one movement, with no stop to read: straight to the full-screen paper (%.1f s)" % lift_seconds_log)
+	_expect(absf(lift_seconds_log - (house.lift_seconds * 0.85 + house.look_seconds + house.show_seconds * 1.8 + house.flip_seconds + house.flip_hold_seconds + house.unflip_seconds * 0.9 + house.zoom_seconds + house.fill_hold_seconds)) < 0.2 and house.memory_log.filter(func(e: Dictionary) -> bool: return e["beat"] == &"reading" or e["beat"] == &"fill").is_empty(), "picked up slowly, looked over, turned to its picture side and back, then drawn in to the full-screen paper (%.1f s)" % lift_seconds_log)
 	var lower_seconds_log: float = _logged_time(&"settled") - _logged_time(&"lower")
 	_expect(bow_lift > 7.0 and bow_lower > 7.0, "she bows her head to the nightstand taking it up (%.0f degrees) and putting it down (%.0f degrees)" % [bow_lift, bow_lower])
 	_expect(absf(lower_seconds_log - 3.0 * house.lower_land_share) < 0.2, "putting it down takes until the card touches the nightstand (%.1f s)" % lower_seconds_log)
@@ -659,7 +659,7 @@ func _check_memory_scene() -> void:
 		_expect(last_at.z > 6.2 and last_at.z < 8.525 and absf(last_at.x - 7.43) < 0.5, "they stop just outside the bedroom door")
 		_expect(float(first_step[1]) >= -16.0 and float(last_step[1]) >= -4.0, "clearly heard, from %.0f dB to %.0f dB" % [float(first_step[1]), float(last_step[1])])
 		var cadence: float = (float(last_step[2]) - float(first_step[2])) / float(step_list.size() - 1)
-		_expect(cadence > 0.5 and cadence < 0.85, "walking: a step every %.2f s" % cadence)
+		_expect(cadence > 0.3 and cadence < 0.85, "walking, hurried to arrive in time: a step every %.2f s" % cadence)
 		_expect(float(last_step[2]) - _logged_time(&"door") > -1.0 and float(last_step[2]) - _logged_time(&"door") < 3.6, "they arrive at the door a few seconds after the cut (%.1f s)" % (float(last_step[2]) - _logged_time(&"door")))
 	_expect(_logged_time(&"handle") - _logged_time(&"steps_end") > 0.2 and _logged_time(&"handle") - _logged_time(&"steps_end") < 1.0, "the handle goes right after the steps stop (%.1f s)" % (_logged_time(&"handle") - _logged_time(&"steps_end")))
 
@@ -676,7 +676,9 @@ func _check_memory_scene() -> void:
 	_expect(beam_near < 8.0, "and after a few steps it has come slowly round to the door (%.1f degrees off it by the end)" % beam_near)
 	_expect(beam_off_after, "and her own beam is back at the end")
 	var handle_at: float = _logged_time(&"handle") - _logged_time(&"door")
-	_expect(handle_at > 1.0 and handle_at < 5.0, "the handle moves %.1f s after the cut" % handle_at)
+	_expect(handle_at > -0.5 and handle_at < 1.0, "the handle moves %.1f s after the cut" % handle_at)
+	var crack_at: float = _logged_time(&"crack") - _logged_time(&"door")
+	_expect(absf(crack_at - house.door_opens_after_cut_seconds) < 0.3, "the door starts to open %.1f s after the cut" % crack_at)
 	_expect(house.find_child("DoorScene", true, false) == null and house.find_child("HallFloorLight", true, false) == null and house.find_child("StepShadow", true, false) == null and house.find_child("DoorGlimpse", true, false) == null, "no light behind the door, no shadow, no one on the other side")
 	_expect(lever_before_handle < 0.01 and presses == 1 and press_end - press_start > house.handle_press_seconds * 0.6, "the handle goes down once, slowly (%.1f s from a fiftieth to nine tenths)" % (press_end - press_start))
 	var held_down: float = _logged_time(&"latch") - (_logged_time(&"handle") + house.handle_press_seconds)
@@ -690,7 +692,8 @@ func _check_memory_scene() -> void:
 	# Her eyes: the scene's camera goes slowly to where hers is, and the view is hers there, with nothing in between.
 	_expect(_logged_time(&"cut_to_eyes") - _logged_time(&"to_eyes") > 4.5, "the camera takes its time to reach her eyes (%.1f s)" % (_logged_time(&"cut_to_eyes") - _logged_time(&"to_eyes")))
 	_expect(blend_error < 0.1 and blend_fov_error < 0.5, "it is her camera's place, direction and lens when the view becomes hers (%.3f, lens %.2f degrees off)" % [blend_error, blend_fov_error])
-	_expect(_logged_time(&"released") - _logged_time(&"cut_to_eyes") < 0.1, "and the controls are hers at once (no turn to the side, no \"Shh.\")")
+	_expect(_logged_time(&"released") - _logged_time(&"glance_end") < 0.1, "and the controls are hers once her flashlight has flickered back (no turn to the side, no \"Shh.\")")
+	_expect(_logged_time(&"glance_end") - _logged_time(&"cut_to_eyes") < 3.0 and house.memory_log.filter(func(e: Dictionary) -> bool: return e["beat"] == &"flick").size() == house.return_flick_levels.size(), "her flashlight flickers twice in her own view, each time stronger")
 	_expect(ajar_at_cut > 58.0, "the door is still open as she looks at it (%.1f degrees)" % ajar_at_cut)
 	_expect(bedroom_door.is_open and absf(_bedroom_angle() - 60.0) < 1.0 and _lever_turn() < 0.05, "and it stays open at 60 degrees in the game, its handle up (%.1f degrees)" % _bedroom_angle())
 	_expect(house._tension != null and house._tension.stream != null and _logged_time(&"handle_release") - _logged_time(&"crack") > 1.0, "the tension recording began with the door moving, the handle going back up a few centimetres into the opening")

@@ -91,12 +91,16 @@ const LANTERN_LIGHT_RANGE: float = 5.0
 const LANTERN_GLASS_GLOW: float = 2.4
 
 # The log table and its bench.
-const TABLE_POSITION: Vector3 = Vector3(3.3, 0.0, 3.0)
-const TABLE_YAW: float = -84.0
+## Table B stands 3.4 m east of the fire, turned so that its bench is on the memory table's side and the table beyond it: someone sitting there faces
+## away from a player at the memory table (the line from the memory table, at (0.45, -2.2), to here runs about 39 degrees east of south).
+const TABLE_POSITION: Vector3 = Vector3(4.4, 0.0, 2.6)
+const TABLE_YAW: float = -141.0
 const TABLE_TOP_Y: float = 0.8
 const TABLE_LENGTH: float = 1.5
 const TABLE_DEPTH: float = 0.72
 const BENCH_OFFSET: Vector3 = Vector3(0.0, 0.0, 0.85)
+## The top of the bench seat above the ground (its plank is 0.05 thick, centred at 0.425).
+const BENCH_SEAT_Y: float = 0.45
 ## The thermos stands at the table's northern end, the lockbox at the southern one (the table's own frame: its length runs along x).
 const THERMOS_ON_TABLE: Vector3 = Vector3(-0.55, 0.0, 0.04)
 const LOCKBOX_ON_TABLE: Vector3 = Vector3(0.62, 0.0, 0.03)
@@ -150,6 +154,10 @@ var radio_static: AudioStreamPlayer3D = null
 var radio_lamp_material: StandardMaterial3D = null
 ## True once `put_out_lights` has been called: the camp's lights stay out.
 var lights_out: bool = false
+## How much of its light the lantern gives (0 to 1): the sequence dims it in dips before the camp goes dark.
+var lantern_level: float = 1.0
+## True once Table B has been cleared (`clear_log_table`).
+var log_table_cleared: bool = false
 
 var _rope: StandardMaterial3D
 var _wood: StandardMaterial3D
@@ -1258,6 +1266,7 @@ func _build_camp_lantern() -> void:
 ## railway radio and its hiss. They stay out. (The camp's own ending no longer calls it: only the fire goes out there.)
 func put_out_lights() -> void:
 	lights_out = true
+	lantern_level = 0.0
 	if lantern_light != null:
 		lantern_light.visible = false
 
@@ -1274,6 +1283,32 @@ func put_out_lights() -> void:
 		radio_static.stop()
 
 
+## The lantern gives `level` of its light (its glass and flame with it): 1 as it burns, 0 out (the light itself is not put out: `put_out_lights` does).
+func set_lantern_level(level: float) -> void:
+	lantern_level = clampf(level, 0.0, 1.0)
+	if lights_out:
+		return
+
+	if lantern_glass_material != null:
+		lantern_glass_material.emission_energy_multiplier = LANTERN_GLASS_GLOW * lantern_level
+	if lantern_flame != null and lantern_flame.material_override is StandardMaterial3D:
+		(lantern_flame.material_override as StandardMaterial3D).emission_energy_multiplier = 4.0 * lantern_level
+
+
+## Table B, the log table by the fire, is cleared of what stood on it (the thermos and the J & S lockbox, which only matter until the album is
+## solved: the photograph in the box is in the album by then): they are freed with their interaction and collision, their scenes and items stay
+## as they are. Called by the sequence while the camera is on Table A, and on a game loaded after it.
+func clear_log_table() -> void:
+	log_table_cleared = true
+	for prop: Node3D in [thermos, lockbox]:
+		if prop != null and is_instance_valid(prop):
+			prop.visible = false
+			prop.process_mode = Node.PROCESS_MODE_DISABLED
+			prop.queue_free()
+	thermos = null
+	lockbox = null
+
+
 ## The lantern's light wavers a little (a flame, not a bulb).
 func _process(_delta: float) -> void:
 	if lantern_light == null or lights_out or Engine.is_editor_hint():
@@ -1281,7 +1316,7 @@ func _process(_delta: float) -> void:
 
 	var t: float = Time.get_ticks_msec() / 1000.0 * 6.5 + 1.3
 	var wobble: float = 0.55 * sin(t) + 0.3 * sin(t * 2.4 + 0.8) + 0.15 * sin(t * 5.7)
-	lantern_light.light_energy = LANTERN_LIGHT_ENERGY * (1.0 + 0.07 * wobble)
+	lantern_light.light_energy = LANTERN_LIGHT_ENERGY * (1.0 + 0.07 * wobble) * lantern_level
 
 
 # ============================================================

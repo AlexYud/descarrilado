@@ -18,6 +18,8 @@ const MOUTH_OFFSET: Vector3 = Vector3(0.0, -0.1, -0.17)
 const NOISE_TEXTURE_SIZE: int = 128
 const PUFF_LIFETIME: float = 1.3
 const MAX_PARTICLES: int = 120
+## How much of an `AmbienceZone` the mouth is in (its `interior`, faded in over the zone's edge) for the place to count as closed.
+const ENCLOSED_FROM: float = 0.45
 const VAPOUR_SHADER: Shader = preload("res://assets/shaders/cold_breath.gdshader")
 
 ## Seconds between two breaths while standing, walking and running, and how long each breath is blown for.
@@ -58,7 +60,7 @@ func _process(delta: float) -> void:
 	if _player == null or _emitter == null:
 		return
 
-	if not cold or not can_breathe_visibly():
+	if not cold or not can_breathe_visibly() or is_enclosed():
 		_stop_exhaling()
 		# Hold the next breath back: it comes a moment after the player can be seen breathing again.
 		_until_next = maxf(_until_next, 0.8)
@@ -73,6 +75,20 @@ func _process(delta: float) -> void:
 	_until_next -= delta
 	if _until_next <= 0.0:
 		_start_exhaling()
+
+
+## True inside a closed place (the wagon, the signal tower, the unfinished house): the same `AmbienceZone`s that muffle the outdoor sound
+## (their `interior`, 0.45 or more at the mouth) keep the breath from smoking, since the air in there is not the cold of outside.
+func is_enclosed() -> bool:
+	if not is_inside_tree():
+		return false
+
+	for node: Node in get_tree().get_nodes_in_group(AmbienceZone.GROUP):
+		var zone: AmbienceZone = node as AmbienceZone
+		if zone != null and zone.amount_at(global_position) >= ENCLOSED_FROM:
+			return true
+
+	return false
 
 
 ## False while the player is held, talking, inspecting something or in a menu: nothing is shown then.

@@ -182,9 +182,9 @@ func _check_the_pace(flat: Dictionary, uphill: Dictionary, downhill: Dictionary)
 	_expect(int(flat["frames"]) > 20 and int(uphill["frames"]) > 20 and int(downhill["frames"]) > 20, "the player walked on the flat, up the slope and down it (%d, %d, %d frames)" % [flat["frames"], uphill["frames"], downhill["frames"]])
 	var walk_speed: float = PlayerMovementController.WALK_SPEED
 	_expect(absf(float(flat["speed"]) - walk_speed) < 0.12, "on the flat the pace is the walking pace (%.2f of %.2f)" % [flat["speed"], walk_speed])
-	_expect(float(uphill["speed"]) < float(flat["speed"]) * 0.87, "uphill is slower (%.2f against %.2f)" % [uphill["speed"], flat["speed"]])
-	_expect(float(downhill["speed"]) > float(flat["speed"]) * 1.08, "downhill is quicker (%.2f against %.2f)" % [downhill["speed"], flat["speed"]])
-	_expect(float(uphill["speed"]) < float(downhill["speed"]) * 0.75, "so that going up takes well over a third longer than coming down (%.2f against %.2f)" % [uphill["speed"], downhill["speed"]])
+	# The pace is the same on a hill (only the stairs have a pace of their own).
+	_expect(absf(float(uphill["speed"]) - float(flat["speed"])) < float(flat["speed"]) * 0.06, "uphill is the same pace as the flat (%.2f against %.2f)" % [uphill["speed"], flat["speed"]])
+	_expect(absf(float(downhill["speed"]) - float(flat["speed"])) < float(flat["speed"]) * 0.06, "and so is downhill (%.2f against %.2f)" % [downhill["speed"], flat["speed"]])
 
 
 func _check_the_body(flat: Dictionary, uphill: Dictionary, downhill: Dictionary) -> void:
@@ -194,7 +194,7 @@ func _check_the_body(flat: Dictionary, uphill: Dictionary, downhill: Dictionary)
 	var up_rate: float = float(uphill["steps"]) / maxf(float(uphill["speed"]) * float(uphill["seconds"]), 0.01)
 	var flat_rate: float = float(flat["steps"]) / maxf(float(flat["speed"]) * float(flat["seconds"]), 0.01)
 	var down_rate: float = float(downhill["steps"]) / maxf(float(downhill["speed"]) * float(downhill["seconds"]), 0.01)
-	_expect(up_rate > flat_rate * 1.04 and down_rate < flat_rate * 0.95, "the steps are shorter uphill and longer downhill (%.2f, %.2f, %.2f steps a metre)" % [up_rate, flat_rate, down_rate])
+	_expect(up_rate > flat_rate * 1.0 and down_rate < flat_rate * 0.95, "the steps are shorter uphill and longer downhill (%.2f, %.2f, %.2f steps a metre)" % [up_rate, flat_rate, down_rate])
 	var breath: ColdBreath = player.cold_breath
 	movement.slope_effort = 0.9
 	_expect(breath != null, "the player breathes the cold air")

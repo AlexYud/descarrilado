@@ -7,7 +7,7 @@ extends Node
 ## and another old red herring. Loaded, the box stands open with Rain at the Station in it, the door opens with no key (and leaves the key
 ## alone), a door of another kind still keeps its lock, the photograph in the album goes back to the hands once (loading again does not
 ## give it twice), and the album takes only the three story photographs. Then the memory is played, the game is saved before the Ficha is
-## taken and loaded (one Ficha, on the empty seat, the fire cold, the lantern lit), the Ficha is taken and the game loaded again (no
+## taken and loaded (one Ficha, on the empty seat, the fire cold, the camp's lights out), the Ficha is taken and the game loaded again (no
 ## Ficha), and once the Ficha is in the payphone's slot no Ficha comes back either. Run it as a scene; it quits by itself with a non-zero
 ## exit code on failure.
 
@@ -136,10 +136,10 @@ func _run() -> void:
 	view.drop_on_slot(1, {"item_id": "photo_adolescence", "from_slot": -1})
 	view.drop_on_slot(2, {"item_id": "photo_recent", "from_slot": -1})
 	_expect(album.locked, "the right order solves the album")
-	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.DONE, 60.0)
+	await _until(func() -> bool: return clearing.stage == FigClearingSequence.Stage.DONE, 90.0)
 	_expect(_count("photo_workshop") == 1 and _count("photo_broken_lever") == 1 and _count("brass_signal_key") == 1, "the old photographs and the key are left in the hands")
 	_expect(not bool(SaveManager.get_state_value(&"collectibles", &"photo_foggy_platform", false)), "and nothing the player never took is marked as taken")
-	_expect(clearing._ficha != null, "the Ficha lies on the empty seat")
+	_expect(clearing._ficha != null, "the Ficha lies on Table B")
 
 	# Saved now, before the Ficha is taken, and loaded.
 	await _save_and_load()
@@ -147,11 +147,11 @@ func _run() -> void:
 	_expect(CaptionManager._active_run.is_empty() and CaptionManager._runs.is_empty(), "nothing is said again")
 	_expect(not clearing.fire.is_lit, "the fire is cold ash")
 	dressing = clearing.get_node("CampDressing") as FigClearingProps
-	_expect(not dressing.lights_out and dressing.lantern_light.visible and dressing.radio_static.playing, "the lantern is lit and the radio hisses")
+	_expect(dressing.lights_out and not dressing.lantern_light.visible and not dressing.radio_static.playing, "the camp's lights stay out (the lantern and the radio)")
 	var fichas: Array[Collectible] = _fichas_in_world()
 	_expect(fichas.size() == 1, "one Ficha lies in the clearing (%d)" % fichas.size())
 	if fichas.size() == 1:
-		_expect(fichas[0].global_position.distance_to(clearing.ficha_spot.global_position) < 0.01 and fichas[0].get_parent() == clearing.empty_seat, "on the empty seat")
+		_expect(fichas[0].global_position.distance_to(clearing.token_landing()) < 0.01, "on Table B, at the landing anchor")
 		fichas[0].interact(player)
 		await _wait(0.5)
 		player.inspect_controller.close(false)

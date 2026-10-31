@@ -6,6 +6,8 @@ extends Node
 ## Terrain3D instances and saves only the regions that changed. The scene step needs a renderer
 ## (a MultiMesh saved headless loses its transforms), so run it in a window:
 ##   godot --path . res://scripts/tools/build_town_vista.tscn -- scene
+## `-- fringe` plants the belt of trees in front of the nearest houses (once; see `TownVistaBuilder.plant_fringe`).
+## `-- cover` adds canopy stands on the bare meadow in front of the town (once; see `TownVistaBuilder.plant_cover`; `-- fringe cover` does both).
 ## `-- assets` builds the far forest's stand meshes first (VistaForestAssets). Pass `-- check` to only measure the saved terrain, forest and visibility.
 
 func _ready() -> void:
@@ -17,6 +19,8 @@ func _ready() -> void:
 
 	var do_terrain: bool = args.has("terrain")
 	var do_scene: bool = args.has("scene")
+	var do_fringe: bool = args.has("fringe")
+	var do_cover: bool = args.has("cover")
 	var builder: TownVistaBuilder = TownVistaBuilder.new()
 
 	var terrain: Terrain3D = Terrain3D.new()
@@ -35,6 +39,14 @@ func _ready() -> void:
 		started = Time.get_ticks_msec()
 		builder.bake_terrain(terrain, town)
 		print("terrain baked in ", Time.get_ticks_msec() - started, " ms: ", builder.stats)
+
+	if do_fringe or do_cover:
+		if do_fringe:
+			builder.plant_fringe(terrain, town)
+		if do_cover:
+			builder.plant_cover(terrain, town)
+		get_tree().quit()
+		return
 
 	builder.check_visibility(terrain, town)
 	builder.check_match(terrain, town)

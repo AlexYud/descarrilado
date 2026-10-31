@@ -106,6 +106,8 @@ const NO_CELL: Vector2i = Vector2i(2147483647, 0)
 ## How muffled the world is while the game is paused, and during a cutscene that freezes the player. The cutscene's is slight: the
 ## muffle is a low pass, and the night chorus (crickets, leaves) is high, so a heavy one silences it and leaves only the wind (the
 ## dream intro's head lift sounded like that until the cutscene ended).
+## How long the outside takes to go silent or come back when a scene asks (`set_silenced`).
+@export var silence_fade_seconds: float = 1.0
 @export_range(0.0, 1.0, 0.05) var pause_muffle: float = 0.75
 @export_range(0.0, 1.0, 0.05) var cutscene_muffle: float = 0.15
 
@@ -127,6 +129,9 @@ var wind_grid: EmitterGrid = null
 var night_grid: EmitterGrid = null
 
 var _muffles: Dictionary = {}
+## Scenes that ask for the outside to be silent (`set_silenced`), and how silent it is now (0 to 1, moving over `silence_fade_seconds`).
+var _silenced: Dictionary = {}
+var _silence: float = 0.0
 var _fade: float = 0.0
 var _listener_known: bool = false
 var _last_listener: Vector3 = Vector3.ZERO
@@ -274,6 +279,15 @@ func set_muffle(source: StringName, amount: float) -> void:
 		_muffles[source] = clampf(amount, 0.0, 1.0)
 
 
+## Asks for the outside to be silent (wind and night chorus gone, not only pushed back) until it is asked again with `on` false. `source`
+## names the asker (the wagon scene, where only the girl is heard).
+func set_silenced(source: StringName, on: bool) -> void:
+	if on:
+		_silenced[source] = true
+	else:
+		_silenced.erase(source)
+
+
 ## The cutoff and the level the outside has right now (for tests and for tuning).
 func get_cutoff_hz() -> float:
 	return filter.cutoff_hz if filter != null else open_cutoff_hz
@@ -326,6 +340,7 @@ func _process(delta: float) -> void:
 	else:
 		interior = move_toward(interior, target_interior, delta / transition_seconds)
 
+	_silence = move_toward(_silence, 1.0 if not _silenced.is_empty() else 0.0, delta / maxf(silence_fade_seconds, 0.01))
 	if fade_in_seconds > 0.0:
 		_fade = minf(_fade + delta / fade_in_seconds, 1.0)
 	else:
@@ -337,9 +352,9 @@ func _process(delta: float) -> void:
 				grid.place(listener as Vector3, cut, _spot_in_cell, _random_offset.bind(grid.players[0].stream if not grid.players.is_empty() else null))
 
 	if wind_grid != null:
-		wind_grid.update(delta, detail_fade_seconds, detail_volume_db + linear_to_db(maxf(get_wind_gain(), 0.0001)))
+		wind_grid.update(delta, detail_fade_seconds, detail_volume_db + linear_to_db(maxf(get_wind_gain(), 0.0001)) + _silence_db())
 	if night_grid != null:
-		night_grid.update(delta, detail_fade_seconds, night_volume_db + linear_to_db(maxf(get_night_gain(), 0.0001)))
+		night_grid.update(delta, detail_fade_seconds, night_volume_db + linear_to_db(maxf(get_night_gain(), 0.0001)) + _silence_db())
 
 	_apply()
 
@@ -430,6 +445,10 @@ func _listener_position() -> Variant:
 	return camera.global_position
 
 
+func _silence_db() -> float:
+	return -80.0 * _silence
+
+
 func _apply() -> void:
 	if filter != null:
 		# The cutoff moves on a log scale, as the ear hears pitch.
@@ -437,10 +456,10 @@ func _apply() -> void:
 
 	var index: int = AudioServer.get_bus_index(BUS_NAME)
 	if index >= 0:
-		AudioServer.set_bus_volume_db(index, inside_volume_db * interior + linear_to_db(maxf(_fade, 0.0001)))
+		AudioServer.set_bus_volume_db(index, inside_volume_db * interior + linear_to_db(maxf(_fade, 0.0001)) + _silence_db())
 
 	if player != null:
-		player.volume_db = outdoor_volume_db + linear_to_db(maxf(get_wind_gain(), 0.0001))
+		player.volume_db = outdoor_volume_db + linear_to_db(maxf(get_wind_gain(), 0.0001)) + _silence_db()
 
 
 ## A place in a cell, the same every time for that cell and grid (the forest does not shuffle), near the ground.

@@ -70,6 +70,9 @@ const FOV_FAST_WALK: float = 1.5
 # quicker and the heels come down harder. The slope is the rise over the run along the way the player is going (0.36 is about 20 degrees), smoothed so that
 # the bumps of the ground do not show.
 const SLOPE_FOLLOW_RATE: float = 5.0
+## Whether the slope changes the PACE (`slope_speed_factor`). Off: the pace is the same on any hill, as it was before the slopes were given a feel; only the stairs
+## keep a pace of their own. The rest of the slope's feel (steps, lean, breath) is separate and stays.
+const SLOPE_CHANGES_PACE: bool = false
 const UPHILL_SLOWEST: float = 0.6
 const UPHILL_FULL_GRADE: float = 0.62
 const DOWNHILL_QUICKEST: float = 1.2
@@ -658,7 +661,8 @@ func _find_stairs() -> bool:
 ## The pace on this ground as a share of the usual one: the slope's, or the stairs' while the player is on them.
 func _get_slope_speed_factor() -> float:
 	var stairs: float = STAIRS_SPEED_UP if slope_grade >= 0.0 else STAIRS_SPEED_DOWN
-	return lerpf(slope_speed_factor(slope_grade), stairs, stairs_blend)
+	var on_the_ground: float = slope_speed_factor(slope_grade) if SLOPE_CHANGES_PACE else 1.0
+	return lerpf(on_the_ground, stairs, stairs_blend)
 
 
 ## How the slope changes the pace (1 on the flat): uphill slower the steeper it is, downhill quicker up to a point, and taken carefully again when it gets steep.

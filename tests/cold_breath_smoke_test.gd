@@ -101,6 +101,25 @@ func _run(warm: CharacterBody3D, cold: CharacterBody3D) -> void:
 		_expect(breath.exhale_count == count and not emitter.emitting, "no breath while %s" % flag)
 		cold.set(flag, false)
 
+	# Nothing shows in a closed place (an AmbienceZone round the mouth, as in the wagon, the signal tower and the house), and the breath comes
+	# back outside it.
+	var closed: AmbienceZone = AmbienceZone.new()
+	closed.size = Vector3(6.0, 6.0, 6.0)
+	closed.interior = 0.8
+	closed.edge = 0.0
+	add_child(closed)
+	closed.global_position = breath.global_position
+	_expect(breath.is_enclosed(), "inside a closed place the breath is enclosed")
+	var inside_count: int = breath.exhale_count
+	for i: int in 1500:
+		breath._process(0.01)
+	_expect(breath.exhale_count == inside_count and not emitter.emitting, "no breath inside a closed place")
+	closed.interior = 0.3
+	_expect(not breath.is_enclosed(), "but a place open to the outside (an interior of 0.3) does not stop it")
+	closed.queue_free()
+	await get_tree().process_frame
+	_expect(not breath.is_enclosed(), "and outside it the breath is free")
+
 	# Taking it up again, a breath is not blown at once.
 	var resumed: int = breath.exhale_count
 	for i: int in 30:

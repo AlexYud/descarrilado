@@ -97,6 +97,9 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 ## and out when the capsule is opened.
 @export var living_light: OmniLight3D
 @export var living_light_energy: float = 2.2
+## The ceiling lamp that gives it (its globe glows to `living_lamp_glow` as the light comes up).
+@export var living_lamp: Node3D
+@export var living_lamp_glow: float = 2.5
 @export var living_light_fade_seconds: float = 2.0
 
 @export_category("Pantry: the door and the arguing")
@@ -165,8 +168,19 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 ## narrows, until the paper is most of the picture (`fill_width` of the screen's width: a little of the room still shows at its edges),
 ## tipped `fill_tilt_degrees` towards her. A moment still (`fill_hold_seconds`), and the
 ## matched change of time under the paper (`paper_dissolve_seconds`, the paper only).
-@export var lift_seconds: float = 3.0
+@export var lift_seconds: float = 4.0
 @export var held_arc: float = 0.05
+## Once it is in her hand she looks at it as a person does: a moment on the written side (`look_seconds`), the hand holds it out a little
+## (`show_seconds`, `show_out`, `show_low`), turns it over to the picture (`flip_seconds`), looks at it (`flip_hold_seconds`), turns it back
+## (`unflip_seconds`), and only then brings it close to read. The hand is never quite still (`hand_sway` radians).
+@export var look_seconds: float = 0.5
+@export var show_seconds: float = 0.7
+@export var show_out: float = 0.1
+@export var show_low: float = 0.04
+@export var flip_seconds: float = 1.1
+@export var flip_hold_seconds: float = 0.9
+@export var unflip_seconds: float = 0.9
+@export var hand_sway: float = 0.014
 ## The bow: the camera sinks and tips down, and rises again, down quicker than up, never at a constant speed.
 @export var bow_offset: Vector3 = Vector3(0.0, -0.07, -0.1)
 @export var bow_pitch_degrees: float = -10.0
@@ -179,11 +193,13 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var fill_distance: float = 0.26
 @export var fill_tilt_degrees: float = 12.0
 @export_range(0.4, 1.0, 0.01) var fill_width: float = 0.78
-## While she reads it, her flashlight is out and the card has a soft natural light of its own, a little in front of it (the light fades in
-## when it is picked up and out as it is put back down).
-@export var read_light_energy: float = 0.9
-@export var read_light_range: float = 1.4
-@export var read_light_color: Color = Color(1.0, 0.94, 0.82)
+## While she reads it, her flashlight is out and the card is lit the way any inspected item is (the inspect view's lamp, same colour and
+## cone, at the eye; it fades in when the card is picked up and out as it is put back down).
+@export var read_light_energy: float = 2.0
+@export var read_light_range: float = 1.25
+@export var read_light_color: Color = Color("#d7e5ff")
+@export var read_light_angle: float = 48.0
+@export var read_light_offset: Vector3 = Vector3(0.055, 0.045, 0.015)
 @export var fill_hold_seconds: float = 2.3
 @export var paper_dissolve_seconds: float = 0.8
 ## From the paper the camera draws slowly back to the memory shot; the voices begin `conversation_after_seconds` into it.
@@ -239,7 +255,11 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 ## From the cut to the handle moving; the press; held down; the latch; the door opening, slowly, to `crack_degrees` (about 45:
 ## wide open, and no one on the other side); the view starts back to her eyes `eyes_lead_seconds` before it has finished. The whole runs about `door_approach_seconds`.
 ## The handle moves this long after the steps stop (a breath), quickly: only the door's opening is slow.
-@export var handle_after_steps_seconds: float = 0.4
+## The door starts to open this long after the cut to the door shot: the steps arrive quicker (their pace is fitted so they end in time,
+## never faster than `steps_fastest_scale` of their own intervals) and the handle goes a moment after them.
+@export var door_opens_after_cut_seconds: float = 1.0
+@export_range(0.3, 1.0, 0.05) var steps_fastest_scale: float = 0.55
+@export var handle_after_steps_seconds: float = 0.3
 ## The tension recording (`placeholder_string_tension`): in as the door begins to open over `tension_in_seconds`, out over the walk to her eyes.
 @export var tension_db: float = 0.0
 @export var tension_in_seconds: float = 3.0
@@ -248,9 +268,9 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 @export var handle_release_seconds: float = 1.2
 ## The handle comes back up (and the tension begins) this long into the opening, once the door has moved a few centimetres: it is unlocked, and only needs pushing.
 @export var handle_release_delay_seconds: float = 1.6
-@export var handle_press_seconds: float = 0.7
-@export var handle_hold_seconds: float = 0.4
-@export var latch_pause_seconds: float = 0.15
+@export var handle_press_seconds: float = 0.5
+@export var handle_hold_seconds: float = 0.2
+@export var latch_pause_seconds: float = 0.1
 @export var crack_degrees: float = 60.0
 @export var crack_seconds: float = 13.0
 ## The view goes back to her eyes this long before the door has finished opening.
@@ -260,6 +280,16 @@ const PANTRY_AREA: AABB = AABB(Vector3(9.39, -1.0, 6.29), Vector3(2.235, 4.0, 2.
 ## The door camera goes slowly to where her own camera is (`eyes_blend_seconds`), turning and widening to her lens as it goes, the
 ## two looking at the same spot (the open door). When it is there the view is hers, and the controls with it.
 @export var eyes_blend_seconds: float = 5.0
+## The master room's light (the door shot's rig) only dims to this level while the camera travels back (0 to 1)...
+@export_range(0.0, 1.0, 0.05) var eyes_room_light: float = 0.5
+## ...and when the view is hers her flashlight, still weak, flickers twice: each flick (a quick dip, then up) leaves it stronger, the
+## last at its usual strength (`return_flick_levels`, a fraction of it), `return_flick_gap_seconds` apart; the room's light goes out
+## smoothly over the whole of it.
+@export var return_flick_levels: PackedFloat32Array = PackedFloat32Array([0.55, 1.0])
+@export var return_flick_gap_seconds: float = 0.7
+@export var return_flick_dip_seconds: float = 0.07
+@export var return_flick_rise_seconds: float = 0.1
+@export var return_flick_end_seconds: float = 0.4
 
 ## Set when the player is not the node found by group "player".
 @export var player: Node3D
@@ -315,6 +345,9 @@ var _freeze_layer: CanvasLayer = null
 var held_card: Node3D = null
 var _held_weight: float = 0.0
 var _held_near: float = 0.0
+## The card held out from her (0 to 1) and turned over to its picture side (0 to 1) while she looks it over.
+var _held_show: float = 0.0
+var _held_flip: float = 0.0
 var _held_from: Transform3D = Transform3D.IDENTITY
 var _fill_at: Transform3D = Transform3D.IDENTITY
 var _fill_rel: Transform3D = Transform3D.IDENTITY
@@ -339,7 +372,7 @@ var _beam_on: bool = false
 ## The postcard is being read (her flashlight is out, the card has its own light) and how strong that light is.
 var _reading: bool = false
 var _read_level: float = 0.0
-var _read_light: OmniLight3D = null
+var _read_light: SpotLight3D = null
 var _flash_strength: float = 1.0
 var _flicker_wait: float = 1.0
 var _flicker_left: float = 0.0
@@ -348,6 +381,8 @@ var _flicker_repeat: bool = false
 var _flicker_drift: float = 1.0
 ## The walker has stopped outside the door: the handle goes at once.
 var _steps_done: bool = false
+var _steps_end_clock: float = 0.0
+var _cut_clock: float = 0.0
 var _tension: AudioStreamPlayer = null
 const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3"
 var _beam_time: float = 0.0
@@ -576,11 +611,11 @@ func _set_pantry_lamp(on: bool, fade: bool) -> void:
 		glass.emission_energy_multiplier = pantry_bulb_glow if on else 0.0
 
 
-func _bulb_material() -> StandardMaterial3D:
-	if pantry_lamp == null:
+func _bulb_material(lamp: Node3D = pantry_lamp) -> StandardMaterial3D:
+	if lamp == null:
 		return null
 
-	var bulb: MeshInstance3D = pantry_lamp.get_node_or_null(^"Bulb") as MeshInstance3D
+	var bulb: MeshInstance3D = lamp.get_node_or_null(^"Bulb") as MeshInstance3D
 	return bulb.material_override as StandardMaterial3D if bulb != null else null
 
 
@@ -785,9 +820,19 @@ func _shot_read(run: int) -> bool:
 	_tween_held(&"_bow", 1.0, lift_seconds * 0.3, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_bow", 0.0, lift_seconds * 0.58, lift_seconds * 0.3, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_held_weight", 1.0, lift_seconds * 0.62, lift_seconds * 0.18, Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)
+	# In her hand: a look at the written side, the card held out, turned over to the picture and looked at, turned back, drawn in.
+	var at: float = lift_seconds * 0.85 + look_seconds
+	_tween_held(&"_held_show", 1.0, show_seconds, at, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+	at += show_seconds * 0.8
+	_tween_held(&"_held_flip", 1.0, flip_seconds, at, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+	at += flip_seconds + flip_hold_seconds
+	_tween_held(&"_held_flip", 0.0, unflip_seconds, at, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+	at += unflip_seconds * 0.9
+	_tween_held(&"_held_show", 0.0, show_seconds, at, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+	at += show_seconds
 	# Held at the reading distance, the picture then zooms in on it until the paper fills the picture.
-	_tween_held(&"_held_near", 1.0, zoom_seconds, lift_seconds * 0.85, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
-	await _wait(lift_seconds * 0.85 + zoom_seconds + fill_hold_seconds)
+	_tween_held(&"_held_near", 1.0, zoom_seconds, at, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+	await _wait(at + zoom_seconds + fill_hold_seconds)
 	if not _still(run):
 		return false
 
@@ -852,8 +897,24 @@ func _take_up_card() -> void:
 	_held_from = visual.global_transform
 	_held_weight = 0.0
 	_held_near = 0.0
+	_held_show = 0.0
+	_held_flip = 0.0
+	# Lit as an inspected item is: the reading light touches this layer only, so the walls round her stay dark.
+	_on_inspect_layer(held_card)
 	held_card.global_transform = _held_from
 	postcard.visible = false
+
+
+## The inspect view's render layer (the same one `PlayerInspectController` puts an inspected item on).
+const INSPECT_LAYER_NUMBER: int = 20
+
+
+func _on_inspect_layer(node: Node) -> void:
+	var visual: VisualInstance3D = node as VisualInstance3D
+	if visual != null and not (visual is Light3D):
+		visual.set_layer_mask_value(INSPECT_LAYER_NUMBER, true)
+	for child: Node in node.get_children():
+		_on_inspect_layer(child)
 
 
 func _tween_held(property: StringName, value: float, seconds: float, delay: float = 0.0, trans: Tween.TransitionType = Tween.TRANS_SINE, ease_kind: Tween.EaseType = Tween.EASE_IN_OUT) -> void:
@@ -869,9 +930,17 @@ func _place_held_card() -> void:
 
 	var eye: Transform3D = _get_camera().global_transform.orthonormalized()
 	var near: float = clampf(_held_near, 0.0, 1.0)
-	var back: Vector3 = Vector3(0.0, -read_low, -(read_distance - fill_distance)) * (1.0 - near)
-	var held: Transform3D = eye * Transform3D(Basis.IDENTITY, back) * _fill_rel
+	var out: float = clampf(_held_show, 0.0, 1.0)
+	var back: Vector3 = Vector3(0.0, -read_low, -(read_distance - fill_distance)) * (1.0 - near) + Vector3(0.0, -show_low, -show_out) * out
 	var weight: float = clampf(_held_weight, 0.0, 1.0)
+	# The hand: turned over about the card's own upright axis (a little rolled and drawn in as it goes), never quite steady while it is
+	# held away from the eye; exactly as the camera will have it once it is close.
+	var flip: float = clampf(_held_flip, 0.0, 1.0)
+	var loose: float = weight * (1.0 - near)
+	var t: float = scene_clock
+	var hand: Basis = Basis.from_euler(Vector3(sin(t * 1.3) * hand_sway, sin(t * 0.9 + 1.0) * hand_sway * 1.2, sin(t * 1.7 + 2.0) * hand_sway * 0.8) * loose)
+	var turned: Basis = Basis(Vector3.UP, PI * flip) * Basis(Vector3.BACK, sin(PI * flip) * deg_to_rad(7.0))
+	var held: Transform3D = eye * Transform3D(Basis.IDENTITY, back) * _fill_rel * Transform3D(hand * turned, Vector3(0.0, 0.0, sin(PI * flip) * 0.03))
 	var pose: Transform3D = _held_from.interpolate_with(held, weight)
 	# Up a little on the way, as a hand lifts a thing and sets it down (nothing at either end).
 	pose.origin += Vector3.UP * sin(PI * weight) * held_arc
@@ -954,7 +1023,10 @@ func _shot_return(run: int) -> bool:
 		return false
 
 	_log(&"lower")
-	_steps_after(run, maxf(lower_seconds * lower_land_share + _scare_seconds() + night_seconds - steps_lead_seconds, 0.0))
+	# The steps are fitted to end just before the door starts to open, `door_opens_after_cut_seconds` after the cut.
+	var to_cut: float = lower_seconds * lower_land_share + _scare_seconds() + night_seconds
+	var steps_delay: float = maxf(to_cut - steps_lead_seconds, 0.0)
+	_steps_after(run, steps_delay, to_cut + door_opens_after_cut_seconds - _handle_seconds() - steps_delay - STEPS_MARGIN_SECONDS)
 	_tween_held(&"_read_level", 0.0, lower_seconds * 0.8, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_held_near", 0.0, lower_seconds * 0.34, 0.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
 	_tween_held(&"_held_weight", 0.0, lower_seconds * 0.62, lower_seconds * 0.2, Tween.TRANS_CUBIC, Tween.EASE_IN_OUT)
@@ -1024,12 +1096,21 @@ func _scared_turn(run: int) -> bool:
 
 
 ## The running begins part way through the putting away, so it is heard far off before the cut.
-func _steps_after(run: int, delay: float) -> void:
+## The steps are fitted to end this much earlier than the handle needs, so the door opens on time whatever the unevenness of the steps.
+const STEPS_MARGIN_SECONDS: float = 0.4
+
+
+func _steps_after(run: int, delay: float, fit_seconds: float = 0.0) -> void:
 	await _wait(delay)
 	if not _still(run):
 		return
 	_duck_outside(true)
-	_walk_to_door(run)
+	_walk_to_door(run, fit_seconds)
+
+
+## From the last step to the crack of the door: the wait, the handle going down, held, the latch.
+func _handle_seconds() -> float:
+	return handle_after_steps_seconds + handle_press_seconds + handle_hold_seconds + latch_pause_seconds
 
 
 # ---- The door -----------------------------------------------------------------------------------------------------
@@ -1044,6 +1125,7 @@ func _shot_door(run: int) -> bool:
 	_show_camera(Transform3D(facing, door_front_wide.global_position), door_fov)
 	_move_camera(Transform3D(facing, door_front_tight.global_position), door_approach_seconds)
 	_log(&"door")
+	_cut_clock = scene_clock
 	if door_lighting != null:
 		door_lighting.fade_to(1.0, 0.0)
 
@@ -1051,11 +1133,14 @@ func _shot_door(run: int) -> bool:
 		await get_tree().process_frame
 	if not _still(run):
 		return false
-	await _wait(handle_after_steps_seconds)
+	# The handle goes just after the last step, and never so early that the door opens before `door_opens_after_cut_seconds`.
+	var handle_at: float = maxf(_steps_end_clock + handle_after_steps_seconds, _cut_clock + door_opens_after_cut_seconds - (handle_press_seconds + handle_hold_seconds + latch_pause_seconds))
+	if handle_at > scene_clock:
+		await _wait(handle_at - scene_clock)
 	if not _still(run):
 		return false
 	_log(&"handle")
-	bedroom_door.play_handle_sound(handle_sound_pitch)
+	bedroom_door.play_handle_sound(handle_sound_pitch, 0)
 
 	var press: Tween = _track(create_tween())
 	press.tween_method(bedroom_door.set_handle_turn, 0.0, 1.0, handle_press_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -1080,7 +1165,7 @@ func _shot_door(run: int) -> bool:
 		return false
 	_log(&"handle_release")
 	_tension_start()
-	bedroom_door.play_handle_sound(handle_sound_pitch * 0.9)
+	bedroom_door.play_handle_sound(handle_sound_pitch * 0.9, 1)
 	var release: Tween = _track(create_tween())
 	release.tween_method(bedroom_door.set_handle_turn, 1.0, 0.0, handle_release_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	# The camera starts back to her eyes `eyes_lead_seconds` before the door has finished opening; the door finishes by itself.
@@ -1117,10 +1202,16 @@ func _door_facing(eye: Vector3) -> Basis:
 
 ## Someone walks along the hallway to the bedroom door, slowly and heavily, louder as they come, and stops outside it; with the
 ## last steps their the camera is square on to the shut door.
-func _walk_to_door(run: int) -> void:
+func _walk_to_door(run: int, fit_seconds: float = 0.0) -> void:
 	var points: Array[Vector3] = _path_points(footstep_path, step_stride)
 	if _step_sound == null:
 		_step_sound = _indoor_step()
+
+	# Hurried, if it must be, to end in `fit_seconds` (never past `steps_fastest_scale` of the usual pace).
+	var natural: float = 0.0
+	for index: int in maxi(points.size() - 1, 0):
+		natural += lerpf(step_interval_seconds, step_interval_end_seconds, float(index) / float(maxi(points.size() - 1, 1)))
+	var pace: float = clampf(fit_seconds / natural, steps_fastest_scale, 1.0) if fit_seconds > 0.0 and natural > 0.0 else 1.0
 
 	_log(&"steps")
 	_steps_done = false
@@ -1133,10 +1224,11 @@ func _walk_to_door(run: int) -> void:
 			break
 
 		var interval: float = lerpf(step_interval_seconds, step_interval_end_seconds, along)
-		await _wait(interval * randf_range(1.0 - step_unevenness, 1.0 + step_unevenness))
+		await _wait(interval * pace * randf_range(1.0 - step_unevenness, 1.0 + step_unevenness))
 		if not _still(run):
 			return
 	_log(&"steps_end")
+	_steps_end_clock = scene_clock
 	_steps_done = true
 
 
@@ -1265,7 +1357,7 @@ func _shot_to_eyes(run: int) -> bool:
 	_log(&"to_eyes")
 	_tension_stop(eyes_blend_seconds)
 	if door_lighting != null:
-		door_lighting.fade_to(0.0, eyes_blend_seconds)
+		door_lighting.fade_to(eyes_room_light, eyes_blend_seconds)
 	_move_camera(_get_camera().global_transform.orthonormalized(), eyes_blend_seconds)
 	_change_lens(_base_fov, eyes_blend_seconds)
 	await _wait(eyes_blend_seconds)
@@ -1275,11 +1367,39 @@ func _shot_to_eyes(run: int) -> bool:
 	_show_eyes()
 	_log(&"cut_to_eyes")
 	_beam_stop()
-	_flash_strength = 1.0
-	_flash_apply()
 	_duck_outside(false)
+	if not await _light_returns(run):
+		return false
 	_log(&"glance_end")
 	return true
+
+
+## In her own view the flashlight, still weak, flickers (a quick dip, then up) once for each of `return_flick_levels`, each leaving it
+## stronger than before and the last at its usual strength, while the room's light goes out smoothly over the whole of it.
+func _light_returns(run: int) -> bool:
+	_flash_strength = door_flashlight_strength
+	_flash_apply()
+	var total: float = return_flick_end_seconds + (return_flick_gap_seconds + return_flick_dip_seconds + return_flick_rise_seconds) * return_flick_levels.size()
+	if door_lighting != null:
+		door_lighting.fade_to(0.0, total)
+	var flicks: Tween = _track(create_tween())
+	var level: float = door_flashlight_strength
+	for peak: float in return_flick_levels:
+		flicks.tween_interval(return_flick_gap_seconds)
+		flicks.tween_method(_set_flash_level, level, level * 0.1, return_flick_dip_seconds)
+		flicks.tween_method(_set_flash_level, level * 0.1, peak, return_flick_rise_seconds).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		flicks.tween_callback(_log.bind(&"flick"))
+		level = peak
+	flicks.tween_interval(return_flick_end_seconds)
+	await flicks.finished
+	_flash_strength = 1.0
+	_flash_apply()
+	return _still(run)
+
+
+func _set_flash_level(level: float) -> void:
+	_flash_strength = level
+	_flash_apply()
 
 
 ## The door put back shut when none of it can be seen from her eyes (`now`: at once, whatever is seen).
@@ -1434,12 +1554,17 @@ func _flash_apply() -> void:
 func _set_reading(on: bool, seconds: float) -> void:
 	_reading = on
 	if on and _read_light == null:
-		_read_light = OmniLight3D.new()
+		_read_light = SpotLight3D.new()
 		_read_light.name = "ReadLight"
 		_read_light.light_color = read_light_color
-		_read_light.omni_range = read_light_range
-		_read_light.omni_attenuation = 1.2
-		_read_light.light_specular = 0.0
+		_read_light.spot_range = read_light_range
+		_read_light.spot_angle = read_light_angle
+		_read_light.spot_attenuation = 0.65
+		_read_light.spot_angle_attenuation = 0.8
+		_read_light.light_specular = 0.45
+		_read_light.light_indirect_energy = 0.0
+		# Only what is on the inspect layer (the card in her hands) is lit, as in the inspect view; not the walls.
+		_read_light.light_cull_mask = 1 << (INSPECT_LAYER_NUMBER - 1)
 		_read_light.shadow_enabled = false
 		_read_light.visible = false
 		add_child(_read_light)
@@ -1456,14 +1581,14 @@ func _set_reading(on: bool, seconds: float) -> void:
 			_read_light.visible = false
 
 
-## The card's natural light: a little in front of it, towards her eyes.
-func _place_read_light(eye: Transform3D, card_at: Vector3) -> void:
+## The card's light: the inspect view's lamp, at her eye, pointing where she looks.
+func _place_read_light(eye: Transform3D, _card_at: Vector3) -> void:
 	if _read_light == null:
 		return
 
 	_read_light.visible = _reading and _read_level > 0.01
 	_read_light.light_energy = read_light_energy * clampf(_read_level, 0.0, 1.0)
-	_read_light.global_position = card_at + eye.basis.z * 0.16 + eye.basis.y * 0.04
+	_read_light.global_transform = Transform3D(eye.basis, eye.origin + eye.basis * read_light_offset)
 
 
 ## The living room's light, on or off (fading over `seconds`): the capsule's room.
@@ -1474,16 +1599,27 @@ func _set_living_light(on: bool, seconds: float) -> void:
 
 	var target: float = living_light_energy if on else 0.0
 	if seconds <= 0.0:
-		living_light.light_energy = target
+		_apply_living_light(target)
 		living_light.visible = on
 		return
 
 	if on:
 		living_light.visible = true
 	var fade: Tween = _track(create_tween())
-	fade.tween_property(living_light, "light_energy", target, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	fade.tween_method(_apply_living_light, living_light.light_energy, target, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	if not on:
 		fade.tween_callback(func() -> void: living_light.visible = false)
+
+
+## The living room's light at `energy`, its lamp's globe glowing with it.
+func _apply_living_light(energy: float) -> void:
+	if living_light == null or not is_instance_valid(living_light):
+		return
+
+	living_light.light_energy = energy
+	var glass: StandardMaterial3D = _bulb_material(living_lamp)
+	if glass != null:
+		glass.emission_energy_multiplier = living_lamp_glow * energy / maxf(living_light_energy, 0.001)
 
 
 func _on_capsule_opened() -> void:

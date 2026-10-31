@@ -69,6 +69,30 @@ const STAND_IDS: Array[int] = [25, 26, 27, 28]
 ## Within this distance of the overlook the forest is single trees (the rest are stands).
 const NEAR_RADIUS: float = 205.0
 
+## The call's camera in the dream intro (the overlook's shot, looking along `FRINGE_LOOK`), for `plant_fringe`: the front rows are the buildings
+## within `FRINGE_REACH` m and `FRINGE_ARC` degrees of the view with no building nearer along the same line of sight; their trees stand `FRINGE_NEAR` to `FRINGE_FAR` m in front,
+## `FRINGE_SIDE` m either way, `FRINGE_FROM_HOUSE` m from any house and `FRINGE_APART` m from each other. A tree is about
+## `FRINGE_TREE_HEIGHT` m tall with a crown of `FRINGE_CROWN` m (at scale 1).
+const FRINGE_CAMERA: Vector3 = Vector3(173.5, -15.9, 27.1)
+const FRINGE_LOOK: Vector2 = Vector2(0.63, -0.77)
+const FRINGE_REACH: float = 520.0
+const FRINGE_ARC: float = 42.0
+const FRINGE_PER_HOUSE: int = 22
+const FRINGE_NEAR: float = 4.5
+const FRINGE_FAR: float = 44.0
+const FRINGE_SIDE: float = 16.0
+const FRINGE_FROM_HOUSE: float = 8.0
+const FRINGE_APART: float = 3.0
+const FRINGE_TREE_HEIGHT: float = 9.0
+## `plant_cover`: the strip starts `COVER_FROM` m from the call's camera (past the near ring of single trees), ends `COVER_GAP` m before the nearest
+## house and is `COVER_SIDE` m wide either way.
+const COVER_FROM: float = 215.0
+const COVER_GAP: float = 30.0
+const COVER_SIDE: float = 190.0
+const COVER_MAX_BARE: int = 9
+const FRINGE_CROWN: float = 3.0
+
+
 ## What the vertex pass did to a vertex.
 const EDIT_NONE: int = 0
 const EDIT_RAISED: int = 1
@@ -76,6 +100,9 @@ const EDIT_NEW: int = 2
 const EDIT_LOWERED: int = 3
 
 var stats: Dictionary = {}
+## `plant_cover` places stands with `_stand_transform` on its own terms (see there): the town's houses, flat, and whether it is on.
+var _cover_mode: bool = false
+var _cover_houses: Array[Vector2] = []
 
 var _noise: FastNoiseLite = FastNoiseLite.new()
 var _cliff_noise: FastNoiseLite = FastNoiseLite.new()
@@ -552,6 +579,268 @@ func plant_forest(terrain: Terrain3D, town: TownBlockout, owned: Callable) -> vo
 			region.set_modified(true)
 
 
+## A belt of trees in front of the town's nearest houses, so that in the call's shot of the city their bottoms (which stood on bare
+## ground) are hidden: for each house of the front rows (the ones nearest the call's camera, within `FRINGE_DEPTH`, in front of the
+## town's middle) a few single trees stand between it and the camera, `FRINGE_NEAR` to `FRINGE_FAR` metres in front, never on a house or
+## on another tree. Adds Terrain3D instances only (heights are not touched) and saves only the regions it planted in. Run it ONCE on the
+## baked terrain (`-- fringe`); to run it again, restore the terrain first (`git checkout -- terrain_data`). Prints how many of the front
+## houses have their foot, and the top of their wall, hidden from the call's camera by the new trees alone.
+func plant_fringe(terrain: Terrain3D, town: TownBlockout) -> Dictionary:
+	var data: Terrain3DData = terrain.data
+	var instancer: Terrain3DInstancer = terrain.get_instancer()
+	_stand_noise.seed = 57
+	_stand_noise.frequency = 0.0042
+	_stand_noise.fractal_octaves = 2
+	var camera: Vector3 = FRINGE_CAMERA
+	var camera_flat: Vector2 = Vector2(camera.x, camera.z)
+	var forward: Vector2 = Vector2(FRINGE_LOOK.x, FRINGE_LOOK.y).normalized()
+
+	# Every building the call's camera can see (the core's houses and the outer town's, which are merged into a few meshes: told apart by
+	# the tall cells of a 12 m grid over their vertices), and of those the ones in front: nothing nearer stands in front of them.
+	var houses: Array[Vector3] = _building_spots(town)
+	var visible: Array[Vector3] = []
+	for house: Vector3 in houses:
+		var offset: Vector2 = Vector2(house.x, house.z) - camera_flat
+		if offset.length() < FRINGE_REACH and rad_to_deg(acos(clampf(offset.normalized().dot(forward), -1.0, 1.0))) < FRINGE_ARC:
+			visible.append(house)
+	var front: Array[Vector3] = []
+	for house: Vector3 in visible:
+		var offset: Vector2 = Vector2(house.x, house.z) - camera_flat
+		var hidden_behind: bool = false
+		for other: Vector3 in visible:
+			var other_offset: Vector2 = Vector2(other.x, other.z) - camera_flat
+			if other_offset.length() < offset.length() - 18.0 and rad_to_deg(acos(clampf(offset.normalized().dot(other_offset.normalized()), -1.0, 1.0))) < 2.5:
+				hidden_behind = true
+				break
+		if not hidden_behind:
+			front.append(house)
+
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 4242
+	var transforms: Dictionary = {}
+	var colors: Dictionary = {}
+	for id: int in MESH_IDS:
+		transforms[id] = [] as Array[Transform3D]
+		colors[id] = PackedColorArray()
+
+	var trees: Array[Dictionary] = []
+	for house: Vector3 in front:
+		var house_flat: Vector2 = Vector2(house.x, house.z)
+		var toward: Vector2 = (camera_flat - house_flat).normalized()
+		var side: Vector2 = Vector2(-toward.y, toward.x)
+		for attempt: int in FRINGE_PER_HOUSE * 4:
+			if _fringe_count_near(trees, house_flat, FRINGE_FAR) >= FRINGE_PER_HOUSE:
+				break
+
+			var spot: Vector2 = house_flat + toward * rng.randf_range(FRINGE_NEAR, FRINGE_FAR) + side * rng.randf_range(-FRINGE_SIDE, FRINGE_SIDE)
+			var clear: bool = true
+			for other: Vector3 in houses:
+				if Vector2(other.x, other.z).distance_to(spot) < FRINGE_FROM_HOUSE:
+					clear = false
+					break
+			if not clear:
+				continue
+
+			for tree: Dictionary in trees:
+				if (tree["flat"] as Vector2).distance_to(spot) < FRINGE_APART:
+					clear = false
+					break
+			if not clear:
+				continue
+
+			var ground: float = data.get_height(Vector3(spot.x, 0.0, spot.y))
+			if is_nan(ground) or absf(ground - house.y) > 8.0:
+				continue
+
+			var species: int = _stand_species(spot)
+			if species == TownScenery.TREE_ARAUCARIA:
+				species = TownScenery.TREE_MEDIUM
+			var tree_scale: float = rng.randf_range(1.2, 1.95)
+			var placed: Transform3D = Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * tree_scale), Vector3(spot.x, ground - 0.1, spot.y))
+			(transforms[MESH_IDS[species]] as Array[Transform3D]).append(placed)
+			(colors[MESH_IDS[species]] as PackedColorArray).append(Color.WHITE)
+			trees.append({"flat": spot, "foot": ground, "height": FRINGE_TREE_HEIGHT * tree_scale, "radius": FRINGE_CROWN * tree_scale})
+
+	for id: int in MESH_IDS:
+		var list: Array[Transform3D] = transforms[id]
+		if not list.is_empty():
+			instancer.add_transforms(id, list, colors[id], false)
+
+	var locations: Dictionary = {}
+	for tree: Dictionary in trees:
+		var flat: Vector2 = tree["flat"]
+		locations[data.get_region_location(Vector3(flat.x, 0.0, flat.y))] = true
+	for location: Vector2i in locations:
+		data.save_region(location, TERRAIN_DIRECTORY, false)
+
+	var foot_hidden: int = 0
+	var wall_hidden: int = 0
+	for house: Vector3 in front:
+		if _fringe_hides(trees, camera, house):
+			foot_hidden += 1
+		if _fringe_hides(trees, camera, house + Vector3(0.0, 6.0, 0.0)):
+			wall_hidden += 1
+
+	var result: Dictionary = {"front_houses": front.size(), "trees": trees.size(), "regions_saved": locations.size(), "feet_hidden": foot_hidden, "walls_top_hidden": wall_hidden}
+	print("  fringe: ", result)
+	return result
+
+
+## The buildings of the town as points (x, ground, z): the core's houses by their nodes, the outer town's merged house meshes ("Houses_*") by
+## the cells of a 12 m grid in which their vertices span more than 3.5 m of height.
+func _building_spots(town: TownBlockout) -> Array[Vector3]:
+	var spots: Array[Vector3] = []
+	for node: Node in town.find_children("House*", "Node3D", true, false):
+		spots.append((node as Node3D).global_position)
+
+	for node: Node in town.find_children("Houses_*", "MeshInstance3D", true, false):
+		var mesh_instance: MeshInstance3D = node as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+
+		var cells: Dictionary = {}
+		for surface: int in mesh_instance.mesh.get_surface_count():
+			var vertices: PackedVector3Array = mesh_instance.mesh.surface_get_arrays(surface)[Mesh.ARRAY_VERTEX]
+			for vertex: Vector3 in vertices:
+				var world: Vector3 = mesh_instance.global_transform * vertex
+				var key: Vector2i = Vector2i(floori(world.x / 12.0), floori(world.z / 12.0))
+				var cell: Dictionary = cells.get(key, {"lo": 1.0e9, "hi": -1.0e9, "x": 0.0, "z": 0.0, "n": 0})
+				cell["lo"] = minf(float(cell["lo"]), world.y)
+				cell["hi"] = maxf(float(cell["hi"]), world.y)
+				cell["x"] = float(cell["x"]) + world.x
+				cell["z"] = float(cell["z"]) + world.z
+				cell["n"] = int(cell["n"]) + 1
+				cells[key] = cell
+		for key: Vector2i in cells:
+			var cell: Dictionary = cells[key]
+			if float(cell["hi"]) - float(cell["lo"]) > 3.5:
+				spots.append(Vector3(float(cell["x"]) / float(cell["n"]), float(cell["lo"]), float(cell["z"]) / float(cell["n"])))
+	return spots
+
+
+func _fringe_count_near(trees: Array[Dictionary], flat: Vector2, radius: float) -> int:
+	var count: int = 0
+	for tree: Dictionary in trees:
+		if (tree["flat"] as Vector2).distance_to(flat) < radius:
+			count += 1
+	return count
+
+
+## Whether one of the new trees stands in the straight line from `from` to `to` (a crown of the tree's radius, from its foot to its top).
+func _fringe_hides(trees: Array[Dictionary], from: Vector3, to: Vector3) -> bool:
+	var from_flat: Vector2 = Vector2(from.x, from.z)
+	var to_flat: Vector2 = Vector2(to.x, to.z)
+	var along: Vector2 = to_flat - from_flat
+	var length_squared: float = along.length_squared()
+	for tree: Dictionary in trees:
+		var flat: Vector2 = tree["flat"]
+		var t: float = clampf((flat - from_flat).dot(along) / length_squared, 0.0, 1.0)
+		if t > 0.995:
+			continue
+
+		if from_flat.lerp(to_flat, t).distance_to(flat) < float(tree["radius"]):
+			var line_height: float = lerpf(from.y, to.y, t)
+			if line_height < float(tree["foot"]) + float(tree["height"]) and line_height > float(tree["foot"]):
+				return true
+	return false
+
+
+## Forest on the bare meadow between the overlook and the town: where the valley floor in front of the town was left a clearing (the groves
+## and clearings of `plant_forest` are by noise), the call's shot of the city sees the first rows of houses standing on bare grass. Every
+## 64 m block of the strip from `COVER_FROM` m from the call's camera to `COVER_GAP` m before the nearest house, `COVER_SIDE` m either side of
+## the line to the town's middle, that has no canopy stand yet gets one (the same stands, on the same terms: nowhere the town built, none on
+## ground too steep or lumpy). Adds Terrain3D instances only and saves only the regions it planted in. Run it ONCE (`-- cover`), after the
+## baked terrain and `-- fringe`; to run it again restore the terrain first (`git checkout -- terrain_data`).
+func plant_cover(terrain: Terrain3D, town: TownBlockout) -> Dictionary:
+	var data: Terrain3DData = terrain.data
+	var instancer: Terrain3DInstancer = terrain.get_instancer()
+	_stand_noise.seed = 57
+	_stand_noise.frequency = 0.0042
+	_stand_noise.fractal_octaves = 2
+	var camera_flat: Vector2 = Vector2(FRINGE_CAMERA.x, FRINGE_CAMERA.z)
+	var axis: Vector2 = (Vector2(CENTER.x, CENTER.y) - camera_flat).normalized()
+	var across: Vector2 = Vector2(-axis.y, axis.x)
+	var nearest: float = INF
+	for node: Node in town.find_children("House*", "Node3D", true, false):
+		var at: Vector3 = (node as Node3D).global_position
+		nearest = minf(nearest, (Vector2(at.x, at.z) - camera_flat).dot(axis))
+
+	var existing: Dictionary = _stand_blocks(terrain)
+	_cover_mode = true
+	_cover_houses.clear()
+	for spot_at: Vector3 in _building_spots(town):
+		_cover_houses.append(Vector2(spot_at.x, spot_at.z))
+	var block: float = VistaForestAssets.CLUMP_SIZE
+	var owned: Callable = func(_world: Vector2) -> bool: return true
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 515
+	var transforms: Dictionary = {}
+	var colors: Dictionary = {}
+	for id: int in STAND_IDS:
+		transforms[id] = [] as Array[Transform3D]
+		colors[id] = PackedColorArray()
+
+	var wanted: int = 0
+	var already: int = 0
+	var placed: Array[Vector2] = []
+	for bz: int in range(floori((camera_flat.y - 600.0) / block), floori((camera_flat.y + 200.0) / block)):
+		for bx: int in range(floori((camera_flat.x - 300.0) / block), floori((camera_flat.x + 700.0) / block)):
+			var centre: Vector2 = Vector2((float(bx) + 0.5) * block, (float(bz) + 0.5) * block)
+			var along: float = (centre - camera_flat).dot(axis)
+			if along < COVER_FROM or along > nearest - COVER_GAP or absf((centre - camera_flat).dot(across)) > COVER_SIDE:
+				continue
+
+			wanted += 1
+			if existing.has(Vector2i(bx, bz)):
+				already += 1
+				continue
+
+			var spot: Variant = _stand_transform(data, town, centre, rng, owned)
+			if spot == null:
+				continue
+
+			var id: int = STAND_IDS[_stand_species(centre)]
+			(transforms[id] as Array[Transform3D]).append(spot)
+			(colors[id] as PackedColorArray).append(Color.WHITE)
+			placed.append(centre)
+
+	for id: int in STAND_IDS:
+		var list: Array[Transform3D] = transforms[id]
+		if not list.is_empty():
+			instancer.add_transforms(id, list, colors[id], false)
+
+	var locations: Dictionary = {}
+	for centre: Vector2 in placed:
+		locations[data.get_region_location(Vector3(centre.x, 0.0, centre.y))] = true
+	for location: Vector2i in locations:
+		data.save_region(location, TERRAIN_DIRECTORY, false)
+
+	_cover_mode = false
+	var result: Dictionary = {"blocks_in_strip": wanted, "had_a_stand": already, "stands_added": placed.size(), "regions_saved": locations.size(), "rejected": stats}
+	print("  cover: ", result)
+	return result
+
+
+## The 64 m blocks (by index) that already hold a canopy stand.
+func _stand_blocks(terrain: Terrain3D) -> Dictionary:
+	var data: Terrain3DData = terrain.data
+	var region_size: int = int(float(terrain.region_size) * terrain.vertex_spacing)
+	var block: float = VistaForestAssets.CLUMP_SIZE
+	var found: Dictionary = {}
+	for region: Terrain3DRegion in data.get_regions_active():
+		var offset: Vector3 = Vector3(float(region.get_location().x * region_size), 0.0, float(region.get_location().y * region_size))
+		var instances: Dictionary = region.get_instances()
+		for mesh_id: Variant in instances.keys():
+			if not STAND_IDS.has(int(mesh_id)):
+				continue
+
+			for cell: Variant in (instances[mesh_id] as Dictionary).keys():
+				for spot: Transform3D in (instances[mesh_id][cell] as Array)[0]:
+					var world: Vector3 = spot.origin + offset
+					found[Vector2i(floori(world.x / block), floori(world.z / block))] = true
+	return found
+
+
 ## The species of the 64 m block a world point is in (a patch of the forest, one species).
 func _stand_species(world: Vector2) -> int:
 	var block: float = VistaForestAssets.CLUMP_SIZE
@@ -583,12 +872,33 @@ func _stand_transform(data: Terrain3DData, town: TownBlockout, centre: Vector2, 
 	# behind it): 25 samples over the block, none on a house, road, farm or near the centre.
 	var to_local: Transform3D = town.global_transform.affine_inverse()
 	var scenery: TownScenery = town._scenery
-	for sz: int in range(-2, 3):
-		for sx: int in range(-2, 3):
-			var local: Vector3 = to_local * Vector3(centre.x + float(sx) * block * 0.22, 0.0, centre.y + float(sz) * block * 0.22)
-			if not scenery.vista_spot_free(local.x, local.z):
-				_reject("town")
+	if _cover_mode:
+		# The meadow in front of the town belongs to the town's own ground (pastures, yards), so `vista_spot_free` refuses all of it: here the block is
+		# free when no house stands on it or within 8 m of it, and none of 25 samples is bare dirt (a road, a pitch).
+		var area: Rect2 = Rect2(centre - Vector2(block, block) * 0.5, Vector2(block, block)).grow(8.0)
+		for house: Vector2 in _cover_houses:
+			if area.has_point(house):
+				_reject("house")
 				return null
+
+		var bare: int = 0
+		for sz: int in range(-2, 3):
+			for sx: int in range(-2, 3):
+				var sample: Vector3 = Vector3(centre.x + float(sx) * block * 0.22, 0.0, centre.y + float(sz) * block * 0.22)
+				var texture: Vector3 = data.get_texture_id(sample)
+				if (int(texture.x) == TEX_DIRT and texture.z < 0.5) or (int(texture.y) == TEX_DIRT and texture.z >= 0.5):
+					bare += 1
+		# A few streets cross every block; a pitch or a square (a third of the samples or more is dirt) keeps its sky.
+		if bare >= COVER_MAX_BARE:
+			_reject("dirt")
+			return null
+	else:
+		for sz: int in range(-2, 3):
+			for sx: int in range(-2, 3):
+				var local: Vector3 = to_local * Vector3(centre.x + float(sx) * block * 0.22, 0.0, centre.y + float(sz) * block * 0.22)
+				if not scenery.vista_spot_free(local.x, local.z):
+					_reject("town")
+					return null
 
 	# The ground over the block: nine samples, a plane through them.
 	var reach: float = block * 0.375
