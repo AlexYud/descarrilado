@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/interactions/collectible_interactable.gd" id="1_collectible"]
-[ext_resource type="PackedScene" uid="uid://bfvap2natuvdh" path="res://assets/models/interactables/miscellaneous/key.glb" id="2_key"]
+[ext_resource type="Script" uid="uid://3mhcaj0whgyi" path="res://scripts/interactions/collectible_interactable.gd" id="1_collectible"]
+[ext_resource type="PackedScene" uid="uid://bfvap2natuvdh" path="res://assets/models/interactables/miscellaneous/key/key.glb" id="2_key"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_rust"]
 transparency = 1

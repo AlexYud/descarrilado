@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://yhpb8ftor1t6"
-path.s3tc="res://.godot/imported/key_key.png-15c7f362abccf445d61d6eb69bb9b348.s3tc.ctex"
+uid="uid://dbjjbkqwevbga"
+path.s3tc="res://.godot/imported/plank_Wood052_1K-JPG_Color.jpg-b2f6932e7deaeaee20ffe1646966056e.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "6e99407a4ca2c7e0ee0c83866384fddf"
+"md5": "803243d8f61b8f0dbec6d532b09174bc"
 }
 
 [deps]
 
-source_file="res://assets/models/interactables/miscellaneous/key_key.png"
-dest_files=["res://.godot/imported/key_key.png-15c7f362abccf445d61d6eb69bb9b348.s3tc.ctex"]
+source_file="res://assets/models/wooden_structures/plank/plank_Wood052_1K-JPG_Color.jpg"
+dest_files=["res://.godot/imported/plank_Wood052_1K-JPG_Color.jpg-b2f6932e7deaeaee20ffe1646966056e.s3tc.ctex"]
 
 [params]
 
