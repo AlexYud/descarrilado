@@ -1,12 +1,12 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://c3ruje8ejgvrw"]
 
 [ext_resource type="PackedScene" path="res://scenes/levels/waiting_shed.tscn" id="1_shed"]
 [ext_resource type="PackedScene" uid="uid://dechhjfthr7jj" path="res://scenes/environment/world_environment_store.tscn" id="2_environment"]
 [ext_resource type="PackedScene" uid="uid://dajciuejb4dh2" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="Texture2D" uid="uid://3jgo84g6tfyu" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_BaseColor.jpg" id="4_grass_color"]
 [ext_resource type="Texture2D" uid="uid://bwlijacaim1ju" path="res://assets/textures/grass/Poliigon_GrassPatchyGround_4585_Normal.png" id="5_grass_normal"]
-[ext_resource type="Texture2D" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="6_dirt_color"]
-[ext_resource type="Texture2D" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="7_dirt_normal"]
+[ext_resource type="Texture2D" uid="uid://br7p8e7uxmydu" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_COL_2K.jpg" id="6_dirt_color"]
+[ext_resource type="Texture2D" uid="uid://coeok4hr2ws2f" path="res://assets/textures/dirt/GroundDirtWeedsPatchy004_NRM_2K.jpg" id="7_dirt_normal"]
 [ext_resource type="Script" uid="uid://c24i4cn4kf5hb" path="res://scripts/environment/clearing_forest_ring.gd" id="8_ring"]
 [ext_resource type="ArrayMesh" uid="uid://da1x3t2o2xsuj" path="res://assets/models/trees/pitangueira/pitangueira_mesh.tres" id="9_pitangueira"]
 [ext_resource type="ArrayMesh" uid="uid://c4rn5wlqy3lj2" path="res://assets/models/trees/medium_generic_tree/medium_generic_tree_mesh.tres" id="10_medium_tree"]
@@ -41,32 +41,32 @@ normal_enabled = true
 normal_texture = ExtResource("7_dirt_normal")
 uv1_scale = Vector3(6, 0.5, 1)
 
-[node name="WaitingShedPlayTest" type="Node3D"]
+[node name="WaitingShedPlayTest" type="Node3D" unique_id=1810720844]
 
-[node name="WorldEnvironmentStore" parent="." instance=ExtResource("2_environment")]
+[node name="WorldEnvironmentStore" parent="." unique_id=1476015552 instance=ExtResource("2_environment")]
 
-[node name="Ground" type="StaticBody3D" parent="."]
+[node name="Ground" type="StaticBody3D" parent="." unique_id=28844972]
 
-[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=407433467]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0)
 mesh = SubResource("PlaneMesh_ground")
 surface_material_override/0 = SubResource("Mat_ground")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=1457907884]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("BoxShape3D_ground")
 
-[node name="Trail" type="MeshInstance3D" parent="."]
+[node name="Trail" type="MeshInstance3D" parent="." unique_id=1621254200]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
 mesh = SubResource("PlaneMesh_trail")
 surface_material_override/0 = SubResource("Mat_trail")
 
-[node name="WaitingShed" parent="." instance=ExtResource("1_shed")]
+[node name="WaitingShed" parent="." unique_id=1871190445 instance=ExtResource("1_shed")]
 
-[node name="Player" parent="." instance=ExtResource("3_player")]
+[node name="Player" parent="." unique_id=756818337 instance=ExtResource("3_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 1.1, 0)
 
-[node name="ForestRing" type="Node3D" parent="."]
+[node name="ForestRing" type="Node3D" parent="." unique_id=2110336033]
 script = ExtResource("8_ring")
 clearing_radius = 16.0
 gap_angle = 0.0
@@ -80,7 +80,7 @@ bush_count = 220
 small_count = 20
 small_plants_keep_out_radius = 14.0
 
-[node name="PlayTestSetup" type="Node3D" parent="." node_paths=PackedStringArray("player")]
+[node name="PlayTestSetup" type="Node3D" parent="." unique_id=1459464232 node_paths=PackedStringArray("player")]
 script = ExtResource("17_setup")
 player = NodePath("../Player")
 start_yaw_degrees = 90.0

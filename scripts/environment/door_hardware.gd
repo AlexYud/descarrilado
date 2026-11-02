@@ -8,7 +8,7 @@ class_name DoorHardware
 ## so the same pieces serve both sides of a door (the back one is turned half a
 ## round).
 
-const KEY_SCENE: PackedScene = preload("res://assets/models/interactables/miscellaneous/key.glb")
+const KEY_SCENE: PackedScene = preload("res://assets/models/interactables/miscellaneous/key/key.glb")
 
 ## How far the handle is pressed down when fully turned.
 const LEVER_TURN_DEGREES: float = 38.0
