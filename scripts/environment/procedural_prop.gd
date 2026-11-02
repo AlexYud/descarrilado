@@ -2,7 +2,7 @@
 extends Node3D
 class_name ProceduralProp
 
-## Fills this node with a stand-in model from HouseProps, JunctionProps, SignalTowerProps, FigClearingProps or ForestMapProps. Put
+## Fills this node with a stand-in model from HouseProps, JunctionProps, ShedRecordingProps, SignalTowerProps, FigClearingProps or ForestMapProps. Put
 ## it on the `Visual` node of an inspectable (so the model is what the inspect
 ## view shows) or on a furniture node.
 ##
@@ -25,6 +25,8 @@ func build_now() -> void:
 
 	if JunctionProps.has_kind(kind):
 		JunctionProps.build(kind, self)
+	elif ShedRecordingProps.has_kind(kind):
+		ShedRecordingProps.build(kind, self)
 	elif SignalTowerProps.has_kind(kind):
 		SignalTowerProps.build(kind, self)
 	elif FigClearingProps.has_kind(kind):

@@ -332,19 +332,64 @@ msgid "OPTIONS_CAPTION_PREVIEW"
 msgstr "Esta é a aparência das legendas."
 
 msgid "CAPTION_INTRO_01"
-msgstr "Tenho certeza de que minha mãe só estava tentando me proteger."
+msgstr "A Fenda tem o tamanho exato do que falta."
 
 msgid "CAPTION_INTRO_02"
-msgstr "Agora que só resta um de nós."
+msgstr "Quando cheguei, ainda pequena,"
 
 msgid "CAPTION_INTRO_03"
-msgstr "Achei que era hora de ouvir as histórias."
+msgstr "pensei que as montanhas tivessem se afastado"
 
 msgid "CAPTION_INTRO_04"
-msgstr "Mas agora temo que as próprias histórias possam ser o problema."
+msgstr "para deixar alguma coisa passar."
 
 msgid "CAPTION_INTRO_05"
-msgstr "Talvez a gente tenha acreditado tanto numa maldição de família que a tornou real."
+msgstr "E se esquecido de voltar ao lugar."
+
+msgid "CAPTION_INTRO_06"
+msgstr "As casas foram ficando."
+
+msgid "CAPTION_INTRO_07"
+msgstr "A chuva aprendeu a morar nas paredes."
+
+msgid "CAPTION_INTRO_08"
+msgstr "O ferro amanhecia vermelho."
+
+msgid "CAPTION_INTRO_09"
+msgstr "À noite, havia janelas que continuavam acesas"
+
+msgid "CAPTION_INTRO_10"
+msgstr "como se a noite ainda devesse alguém."
+
+msgid "CAPTION_INTRO_11"
+msgstr "Naquela viagem, contei as luzes"
+
+msgid "CAPTION_INTRO_12"
+msgstr "pela janela do trem."
+
+msgid "CAPTION_INTRO_13"
+msgstr "Se uma se apagava, começava de novo."
+
+msgid "CAPTION_INTRO_14"
+msgstr "Eu ainda não sabia onde íamos morar."
+
+msgid "CAPTION_INTRO_15"
+msgstr "Mas tive a impressão de que alguém"
+
+msgid "CAPTION_INTRO_16"
+msgstr "havia deixado uma delas acesa para mim."
+
+msgid "CAPTION_INTRO_17"
+msgstr "Hoje, quando fecho os olhos,"
+
+msgid "CAPTION_INTRO_18"
+msgstr "aquela luz continua acesa."
+
+msgid "CAPTION_INTRO_19"
+msgstr "A casa em volta"
+
+msgid "CAPTION_INTRO_20"
+msgstr "é que eu já não consigo encontrar."
 
 # Fig tree clearing, album puzzle and train ticket (placeholder content)
 msgid "PROMPT_INSPECT"
@@ -618,10 +663,10 @@ msgid "LEVER_DOWN"
 msgstr "BAIXO"
 
 msgid "ITEM_SOPHIA_JOURNAL_NAME"
-msgstr "Caderno da Sophia"
+msgstr "Caderno de Sophia"
 
 msgid "ITEM_SOPHIA_JOURNAL_DESCRIPTION"
-msgstr "Deixado aberto no banco, como se ela tivesse acabado de sair."
+msgstr "Recortes dobrados entre páginas de anotações sobre o abrigo."
 
 msgid "ITEM_RAILWAY_LANTERN_NAME"
 msgstr "Lanterna Ferroviária Enferrujada"
@@ -630,10 +675,10 @@ msgid "ITEM_WOODEN_WHISTLE_NAME"
 msgstr "Apito de Madeira Entalhado"
 
 msgid "ITEM_SOPHIA_FICHA_NAME"
-msgstr "Ficha da Sophia"
+msgstr "Ficha de Sophia"
 
 msgid "ITEM_SOPHIA_FICHA_DESCRIPTION"
-msgstr "Uma ficha de telefone de latão. Número três."
+msgstr "Uma ficha de telefone de latão, guardada entre os papéis de Sophia."
 
 msgid "FICHA_NUMBER"
 msgstr "3"
@@ -661,10 +706,10 @@ msgstr "Empurrar a alavanca %d para cima"
 
 
 msgid "JOURNAL_LEFT"
-msgstr "O Lucas acha que consegue passar por tudo à força com uma chave inglesa.\n\nEle não entende que essa velha caixa de junção segue uma sequência. Lembra do nosso código secreto para pegar o trem da noite, Juli?"
+msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nO jornal foi publicado antes de a fita circular. “Sem testemunhas” pode ser só falta de informação naquela manhã.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo."
 
 msgid "JOURNAL_RIGHT"
-msgstr "Primeiro, você ilumina os trilhos.\nDepois, você fura o bilhete.\nPor fim, você apita o sinal."
+msgstr "A gravação que me emprestaram é só um trecho.\nA cópia que me emprestaram está sem som.\n\nPerguntar quem passou a cópia.\nPerguntar quem ficou com o original.\nQuem estava filmando?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia"
 
 msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
 msgstr "Uma velha lanterna ferroviária de latão, usada por vigias noturnos."
@@ -926,7 +971,7 @@ msgid "READABLE_FICHA_NOTE"
 msgstr "Eu sabia que você ia achar, Juli. Você é a única que realmente presta atenção.\n\nLeve a ficha até o topo do morro — vamos fazer essa ligação."
 
 msgid "READABLE_JOURNAL"
-msgstr "O Lucas acha que consegue passar por tudo à força com uma chave inglesa.\n\nEle não entende que essa velha caixa de junção segue uma sequência. Lembra do nosso código secreto para pegar o trem da noite, Juli?\n\n[b]Primeiro, você ilumina os trilhos.[/b]\n[b]Depois, você fura o bilhete.[/b]\n[b]Por fim, você apita o sinal.[/b]"
+msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nO jornal foi publicado antes de a fita circular. “Sem testemunhas” pode ser só falta de informação naquela manhã.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo.\n\nA gravação que me emprestaram é só um trecho.\nA cópia que me emprestaram está sem som.\n\nPerguntar quem passou a cópia.\nPerguntar quem ficou com o original.\nQuem estava filmando?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia\n\n[center]· · ·[/center]\n\n[i][b]ABRIGO DO RAMAL — SERVIÇO CONCLUÍDO[/b]\n\nLavagem do piso.\nSubstituição de uma tábua do banco.\nSem danos nos pilares.\n\nLiberado para uso.\n\nManutenção da Linha\n\nNa manhã seguinte à retirada do corpo.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Pedir a segunda via do histórico escolar.[/i]"
 
 msgid "READABLE_HOUSE_AD"
 msgstr "[b]CASA À VENDA[/b]\n\nSala, cozinha, dois quartos e despensa.\n\nAcabamento por concluir.\n\n[b][i]NOSSA?\nLucas[/i][/b]\n\n[i]As janelas azuis são bonitas.\nSophia[/i]"
@@ -1364,3 +1409,75 @@ msgstr "Juli!"
 
 msgid "CAPTION_HOUSE_ESC_17"
 msgstr "Me ajuda!"
+
+# Waiting shed: the recording scene
+
+msgid "JOURNAL_EXTRACT"
+msgstr "ABRIGO DO RAMAL — SERVIÇO CONCLUÍDO\n\nLavagem do piso.\nSubstituição de uma tábua do banco.\nSem danos nos pilares.\n\nLiberado para uso.\n\nManutenção da Linha\n\nNa manhã seguinte à retirada do corpo.\n— Sophia"
+
+msgid "JOURNAL_MARGIN"
+msgstr "Pedir a segunda via do histórico escolar."
+
+msgid "ITEM_VHS_NAME"
+msgstr "Fita de vídeo"
+
+msgid "ITEM_VHS_DESCRIPTION"
+msgstr "Uma cópia sem som, associada à investigação da morte de Marina. A etiqueta não identifica quem fez a gravação."
+
+msgid "PROMPT_EXAMINE_TAPE"
+msgstr "Examinar fita"
+
+msgid "READABLE_VHS_LABEL"
+msgstr "[b]ABRIGO / CÓPIA[/b]\n\nDevolver na sexta."
+
+msgid "ITEM_CLIPPING_NAME"
+msgstr "Recorte com fotografia"
+
+msgid "ITEM_CLIPPING_DESCRIPTION"
+msgstr "Uma fotografia do abrigo foi presa ao recorte. O sangue cobre parte do assento, escorre entre as tábuas e escurece o piso ao redor. O corpo já havia sido retirado quando a imagem foi feita."
+
+msgid "READABLE_CLIPPING"
+msgstr "[b]MULHER ENCONTRADA MORTA NO ABRIGO DO RAMAL[/b]\n\nMarina, de 34 anos, foi encontrada morta na manhã de ontem no abrigo do antigo ramal ferroviário. Um funcionário da linha localizou o corpo no chão, entre o banco e um dos pilares.\n\nSegundo as informações repassadas à reportagem, as roupas estavam ensanguentadas e havia sangue no banco e no piso. O corpo foi retirado antes da liberação do local.\n\nMoradores ouvidos afirmaram não ter presenciado o ocorrido. A polícia investiga a morte como homicídio. A causa da morte não havia sido divulgada até o fechamento desta edição. Não há suspeitos identificados."
+
+msgid "PHOTO_CAPTION_SHELTER"
+msgstr "Abrigo do ramal, após a retirada do corpo."
+
+msgid "ITEM_CAMCORDER_NAME"
+msgstr "Filmadora"
+
+msgid "ITEM_CAMCORDER_DESCRIPTION"
+msgstr "Uma filmadora montada num tripé. A lente está voltada para o banco do abrigo."
+
+msgid "CAPTION_SHED_MEM_01"
+msgstr "Essa é a cópia que a irmã da Marina me emprestou."
+
+msgid "CAPTION_SHED_MEM_02"
+msgstr "Tá sem som?"
+
+msgid "CAPTION_SHED_MEM_03"
+msgstr "A cópia veio assim."
+
+msgid "CAPTION_SHED_TALK_01"
+msgstr "Ela conhece essa pessoa?"
+
+msgid "CAPTION_SHED_TALK_02"
+msgstr "A irmã acha que sim."
+
+msgid "CAPTION_SHED_TALK_03"
+msgstr "Você reconheceu?"
+
+msgid "CAPTION_SHED_TALK_04"
+msgstr "Não."
+
+msgid "CAPTION_SHED_TALK_05"
+msgstr "E quem está filmando?"
+
+msgid "CAPTION_SHED_TALK_06"
+msgstr "Foi o que eu perguntei."
+
+msgid "CAPTION_SHED_TALK_07"
+msgstr "E?"
+
+msgid "CAPTION_SHED_TALK_08"
+msgstr "Me ofereceram uma cópia melhor."
+

@@ -1059,7 +1059,8 @@ func _find_altitude_target() -> Node3D:
 		if assigned_target != null:
 			return assigned_target
 
-	var current_scene: Node = get_tree().current_scene
+	# The scene this node belongs to (not the tree's current scene: the menu's night is also seen while another scene is the current one).
+	var current_scene: Node = owner if owner != null else get_tree().current_scene
 
 	if current_scene != null:
 		var player_node: Node3D = (

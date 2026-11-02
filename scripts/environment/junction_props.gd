@@ -18,6 +18,8 @@ const RUST: Color = Color(0.34, 0.17, 0.08)
 const RUST_DARK: Color = Color(0.2, 0.1, 0.05)
 const IRON: Color = Color(0.13, 0.13, 0.14)
 const MOLD: Color = Color(0.16, 0.26, 0.12)
+## Damp wood and moss in the shelter's bench and box: dark, so that it never reads as a sheet of paper under a light.
+const MOLD_DAMP: Color = Color(0.085, 0.115, 0.07)
 const WOOD_OLD: Color = Color(0.27, 0.2, 0.13)
 const WOOD_PALE: Color = Color(0.46, 0.34, 0.2)
 const ETCH: Color = Color(0.06, 0.045, 0.03)
@@ -235,6 +237,20 @@ static func _build_journal(root: Node3D) -> void:
 		Vector3(0.013, 0.075, 0.0042), 22, 0.00025, HouseProps.INK_BLUE, 400.0
 	)
 
+	# The maintenance record Sophia copied out, on a scrap pasted low on the right page, and a note in the margin.
+	var extract: MeshInstance3D = HouseProps._add_paper(
+		root, "ExtractPaper", Vector2(0.108, 0.078), Vector3(0.0645, -0.046, 0.0043),
+		Color(0.9, 0.88, 0.8), Vector3(0.0, 0.0, -1.5)
+	)
+	HouseProps.add_paragraphs(
+		extract, "ExtractText", "JOURNAL_EXTRACT",
+		Vector3(-0.049, 0.034, 0.0009), 14, 0.00025, HouseProps.INK_BLUE, 392.0, 0.002
+	)
+	HouseProps.add_paragraphs(
+		root, "MarginText", "JOURNAL_MARGIN",
+		Vector3(-0.118, -0.073, 0.0042), 14, 0.00025, HouseProps.INK_BLUE, 400.0
+	)
+
 
 ## A heavy railway lantern, rusted and waterlogged, the glass cracked. The clue is
 ## etched on the underside of its base plate: turn it over.
@@ -274,31 +290,31 @@ static func _build_lantern(root: Node3D) -> void:
 
 ## A closed, rotting wooden box with a brass clasp. Nothing in it is shown until
 ## it is opened (see OpenableContainer): `LidPivot` is the hinge at the back edge.
-## Origin at the middle of the box, its floor at y = -0.07.
+## Origin at the middle of the box, its floor at y = -0.07 and its rim at y = 0.025 (shallow, so what lies in it is seen from above).
 static func _build_switch_box(root: Node3D) -> void:
 	var wood: StandardMaterial3D = weathered(WOOD_OLD, 3.0, 0.9)
 	var brass: StandardMaterial3D = HouseProps.material(BRASS, 0.4, 0.85)
 
 	HouseProps.add_box(root, "Floor", Vector3(0.3, 0.01, 0.2), Vector3(0.0, -0.065, 0.0), wood)
-	HouseProps.add_box(root, "Front", Vector3(0.3, 0.13, 0.01), Vector3(0.0, 0.0, 0.095), wood)
-	HouseProps.add_box(root, "Back", Vector3(0.3, 0.13, 0.01), Vector3(0.0, 0.0, -0.095), wood)
-	HouseProps.add_box(root, "Left", Vector3(0.01, 0.13, 0.2), Vector3(-0.145, 0.0, 0.0), wood)
-	HouseProps.add_box(root, "Right", Vector3(0.01, 0.13, 0.2), Vector3(0.145, 0.0, 0.0), wood)
+	HouseProps.add_box(root, "Front", Vector3(0.3, 0.085, 0.01), Vector3(0.0, -0.0175, 0.095), wood)
+	HouseProps.add_box(root, "Back", Vector3(0.3, 0.085, 0.01), Vector3(0.0, -0.0175, -0.095), wood)
+	HouseProps.add_box(root, "Left", Vector3(0.01, 0.085, 0.2), Vector3(-0.145, -0.0175, 0.0), wood)
+	HouseProps.add_box(root, "Right", Vector3(0.01, 0.085, 0.2), Vector3(0.145, -0.0175, 0.0), wood)
 	# Tilt the floor of the box into shade: a dark inside for when it opens.
-	HouseProps.add_box(root, "Inside", Vector3(0.28, 0.002, 0.18), Vector3(0.0, -0.059, 0.0), HouseProps.material(Color(0.07, 0.05, 0.04), 1.0))
+	HouseProps.add_box(root, "Inside", Vector3(0.28, 0.002, 0.18), Vector3(0.0, -0.059, 0.0), HouseProps.material(Color(0.2, 0.15, 0.11), 1.0))
 
 	var hinge: Node3D = Node3D.new()
 	hinge.name = "LidPivot"
-	hinge.position = Vector3(0.0, 0.065, -0.1)
+	hinge.position = Vector3(0.0, 0.025, -0.1)
 	root.add_child(hinge)
 	HouseProps.add_box(hinge, "Lid", Vector3(0.32, 0.016, 0.22), Vector3(0.0, 0.008, 0.11), wood)
 	HouseProps.add_box(hinge, "LidBandLeft", Vector3(0.016, 0.018, 0.224), Vector3(-0.1, 0.008, 0.11), brass)
 	HouseProps.add_box(hinge, "LidBandRight", Vector3(0.016, 0.018, 0.224), Vector3(0.1, 0.008, 0.11), brass)
 	HouseProps.add_box(hinge, "Clasp", Vector3(0.03, 0.02, 0.012), Vector3(0.0, 0.0, 0.222), brass)
-	_stain(hinge, "LidMould", Vector3(0.11, 0.0016, 0.07), Vector3(0.05, 0.0168, 0.09), MOLD)
+	_stain(hinge, "LidMould", Vector3(0.11, 0.0016, 0.07), Vector3(0.05, 0.0168, 0.09), MOLD_DAMP)
 
-	_stain(root, "MouldFront", Vector3(0.12, 0.05, 0.0016), Vector3(-0.05, -0.02, 0.1005), MOLD)
-	_stain(root, "MouldSide", Vector3(0.0016, 0.06, 0.08), Vector3(0.1505, -0.01, 0.03), MOLD)
+	_stain(root, "MouldFront", Vector3(0.12, 0.05, 0.0016), Vector3(-0.05, -0.02, 0.1005), MOLD_DAMP)
+	_stain(root, "MouldSide", Vector3(0.0016, 0.06, 0.08), Vector3(0.1505, -0.01, 0.03), MOLD_DAMP)
 
 
 ## A heavy cast-iron conductor's ticket puncher, held open: two crossed arms on a
@@ -539,6 +555,19 @@ static func _build_shelter(root: Node3D) -> void:
 				Vector3(pos.x + 0.06, pos.y + 0.3, pos.z), CONCRETE_DARK
 			)
 
+	# The cracked pillar, seen from the open side (+Z): a narrow zigzag crack and the lighter cement patch that mended its
+	# lower half. Pillar 1 is the one beside the bench; the same marks are in the news photograph and in the recording.
+	_build_pillar_crack(root, Vector3(-half_x, 0.05 + pillar_height * 0.5, half_z))
+
+	# Ordinary damp on the slab in front of the bench: dark, soft and uneven.
+	var damp: StandardMaterial3D = HouseProps.material(Color(0.1, 0.1, 0.1, 0.3), 1.0)
+	damp.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	for i: int in 3:
+		HouseProps.add_box(
+			root, "Damp%d" % i, Vector3(0.9 - i * 0.2, 0.002, 0.5 - i * 0.1),
+			Vector3(-1.9 + i * 0.35, 0.0512, 0.25 + i * 0.12), damp, Vector3(0.0, 18.0 * i - 10.0, 0.0)
+		)
+
 	# Spalled concrete on one pillar with the iron showing through.
 	var spall: Vector3 = Vector3(-half_x, 1.1, -half_z)
 	HouseProps.add_box(root, "Spall", Vector3(0.18, 0.5, 0.012), Vector3(spall.x, spall.y, spall.z - 0.122), HouseProps.material(Color(0.22, 0.22, 0.21), 1.0))
@@ -547,6 +576,15 @@ static func _build_shelter(root: Node3D) -> void:
 			root, "ExposedBar%d" % i, 0.008, 0.52,
 			Vector3(spall.x - 0.05 + i * 0.05, spall.y, spall.z - 0.13), rebar
 		)
+
+	# The lamp's fixture: a cord and a bare bulb under the roof (the light itself is the scene's `ShelterLamp`, at the same place), so that the shelter
+	# reads as lit from far off in the fog. Steady and cold: it does nothing.
+	var bulb: StandardMaterial3D = HouseProps.material(Color(0.78, 0.9, 1.0), 0.3)
+	bulb.emission_enabled = true
+	bulb.emission = Color(0.7, 0.86, 1.0)
+	bulb.emission_energy_multiplier = 1.8
+	HouseProps.add_cylinder(root, "LampCord", 0.004, 0.2, Vector3(0.0, 2.7, 0.3), HouseProps.black_material())
+	JunctionProps._sphere(root, "LampBulb", 0.05, 0.1, Vector3(0.0, 2.56, 0.3), bulb)
 
 	# The roof: a heavy slab that has lost a corner, nothing hangs from the break.
 	var roof: CSGBox3D = CSGBox3D.new()
@@ -603,26 +641,64 @@ static func _build_shelter(root: Node3D) -> void:
 		)
 
 
+## The crack in the shelter's mended pillar: a zigzag of thin dark strips down the face toward +Z, the lighter patch of
+## cement over its lower half. `pillar_centre` is the middle of the pillar in the shelter's space.
+static func _build_pillar_crack(root: Node3D, pillar_centre: Vector3) -> void:
+	var face_z: float = pillar_centre.z + 0.1215
+	var crack: StandardMaterial3D = HouseProps.material(Color(0.045, 0.045, 0.045), 1.0)
+	var patch: StandardMaterial3D = weathered(Color(0.6, 0.6, 0.56), 2.0, 0.95)
+	var top_y: float = pillar_centre.y + 0.75
+	var x: float = pillar_centre.x + 0.02
+	for i: int in 7:
+		var lean: float = 22.0 if i % 2 == 0 else -22.0
+		HouseProps.add_box(
+			root, "PillarCrack%d" % i, Vector3(0.011, 0.2, 0.003),
+			Vector3(x + (0.025 if i % 2 == 0 else -0.025) * 0.5, top_y - 0.17 * i, face_z), crack,
+			Vector3(0.0, 0.0, lean)
+		)
+
+	# The mend: an uneven patch of lighter cement over the lower cracks.
+	HouseProps.add_box(
+		root, "PillarPatch", Vector3(0.115, 0.42, 0.004),
+		Vector3(x, top_y - 0.17 * 5.0, face_z - 0.0005), patch
+	)
+	HouseProps.add_box(
+		root, "PillarPatchEdge", Vector3(0.07, 0.16, 0.004),
+		Vector3(x - 0.02, top_y - 0.17 * 6.4, face_z - 0.0005), patch, Vector3(0.0, 0.0, 6.0)
+	)
+
+
 ## A concrete bench with a few rotten planks. Origin on the floor under its
-## middle; 1.8 m long along X, the seat 0.45 m high.
+## middle; 1.8 m long along X, the seat 0.45 m high. The front plank is a replacement: the same length as the seat, a
+## little greyer and cleaner than the others, with fresh nail heads. (The recording shows the plank it replaced: see
+## `shelter_archive`.)
 static func _build_bench(root: Node3D) -> void:
 	var concrete: StandardMaterial3D = weathered(CONCRETE, 1.4)
 	var wood: StandardMaterial3D = weathered(WOOD_OLD, 3.0, 0.9)
+	var replaced: StandardMaterial3D = weathered(Color(0.31, 0.25, 0.18), 2.2, 0.82)
 
 	for sx: float in [-0.75, 0.75]:
 		HouseProps.add_box(root, "Leg%s" % ("L" if sx < 0.0 else "R"), Vector3(0.14, 0.4, 0.44), Vector3(sx, 0.2, 0.0), concrete)
 
-	for i: int in 3:
-		# The middle plank has split and sags; the last one is gone at one end.
-		var length: float = 1.74 if i != 2 else 1.1
-		var offset: float = 0.0 if i != 2 else -0.3
+	for i: int in 2:
+		# The middle plank has split and sags.
 		HouseProps.add_box(
-			root, "Plank%d" % i, Vector3(length, 0.04, 0.13),
-			Vector3(offset, 0.42 - (0.012 if i == 1 else 0.0), -0.15 + i * 0.15),
+			root, "Plank%d" % i, Vector3(1.74, 0.04, 0.13),
+			Vector3(0.0, 0.42 - (0.012 if i == 1 else 0.0), -0.15 + i * 0.15),
 			wood, Vector3(0.0, 0.0, 0.0 if i != 1 else 1.0)
 		)
 
-	_stain(root, "Mould", Vector3(0.3, 0.002, 0.1), Vector3(0.3, 0.443, -0.1), MOLD, Vector3(0.0, 15.0, 0.0))
+	# The replaced plank with its nails, in a node of its own: the recording shows the old plank in its place.
+	var fresh: Node3D = Node3D.new()
+	fresh.name = "ReplacedPlank"
+	root.add_child(fresh)
+	HouseProps.add_box(fresh, "Plank2", Vector3(1.74, 0.04, 0.13), Vector3(0.0, 0.42, 0.15), replaced)
+	var nail: StandardMaterial3D = HouseProps.material(Color(0.2, 0.2, 0.21), 0.5, 0.7)
+	for sx: float in [-0.75, 0.75]:
+		for dz: float in [-0.035, 0.035]:
+			HouseProps.add_cylinder(fresh, "Nail%s%s" % ["L" if sx < 0.0 else "R", "a" if dz < 0.0 else "b"], 0.006, 0.003, Vector3(sx, 0.4415, 0.15 + dz), nail)
+
+	_stain(root, "Mould", Vector3(0.3, 0.002, 0.1), Vector3(0.3, 0.443, -0.1), MOLD_DAMP, Vector3(0.0, 15.0, 0.0))
 	# Solid seat and legs, but open underneath: things can be hidden below.
 	HouseProps.add_solid(root, "SeatSolid", Vector3(1.8, 0.05, 0.46), Vector3(0.0, 0.425, 0.0))
 	HouseProps.add_solid(root, "LegSolidL", Vector3(0.14, 0.4, 0.44), Vector3(-0.75, 0.2, 0.0))

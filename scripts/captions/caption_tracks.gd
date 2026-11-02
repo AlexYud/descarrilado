@@ -15,6 +15,9 @@ extends RefCounted
 
 const INTRO_NARRATION: StringName = &"intro_narration"
 
+## The index (in the track) of the first cue said over the blackout; the camera glide and the lights are timed from the end of the cue before it.
+const INTRO_BLACK_CUE_INDEX: int = 18
+
 ## The cassette recording in the fig tree clearing (placeholder timing): the conversation up to Juliana's "Good.".
 const FIG_RECORDING: StringName = &"fig_recording"
 
@@ -37,6 +40,13 @@ const HOUSE_DOOR_HELP: StringName = &"house_door_help"
 ## the lure, the warning).
 const OVERLOOK_CALL: StringName = &"overlook_call"
 
+## The waiting shed's recording scene (placeholder timing, subtitles only; future clips are timed from the start of their shot).
+## Shot 1: Sophia and Juliana, remembered, over the tape on the bench. The recording that follows (about 22 s) is SILENT and has no track at all: nobody
+## in it is captioned, and there is no transcript of what the people in it might say. It is not replayed, so there is no review. The close view of the
+## photograph that follows it is silent too. Shot 4: the conversation, remembered. The girls' lines are remembered voices of the present, not the tape's.
+const SHED_REMEMBERED_COPY: StringName = &"shed_remembered_copy"
+const SHED_REMEMBERED_TALK: StringName = &"shed_remembered_talk"
+
 const SPEAKER_SOPHIA_PHONE: String = "CAPTION_SPEAKER_SOPHIA_PHONE"
 const SPEAKER_SOPHIA_RECORDING: String = "CAPTION_SPEAKER_SOPHIA_RECORDING"
 const SPEAKER_JULIANA_RECORDING: String = "CAPTION_SPEAKER_JULIANA_RECORDING"
@@ -45,12 +55,31 @@ const SPEAKER_JULIANA: String = "CAPTION_SPEAKER_JULIANA"
 const SPEAKER_LUCAS: String = "CAPTION_SPEAKER_LUCAS"
 
 const TRACKS: Dictionary = {
+	# Juliana's opening narration over the train (an editable preview schedule; no recording yet). Time zero is the click on Start; the first caption comes at 3 s.
+	# Every caption is ONE line (a long sentence is split into contiguous parts that share a timestamp, so nothing blinks out between them and no pause is added). The camera
+	# glide is fitted to end `intro_ambient_tail_seconds` after the cue before `INTRO_BLACK_CUE_INDEX` (57.2 s); then the lights fail and the screen goes black, and the last
+	# sentence (the last two cues) is said in that black: it begins a little after the blackout is complete and the next scene has been built (the narration is held while it is built, see MenuController._hold_narration_for_scene_change), and the opening begins right after its last word.
 	INTRO_NARRATION: [
-		{"start": 10.0, "end": 17.5, "key": "CAPTION_INTRO_01"},
-		{"start": 18.0, "end": 19.8, "key": "CAPTION_INTRO_02"},
-		{"start": 20.0, "end": 25.0, "key": "CAPTION_INTRO_03"},
-		{"start": 26.0, "end": 32.5, "key": "CAPTION_INTRO_04"},
-		{"start": 33.0, "end": 39.5, "key": "CAPTION_INTRO_05"},
+		{"start": 3.0, "end": 6.4, "key": "CAPTION_INTRO_01", "wide": true},
+		{"start": 7.2, "end": 9.35, "key": "CAPTION_INTRO_02", "wide": true},
+		{"start": 9.35, "end": 12.5, "key": "CAPTION_INTRO_03", "wide": true},
+		{"start": 12.5, "end": 15.07, "key": "CAPTION_INTRO_04", "wide": true},
+		{"start": 15.07, "end": 17.8, "key": "CAPTION_INTRO_05", "wide": true},
+		{"start": 18.7, "end": 20.54, "key": "CAPTION_INTRO_06", "wide": true},
+		{"start": 20.54, "end": 23.5, "key": "CAPTION_INTRO_07", "wide": true},
+		{"start": 23.8, "end": 26.3, "key": "CAPTION_INTRO_08", "wide": true},
+		{"start": 27.0, "end": 30.55, "key": "CAPTION_INTRO_09", "wide": true},
+		{"start": 30.55, "end": 34.2, "key": "CAPTION_INTRO_10", "wide": true},
+		{"start": 35.0, "end": 37.31, "key": "CAPTION_INTRO_11", "wide": true},
+		{"start": 37.31, "end": 38.8, "key": "CAPTION_INTRO_12", "wide": true},
+		{"start": 39.0, "end": 42.2, "key": "CAPTION_INTRO_13", "wide": true},
+		{"start": 42.85, "end": 46.05, "key": "CAPTION_INTRO_14", "wide": true},
+		{"start": 46.2, "end": 49.0, "key": "CAPTION_INTRO_15", "wide": true},
+		{"start": 49.0, "end": 52.2, "key": "CAPTION_INTRO_16", "wide": true},
+		{"start": 53.0, "end": 55.18, "key": "CAPTION_INTRO_17", "wide": true},
+		{"start": 55.18, "end": 57.2, "key": "CAPTION_INTRO_18", "wide": true},
+		{"start": 61.3, "end": 62.68, "key": "CAPTION_INTRO_19", "wide": true},
+		{"start": 62.68, "end": 65.8, "key": "CAPTION_INTRO_20", "wide": true},
 	],
 	FIG_RECORDING: [
 		{"start": 3.5, "end": 6.0, "key": "CAPTION_REC_01", "speaker": SPEAKER_SOPHIA_RECORDING},
@@ -138,8 +167,37 @@ const TRACKS: Dictionary = {
 		# The line goes on hissing for a moment after she stops.
 		{"start": 36.8, "end": 38.2, "key": ""},
 	],
+	# Shot 1 (about 9 s): the tape on the bench, Sophia and Juliana as Juliana remembers them. Held to the cut.
+	SHED_REMEMBERED_COPY: [
+		{"start": 0.8, "end": 3.7, "key": "CAPTION_SHED_MEM_01", "speaker": SPEAKER_SOPHIA},
+		{"start": 4.4, "end": 5.8, "key": "CAPTION_SHED_MEM_02", "speaker": SPEAKER_JULIANA},
+		{"start": 6.5, "end": 8.0, "key": "CAPTION_SHED_MEM_03", "speaker": SPEAKER_SOPHIA},
+		{"start": 8.0, "end": 9.2, "key": ""},
+	],
+	# Shot 4 (about 20 s): the conversation, remembered, after the recording and the photograph. A small unfilled pause (2 s) before Sophia's last answer, and the
+	# shot held a little after it. Juliana asks, Sophia answers; nobody explains anything.
+	SHED_REMEMBERED_TALK: [
+		{"start": 0.8, "end": 2.8, "key": "CAPTION_SHED_TALK_01", "speaker": SPEAKER_JULIANA},
+		{"start": 3.5, "end": 5.0, "key": "CAPTION_SHED_TALK_02", "speaker": SPEAKER_SOPHIA},
+		{"start": 5.8, "end": 7.4, "key": "CAPTION_SHED_TALK_03", "speaker": SPEAKER_JULIANA},
+		{"start": 8.1, "end": 8.9, "key": "CAPTION_SHED_TALK_04", "speaker": SPEAKER_SOPHIA},
+		{"start": 9.7, "end": 11.3, "key": "CAPTION_SHED_TALK_05", "speaker": SPEAKER_JULIANA},
+		{"start": 12.0, "end": 13.7, "key": "CAPTION_SHED_TALK_06", "speaker": SPEAKER_SOPHIA},
+		{"start": 14.4, "end": 15.2, "key": "CAPTION_SHED_TALK_07", "speaker": SPEAKER_JULIANA},
+		# Two seconds of unfilled quiet.
+		{"start": 17.2, "end": 19.4, "key": "CAPTION_SHED_TALK_08", "speaker": SPEAKER_SOPHIA},
+		{"start": 19.4, "end": 20.6, "key": ""},
+	],
 }
 
 
 static func get_cues(track_id: StringName) -> Array:
 	return TRACKS.get(track_id, [])
+
+
+## The end of the last cue of a track (its length as a schedule), in seconds.
+static func get_length(track_id: StringName) -> float:
+	var length: float = 0.0
+	for cue: Dictionary in get_cues(track_id):
+		length = maxf(length, float(cue["end"]))
+	return length

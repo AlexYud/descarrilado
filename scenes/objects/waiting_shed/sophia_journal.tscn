@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
-size = Vector3(0.28, 0.2, 0.05)
+size = Vector3(0.28, 0.2, 0.03)
 
 [node name="SophiaJournal" type="Node3D"]
 script = ExtResource("1_inspectable")

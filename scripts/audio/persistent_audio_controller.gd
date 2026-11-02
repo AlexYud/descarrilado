@@ -1,6 +1,11 @@
 extends Node
 class_name PersistentAudioController
 
+## Raised when the opening narration is over, or was stopped (so that nobody waits for it for ever).
+signal intro_narration_finished
+## Raised when the next scene may begin its opening (see `hold_opening`).
+signal opening_released
+
 @export var menu_idle_player_path: String = "MenuIdlePlayer"
 @export var intro_narration_player_path: String = "IntroNarrationPlayer"
 
@@ -26,6 +31,12 @@ var menu_idle_should_loop: bool = false
 var menu_idle_tween: Tween = null
 
 var narration_request_id: int = 0
+## True from the request until the narration ends or is stopped; `_narration_with_voice` says whether a recording is the clock (else the caption schedule is).
+var _narration_running: bool = false
+var _narration_with_voice: bool = false
+var _narration_run_id: int = -1
+var _narration_held: bool = false
+var _opening_held: bool = false
 var master_volume_percent: float = 100.0
 var fallback_intro_narration: AudioStream = null
 
@@ -124,6 +135,9 @@ func _apply_intro_narration_language() -> void:
 				selected_stream = intro_narration_english
 
 	if selected_stream == null:
+		# No recording for this voice language: nothing is left from another one.
+		if not intro_narration_player.playing:
+			intro_narration_player.stream = null
 		return
 
 	if intro_narration_player.stream == selected_stream:
@@ -213,12 +227,16 @@ func _on_menu_idle_finished() -> void:
 	menu_idle_player.play()
 
 
+## The opening narration (Juliana's voice-over, not spatial). With a recording assigned for the voice language (`intro_narration_english` / `..._brazilian_portuguese`
+## here, or a stream on the IntroNarrationPlayer), the recording's own position is the clock of the captions (cue times are seconds into the recording) and the
+## narration ends with it. Without one, the caption schedule of `CaptionTracks.INTRO_NARRATION` is the clock, and it ends at its last cue. Either way the
+## caption manager does the showing, and `intro_narration_finished` is raised once.
 func play_intro_narration_after_delay(start_delay: float) -> void:
-	if intro_narration_player == null:
-		return
-
 	narration_request_id += 1
 	var current_request_id: int = narration_request_id
+	_narration_running = true
+	_narration_with_voice = false
+	_narration_run_id = -1
 
 	if start_delay > 0.0:
 		await get_tree().create_timer(
@@ -229,23 +247,134 @@ func play_intro_narration_after_delay(start_delay: float) -> void:
 	if current_request_id != narration_request_id:
 		return
 
-	intro_narration_player.volume_db = intro_narration_volume_db
-	intro_narration_player.stop()
-	intro_narration_player.play()
-	CaptionManager.follow_player(
-		CaptionTracks.INTRO_NARRATION,
-		intro_narration_player
-	)
+	if intro_narration_player != null and intro_narration_player.stream != null:
+		_narration_with_voice = true
+		intro_narration_player.volume_db = intro_narration_volume_db
+		intro_narration_player.stop()
+		intro_narration_player.play()
+		CaptionManager.follow_player(
+			CaptionTracks.INTRO_NARRATION,
+			intro_narration_player
+		)
+		await intro_narration_player.finished
+	else:
+		_narration_run_id = CaptionManager.play_scripted(CaptionTracks.INTRO_NARRATION)
+		while true:
+			var finished_id: int = await CaptionManager.run_finished
+			if finished_id == _narration_run_id or current_request_id != narration_request_id:
+				break
+
+	if current_request_id != narration_request_id:
+		return
+
+	_narration_running = false
+	_narration_run_id = -1
+	_release_narration_hold()
+	intro_narration_finished.emit()
 
 
 func stop_intro_narration() -> void:
 	narration_request_id += 1
+	var was_running: bool = _narration_running
+	_narration_running = false
+	_narration_run_id = -1
+	_release_narration_hold()
 
-	if intro_narration_player == null:
+	if intro_narration_player != null:
+		intro_narration_player.stop()
+
+	if was_running:
+		CaptionManager.clear()
+		intro_narration_finished.emit()
+
+
+func is_intro_narration_running() -> bool:
+	return _narration_running
+
+
+## Holds the narration where it is (true), or lets it go on (false): its clock stops, and a recording is paused, so that whatever takes the frame time (the next scene
+## being built) can neither eat a line nor leave the voice ahead of its captions. Whoever holds it lets it go; ending or stopping the narration lets it go too.
+func hold_intro_narration(held: bool) -> void:
+	if not _narration_running:
 		return
 
-	intro_narration_player.stop()
-	CaptionManager.clear()
+	_narration_held = held
+	if _narration_with_voice:
+		if is_instance_valid(intro_narration_player):
+			intro_narration_player.stream_paused = held
+	else:
+		CaptionManager.hold_clock(held)
+
+
+## The menu's cinematic holds the opening of the next scene (which is already built, asleep behind it) until it hands over: the scene's own set-up may be done long
+## before the cinematic is, and must not begin its opening then.
+func hold_opening(held: bool) -> void:
+	var was_held: bool = _opening_held
+	_opening_held = held
+	if was_held and not held:
+		opening_released.emit()
+
+
+func is_opening_held() -> bool:
+	return _opening_held
+
+
+func is_intro_narration_held() -> bool:
+	return _narration_held and _narration_running
+
+
+func _release_narration_hold() -> void:
+	if not _narration_held:
+		return
+
+	_narration_held = false
+	CaptionManager.hold_clock(false)
+	if is_instance_valid(intro_narration_player):
+		intro_narration_player.stream_paused = false
+
+
+## Where the narration is, in seconds (the recording's position, or the caption schedule's clock); very large once it is over.
+func get_intro_narration_seconds() -> float:
+	if _narration_with_voice:
+		if is_instance_valid(intro_narration_player) and intro_narration_player.playing:
+			return intro_narration_player.get_playback_position()
+		return 0.0
+
+	if _narration_run_id < 0:
+		return 0.0
+
+	var seconds: float = CaptionManager.get_run_seconds(_narration_run_id)
+	return seconds if seconds >= 0.0 else 100000.0
+
+
+## Seconds until the last cue before the ones said in the black ends (negative once it has): the camera glide is fitted to this, and the lights fail after it.
+func get_intro_narration_seconds_to_black() -> float:
+	if not _narration_running:
+		return 0.0
+
+	var cues: Array = CaptionTracks.get_cues(CaptionTracks.INTRO_NARRATION)
+	var index: int = CaptionTracks.INTRO_BLACK_CUE_INDEX
+	var lights_at: float = float((cues[index - 1] as Dictionary)["end"]) if index > 0 and index <= cues.size() else CaptionTracks.get_length(CaptionTracks.INTRO_NARRATION)
+	return lights_at - get_intro_narration_seconds()
+
+
+## Seconds of the narration still to come (its caption schedule, or its recording), or 0 when it is not running.
+func get_intro_narration_remaining() -> float:
+	if not _narration_running:
+		return 0.0
+
+	var schedule: float = CaptionTracks.get_length(CaptionTracks.INTRO_NARRATION)
+	if _narration_with_voice:
+		if not is_instance_valid(intro_narration_player) or not intro_narration_player.playing:
+			return 0.0
+
+		var recording: float = intro_narration_player.stream.get_length() if intro_narration_player.stream != null else 0.0
+		return maxf((recording if recording > 0.0 else schedule) - intro_narration_player.get_playback_position(), 0.0)
+
+	if _narration_run_id < 0:
+		return schedule
+
+	return maxf(schedule - maxf(CaptionManager.get_run_seconds(_narration_run_id), 0.0), 0.0)
 
 
 func set_master_volume_percent(value: float, save_after_change: bool = true) -> void:

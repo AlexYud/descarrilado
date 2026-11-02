@@ -215,9 +215,10 @@ func _on_this_side(item: Interactable, eye: Vector3) -> bool:
 
 ## Where a thing's mark sits: the middle of its interaction shape, or its own origin.
 func _point_of(item: Interactable) -> Vector3:
-	var shape: Node3D = _shapes.get(item) as Node3D
-	if shape == null or not is_instance_valid(shape):
-		shape = null
+	# What was remembered may have been freed since (a shape inside an open box's contents, once the thing in it is taken): it is not cast then.
+	var remembered: Variant = _shapes.get(item)
+	var shape: Node3D = remembered as Node3D if is_instance_valid(remembered) else null
+	if shape == null:
 		for child: Node in item.find_children("*", "CollisionShape3D", true, false):
 			shape = child as Node3D
 			break

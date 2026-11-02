@@ -277,10 +277,34 @@ func _finish_scene_setup() -> void:
 	if SceneTransition.is_cover_visible():
 		await SceneTransition.transition_finished
 
+	# The opening narration's last sentence is said over this scene's black (the menu holds the narration while the scene is built): let it go on, and begin when it has
+	# been said, right away.
+	await _wait_for_opening_narration()
+
+	# (The scene may have been left while it waited: the pause menu's way back to the main menu.)
+	if not is_inside_tree():
+		return
+
 	if opening_cancelled:
 		return
 
 	await _begin_playable_scene()
+
+
+func _wait_for_opening_narration() -> void:
+	var audio: Node = get_tree().root.get_node_or_null("PersistentAudio")
+	if audio == null:
+		return
+
+	# Built behind the opening cinematic: asleep until it is over.
+	if audio.has_method("is_opening_held") and bool(audio.call("is_opening_held")):
+		await Signal(audio, &"opening_released")
+
+	if not audio.has_method("is_intro_narration_running") or not bool(audio.call("is_intro_narration_running")):
+		return
+
+	audio.call("hold_intro_narration", false)
+	await Signal(audio, &"intro_narration_finished")
 
 
 # ============================================================

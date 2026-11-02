@@ -332,19 +332,64 @@ msgid "OPTIONS_CAPTION_PREVIEW"
 msgstr "This is how captions will look."
 
 msgid "CAPTION_INTRO_01"
-msgstr "I'm sure my mom was just trying to protect me."
+msgstr "The Fenda is the exact size of what is missing."
 
 msgid "CAPTION_INTRO_02"
-msgstr "Now that there's only one of us left."
+msgstr "When I first arrived, still a little girl,"
 
 msgid "CAPTION_INTRO_03"
-msgstr "I thought it was time I heard the stories."
+msgstr "I thought the mountains had moved apart"
 
 msgid "CAPTION_INTRO_04"
-msgstr "But now I'm worried the stories themselves might be the problem."
+msgstr "to let something pass."
 
 msgid "CAPTION_INTRO_05"
-msgstr "Maybe we believed so much in a family curse, we made it real."
+msgstr "And forgotten to move back."
+
+msgid "CAPTION_INTRO_06"
+msgstr "The houses stayed."
+
+msgid "CAPTION_INTRO_07"
+msgstr "The rain learned to live in the walls."
+
+msgid "CAPTION_INTRO_08"
+msgstr "The iron woke red."
+
+msgid "CAPTION_INTRO_09"
+msgstr "At night, some windows would stay lit"
+
+msgid "CAPTION_INTRO_10"
+msgstr "as though the night still had someone to return."
+
+msgid "CAPTION_INTRO_11"
+msgstr "On that journey, I counted the lights"
+
+msgid "CAPTION_INTRO_12"
+msgstr "through the train window."
+
+msgid "CAPTION_INTRO_13"
+msgstr "If one went out, I would start again."
+
+msgid "CAPTION_INTRO_14"
+msgstr "I didn't yet know where we were going to live."
+
+msgid "CAPTION_INTRO_15"
+msgstr "But I had the feeling that someone"
+
+msgid "CAPTION_INTRO_16"
+msgstr "had left one of them on for me."
+
+msgid "CAPTION_INTRO_17"
+msgstr "Today, when I close my eyes,"
+
+msgid "CAPTION_INTRO_18"
+msgstr "that light is still on."
+
+msgid "CAPTION_INTRO_19"
+msgstr "It's the house around it"
+
+msgid "CAPTION_INTRO_20"
+msgstr "that I can no longer find."
 
 # Fig tree clearing, album puzzle and train ticket (placeholder content)
 msgid "PROMPT_INSPECT"
@@ -621,7 +666,7 @@ msgid "ITEM_SOPHIA_JOURNAL_NAME"
 msgstr "Sophia's Notebook"
 
 msgid "ITEM_SOPHIA_JOURNAL_DESCRIPTION"
-msgstr "Left open on the bench, as if she had only just stepped away."
+msgstr "Clippings folded between pages of notes about the shelter."
 
 msgid "ITEM_RAILWAY_LANTERN_NAME"
 msgstr "Rusted Railway Lantern"
@@ -630,10 +675,10 @@ msgid "ITEM_WOODEN_WHISTLE_NAME"
 msgstr "Carved Wooden Whistle"
 
 msgid "ITEM_SOPHIA_FICHA_NAME"
-msgstr "Sophia's Ficha"
+msgstr "Sophia's Telephone Token"
 
 msgid "ITEM_SOPHIA_FICHA_DESCRIPTION"
-msgstr "A brass telephone token. Number three."
+msgstr "A brass telephone token, kept among Sophia's papers."
 
 msgid "FICHA_NUMBER"
 msgstr "3"
@@ -661,10 +706,10 @@ msgstr "Push lever %d up"
 
 
 msgid "JOURNAL_LEFT"
-msgstr "Lucas thinks he can force his way through everything with a wrench.\n\nHe doesn't get that this old junction box follows a sequence. Remember our secret code for catching the night train, Juli?"
+msgstr "Marina, 34.\n\nHer sister lives out of town. The copy passed through at least three people before reaching her. One of them didn't know Marina's name.\n\nThe newspaper came out before the tape began circulating. “No witnesses” may simply reflect what was known that morning.\n\nHer sister thinks Marina knew the person in the recording. She asked me to look again."
 
 msgid "JOURNAL_RIGHT"
-msgstr "First, you light the track.\nThen, you punch the ticket.\nFinally, you blow the signal."
+msgstr "The recording I was lent is only an excerpt.\nThe copy I was lent has no sound.\n\nAsk who passed on the copy.\nAsk who kept the original.\nWho was filming?\n\nCall Marina's sister again.\n\n— Sophia"
 
 msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
 msgstr "An old brass railway lantern used by night watchmen."
@@ -926,7 +971,7 @@ msgid "READABLE_FICHA_NOTE"
 msgstr "I knew you'd find it, Juli. You're the only one who actually pays attention.\n\nTake the token to the top of the hill — let's make that call."
 
 msgid "READABLE_JOURNAL"
-msgstr "Lucas thinks he can force his way through everything with a wrench.\n\nHe doesn't get that this old junction box follows a sequence. Remember our secret code for catching the night train, Juli?\n\n[b]First, you light the track.[/b]\n[b]Then, you punch the ticket.[/b]\n[b]Finally, you blow the signal.[/b]"
+msgstr "Marina, 34.\n\nHer sister lives out of town. The copy passed through at least three people before reaching her. One of them didn't know Marina's name.\n\nThe newspaper came out before the tape began circulating. “No witnesses” may simply reflect what was known that morning.\n\nHer sister thinks Marina knew the person in the recording. She asked me to look again.\n\nThe recording I was lent is only an excerpt.\nThe copy I was lent has no sound.\n\nAsk who passed on the copy.\nAsk who kept the original.\nWho was filming?\n\nCall Marina's sister again.\n\n— Sophia\n\n[center]· · ·[/center]\n\n[i][b]BRANCH-LINE SHELTER — WORK COMPLETED[/b]\n\nFloor washed.\nOne bench plank replaced.\nNo damage to pillars.\n\nCleared for use.\n\nRailway Maintenance\n\nThe morning after the body was removed.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Request another copy of my school transcript.[/i]"
 
 msgid "READABLE_HOUSE_AD"
 msgstr "[b]HOUSE FOR SALE[/b]\n\nLiving room, kitchen, two bedrooms, and pantry.\n\nFinishing work required.\n\n[b][i]OURS?\nLucas[/i][/b]\n\n[i]The blue windows are beautiful.\nSophia[/i]"
@@ -1364,3 +1409,75 @@ msgstr "Juli!"
 
 msgid "CAPTION_HOUSE_ESC_17"
 msgstr "Help me!"
+
+# Waiting shed: the recording scene
+
+msgid "JOURNAL_EXTRACT"
+msgstr "BRANCH-LINE SHELTER — WORK COMPLETED\n\nFloor washed.\nOne bench plank replaced.\nNo damage to pillars.\n\nCleared for use.\n\nRailway Maintenance\n\nThe morning after the body was removed.\n— Sophia"
+
+msgid "JOURNAL_MARGIN"
+msgstr "Request another copy of my school transcript."
+
+msgid "ITEM_VHS_NAME"
+msgstr "Videotape"
+
+msgid "ITEM_VHS_DESCRIPTION"
+msgstr "A silent copy associated with the investigation into Marina's death. The label does not identify who made the recording."
+
+msgid "PROMPT_EXAMINE_TAPE"
+msgstr "Examine tape"
+
+msgid "READABLE_VHS_LABEL"
+msgstr "[b]ABRIGO / CÓPIA[/b]\n\nDevolver na sexta."
+
+msgid "ITEM_CLIPPING_NAME"
+msgstr "Clipping with Photograph"
+
+msgid "ITEM_CLIPPING_DESCRIPTION"
+msgstr "A photograph of the shelter is attached to the clipping. Blood covers part of the seat, runs between the planks, and darkens the floor around it. The body had already been removed when the picture was taken."
+
+msgid "READABLE_CLIPPING"
+msgstr "[b]WOMAN FOUND DEAD AT BRANCH-LINE SHELTER[/b]\n\nMarina, 34, was found dead yesterday morning at the shelter on the old railway branch line. A railway employee discovered the body on the ground between the bench and one of the pillars.\n\nAccording to information provided to the newspaper, her clothes were bloodstained, and there was blood on the bench and floor. The body was removed before the site was reopened.\n\nResidents interviewed said they had not witnessed the incident. Police are investigating the death as a homicide. The cause of death had not been released when this edition went to press. No suspects have been identified."
+
+msgid "PHOTO_CAPTION_SHELTER"
+msgstr "Branch-line shelter, after the body was removed."
+
+msgid "ITEM_CAMCORDER_NAME"
+msgstr "Camcorder"
+
+msgid "ITEM_CAMCORDER_DESCRIPTION"
+msgstr "A camcorder mounted on a tripod. Its lens faces the shelter bench."
+
+msgid "CAPTION_SHED_MEM_01"
+msgstr "This is the copy Marina's sister lent me."
+
+msgid "CAPTION_SHED_MEM_02"
+msgstr "There's no sound?"
+
+msgid "CAPTION_SHED_MEM_03"
+msgstr "The copy came like this."
+
+msgid "CAPTION_SHED_TALK_01"
+msgstr "Does she know that person?"
+
+msgid "CAPTION_SHED_TALK_02"
+msgstr "Her sister thinks so."
+
+msgid "CAPTION_SHED_TALK_03"
+msgstr "Did you recognize them?"
+
+msgid "CAPTION_SHED_TALK_04"
+msgstr "No."
+
+msgid "CAPTION_SHED_TALK_05"
+msgstr "And who's filming?"
+
+msgid "CAPTION_SHED_TALK_06"
+msgstr "That's what I asked."
+
+msgid "CAPTION_SHED_TALK_07"
+msgstr "And?"
+
+msgid "CAPTION_SHED_TALK_08"
+msgstr "They offered me a better copy."
+

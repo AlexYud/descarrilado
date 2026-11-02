@@ -2,12 +2,16 @@
 
 [ext_resource type="Script" path="res://scripts/levels/waiting_shed_sequence.gd" id="1_sequence"]
 [ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
-[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/signal_box.tscn" id="4_box"]
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/sophia_journal.tscn" id="5_journal"]
-[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/railway_lantern.tscn" id="6_lantern"]
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/switch_box.tscn" id="7_switch"]
-[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/carved_whistle.tscn" id="8_whistle"]
 [ext_resource type="PackedScene" uid="uid://dwba3i74cp2x2" path="res://assets/models/trains/train_tracks/train_tracks.tscn" id="9_tracks"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/vhs_tape.tscn" id="10_vhs"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/sophia_ficha.tscn" id="11_ficha"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/newspaper_clipping.tscn" id="12_clipping"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/camcorder.tscn" id="13_camcorder"]
+[ext_resource type="Script" path="res://scripts/levels/shot_marker.gd" id="14_shot"]
+[ext_resource type="Script" path="res://scripts/levels/shelter_footage.gd" id="15_footage"]
+[ext_resource type="ArrayMesh" uid="uid://bfoll4ywqfmm4" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="16_fern_medium"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_shed_steps"]
 size = Vector3(15.4, 6, 11)
@@ -15,8 +19,24 @@ size = Vector3(15.4, 6, 11)
 [sub_resource type="BoxShape3D" id="BoxShape3D_track_steps"]
 size = Vector3(4.6, 6, 44)
 
-[node name="WaitingShed" type="Node3D" node_paths=PackedStringArray("platform", "track", "marker_group")]
+; The waiting shed: Sophia's investigation on the bench (see WaitingShedSequence). Positions are in the space of this scene's root;
+; in the dream the root is at world (65, -12.452, -16). The bench holds, seen from its open front (+Z): the closed backpack on the
+; left, the notebook with the clipping in the middle, the hinged box on the right (the tape on the token inside it).
+[node name="WaitingShed" type="Node3D" node_paths=PackedStringArray("container", "vhs", "ficha", "vhs_set_down", "effects_root", "archive_dressing", "archive_foreground", "footage", "camcorder", "shot_copy", "shot_recording", "shot_photo", "shot_talk", "platform", "track", "marker_group")]
 script = ExtResource("1_sequence")
+container = NodePath("Platform/PersonalEffects/SwitchBox")
+vhs = NodePath("Platform/PersonalEffects/SwitchBox/Contents/VhsTape")
+ficha = NodePath("Platform/PersonalEffects/SwitchBox/Contents/SophiaFicha")
+vhs_set_down = NodePath("Platform/PersonalEffects/VhsSetDown")
+effects_root = NodePath("Platform/PersonalEffects")
+archive_dressing = NodePath("Platform/ShelterArchive")
+archive_foreground = NodePath("ArchiveForeground")
+footage = NodePath("Platform/Footage")
+camcorder = NodePath("Camcorder")
+shot_copy = NodePath("Shots/ShotCopy")
+shot_recording = NodePath("Shots/ShotRecording")
+shot_photo = NodePath("Shots/ShotPhoto")
+shot_talk = NodePath("Shots/ShotTalk")
 platform = NodePath("Platform")
 track = NodePath("Track")
 marker_group = NodePath("MarkerGroup")
@@ -57,34 +77,86 @@ position = Vector3(-4.3, 0.05, -5.8)
 script = ExtResource("2_prop")
 kind = &"shelter_bench"
 
-[node name="Backpack" type="Node3D" parent="Platform"]
-position = Vector3(-4.95, 0.493, -5.95)
-rotation_degrees = Vector3(-8, 12, 0)
+; What the recording and the aftermath photograph show and the present does not: the bench's front plank before it was replaced (whole in the
+; recording, broken in the aftermath). Hidden; at the bench's place.
+[node name="ShelterArchive" type="Node3D" parent="Platform"]
+visible = false
+position = Vector3(-4.3, 0.05, -5.8)
+script = ExtResource("2_prop")
+kind = &"shelter_archive"
+
+; A small litter bin where the old mechanism stood: scenery, outside the bench's standing patch.
+[node name="ShelterBin" type="Node3D" parent="Platform"]
+position = Vector3(-2.1, 0.05, -6.85)
+script = ExtResource("2_prop")
+kind = &"shelter_bin"
+
+; Sophia's things and the box: hidden together while the recording shows the bench as it was.
+[node name="PersonalEffects" type="Node3D" parent="Platform"]
+
+[node name="Backpack" type="Node3D" parent="Platform/PersonalEffects"]
+position = Vector3(-4.97, 0.493, -5.9)
+rotation_degrees = Vector3(-4, 12, 0)
 script = ExtResource("2_prop")
 kind = &"backpack"
 
-[node name="SophiaJournal" parent="Platform" instance=ExtResource("5_journal")]
+[node name="SophiaJournal" parent="Platform/PersonalEffects" instance=ExtResource("5_journal")]
 unique_name_in_owner = true
-position = Vector3(-4.4, 0.505, -5.75)
-rotation_degrees = Vector3(-90, 15, 0)
+position = Vector3(-4.52, 0.502, -5.74)
+rotation_degrees = Vector3(-90, 12, 0)
 
-[node name="SwitchBox" parent="Platform" instance=ExtResource("7_switch")]
+[node name="NewspaperClipping" parent="Platform/PersonalEffects" instance=ExtResource("12_clipping")]
 unique_name_in_owner = true
-position = Vector3(-4.1, 0.12, -5.42)
-rotation_degrees = Vector3(0, 15, 0)
+position = Vector3(-4.43, 0.5095, -5.72)
+rotation_degrees = Vector3(-90, -14, 0)
 
-[node name="SignalBox" parent="Platform" instance=ExtResource("4_box")]
+[node name="SwitchBox" parent="Platform/PersonalEffects" instance=ExtResource("7_switch")]
 unique_name_in_owner = true
-position = Vector3(-1.7, 0.05, -5.7)
-persistent_id = &"junction_signal_box"
+position = Vector3(-3.7, 0.56, -5.8)
+rotation_degrees = Vector3(0, -6, 0)
+
+; In the box, the tape on top of the token (label up). They stay out of the tree until the lid is lifted.
+[node name="VhsTape" parent="Platform/PersonalEffects/SwitchBox/Contents" instance=ExtResource("10_vhs")]
+unique_name_in_owner = true
+position = Vector3(0, -0.0415, -0.012)
+rotation_degrees = Vector3(-90, 8, 0)
+
+[node name="SophiaFicha" parent="Platform/PersonalEffects/SwitchBox/Contents" instance=ExtResource("11_ficha")]
+unique_name_in_owner = true
+position = Vector3(-0.03, -0.057, -0.045)
+rotation_degrees = Vector3(-90, 0, 0)
+
+; Where the tape is set down on the bench, beside the box, once it has been examined.
+[node name="VhsSetDown" type="Marker3D" parent="Platform/PersonalEffects"]
+position = Vector3(-4.12, 0.5025, -5.72)
+rotation_degrees = Vector3(-90, 14, 0)
+
+; The performance of the recording (see ShelterFootage): two adults, built in code and hidden except inside the recording. Marina sits on the bench's
+; left half (the marker is the point on the seat under her pelvis, she faces the open front); the visitor comes in from the right on the near side of
+; the bench (the entry is out of the picture), stops by her and goes back the way they came.
+[node name="Footage" type="Node3D" parent="Platform" node_paths=PackedStringArray("marina_seat", "path_entry", "path_stop")]
+visible = false
+script = ExtResource("15_footage")
+marina_seat = NodePath("MarinaSeat")
+path_entry = NodePath("PathEntry")
+path_stop = NodePath("PathStop")
+
+[node name="MarinaSeat" type="Marker3D" parent="Platform/Footage"]
+transform = Transform3D(0.990268, 0, 0.139173, 0, 1, 0, -0.139173, 0, 0.990268, -4.8, 0.49, -5.93)
+
+[node name="PathEntry" type="Marker3D" parent="Platform/Footage"]
+position = Vector3(0.4, 0.05, -4.7)
+
+[node name="PathStop" type="Marker3D" parent="Platform/Footage"]
+position = Vector3(-4.25, 0.05, -4.7)
 
 [node name="ShelterLamp" type="OmniLight3D" parent="Platform"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 2.55, -5.2)
 light_color = Color(0.62, 0.78, 0.9, 1)
-light_energy = 0.7
+light_energy = 1.0
 light_volumetric_fog_energy = 0.6
 shadow_enabled = true
-omni_range = 7.0
+omni_range = 8.0
 
 [node name="Track" type="Node3D" parent="."]
 unique_name_in_owner = true
@@ -103,11 +175,6 @@ transform = Transform3D(-3.628045e-08, 0, 0.83, 0, 0.83, 0, -0.83, 0, -3.628045e
 script = ExtResource("2_prop")
 kind = &"track_bank"
 
-[node name="RailwayLantern" parent="Track" instance=ExtResource("6_lantern")]
-unique_name_in_owner = true
-position = Vector3(-0.5, 0.216, -4.7)
-rotation_degrees = Vector3(0, 25, 0)
-
 [node name="MarkerGroup" type="Node3D" parent="."]
 position = Vector3(-8.5, 0, -2.4)
 
@@ -115,11 +182,6 @@ position = Vector3(-8.5, 0, -2.4)
 unique_name_in_owner = true
 script = ExtResource("2_prop")
 kind = &"mile_marker"
-
-[node name="CarvedWhistle" parent="MarkerGroup" instance=ExtResource("8_whistle")]
-unique_name_in_owner = true
-position = Vector3(0.063, 0.565, -0.14)
-rotation_degrees = Vector3(0, 180, 90)
 
 [node name="TrackMoonlight" type="SpotLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 6, 9, 1)
@@ -129,3 +191,68 @@ light_volumetric_fog_energy = 1.0
 shadow_enabled = true
 spot_range = 16.0
 spot_angle = 17.0
+
+; The camcorder across the clearing from the bench (candidate A, moved 2 m toward the bench: its lens 1.33 m up, about 7 m from the bench, inside the forest
+; boundary), facing the bench. Always there, its recording light off. The tripod's foot is at the ground.
+[node name="Camcorder" parent="." instance=ExtResource("13_camcorder")]
+unique_name_in_owner = true
+position = Vector3(-4.3, 0, 1.2)
+
+; The ferns close to the recording's lens (hidden except inside the recording): the hidden camera looks out from behind them. They frame the left and
+; lower edges and a small corner of the picture and leave a clear window onto the bench. Plain meshes of the forest's own plants, still, no collision.
+[node name="ArchiveForeground" type="Node3D" parent="."]
+visible = false
+
+[node name="FernLeft" type="MeshInstance3D" parent="ArchiveForeground"]
+transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, -4.95, 0, -0.55)
+mesh = ExtResource("16_fern_medium")
+
+[node name="FernEdge" type="MeshInstance3D" parent="ArchiveForeground"]
+transform = Transform3D(1.0, 0, 0.25, 0, 1.1, 0, -0.25, 0, 1.0, -5.2, 0, -0.2)
+mesh = ExtResource("16_fern_medium")
+
+[node name="FernCorner" type="MeshInstance3D" parent="ArchiveForeground"]
+transform = Transform3D(0.5, 0, 0.2, 0, 0.55, 0, -0.2, 0, 0.5, -3.7, 0, -0.45)
+mesh = ExtResource("16_fern_medium")
+
+; Where each shot of the recording scene stands (see ShotMarker). The targets are the points the shots look at. The recording's camera is fixed: it stands at
+; the camcorder's place (the audit's candidate A, a little lower) and looks down at the bench so that the top edge of the 4:3 picture (a ray 2.3 degrees above
+; the horizontal) passes under the chin of the person who walks past on the near side.
+[node name="Shots" type="Node3D" parent="."]
+
+[node name="CopyTarget" type="Marker3D" parent="Shots"]
+position = Vector3(-4.0, 0.5, -5.8)
+
+[node name="RecordingTarget" type="Marker3D" parent="Shots"]
+position = Vector3(-4.5, -0.12, -5.8)
+
+[node name="PhotoTarget" type="Marker3D" parent="Shots"]
+position = Vector3(-4.431, 0.5105, -5.724)
+
+[node name="TalkTarget" type="Marker3D" parent="Shots"]
+position = Vector3(-4.1, 0.54, -5.75)
+
+[node name="ShotCopy" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
+position = Vector3(-4.12, 1.14, -4.95)
+script = ExtResource("14_shot")
+fov = 46.0
+target = NodePath("../CopyTarget")
+
+[node name="ShotRecording" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
+position = Vector3(-4.3, 1.2, 1.2)
+script = ExtResource("14_shot")
+fov = 26.0
+target = NodePath("../RecordingTarget")
+
+; The close view of the print on Sophia's clipping, from above and a little in front.
+[node name="ShotPhoto" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
+position = Vector3(-4.43, 0.7, -5.62)
+script = ExtResource("14_shot")
+fov = 30.0
+target = NodePath("../PhotoTarget")
+
+[node name="ShotTalk" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
+position = Vector3(-4.46, 0.95, -5.04)
+script = ExtResource("14_shot")
+fov = 42.0
+target = NodePath("../TalkTarget")

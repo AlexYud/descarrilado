@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/tools/capture_shelter_aftermath.gd" id="1"]
+
+[node name="CaptureShelterAftermath" type="Node"]
+script = ExtResource("1")

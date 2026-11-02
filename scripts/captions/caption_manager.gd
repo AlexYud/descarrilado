@@ -26,6 +26,7 @@ const LINE_TAIL_SECONDS: float = 0.8
 
 @onready var panel: PanelContainer = $Root/Anchor/CaptionPanel
 @onready var label: Label = $Root/Anchor/CaptionPanel/CaptionLabel
+@onready var anchor: MarginContainer = $Root/Anchor
 
 var _player: AudioStreamPlayer = null
 var _cues: Array = []
@@ -34,6 +35,7 @@ var _shown_key: String = ""
 var _runs: Array[Dictionary] = []
 var _active_run: Dictionary = {}
 var _clock: float = 0.0
+var _clock_held: bool = false
 var _next_run_id: int = 1
 
 
@@ -77,6 +79,24 @@ func play_scripted(track_id: StringName) -> int:
 	return _queue_run(CaptionTracks.get_cues(track_id))
 
 
+## Stops (true) or lets go (false) the clock of scripted runs: a held run neither advances nor ends, and its caption stays as it is. For a scene change whose loading
+## would otherwise eat the lines (the opening narration holds it across the hand-over to the next scene).
+func hold_clock(held: bool) -> void:
+	_clock_held = held
+
+
+## Seconds into a scripted run (0 while it waits its turn), or -1 if it is not running (finished, dropped or never queued).
+func get_run_seconds(run_id: int) -> float:
+	if not _active_run.is_empty() and int(_active_run["id"]) == run_id:
+		return _clock
+
+	for run: Dictionary in _runs:
+		if int(run["id"]) == run_id:
+			return 0.0
+
+	return -1.0
+
+
 func say_and_wait(
 	key: String,
 	duration: float = 0.0,
@@ -91,6 +111,7 @@ func play_scripted_and_wait(track_id: StringName) -> void:
 
 ## Stops following the current audio, drops queued runs and hides the caption.
 func clear() -> void:
+	_clock_held = false
 	_player = null
 	_cues = []
 	_drop_runs()
@@ -122,7 +143,7 @@ func _process_scripted_runs(delta: float) -> void:
 		_clock = 0.0
 		_shown_key = ""
 
-	if not get_tree().paused:
+	if not get_tree().paused and not _clock_held:
 		_clock += delta
 
 	var cues: Array = _active_run["cues"]
@@ -147,7 +168,7 @@ func _show_cue_at(cues: Array, position: float) -> void:
 			if key.is_empty():
 				break
 
-			_show_caption(key, str(cue.get("speaker", "")))
+			_show_caption(key, str(cue.get("speaker", "")), bool(cue.get("wide", false)))
 			return
 
 	_hide_caption()
@@ -192,7 +213,10 @@ func _get_playback_seconds() -> float:
 	return maxf(position, 0.0)
 
 
-func _show_caption(key: String, speaker_key: String) -> void:
+## A cue marked "wide" (the opening narration's, whose lines are long) uses nearly the whole width of the screen, so that its two lines never wrap into four.
+func _show_caption(key: String, speaker_key: String, wide: bool = false) -> void:
+	anchor.anchor_left = 0.03 if wide else 0.2
+	anchor.anchor_right = 0.97 if wide else 0.8
 	var shown_id: String = key + "|" + speaker_key
 	if shown_id != _shown_key:
 		_shown_key = shown_id

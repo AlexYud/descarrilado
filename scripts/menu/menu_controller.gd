@@ -95,6 +95,7 @@ const CINEMATIC_LOADING_LABEL_PATH := NodePath(
 )
 
 const PERSISTENT_AUDIO_NAME := "PersistentAudio"
+const HORROR_FILTER_SCENE := "res://scenes/ui/filters/horror_filter.tscn"
 
 
 # ============================================================
@@ -107,8 +108,15 @@ const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 @export var menu_idle_fade_out_duration: float = 2.0
 
 @export var play_intro_narration: bool = true
+## The narration clock starts this long after Start (keep it 0: the cue schedule counts from the click; a later start only makes the narration end later than the camera).
 @export var intro_narration_start_delay: float = 0.0
 @export var intro_narration_volume_db: float = -10.0
+## The narration (the recording, or the caption schedule while there is none) is the clock of the opening: the camera glide is slowed so that it ends this long after the
+## last line said before the blackout (the cue before `CaptionTracks.INTRO_BLACK_CUE_INDEX`), with only the train's own sound in that time, and the lights fail then. The
+## last sentence is said in the black, which is the next scene's (the narration is held while it loads, and the next scene lets it go when it is ready and waits for
+## its last word before it begins). The glide is never made faster than its own speed.
+@export var intro_ambient_tail_seconds: float = 2.5
+@export_range(0.1, 1.0, 0.05) var intro_min_speed_scale: float = 0.2
 
 
 # ============================================================
@@ -175,6 +183,12 @@ const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 @export_category("Playable Scene")
 
 @export var change_scene_after_animation: bool = true
+
+## The next scene is built when the main menu is first shown, behind a loading screen (a few seconds: nothing can be drawn while it is built), and this menu then runs in a
+## viewport over it. Start is then smooth (the menu fades out over the train, the cinematic begins) and at the end of the cinematic the viewport is taken away and the
+## scene is already there, so nothing is built after Start or after the crash. False: the old way (nothing built beforehand, a few seconds of black after the crash).
+@export var build_scene_before_cinematic: bool = true
+@export var menu_reveal_seconds: float = 0.8
 
 @export_file("*.tscn")
 var playable_scene_path: String = (
@@ -254,6 +268,17 @@ var scene_change_fade_finished: bool = false
 var new_game_scene_path: String = ""
 var reveal_loaded_scene_after_change: bool = false
 
+## While the cinematic is played over the already built next scene: the host of the cinematic (a layer with a viewport that holds this whole menu), and the scene.
+var _cinematic_host: CanvasLayer = null
+## The menu's interface and logic (everything that is not the 3D scene) stay in the main window's viewport, as they always were; only the 3D scene is in the cinematic viewport.
+var _menu_logic: Node = null
+var _built_scene: Node = null
+var _handing_over: bool = false
+var _prebuilding: bool = false
+## What the built scene had set to "always process" (its pause menu, for one), which sleeps with it: no key may reach it while the cinematic is on.
+var _slept_nodes: Array[Node] = []
+var _hidden_layers: Array[CanvasLayer] = []
+
 
 # ============================================================
 # STARTUP
@@ -268,6 +293,15 @@ func _ready() -> void:
 	_connect_buttons()
 	_connect_viewport()
 	_prepare_menu_state()
+
+
+func _exit_tree() -> void:
+	# Leaving the menu (the pause menu's way back to it, a scene change) never leaves the narration running under whatever comes next (but handing the cinematic over
+	# to the built scene does not stop it: its last sentence is still to be said).
+	if _handing_over:
+		return
+
+	_stop_intro_narration_if_running()
 
 
 func _process(delta: float) -> void:
@@ -807,7 +841,7 @@ func _connect_buttons() -> void:
 
 
 func _on_new_game_button_pressed() -> void:
-	if transition_running:
+	if transition_running or _prebuilding:
 		return
 
 	_set_options_panel_open(false)
@@ -835,7 +869,9 @@ func _on_new_game_slot_selected(slot_id: int) -> void:
 		return
 
 	playable_scene_path = new_game_scene_path
-	_reset_playable_scene_load()
+	# The scene that has been loading since the menu appeared is kept.
+	if playable_scene_load_path != playable_scene_path or not (playable_scene_load_started or loaded_playable_scene != null):
+		_reset_playable_scene_load()
 	reveal_loaded_scene_after_change = false
 	var save_result: Error = SaveManager.create_new_game(
 		slot_id,
@@ -898,8 +934,10 @@ func _refresh_main_menu_save_state() -> void:
 
 func _start_new_game_transition() -> void:
 	transition_running = true
+	var built: bool = _built_scene != null and is_instance_valid(_built_scene)
 	_begin_cinematic_skip()
-	_start_playable_scene_preload()
+	if not built:
+		_start_playable_scene_preload()
 
 	if save_slots_panel != null:
 		save_slots_panel.close_panel()
@@ -911,9 +949,13 @@ func _start_new_game_transition() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 	_fade_out_menu_idle_audio()
-	_start_intro_narration()
 
+	# The menu fades out over the train and the narration begins (the next scene, if it was built beforehand, sleeps behind this).
+	_start_intro_narration()
 	await _fade_out_menu()
+
+	if skip_requested:
+		return
 
 	if intro_animation_start_delay > 0.0:
 		await get_tree().create_timer(
@@ -922,9 +964,20 @@ func _start_new_game_transition() -> void:
 		).timeout
 
 	await _play_intro_animation()
+	if skip_requested:
+		return
+
+	# The one synchronisation point: the narration has reached the end of its last line before the black plus the ambient tail (the glide normally ends exactly
+	# there), then the lights fail; the last sentence is said in the black (see `_run_train_stop_sequence`).
+	await _wait_for_intro_lights_out()
+	if skip_requested:
+		return
+
 	await _run_train_stop_sequence()
 
-	if change_scene_after_animation:
+	if built:
+		_hand_over_to_built_scene()
+	elif change_scene_after_animation:
 		_open_playable_scene()
 	else:
 		transition_running = false
@@ -1088,6 +1141,10 @@ func _skip_to_playable_scene() -> void:
 		if persistent_audio.has_method("stop_menu_idle"):
 			persistent_audio.call("stop_menu_idle")
 
+	if _built_scene != null and is_instance_valid(_built_scene):
+		_hand_over_to_built_scene()
+		return
+
 	_open_playable_scene()
 
 
@@ -1117,6 +1174,7 @@ func _reset_cinematic_skip() -> void:
 # ============================================================
 
 func _prepare_menu_state() -> void:
+	_stop_intro_narration_if_running()
 	transition_running = false
 	options_panel_open = false
 	playable_scene_path = new_game_scene_path
@@ -1154,6 +1212,9 @@ func _prepare_menu_state() -> void:
 	_sync_master_volume_slider_to_audio()
 	_apply_responsive_ui()
 	_start_menu_idle_audio()
+
+	# The next scene is built (behind a loading screen) before the menu is shown.
+	_prebuild_if_main_menu.call_deferred()
 
 	if new_game_button != null:
 		new_game_button.call_deferred("grab_focus")
@@ -1306,6 +1367,261 @@ func _fade_out_menu_idle_audio() -> void:
 		)
 
 
+func _stop_intro_narration_if_running() -> void:
+	# A narration that is held is being handed over to the next scene, which lets it go on and waits for its last word: leaving the menu does not stop it.
+	if persistent_audio != null and is_instance_valid(persistent_audio) and persistent_audio.has_method("is_intro_narration_held") and bool(persistent_audio.call("is_intro_narration_held")):
+		return
+
+	if persistent_audio != null and is_instance_valid(persistent_audio) and persistent_audio.has_method("is_intro_narration_running"):
+		if bool(persistent_audio.call("is_intro_narration_running")):
+			persistent_audio.call("stop_intro_narration")
+
+
+## Waits, if the glide was over before the narration was, until the last line before the black has ended and the ambient tail has passed (normally no wait at all).
+func _wait_for_intro_lights_out() -> void:
+	if persistent_audio == null or not persistent_audio.has_method("is_intro_narration_running"):
+		return
+	if not bool(persistent_audio.call("is_intro_narration_running")):
+		return
+
+	var wait: float = float(persistent_audio.call("get_intro_narration_seconds_to_black")) + maxf(intro_ambient_tail_seconds, 0.0)
+	if wait > 0.02:
+		await get_tree().create_timer(wait, false).timeout
+
+
+## The menu is first shown: it stays under black with the loading label while the next scene is built (this takes a few seconds, in which no frame is drawn), and then
+## appears. Only for the real main menu (the current scene, with the building switched on).
+func _should_prebuild() -> bool:
+	return build_scene_before_cinematic and change_scene_after_animation and menu_root != null and get_tree().current_scene == menu_root and _built_scene == null
+
+
+func _prebuild_if_main_menu() -> void:
+	if _should_prebuild():
+		_prebuild_next_scene()
+
+
+func _prebuild_next_scene() -> void:
+	_prebuilding = true
+	if persistent_audio != null and persistent_audio.has_method("hold_opening"):
+		persistent_audio.call("hold_opening", true)
+
+	_set_main_menu_buttons_enabled(false)
+	if blackout_rect != null:
+		blackout_rect.visible = true
+		blackout_rect.color = Color.BLACK
+		blackout_rect.modulate.a = 1.0
+
+	if cinematic_loading_label != null:
+		cinematic_loading_label.show()
+
+	_start_playable_scene_preload()
+	await get_tree().process_frame
+
+	var built: bool = await _build_next_scene_asleep()
+	if cinematic_loading_label != null:
+		cinematic_loading_label.hide()
+
+	if not built:
+		_release_opening_hold()
+
+	if blackout_rect != null:
+		var reveal: Tween = create_tween()
+		reveal.tween_property(blackout_rect, "modulate:a", 0.0, maxf(menu_reveal_seconds, 0.0)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		await reveal.finished
+
+	_prebuilding = false
+	_refresh_main_menu_save_state()
+	if new_game_button != null:
+		new_game_button.grab_focus()
+
+
+## Builds the next scene and leaves it asleep behind this menu: this whole menu is moved into a viewport on a layer over it (a world of its own, so the two scenes never see
+## each other), and the next scene has its processing and its 3D drawing switched off until the hand-over. False if it could not be done (the old way is then used).
+func _build_next_scene_asleep() -> bool:
+	var waited: float = 0.0
+	while loaded_playable_scene == null and not playable_scene_load_failed and waited < 120.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+
+	if loaded_playable_scene == null or menu_root == null:
+		return false
+
+	var tree: SceneTree = get_tree()
+	var packed: PackedScene = loaded_playable_scene
+	_make_cinematic_host()
+	await tree.process_frame
+
+	var next_scene: Node = packed.instantiate()
+	tree.root.add_child(next_scene)
+	tree.current_scene = next_scene
+	_built_scene = next_scene
+	_built_scene.tree_exited.connect(_on_built_scene_left)
+	_reset_playable_scene_load()
+	# Its own set-up runs and its first frames are drawn here, under the black; then it sleeps.
+	for _frame: int in 4:
+		await tree.process_frame
+
+	_sleep_built_scene()
+	tree.root.disable_3d = true
+	# (It captured the mouse for its own opening: the menu needs the pointer.)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	return true
+
+
+func _sleep_built_scene() -> void:
+	_slept_nodes.clear()
+	for node: Node in _built_scene.find_children("*", "", true, false):
+		if node.process_mode == Node.PROCESS_MODE_ALWAYS:
+			node.process_mode = Node.PROCESS_MODE_DISABLED
+			_slept_nodes.append(node)
+
+	_built_scene.process_mode = Node.PROCESS_MODE_DISABLED
+
+	# Its interface layers (its black cover for one) would be drawn over the cinematic.
+	_hidden_layers.clear()
+	for layer: Node in _built_scene.find_children("*", "CanvasLayer", true, false):
+		var canvas_layer: CanvasLayer = layer as CanvasLayer
+		if canvas_layer.visible:
+			canvas_layer.visible = false
+			_hidden_layers.append(canvas_layer)
+
+
+func _wake_built_scene() -> void:
+	for canvas_layer: CanvasLayer in _hidden_layers:
+		if is_instance_valid(canvas_layer):
+			canvas_layer.visible = true
+
+	_hidden_layers.clear()
+
+	if _built_scene != null and is_instance_valid(_built_scene):
+		_built_scene.process_mode = Node.PROCESS_MODE_INHERIT
+
+	for node: Node in _slept_nodes:
+		if is_instance_valid(node):
+			node.process_mode = Node.PROCESS_MODE_ALWAYS
+
+	_slept_nodes.clear()
+
+
+## The menu's 3D scene (the train, the forest loop, the camera, the sky) goes into a viewport of its own, drawn on a layer under the menu's interface. The interface (the buttons, the
+## options, the save slots and their dialogs, the skip prompt, the pause menu, the black) and this controller stay in the main window, so that they work exactly as they always
+## did (pop-up windows and keyboard/gamepad focus do not work properly inside a viewport that is shown through a container).
+const MENU_LOGIC_NODES: Array[String] = ["UI", "CinematicHUD", "LoadingHUD", "CinematicPauseMenu", "CinematicPauseController", "MenuController", "TransitionBlackout"]
+
+
+func _make_cinematic_host() -> void:
+	var tree: SceneTree = get_tree()
+	var window: Window = tree.root
+	_cinematic_host = CanvasLayer.new()
+	_cinematic_host.name = "CinematicHost"
+	# Over the dream scene's pictures and the main window's own filter, under every layer of the menu's interface (10 and up).
+	_cinematic_host.layer = 5
+
+	var container: SubViewportContainer = SubViewportContainer.new()
+	container.stretch = true
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_cinematic_host.add_child(container)
+
+	var viewport: SubViewport = SubViewport.new()
+	viewport.own_world_3d = true
+	# Its 3D sounds (the train) are heard through this viewport.
+	viewport.audio_listener_enable_3d = true
+	viewport.audio_listener_enable_2d = true
+	viewport.size = window.size
+	viewport.msaa_3d = window.msaa_3d
+	viewport.screen_space_aa = window.screen_space_aa
+	viewport.use_taa = window.use_taa
+	viewport.use_debanding = window.use_debanding
+	viewport.scaling_3d_mode = window.scaling_3d_mode
+	viewport.scaling_3d_scale = window.scaling_3d_scale
+	# The horror filter (grain, glare, lens) is a layer-0 overlay of the main window: it never sees what is drawn in another viewport, so the 3D scene gets one of its own (without
+	# it the menu's night loses its haze and colour).
+	viewport.add_child((load(HORROR_FILTER_SCENE) as PackedScene).instantiate())
+	container.add_child(viewport)
+	window.add_child(_cinematic_host)
+
+	# This scene is no longer the current one (it is not freed when the next one is built); the interface goes to the main window, the 3D scene to its viewport.
+	tree.current_scene = null
+	_menu_logic = Node.new()
+	_menu_logic.name = "MenuLogic"
+	window.add_child(_menu_logic)
+	for node_name: String in MENU_LOGIC_NODES:
+		var node: Node = menu_root.get_node_or_null(node_name)
+		if node != null:
+			menu_root.remove_child(node)
+			_menu_logic.add_child(node)
+
+	menu_root.get_parent().remove_child(menu_root)
+	viewport.add_child(menu_root)
+	if menu_camera != null:
+		menu_camera.make_current()
+
+
+## The cinematic is over (or skipped): its viewport goes, and the built scene wakes up where it waited, black, to begin when the last word has been said.
+func _hand_over_to_built_scene() -> void:
+	if _handing_over:
+		return
+
+	_handing_over = true
+	var tree: SceneTree = get_tree()
+	_wake_built_scene()
+
+	tree.root.disable_3d = false
+	_free_cinematic_host()
+	_release_opening_hold()
+
+
+func _free_cinematic_host() -> void:
+	if _cinematic_host != null and is_instance_valid(_cinematic_host):
+		_cinematic_host.queue_free()
+
+	if _menu_logic != null and is_instance_valid(_menu_logic):
+		_menu_logic.queue_free()
+
+
+func _release_opening_hold() -> void:
+	if persistent_audio != null and is_instance_valid(persistent_audio) and persistent_audio.has_method("hold_opening"):
+		persistent_audio.call("hold_opening", false)
+
+
+## The built scene went while the cinematic was still being played (the pause menu's way back to the main menu): nothing of this is left over it.
+func _on_built_scene_left() -> void:
+	if _handing_over:
+		return
+
+	_handing_over = true
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return
+
+	tree.root.disable_3d = false
+	_stop_intro_narration_if_running()
+	_release_opening_hold()
+	_free_cinematic_host()
+
+
+## The screen is black and the next scene is about to be built (which takes a few seconds in which no frame is drawn): the narration waits where it is, and the next scene
+## (`DreamIntroController`) lets it go when it is ready, so that the last sentence is said in the black, whole, and the opening begins right after it.
+func _hold_narration_for_scene_change() -> void:
+	if skip_requested or not change_scene_after_animation or _built_scene != null or persistent_audio == null or not persistent_audio.has_method("hold_intro_narration"):
+		return
+
+	persistent_audio.call("hold_intro_narration", true)
+
+
+## How fast the camera glide runs: slowed (never sped up) so that it ends `intro_ambient_tail_seconds` after the last line said before the black.
+func _intro_animation_speed(animation_length: float) -> float:
+	if persistent_audio == null or not persistent_audio.has_method("get_intro_narration_seconds_to_black"):
+		return 1.0
+
+	var remaining: float = float(persistent_audio.call("get_intro_narration_seconds_to_black"))
+	if remaining <= 0.0 or animation_length <= 0.0:
+		return 1.0
+
+	return clampf(animation_length / (remaining + maxf(intro_ambient_tail_seconds, 0.0)), intro_min_speed_scale, 1.0)
+
+
 func _start_intro_narration() -> void:
 	if not play_intro_narration:
 		return
@@ -1390,8 +1706,11 @@ func _play_intro_animation() -> void:
 		)
 		return
 
+	# Same path, same order of events, at the speed that lets it end with the narration (and its tail).
 	camera_animation_player.play(
-		intro_animation_name
+		intro_animation_name,
+		-1.0,
+		_intro_animation_speed(intro_animation.length)
 	)
 
 	camera_animation_player.seek(0.0, true)
@@ -1524,6 +1843,8 @@ func _run_train_stop_sequence() -> void:
 			screen_blackout_hold_duration,
 			false
 		).timeout
+
+	_hold_narration_for_scene_change()
 
 
 # ============================================================
@@ -1966,6 +2287,7 @@ func _advance_playable_scene_change() -> void:
 
 
 func _recover_from_playable_scene_load_failure() -> void:
+	_stop_intro_narration_if_running()
 	transition_running = false
 	reveal_loaded_scene_after_change = false
 	SceneTransition.cancel_transition()

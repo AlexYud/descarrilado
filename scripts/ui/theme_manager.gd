@@ -108,8 +108,11 @@ func _track_for_capitals(button: Button) -> void:
 	_buttons.append(button)
 	button.tree_exited.connect(_forget.bind(button), CONNECT_ONE_SHOT)
 	# Safety nets for text set later by a script: a change of text changes the size or redraws.
-	button.minimum_size_changed.connect(_capitalise.bind(button))
-	button.draw.connect(_capitalise.bind(button))
+	# (A button that leaves the tree and comes back, as the menu does when it moves into the cinematic viewport, keeps these connections.)
+	if not button.minimum_size_changed.is_connected(_capitalise.bind(button)):
+		button.minimum_size_changed.connect(_capitalise.bind(button))
+	if not button.draw.is_connected(_capitalise.bind(button)):
+		button.draw.connect(_capitalise.bind(button))
 	_capitalise(button)
 
 

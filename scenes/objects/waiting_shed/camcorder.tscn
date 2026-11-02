@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/inspectable_interactable.gd" id="1_inspectable"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.42, 0.34, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_column"]
+size = Vector3(0.14, 1.2, 0.14)
+
+; The camcorder on its tripod across the clearing. It stands in the level from the start with its recording light off; the recording
+; scene turns its head and lights its lamp, and afterwards it is an ordinary thing to look at. Its lens faces -Z.
+[node name="Camcorder" type="Node3D"]
+script = ExtResource("1_inspectable")
+inspect_name = "ITEM_CAMCORDER_NAME"
+inspect_description = "ITEM_CAMCORDER_DESCRIPTION"
+prompt_text = "PROMPT_INSPECT"
+
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("2_prop")
+kind = &"camcorder"
+metadata/inspect_id = "shed_camcorder"
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.33, 0.02)
+shape = SubResource("BoxShape3D_area")
+
+; The tripod's column, so that nobody walks through it.
+[node name="Solid" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Solid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("BoxShape3D_column")

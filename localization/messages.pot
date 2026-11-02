@@ -1224,3 +1224,75 @@ msgstr ""
 
 msgid "READABLE_POSTCARD"
 msgstr ""
+
+# Waiting shed: the recording scene
+
+msgid "JOURNAL_EXTRACT"
+msgstr ""
+
+msgid "JOURNAL_MARGIN"
+msgstr ""
+
+msgid "ITEM_VHS_NAME"
+msgstr ""
+
+msgid "ITEM_VHS_DESCRIPTION"
+msgstr ""
+
+msgid "PROMPT_EXAMINE_TAPE"
+msgstr ""
+
+msgid "READABLE_VHS_LABEL"
+msgstr ""
+
+msgid "ITEM_CLIPPING_NAME"
+msgstr ""
+
+msgid "ITEM_CLIPPING_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_CLIPPING"
+msgstr ""
+
+msgid "PHOTO_CAPTION_SHELTER"
+msgstr ""
+
+msgid "ITEM_CAMCORDER_NAME"
+msgstr ""
+
+msgid "ITEM_CAMCORDER_DESCRIPTION"
+msgstr ""
+
+msgid "CAPTION_SHED_MEM_01"
+msgstr ""
+
+msgid "CAPTION_SHED_MEM_02"
+msgstr ""
+
+msgid "CAPTION_SHED_MEM_03"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_01"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_02"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_03"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_04"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_05"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_06"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_07"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_08"
+msgstr ""
+

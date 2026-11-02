@@ -2,11 +2,12 @@
 
 [ext_resource type="Script" path="res://scripts/interactions/openable_container.gd" id="1_container"]
 [ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
-[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/ticket_puncher.tscn" id="3_puncher"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_area"]
-size = Vector3(0.36, 0.22, 0.26)
+size = Vector3(0.36, 0.14, 0.26)
 
+; A small hinged wooden box that opens with a plain interaction. What lies inside is added to `Contents` by the scene that places the box
+; (the waiting shed puts the videotape and the telephone token there); `Contents` stays out of the tree until the lid is lifted.
 [node name="SwitchBox" type="Node3D"]
 script = ExtResource("1_container")
 prompt_text = "PROMPT_OPEN"
@@ -18,11 +19,8 @@ kind = &"switch_box"
 
 [node name="Contents" type="Node3D" parent="."]
 
-[node name="TicketPuncher" parent="Contents" instance=ExtResource("3_puncher")]
-position = Vector3(0.02, -0.042, 0.01)
-rotation_degrees = Vector3(-90, 8, 0)
-
 [node name="InteractArea" type="Area3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0)
 shape = SubResource("BoxShape3D_area")

@@ -74,6 +74,9 @@ func _build() -> void:
 	_add("state_set", "state_set <section> <key> <value>", "Writes a value of the save state (true, false, a number or text).", _state_set)
 	_add("house_unstick", "house_unstick", "If the unfinished house is stuck: ends the bedroom scene at once (the cameras and the player are given back, the capsule key lies on the nightstand) and unlocks the pantry and the bedroom.", _house_unstick)
 	_add("house_postcard", "house_postcard", "Plays the bedroom's postcard scene again from where the player stands (best beside the nightstand). Nothing else is reset.", _house_postcard)
+	_add("shed_replay", "shed_replay", "Puts the waiting shed back as before its recording scene (the tape on the token, the token held); examining the tape plays it again. Only while the token is still in the box.", _shed_replay)
+	_add("shed_preview", "shed_preview <seconds|off>", "Shows the waiting shed's silent recording at one moment of the footage (0 to 32 s, no sound, no captions), through its own camera and picture, without taking the player or touching any save; 'off' puts the view back. Works on a finished save too.", _shed_preview)
+	_add("shed_unstick", "shed_unstick", "Ends the waiting shed's recording scene at once (the player is given back, the tape lies beside the box, the token is free).", _shed_unstick)
 	_add("scene", "scene <res://path.tscn>", "Changes to a scene.", _scene)
 	_add("reload", "reload", "Reloads the current scene.", func(_a: PackedStringArray) -> String:
 		_console.call("close")
@@ -316,6 +319,43 @@ func _house_postcard(_args: PackedStringArray) -> String:
 		return "[color=%s]The scene is already playing, or there is no player to show it to.[/color]" % _bad_colour()
 
 	return "The postcard scene plays (close the console)."
+
+
+func _shed_replay(_args: PackedStringArray) -> String:
+	var found: Array[Node] = _console.get_tree().root.find_children("*", "WaitingShedSequence", true, false)
+	if found.is_empty():
+		return "[color=%s]There is no waiting shed in this scene.[/color]" % _bad_colour()
+
+	if not (found[0] as WaitingShedSequence).reset_for_replay():
+		return "[color=%s]The recording is playing, or the token has already been taken.[/color]" % _bad_colour()
+
+	return "The shed is as it was before the recording (open the box if it is shut, then examine the tape)."
+
+
+func _shed_preview(args: PackedStringArray) -> String:
+	var found: Array[Node] = _console.get_tree().root.find_children("*", "WaitingShedSequence", true, false)
+	if found.is_empty():
+		return "[color=%s]There is no waiting shed in this scene.[/color]" % _bad_colour()
+
+	var shed: WaitingShedSequence = found[0] as WaitingShedSequence
+	var seconds: float = -1.0
+	if args.is_empty():
+		return "Usage: shed_preview <seconds|off>"
+	if args[0].to_lower() != "off":
+		seconds = clampf(args[0].to_float(), 0.0, 1000.0)
+	if not shed.preview_footage(seconds):
+		return "[color=%s]The recording is playing, or its cast could not be built.[/color]" % _bad_colour()
+
+	return "The recording at %.1f s (close the console to look; shed_preview off puts the view back)." % seconds if seconds >= 0.0 else "The view is back."
+
+
+func _shed_unstick(_args: PackedStringArray) -> String:
+	var found: Array[Node] = _console.get_tree().root.find_children("*", "WaitingShedSequence", true, false)
+	if found.is_empty():
+		return "[color=%s]There is no waiting shed in this scene.[/color]" % _bad_colour()
+
+	(found[0] as WaitingShedSequence).force_finish()
+	return "The shed's recording is over."
 
 
 func _state_get(args: PackedStringArray) -> String:
