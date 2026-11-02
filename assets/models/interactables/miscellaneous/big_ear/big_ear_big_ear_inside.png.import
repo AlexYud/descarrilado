@@ -1,0 +1,44 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://blhi741knikek"
+path.s3tc="res://.godot/imported/big_ear_big_ear_inside.png-8b573f788602f2df7b25c5a3a3e2ca11.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "d5ac3ddefb895e94c9bdd86484029ae3"
+}
+
+[deps]
+
+source_file="res://assets/models/interactables/miscellaneous/big_ear/big_ear_big_ear_inside.png"
+dest_files=["res://.godot/imported/big_ear_big_ear_inside.png-8b573f788602f2df7b25c5a3a3e2ca11.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/normal_map=1
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=1
+roughness/src_normal="res://assets/models/interactables/miscellaneous/big_ear/big_ear_big_ear_inside.png"
+process/channel_remap/red=0
+process/channel_remap/green=1
+process/channel_remap/blue=2
+process/channel_remap/alpha=3
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0
