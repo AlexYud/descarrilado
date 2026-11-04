@@ -59,7 +59,6 @@ const LINE_WHISPER: String = "CAPTION_WAGON_WHISPER"
 const LAST_LIGHT_OUT_SECONDS: float = 0.45
 ## The highest moment (of the blackout, 0 to 1) at which any light but the last goes out (`_light_rank`).
 const LAST_ORDINARY_RANK: float = 0.92
-const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3"
 const CRYING_PATH: String = "res://assets/audios/placeholder_crying_woman.mp3"
 const CRYING_DB: float = -3.0
 const CRYING_UNIT_SIZE: float = 3.0
@@ -140,7 +139,7 @@ void fragment() {
 @export_category("Wagon")
 ## In the wagon's own space (X across, Z along the aisle): where the player appears (the very spot the
 ## dream began at), and the floor point where the girl sits.
-@export var wagon_start_local: Vector3 = Vector3(-0.18, 0.7657, 3.1)
+@export var wagon_start_local: Vector3 = Vector3(-0.18, 1.1069, 3.1)
 @export var sophia_local: Vector3 = Vector3(0.0, 0.073, -5.5)
 ## The middle of the aisle (wagon-local X): the wagon is symmetrical and the aisle between the benches is about
 ## 1 m wide, so it is 0. The player walks along it.
@@ -160,17 +159,14 @@ void fragment() {
 ## `cutscene_walk_seconds` and hears the whisper.
 @export var cutscene_distance: float = 1.1
 @export var cutscene_sight_distance: float = 3.5
-@export var cutscene_walk_seconds: float = 0.8
-## `placeholder_string_tension` comes in this long after the whisper, fading in over `tension_in_seconds` to `tension_db`, and goes out as the
-## controls come back (`tension_out_seconds`).
-@export var tension_after_whisper_seconds: float = 0.5
-@export var tension_in_seconds: float = 1.5
-@export var tension_db: float = -3.0
-@export var tension_out_seconds: float = 3.0
+## The whisper comes, and the walk ends, this far (metres) from the girl's back: the cutscene begins the length of its own little walk (`cutscene_walk_seconds`) before that,
+## and the player cannot get nearer than this (`_stop_distance`).
+@export var whisper_distance: float = 1.0
+@export var cutscene_walk_seconds: float = 0.6
 ## The shot of her back: the view settles on her (`reveal_turn_seconds`) and holds quite still `reveal_hold_seconds`, her back heaving in a
 ## weak light that keeps failing (`reveal_torch_level` of its strength, dipping and cutting out), before she walks on and hears the whisper.
 @export var reveal_turn_seconds: float = 1.3
-@export var reveal_hold_seconds: float = 2.8
+@export var reveal_hold_seconds: float = 0.4
 @export_range(0.05, 1.0, 0.05) var reveal_torch_level: float = 0.5
 ## The ceiling lights are dim, cold and always stuttering (the wagon is dark and the girl is not lit by anything
 ## of her own). The flashlight is a fraction of its usual strength.
@@ -193,7 +189,6 @@ void fragment() {
 
 var stage: Stage = Stage.IDLE
 var _cry: AudioStreamPlayer3D = null
-var _tension: AudioStreamPlayer = null
 
 var _player: Node3D = null
 var _snapshot: Dictionary = {}
@@ -264,7 +259,6 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_stop_failing_the_torch()
-	_stop_tension(0.0)
 	_silence_outside(false)
 	_set_filter_darkness(0.0)
 	_stop_beam_script()
@@ -709,7 +703,9 @@ func _enter_wagon() -> void:
 	var movement: Node = _player.get("movement_controller") as Node
 	var yaw_degrees: float = _yaw_towards(along)
 	if movement != null:
-		movement.call("lock_to_corridor", aisle_start, along, -back_limit, maxf(total - stop_before_sophia, 0.5))
+		# The aisle ends `whisper_distance` from her back (never nearer than `stop_before_sophia` from where she is said to sit).
+		var stop: float = maxf(stop_before_sophia, _girl_back_local_z() + whisper_distance - sophia_local.z)
+		movement.call("lock_to_corridor", aisle_start, along, -back_limit, maxf(total - stop, 0.5))
 		movement.set("corridor_speed_scale", wagon_walk_scale)
 
 	if _player.has_method("release_movement_hold"):
@@ -1123,8 +1119,9 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	match stage:
 		Stage.APPROACH:
-			var near: float = _distance_to_sophia()
-			if near <= cutscene_distance or (near <= cutscene_sight_distance and _girl_in_sight()):
+			var near: float = _distance_to_girl()
+			var reach: float = PlayerMovementController.WALK_SPEED * wagon_walk_scale * cutscene_walk_seconds
+			if near <= whisper_distance + reach + 0.05 and (_girl_in_sight() or near <= whisper_distance + reach * 0.5):
 				_run_cutscene()
 		Stage.CUTSCENE:
 			_auto_walk(delta)
@@ -1141,6 +1138,16 @@ func _girl_in_sight() -> bool:
 	query.exclude = [_player.get_rid()]
 	var hit: Dictionary = _camera().get_world_3d().direct_space_state.intersect_ray(query)
 	return hit.is_empty() or (hit["position"] as Vector3).distance_to(back) < 0.3
+
+
+## The wagon-local z of the girl's back (the side towards the player): she sits turned to the end wall, so her back is the far edge of her footprint.
+func _girl_back_local_z() -> float:
+	return _sophia.position.z - _girl.footprint.position.y
+
+
+## How far (metres, along the aisle) the player is from her back.
+func _distance_to_girl() -> float:
+	return wagon.to_local(_player.global_position).z - _girl_back_local_z()
 
 
 ## How far the player is from the aisle's end (where she would sit in the middle), along the aisle: the cutscene and the whisper are
@@ -1230,7 +1237,6 @@ func _run_cutscene() -> void:
 	# The whisper at her ear (a caption); she flinches: the light sputters and jumps back over her shoulder.
 	_stop_failing_the_torch()
 	_whisper()
-	_tension_after_the_whisper()
 	_flicker_torch(0.55)
 	_beam_fear = 1.4
 	_aim_beam(facing + 132.0, 4.0, 0.22, Tween.TRANS_CUBIC, Tween.EASE_OUT)
@@ -1272,14 +1278,12 @@ func _run_cutscene() -> void:
 	await _look_to(movement, facing, 17.0, 1.1)
 	await _wait(0.9)
 
-	# She looks for her: the light darts under the benches on one side, then the other, then up at the dead
-	# lamps; her head is always a beat behind it.
+	# She looks for her: the light darts under the benches on one side, then the other (never up at the ceiling);
+	# her head is always a beat behind it.
 	_beam_fear = 1.0
 	await _point_then_look(movement, facing - 38.0, 26.0, 0.26, 0.14, 0.5)
 	await _wait(0.45)
 	await _point_then_look(movement, facing + 40.0, 22.0, 0.3, 0.12, 0.85)
-	await _wait(0.3)
-	await _point_then_look(movement, facing + 6.0, -34.0, 0.4, 0.2, 0.7)
 	_flicker_torch(0.35)
 	await _wait(0.6)
 
@@ -1365,34 +1369,6 @@ func _vanish_sophia() -> void:
 
 
 ## A whisper from right behind the player's head: its words only (a caption), there is no sound.
-## `placeholder_string_tension` comes in a moment after the whisper and stays until the controls are back (see `_end_cutscene`).
-func _tension_after_the_whisper() -> void:
-	await _wait(tension_after_whisper_seconds)
-	if stage != Stage.CUTSCENE:
-		return
-
-	_tension = AudioStreamPlayer.new()
-	_tension.name = "Tension"
-	_tension.stream = load(TENSION_PATH) as AudioStream
-	_tension.volume_db = -60.0
-	add_child(_tension)
-	_tension.play()
-	create_tween().tween_property(_tension, "volume_db", tension_db, tension_in_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
-
-
-func _stop_tension(seconds: float) -> void:
-	if _tension == null or not is_instance_valid(_tension) or not _tension.playing:
-		return
-
-	if seconds <= 0.0:
-		_tension.stop()
-		return
-
-	var fall: Tween = create_tween()
-	fall.tween_property(_tension, "volume_db", -60.0, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-	fall.tween_callback(_tension.stop)
-
-
 func _whisper() -> void:
 	# The crying stops the moment the whisper comes.
 	_stop_crying()
@@ -1418,7 +1394,6 @@ func _stop_beam_script() -> void:
 ## the head.
 func _end_cutscene(yaw: float) -> void:
 	stage = Stage.LEAVING
-	_stop_tension(tension_out_seconds)
 	var movement: Node = _player.get("movement_controller") as Node
 	_player.call("set_view_locked", false)
 	_stop_beam_script()

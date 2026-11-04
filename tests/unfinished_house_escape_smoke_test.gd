@@ -34,6 +34,7 @@ func _ready() -> void:
 	await _check_the_doorway()
 	await _check_restored_states()
 	await _check_the_watcher()
+	await _check_the_broken_flashlight()
 
 	get_tree().paused = false
 	SaveManager.delete_slot(1)
@@ -207,6 +208,9 @@ func _check_the_watcher() -> void:
 	house._escape_done = true
 	house._watcher_done = false
 	house._recipe_done = true
+	# (With Lucas's token in hand: the flashlight works. It is broken only until the token, see `_check_the_broken_flashlight`.)
+	SaveManager.set_state_value(&"collectibles", &"lucas_ficha", true)
+	house._sync_flashlight_failure(0.0, true)
 	house._set_pantry_lamp(true, false)
 	house._set_living_light(true, 0.0)
 	house.pantry_door.unlock()
@@ -218,7 +222,7 @@ func _check_the_watcher() -> void:
 	_expect(house.watcher.get_node("Lean/Model").get_child_count() > 0 and house.watcher.find_children("*", "MeshInstance3D", true, false).size() >= 2, "it is the project's humanoid model (and a disc over the cut at the neck)")
 	var body: MeshInstance3D = house.watcher.get_node("Lean/Model/Skeleton3D/Body") as MeshInstance3D
 	var shader_material: ShaderMaterial = body.material_override as ShaderMaterial
-	_expect(shader_material != null and shader_material.shader.code.contains("ALBEDO = vec3(0.0)") and not shader_material.shader.code.contains("EMISSION"), "drawn completely black, unlit, with no emission, and cut off under the jaw: no neck, body or arms can show")
+	_expect(shader_material != null and shader_material.shader.code.contains("ALBEDO = vec3(0.0)") and not shader_material.shader.code.contains("EMISSION"), "drawn completely black, unlit, with no emission, and cut off under the jaw: only the head and a shoulder can show")
 
 	# Not noticed: from the kitchen (a wall between), from the corridor looking away, with the view held, with a panel open.
 	(player.get("flashlight_controller") as Node).set("flashlight_on", true)
@@ -264,6 +268,46 @@ func _check_the_watcher() -> void:
 	house._arm_watcher()
 	_expect(not house.watcher.is_peeking, "it does not look again")
 	_expect(not bool(player.get("view_locked")) and not bool(player.get("cutscene_frozen")) and camera.fov == camera.fov, "the player was never taken out of control")
+
+
+## After the escape and until Lucas's token the flashlight is broken (no light, the key does nothing, and the shadow is found by her eyes alone); with the token
+## it works again, with its usual start-up flicker.
+func _check_the_broken_flashlight() -> void:
+	_clear_state()
+	_mark(&"house_migrated", true)
+	_mark(&"house_recipe_done", true)
+	_mark(&"house_bedroom_memory_done", true)
+	_mark(&"house_escape_done", true)
+	house._escape_done = true
+	house._watcher_done = false
+	house._recipe_done = true
+	house.pantry_door.unlock()
+	house.pantry_door.force_open(0.0, 55.0)
+	house._set_pantry_lamp(true, false)
+	var light: Node = player.get("flashlight_controller") as Node
+	light.set("flashlight_on", true)
+	light.call("set_failed", false)
+	house._sync_flashlight_failure(0.0, true)
+	await get_tree().physics_frame
+	_expect(bool(light.get("failed")) and not (light as Node3D).visible, "after the escape the flashlight is broken: no light")
+	_expect(not bool(light.call("_can_toggle_flashlight")), "and its key does nothing")
+	await _wait(0.3)
+	_expect(not (light as Node3D).visible and bool(light.get("flashlight_on")), "it stays dark (its switch was left on)")
+
+	# Her eyes alone find the shadow while it is broken.
+	house._arm_watcher()
+	await get_tree().physics_frame
+	var head: Vector3 = house.watcher.head_point()
+	_stand_at(Vector3(5.2, 0.1, 7.35), head)
+	await _until(func() -> bool: return house._watcher_done, "looking at the shadow, with a dead flashlight, is enough to find it", 6.0)
+	await _until(func() -> bool: return not house.watcher.visible, "and it goes", 3.0)
+
+	# The token is taken: it works again.
+	SaveManager.set_state_value(&"collectibles", &"lucas_ficha", true)
+	await _until(func() -> bool: return not bool(light.get("failed")), "taking Lucas's token mends the flashlight", 3.0)
+	await _wait(1.4)
+	_expect(bool(light.call("_can_toggle_flashlight")) and (light as Node3D).visible, "and it lights again, as before")
+	SaveManager.set_state_value(&"collectibles", &"lucas_ficha", false)
 
 
 ## The player put at `spot` (house local) looking at `point` (world).

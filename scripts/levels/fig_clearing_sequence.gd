@@ -182,6 +182,10 @@ var _held_scripted_flashlight: bool = false
 var _held_toggle_lock: bool = false
 var _torch: Node = null
 var _cinema: Camera3D = null
+## What the scene's camera is focused on, from where to where (it moves with the shot): the subject is sharp and what is behind it blurred (`FocusBlur`).
+var _focus_from: Vector3 = Vector3.ZERO
+var _focus_to: Vector3 = Vector3.ZERO
+var _has_focus: bool = false
 var _cinema_fill: OmniLight3D = null
 var _figure: SeatedFigure = null
 var _held_flashlight_on: bool = false
@@ -375,6 +379,10 @@ func _run_sequence(resumed: bool) -> void:
 	var arrival: Transform3D = _cinema_pose(focus_recorder, recorder_shot)
 	var closer: Transform3D = _cinema_pose(focus_recorder, push_shot)
 	_cinema.global_transform = start
+	_focus_from = focus_album
+	_focus_to = focus_recorder
+	_has_focus = true
+	_set_cinema_between(0.0, start, start)
 	_cinema.make_current()
 	# The Table B props are not needed any more and the camera cannot see them: they go now.
 	if dressing != null:
@@ -389,7 +397,9 @@ func _run_sequence(resumed: bool) -> void:
 	await glide.finished
 	await _wait(maxf(rewind_seconds - rewind_before_glide_end_seconds, 0.0))
 
-	# 2. The conversation, the camera pushing in all the while and a little after.
+	# 2. The conversation, the camera pushing in all the while and a little after (the recorder is what it is focused on).
+	_focus_from = focus_recorder
+	_focus_to = focus_recorder
 	await _play_recording(arrival, closer)
 
 	# 3. After "Good.": the reels and the rain stop and the figure is made (hidden, off camera); `lights_out_after_good_seconds` after the tape's end the lamp
@@ -523,6 +533,7 @@ func _begin_cinema(_target: Node3D) -> void:
 
 
 func _free_cinema() -> void:
+	_has_focus = false
 	if _cinema_fill != null and is_instance_valid(_cinema_fill):
 		_cinema_fill.queue_free()
 	_cinema_fill = null
@@ -560,6 +571,8 @@ func _cinema_pose(focus: Vector3, offset: Vector3) -> Transform3D:
 func _set_cinema_between(t: float, from: Transform3D, to: Transform3D) -> void:
 	if _cinema != null and is_instance_valid(_cinema):
 		_cinema.global_transform = Transform3D(from.basis.slerp(to.basis, t), from.origin.lerp(to.origin, t))
+		if _has_focus:
+			FocusBlur.focus_on(_cinema, _cinema.global_position.distance_to(_focus_from.lerp(_focus_to, t)))
 
 
 # ---- Holding the player ------------------------------------------------------------------------------------------

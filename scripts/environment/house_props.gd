@@ -34,8 +34,6 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_tin_can(root)
 		&"sack":
 			_build_sack(root)
-		&"lucas_diary":
-			_build_lucas_diary(root)
 		&"house_advertisement":
 			_build_house_advertisement(root)
 		&"bus_ticket_sophia":
@@ -390,41 +388,6 @@ static func _build_sack(root: Node3D) -> void:
 	add_solid(root, "Collision", Vector3(0.48, 0.6, 0.48), Vector3(0.0, 0.3, 0.0))
 
 
-static func _build_lucas_diary(root: Node3D) -> void:
-	var leather: StandardMaterial3D = material(Color(0.22, 0.14, 0.09), 0.8)
-	var page: StandardMaterial3D = material(Color(0.8, 0.76, 0.62), 0.95)
-	var rule: StandardMaterial3D = material(Color(0.35, 0.33, 0.3), 1.0)
-
-	add_box(root, "Cover", Vector3(0.27, 0.19, 0.012), Vector3(0.0, 0.0, -0.006), leather)
-	add_box(root, "LeftPage", Vector3(0.125, 0.18, 0.004), Vector3(-0.0635, 0.0, 0.002), page)
-	add_box(root, "RightPage", Vector3(0.125, 0.18, 0.004), Vector3(0.0635, 0.0, 0.002), page)
-	add_box(root, "Spine", Vector3(0.003, 0.185, 0.006), Vector3(0.0, 0.0, 0.003), leather)
-	add_box(
-		root, "Ribbon", Vector3(0.005, 0.05, 0.0008), Vector3(0.0, -0.11, 0.0046),
-		material(Color(0.5, 0.08, 0.08), 0.9)
-	)
-
-	# Ruled lines of an older entry on the left page.
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 91
-	for i: int in 11:
-		var length: float = rng.randf_range(0.06, 0.11)
-		add_box(
-			root, "Scribble%d" % i, Vector3(length, 0.0009, 0.0004),
-			Vector3(-0.118 + length * 0.5, 0.07 - i * 0.0125, 0.0043), rule
-		)
-
-	# The date and time as a heading, then the entry.
-	add_text(
-		root, "Heading", "DIARY_HEADING",
-		Vector3(0.013, 0.077, 0.0042), 22, 0.00025, INK_DARK
-	)
-	add_paragraphs(
-		root, "Text", "DIARY_TEXT",
-		Vector3(0.013, 0.066, 0.0042), 12, 0.00025, INK_DARK, 420.0, 0.0022
-	)
-
-
 static func _build_house_advertisement(root: Node3D) -> void:
 	_add_paper(root, "Page", Vector2(0.2, 0.28), Vector3.ZERO, NEWSPRINT)
 	add_text(
@@ -738,7 +701,6 @@ static func _build_pantry_shelves(root: Node3D) -> void:
 			)
 
 
-
 ## A plank laid over two piles of loose bricks beside the sink, unplumbed like it: where the recipe lies. The plank's top
 ## is at y 0.9, 0.62 long (along X) and 0.48 deep; the front faces +Z. Origin on the floor.
 static func _build_kitchen_counter(root: Node3D) -> void:
@@ -970,8 +932,6 @@ static func _add_capsule(
 	mesh.radius = radius
 	mesh.height = height
 	return _add_mesh(parent, node_name, mesh, pos, mat, rot)
-
-
 
 
 ## Several paragraphs of written text (see ParagraphStack). `key` is a

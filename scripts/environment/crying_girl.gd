@@ -1,15 +1,15 @@
 extends Node3D
 class_name CryingGirl
 
-## The girl crying in the wagon: the rigged basic model (`basic_model_rigged.tscn`, a Mixamo skeleton) scaled down to a girl, squatting
+## The girl crying in the wagon: the rigged basic model (`basic_model_rigged.tscn`, a Mixamo skeleton) scaled to a young woman's height, squatting
 ## with her head down and her hands over her face, and shaking as she sobs. Built facing +Z with her feet on y 0 (the finale turns her to
 ## the wall). The body is one colour per part (hair, skin, clothes) from vertex colours made here, so the shared model stays plain.
 
 const MODEL: String = "res://assets/models/characters/basic_model/basic_model_rigged.tscn"
 const PREFIX: String = "mixamorig_"
 
-## The model is a 1.83 m adult; she is a girl.
-const SCALE: float = 0.72
+## The model is a 1.83 m adult; she is a young woman as tall as Juliana (about 1.65 m).
+const SCALE: float = 0.9
 ## The model's ankle is this high above the sole of its foot.
 const ANKLE_HEIGHT: float = 0.085
 

@@ -1,25 +1,24 @@
 extends Node3D
 class_name DoorHardware
 
-## The handle and the keyhole fitted to one face of a door, built in code like the
-## other props: a rose with a lever handle that turns, and an escutcheon with a
-## keyhole where a key can be shown, slid in and turned. The DoorController drives
-## it. The node sits on the door's surface and its local +z points out of the face,
-## so the same pieces serve both sides of a door (the back one is turned half a
-## round).
+## The handle and the keyhole fitted to one face of a door, from the `door_001` models (see `DoorModel`): the handle plate with its keyhole
+## escutcheon, and the lever, a separate model that turns on its pivot. The DoorController drives it. The node sits on the door's surface, under
+## the lever's pivot, and its local +z points out of the face, so the same pieces serve both sides of a door (the back one is turned half a
+## round). The glb has the plate on one face only; the other face gets the same pieces mirrored.
 
 const KEY_SCENE: PackedScene = preload("res://assets/models/interactables/miscellaneous/key/key.glb")
 
 ## How far the handle is pressed down when fully turned.
 const LEVER_TURN_DEGREES: float = 38.0
 ## The key model is a flat 6.6 cm blank; this makes it a believable door key.
-const KEY_SCALE: float = 1.25
+const KEY_SCALE: float = 0.95
 const KEY_THICKNESS_SCALE: float = 2.5
-## The key's origin height above the door face when it is out and when it is in.
-const KEY_Z_OUT: float = 0.1
-const KEY_Z_IN: float = 0.021
-const KEYHOLE_Y: float = -0.103
-const PLATE_SURFACE_Z: float = 0.006
+## The key's origin height above the keyhole when it is out and when it is in.
+const KEY_Z_OUT: float = 0.087
+const KEY_Z_IN: float = 0.008
+## The keyhole below the lever's pivot, and the escutcheon's surface above the door face.
+const KEYHOLE_Y: float = DoorModel.KEYHOLE_Y
+const PLATE_SURFACE_Z: float = DoorModel.KEYHOLE_TOP
 
 ## +1 for the front face, -1 for the back one.
 var face_side: int = 1
@@ -29,11 +28,11 @@ var _key_slot: Node3D = null
 var _key_turn: Node3D = null
 
 
-func setup(side: int, brass: Material) -> void:
+func setup(side: int, _brass: Material = null) -> void:
 	face_side = side
-	_build_rose(brass)
-	_build_lever(brass)
-	_build_keyhole_plate(brass)
+	_build_plate()
+	_build_lever()
+	_build_keyslot()
 
 
 ## 0 is the handle at rest, 1 is pressed all the way down.
@@ -44,10 +43,6 @@ func set_lever_turn(amount: float) -> void:
 	# The handle points towards the hinge on both faces; turning it down is a
 	# turn one way on the front and the other way on the back.
 	_lever.rotation.z = deg_to_rad(LEVER_TURN_DEGREES) * amount * float(face_side)
-
-
-func has_key() -> bool:
-	return _key_turn != null
 
 
 func is_key_shown() -> bool:
@@ -99,75 +94,35 @@ func get_handle_global() -> Vector3:
 	return _lever.global_position
 
 
-func _build_rose(brass: Material) -> void:
-	_add_cylinder(self, 0.042, 0.008, Vector3(0.0, 0.0, 0.004), brass)
-	_add_cylinder(self, 0.009, 0.044, Vector3(0.0, 0.0, 0.03), brass)
-
-
-func _build_lever(brass: Material) -> void:
-	_lever = Node3D.new()
-	_lever.name = "Lever"
-	_lever.position = Vector3(0.0, 0.0, 0.052)
-	add_child(_lever)
-
-	# It points towards the hinge: along local -x on the front face, +x on the back.
-	var toward_hinge: float = -float(face_side)
-
-	var hub: MeshInstance3D = MeshInstance3D.new()
-	var hub_mesh: SphereMesh = SphereMesh.new()
-	hub_mesh.radius = 0.019
-	hub_mesh.height = 0.038
-	hub.mesh = hub_mesh
-	hub.material_override = brass
-	_lever.add_child(hub)
-
-	var arm: MeshInstance3D = MeshInstance3D.new()
-	var arm_mesh: BoxMesh = BoxMesh.new()
-	arm_mesh.size = Vector3(0.13, 0.016, 0.016)
-	arm.mesh = arm_mesh
-	arm.material_override = brass
-	arm.position = Vector3(toward_hinge * 0.065, 0.0, 0.0)
-	_lever.add_child(arm)
-
-	var tip: MeshInstance3D = MeshInstance3D.new()
-	var tip_mesh: SphereMesh = SphereMesh.new()
-	tip_mesh.radius = 0.012
-	tip_mesh.height = 0.024
-	tip.mesh = tip_mesh
-	tip.material_override = brass
-	tip.position = Vector3(toward_hinge * 0.13, 0.0, 0.0)
-	_lever.add_child(tip)
-
-
-func _build_keyhole_plate(brass: Material) -> void:
+## The plate and the escutcheon, from the model's second and third surfaces, in this face's frame (the front's is a mirrored mesh).
+func _build_plate() -> void:
 	var plate: MeshInstance3D = MeshInstance3D.new()
-	var plate_mesh: BoxMesh = BoxMesh.new()
-	plate_mesh.size = Vector3(0.032, 0.07, 0.006)
-	plate.mesh = plate_mesh
-	plate.material_override = brass
-	plate.position = Vector3(0.0, KEYHOLE_Y, 0.003)
+	plate.name = "Plate"
+	plate.mesh = DoorModel.plate_mesh(face_side > 0)
+	var basis: Basis = DoorModel.face_basis(-1, false)
+	var origin_in_file: Vector3 = Vector3(DoorModel.HALF_THICKNESS, DoorModel.HUB_Y, DoorModel.HUB_Z)
+	plate.transform = Transform3D(basis, -(basis * origin_in_file))
 	add_child(plate)
 
-	var dark: StandardMaterial3D = StandardMaterial3D.new()
-	dark.albedo_color = Color(0.01, 0.01, 0.012)
-	dark.roughness = 1.0
 
-	var slot: MeshInstance3D = MeshInstance3D.new()
-	var slot_mesh: BoxMesh = BoxMesh.new()
-	slot_mesh.size = Vector3(0.0055, 0.022, 0.001)
-	slot.mesh = slot_mesh
-	slot.material_override = dark
-	slot.position = Vector3(0.0, KEYHOLE_Y - 0.008, PLATE_SURFACE_Z + 0.0005)
-	add_child(slot)
+## The lever: the handle model on a pivot at the plate's surface, the arm towards the hinge.
+func _build_lever() -> void:
+	_lever = Node3D.new()
+	_lever.name = "Lever"
+	_lever.position = Vector3(0.0, 0.0, DoorModel.PLATE_HEIGHT)
+	add_child(_lever)
 
-	_add_cylinder(
-		self, 0.0075, 0.001,
-		Vector3(0.0, KEYHOLE_Y + 0.008, PLATE_SURFACE_Z + 0.0005), dark
-	)
+	var model: Node3D = DoorModel.HANDLE_SCENE.instantiate() as Node3D
+	model.name = "Handle"
+	model.basis = DoorModel.face_basis(face_side, true)
+	_lever.add_child(model)
 
+
+func _build_keyslot() -> void:
 	_key_slot = Node3D.new()
 	_key_slot.name = "KeySlot"
-	_key_slot.position = Vector3(0.0, KEYHOLE_Y + 0.008, PLATE_SURFACE_Z)
+	# The keyhole is a little towards the hinge from the pivot: along -x on the front face (the lever points that way), +x on the back one.
+	_key_slot.position = Vector3(-float(face_side) * DoorModel.KEYHOLE_TOWARDS_HINGE, KEYHOLE_Y, PLATE_SURFACE_Z)
 	add_child(_key_slot)
 
 
@@ -198,21 +153,3 @@ func _ensure_key() -> void:
 		(mesh as MeshInstance3D).material_overlay = rust
 
 	_key_turn.position = Vector3(0.0, 0.0, KEY_Z_OUT)
-
-
-## A cylinder lying along the z axis.
-func _add_cylinder(
-	parent: Node3D, radius: float, length: float, at: Vector3, material: Material
-) -> void:
-	var instance: MeshInstance3D = MeshInstance3D.new()
-	var mesh: CylinderMesh = CylinderMesh.new()
-	mesh.top_radius = radius
-	mesh.bottom_radius = radius
-	mesh.height = length
-	mesh.radial_segments = 20
-	mesh.rings = 1
-	instance.mesh = mesh
-	instance.material_override = material
-	instance.rotation.x = PI * 0.5
-	instance.position = at
-	parent.add_child(instance)

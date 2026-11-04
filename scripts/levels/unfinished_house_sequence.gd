@@ -137,11 +137,15 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 @export var memory_root: Node3D
 @export var memory_light: OmniLight3D
 @export var memory_light_energy: float = 1.6
-## The memory's one held shot: where the camera stands and what it looks at (the postcard in front, the lamp to one side, a little
-## of the bed behind), with `memory_fov`.
+## The memory's one held shot: where the camera stands and what it looks at (close to the postcard, low and looking up a little, with the lamp
+## and a part of the bed soft behind it), with `memory_fov`.
 @export var memory_eye: Marker3D
 @export var memory_aim: Marker3D
-@export var memory_fov: float = 42.0
+@export var memory_fov: float = 38.0
+## The flashback's depth of field (`FocusBlur`): how soft the lamp and the bed are, how far behind the card the sharp part ends and how fast it softens.
+@export var memory_blur_amount: float = 1.0
+@export var memory_blur_depth: float = 0.02
+@export var memory_blur_falloff: float = 0.5
 ## Before it is picked up she is walked (slowly, looking at the postcard) to where she stands over the nightstand, as the doors
 ## walk her to their handle: this marker, the walk's speed, and how long it may take.
 @export var postcard_stand: Marker3D
@@ -284,6 +288,18 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 @export var kitchen_light_energy: float = 1.8
 ## The kitchen's light after she has gone through: it stays, dimmer (the living room's is the one that calls).
 @export_range(0.0, 1.0, 0.05) var kitchen_light_after: float = 0.35
+const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3"
+
+## The light changes as she goes, not all at once: the kitchen's light comes up over `kitchen_light_fade_in_seconds` from the shush, the living room's
+## starts coming up as she begins to walk (`living_light_walk_fade_seconds`), and the kitchen's eases down to `kitchen_light_after` over
+## `kitchen_light_settle_seconds` from the slam (it was a jump at the end of the scene).
+@export var kitchen_light_fade_in_seconds: float = 3.5
+## `placeholder_string_tension` comes in with the shush, fading in over `tension_in_seconds` to `tension_db`, and goes out as the controls come back (`tension_out_seconds`).
+@export var tension_in_seconds: float = 1.5
+@export var tension_db: float = -3.0
+@export var tension_out_seconds: float = 3.0
+@export var living_light_walk_fade_seconds: float = 4.0
+@export var kitchen_light_settle_seconds: float = 4.5
 @export var watcher: PantryWatcher
 ## The source of the voice beyond the original bedroom door (the one door, in the hallway). The other two sources are made on the player's own head.
 @export var door_voice_player: AudioStreamPlayer3D
@@ -315,8 +331,8 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 ## The look to the doorway is not direct: her light goes over the opening and on past it by `pass_overshoot_degrees`, drifting on for `pass_drift_seconds`, and only
 ## then, with a start, does the mind catch up and the view come back to it (`realize_seconds`, a half second at most).
 @export var pass_overshoot_degrees: float = 38.0
-@export var pass_drift_seconds: float = 1.0
-@export var realize_seconds: float = 0.4
+@export var pass_drift_seconds: float = 0.3
+@export var realize_seconds: float = 0.25
 ## The flashback (from the postcard being taken up to the paper that brings her back to the night) can be skipped by holding the intro cinematic key (the prompt shows only once the
 ## player has pressed something): the picture goes dark for skip_fade_seconds and comes back in the night room, the horror about to begin.
 @export var skip_fade_seconds: float = 0.3
@@ -328,7 +344,12 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 ## The one look back at the original door and the turn to the passage again.
 @export var glance_seconds: float = 0.55
 @export var glance_hold_seconds: float = 0.35
+## She looks at the original door and waits this long, in silence, until Sophia begins to speak again; then she turns away and goes.
+@export var glance_wait_seconds: float = 2.0
 @export var turn_back_seconds: float = 0.5
+## Her flashlight in the kitchen: from the slam it flickers, each step a share of its strength for some seconds, and is out for good after the last one. It works again
+## when Lucas's token is taken.
+@export var flashlight_death: Array[Vector2] = [Vector2(0.15, 0.08), Vector2(1.0, 0.14), Vector2(0.0, 0.1), Vector2(0.8, 0.12), Vector2(0.1, 0.07), Vector2(0.55, 0.18), Vector2(0.0, 0.22), Vector2(0.3, 0.09), Vector2(0.0, 0.35), Vector2(0.2, 0.1), Vector2(0.0, 0.2)]
 ## Her flashlight in her own view (a share of its usual strength).
 @export_range(0.05, 1.0, 0.05) var escape_flashlight_strength: float = 0.55
 ## The walk through the new door, in the house's own frame: where her body goes, one point after the other (she walks on through the first ones without
@@ -348,6 +369,9 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 @export var escape_look_back_pace: float = 0.8
 @export var escape_look_back_until_x: float = 4.85
 @export var escape_look_back_max_seconds: float = 7.0
+## She turns to the front this long BEFORE any of those would be true: they are tested where she will be this many seconds later on the path
+## (and `escape_look_back_max_seconds` is shortened by as much).
+@export var escape_look_back_lead_seconds: float = 1.0
 @export var slam_speed: float = 14.0
 ## She stands a moment in the kitchen before the view is hers.
 @export var settle_seconds: float = 0.8
@@ -444,6 +468,12 @@ var _reading: bool = false
 var _read_level: float = 0.0
 var _read_light: SpotLight3D = null
 var _flash_strength: float = 1.0
+## Her flashlight dies in the kitchen after the escape (`_fail_flashlight`): the scene's light is out for good, and `_release_player` gives the player a flashlight that
+## does not work (`FlashlightController.set_failed`) until Lucas's token is taken (`_sync_flashlight_failure`).
+var _tension: AudioStreamPlayer = null
+var _flash_failed: bool = false
+var _flash_failing: bool = false
+var _flash_sync_clock: float = 0.0
 var _flicker_wait: float = 1.0
 var _flicker_left: float = 0.0
 var _flicker_level: float = 1.0
@@ -456,6 +486,7 @@ var _cut_clock: float = 0.0
 var _beam_time: float = 0.0
 var _kitchen_exit_watch: bool = false
 var _living_light_on: bool = false
+var _kitchen_fade: Tween = null
 var _escape_done: bool = false
 var _exits_locked: bool = false
 var _watcher_done: bool = false
@@ -582,10 +613,12 @@ func _connect_to_player() -> void:
 	if not inspect.inspect_closed.is_connected(_on_inspect_closed):
 		inspect.inspect_closed.connect(_on_inspect_closed)
 	_connected = true
+	_sync_flashlight_failure(0.0, true)
 
 
 func _exit_tree() -> void:
 	_cancel_memory()
+	get_tree().call_group(OutdoorAmbience.GROUP, "set_silenced", &"house_memory", false)
 
 
 func _process(delta: float) -> void:
@@ -620,9 +653,32 @@ func _physics_process(delta: float) -> void:
 	# The exits open the moment Lucas's token is collected (not inspected, not read about): the pickup records it before anything is shown.
 	if _exits_locked and _token_owned():
 		_release_exits()
+	_sync_flashlight_failure(delta)
 	_update_watcher(delta)
 	if _walking:
 		_hold_the_walker()
+
+
+## The player's flashlight is broken from the end of the escape until Lucas's token is taken (checked twice a second, and when the player is found), and works again
+## the moment it is (with its usual start-up flicker). Not while the scene itself plays.
+func _sync_flashlight_failure(delta: float, force: bool = false) -> void:
+	_flash_sync_clock -= delta
+	if not force and _flash_sync_clock > 0.0:
+		return
+
+	_flash_sync_clock = 0.5
+	if memory_running:
+		return
+
+	var target: Node3D = _get_player()
+	var light: Node = target.get("flashlight_controller") as Node if target != null else null
+	if light == null or not light.has_method("set_failed"):
+		return
+
+	var dead: bool = _escape_done and not _token_owned()
+	if bool(light.get("failed")) != dead:
+		light.call("set_failed", dead)
+		_log(&"flashlight_broken" if dead else &"flashlight_repaired")
 
 
 ## The flashlight goes out as the player, with the pantry open, comes within `kitchen_light_off_distance` of the corridor's arch (inside the
@@ -885,6 +941,7 @@ func _play_memory() -> void:
 	_complete_escape_state()
 	_finish_memory_state()
 	_release_player()
+	_stop_tension(tension_out_seconds)
 	_log(&"released")
 	# The head in the pantry, only now that the controls are hers: the scene's own looks back cannot spend it.
 	_arm_watcher()
@@ -1706,9 +1763,10 @@ func _shot_escape(run: int) -> bool:
 	# Then the shush, at her right ear; she turns to the right, to the new door, which is opening (it began out of her sight): her light goes over the
 	# opening and on past it, drifting; and only then, with a start, does she see it and come back to it.
 	_log(&"shush")
+	_start_tension()
 	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_SHUSH, 13)
 	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_SHUSH)
-	_set_kitchen_light(kitchen_light_energy, 1.8)
+	_set_kitchen_light(kitchen_light_energy, kitchen_light_fade_in_seconds)
 	_open_escape_door()
 	_log(&"turn_right")
 	var doorway: Vector2 = _look_angles(_doorway_view_point())
@@ -1735,12 +1793,17 @@ func _shot_escape(run: int) -> bool:
 	if not _still(run):
 		return false
 
-	# One look back at the original door, as she hears the next plea from it, and back to the passage.
+	# One look back at the original door: she stays there, unsure, for `glance_wait_seconds` in silence; Sophia begins to speak again beyond it, and with that voice
+	# behind the door she wants to be away from it: she turns to the passage and goes.
 	_log(&"look_back")
+	_turn_view(_look_angles(_door_middle()), glance_seconds)
+	await _wait(glance_seconds + glance_wait_seconds)
+	if not _still(run):
+		return false
+	_log(&"sophia_speaks_again")
 	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_COLD, 14)
 	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_COLD)
-	_turn_view(_look_angles(_door_middle()), glance_seconds)
-	await _wait(glance_seconds + glance_hold_seconds)
+	await _wait(glance_hold_seconds)
 	if not _still(run):
 		return false
 	_turn_view(_look_angles(_doorway_view_point()), turn_back_seconds)
@@ -1749,6 +1812,9 @@ func _shot_escape(run: int) -> bool:
 		return false
 
 	_log(&"go")
+	# The living room's light starts to come up as she starts to walk (it used to come on at the slam).
+	if not _capsule_open():
+		_set_living_light(true, living_light_walk_fade_seconds)
 	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_HELP, 16)
 	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_HELP)
 	if not await _escape_walk(run):
@@ -1762,6 +1828,11 @@ func _shot_escape(run: int) -> bool:
 	_log(&"arrived")
 	_turn_view(_look_angles(to_global(escape_final_look)), 0.5)
 	await _wait(maxf(settle_seconds, 0.5))
+	if not _still(run):
+		return false
+	# (The light is dead before the view is hers: the death can take longer than the walk's last steps.)
+	while _flash_failing and _still(run):
+		await get_tree().physics_frame
 	if not _still(run):
 		return false
 	_log(&"glance_end")
@@ -1793,7 +1864,7 @@ func _escape_walk(run: int) -> bool:
 		var share: float = escape_speeds[index] if index < escape_speeds.size() else 1.0
 		var speed: float = PlayerMovementController.WALK_SPEED * share
 		# Looking back at the original door (the walk goes on, slower) until the open one is about to be in the way, then ahead.
-		glancing = glancing and not _looking_back_is_over(walk_clock)
+		glancing = glancing and not _looking_back_is_over(walk_clock, _path_ahead(index, target.global_position))
 		var tries: int = 0
 		while not movement.begin_guided_walk(stand, _door_middle() if glancing else ahead, speed * (escape_look_back_pace if glancing else 1.0), escape_walk_timeout_seconds):
 			tries += 1
@@ -1815,7 +1886,7 @@ func _escape_walk(run: int) -> bool:
 			flat.y = 0.0
 			if not last and flat.length() < escape_pass_radius:
 				break
-			if glancing and _looking_back_is_over(walk_clock):
+			if glancing and _looking_back_is_over(walk_clock, _path_ahead(index, target.global_position)):
 				glancing = false
 				_log(&"glance_over")
 				movement.begin_guided_walk(stand, ahead, speed, escape_walk_timeout_seconds)
@@ -1831,18 +1902,39 @@ func _escape_walk(run: int) -> bool:
 
 ## She has looked back long enough: the open leaf is about to come between her eyes and the original door (a ray from her eyes to it meets the new door's
 ## leaf), or she is at the doorway, or it has been long enough.
-func _looking_back_is_over(walk_clock: float) -> bool:
+func _looking_back_is_over(walk_clock: float, ahead: Vector3) -> bool:
 	var target: Node3D = _get_player()
 	var camera: Camera3D = _get_camera()
-	if target == null or camera == null or walk_clock >= escape_look_back_max_seconds:
+	if target == null or camera == null or walk_clock >= escape_look_back_max_seconds - escape_look_back_lead_seconds:
 		return true
-	if to_local(target.global_position).x <= escape_look_back_until_x:
+	if to_local(ahead).x <= escape_look_back_until_x:
 		return true
 
-	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(camera.global_position, _door_middle())
+	# The leaf's check is made from where her eyes will be `escape_look_back_lead_seconds` on.
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(camera.global_position + (ahead - target.global_position), _door_middle())
 	query.exclude = [target.get_rid()]
 	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
 	return not hit.is_empty() and escape_door != null and escape_door.is_ancestor_of(hit["collider"] as Node)
+
+
+## Where she will stand `escape_look_back_lead_seconds` from now if she goes on along the path from leg `from_leg` at the pace she looks back at: leg by leg,
+## each at its own share of the walk speed (the end of the path if it is shorter).
+func _path_ahead(from_leg: int, from: Vector3) -> Vector3:
+	var point: Vector3 = from
+	var left: float = escape_look_back_lead_seconds
+	for leg: int in range(from_leg, escape_path.size()):
+		var stand: Vector3 = to_global(escape_path[leg])
+		stand.y = point.y
+		var share: float = escape_speeds[leg] if leg < escape_speeds.size() else 1.0
+		var speed: float = maxf(PlayerMovementController.WALK_SPEED * share * escape_look_back_pace, 0.05)
+		var seconds: float = point.distance_to(stand) / speed
+		if seconds >= left:
+			return point.move_toward(stand, speed * left)
+
+		left -= seconds
+		point = stand
+
+	return point
 
 
 ## All of her (her body's width and a margin) is west of the wall's face: the leaf, which swings in the bedroom, cannot touch her.
@@ -1880,7 +1972,11 @@ func _slam_and_lock(run: int) -> void:
 	CaptionManager.clear()
 	escape_door.slam_shut(slam_speed)
 	_lock_exits()
-	_set_living_light(not _capsule_open(), living_light_fade_seconds)
+	if _living_light_on == _capsule_open():
+		_set_living_light(not _capsule_open(), living_light_fade_seconds)
+	_fail_flashlight(run)
+	# The kitchen's light, which called her through, eases down to what it stays at.
+	_set_kitchen_light(kitchen_light_energy * kitchen_light_after, kitchen_light_settle_seconds)
 	var thud_played: bool = false
 	var waited: float = 0.0
 	while waited < 2.5 and _still(run):
@@ -1900,6 +1996,52 @@ func _slam_and_lock(run: int) -> void:
 	_log(&"escape_door_locked")
 
 
+## The string tension comes in with the shush and stays until the controls are back.
+func _start_tension() -> void:
+	_stop_tension(0.0)
+	_tension = AudioStreamPlayer.new()
+	_tension.name = "Tension"
+	_tension.stream = load(TENSION_PATH) as AudioStream
+	_tension.volume_db = -60.0
+	add_child(_tension)
+	_tension.play()
+	create_tween().tween_property(_tension, "volume_db", tension_db, tension_in_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+
+func _stop_tension(seconds: float) -> void:
+	if _tension == null or not is_instance_valid(_tension):
+		return
+
+	var player: AudioStreamPlayer = _tension
+	_tension = null
+	if seconds <= 0.0 or not player.playing:
+		player.queue_free()
+		return
+
+	var fall: Tween = create_tween()
+	fall.tween_property(player, "volume_db", -60.0, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	fall.tween_callback(player.queue_free)
+
+
+## Her flashlight flickers and dies, as she is in the kitchen (the scene's light first, and then the player's own, which stays broken: see `_release_player`).
+func _fail_flashlight(run: int) -> void:
+	if _flash_failing or _flash_failed or _flashlight == null or not _flashlight_scripted:
+		return
+
+	_flash_failing = true
+	_log(&"flashlight_failing")
+	for step: Vector2 in flashlight_death:
+		_flash_strength = escape_flashlight_strength * step.x
+		_flash_apply()
+		await _wait(step.y)
+		if not _still(run):
+			break
+
+	_flash_failed = true
+	_flash_failing = false
+	_flash_apply()
+
+
 ## Her view at once to look at `point` (the controller's own yaw and pitch, so that the mouse never snaps back to an older orientation).
 func _aim_now(point: Vector3) -> void:
 	var movement: PlayerMovementController = _get_movement()
@@ -1913,13 +2055,15 @@ func _set_kitchen_light(energy: float, seconds: float) -> void:
 	if kitchen_light == null or not is_instance_valid(kitchen_light):
 		return
 
+	if _kitchen_fade != null and _kitchen_fade.is_valid():
+		_kitchen_fade.kill()
 	kitchen_light.visible = energy > 0.0
 	if seconds <= 0.0:
 		kitchen_light.light_energy = energy
 		return
 
-	var fade: Tween = _track(create_tween())
-	fade.tween_property(kitchen_light, "light_energy", energy, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_kitchen_fade = _track(create_tween())
+	_kitchen_fade.tween_property(kitchen_light, "light_energy", energy, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 # ---- The exits, the escape's outcome, the watcher --------------------------------------------------------------------
@@ -1976,7 +2120,9 @@ func _complete_escape_state() -> void:
 		if not escape_door.is_locked:
 			escape_door.close_instantly()
 			escape_door.lock()
-	_set_kitchen_light(kitchen_light_energy * kitchen_light_after, 0.0)
+	# (Left to finish if it is still easing down: setting it here would jump.)
+	if _kitchen_fade == null or not _kitchen_fade.is_valid() or not _kitchen_fade.is_running():
+		_set_kitchen_light(kitchen_light_energy * kitchen_light_after, 0.0)
 	_lock_exits()
 	# The pantry: its door open and its bulb on again (the paper had them shut and out), done where she cannot see: she is in the kitchen.
 	if pantry_door != null and not _watcher_done:
@@ -2013,9 +2159,9 @@ func _update_watcher(delta: float) -> void:
 	if bool(target.call("is_inventory_open")):
 		return
 
-	# Only a light finds it: the head waits, in the lit pantry, for as long as the flashlight is off.
+	# Only a light, or her eyes while the flashlight is broken, find it: the shadow waits, in the lit pantry, for as long as the flashlight is off.
 	var light: Node = target.get("flashlight_controller") as Node
-	if light == null or not bool(light.get("flashlight_on")):
+	if light == null or not (bool(light.get("flashlight_on")) or bool(light.get("failed"))):
 		return
 
 	if not WATCHER_AREA.has_point(to_local(target.global_position)):
@@ -2186,6 +2332,7 @@ func _cancel_memory() -> void:
 	_run += 1
 	memory_running = false
 	_walking = false
+	_stop_tension(0.0)
 	var mover: PlayerMovementController = _get_movement()
 	if mover != null:
 		mover.cancel_guided_walk()
@@ -2240,6 +2387,9 @@ func _still(run: int) -> bool:
 ## flashlight back). Changed all at once: only ever while a dissolve covers it, or with the room out of the shot.
 func _set_room(memory: bool) -> void:
 	in_memory = memory
+	# The memory is not the night: the wind and the night chorus are gone while it lasts (they come back with the cold room).
+	if is_inside_tree():
+		get_tree().call_group(OutdoorAmbience.GROUP, "set_silenced", &"house_memory", memory)
 	if memory_root != null:
 		memory_root.visible = memory
 	if memory_light != null:
@@ -2257,7 +2407,7 @@ func _set_room(memory: bool) -> void:
 ## Her flashlight as the scene wants it: on in the night (at `_flash_strength`), out in the memory and while the postcard is read.
 func _flash_apply() -> void:
 	if _flashlight_scripted and _flashlight != null and is_instance_valid(_flashlight):
-		_flashlight.call("set_scripted_light", _flashlight_available and not in_memory and not _reading, _flash_strength)
+		_flashlight.call("set_scripted_light", _flashlight_available and not in_memory and not _reading and not _flash_failed, _flash_strength)
 
 
 ## The postcard is read (or not): her flashlight goes out and the card's own light fades in over `seconds`, or the reverse.
@@ -2374,6 +2524,11 @@ func _hold_player(target: Node) -> void:
 	_flashlight = target.get("flashlight_controller") as Node
 	_flashlight_scripted = false
 	_flashlight_available = false
+	_flash_failed = false
+	_flash_failing = false
+	if _flashlight != null and bool(_flashlight.get("failed")):
+		# A scene played again on a game whose flashlight is broken: it works for the scene (it is broken again when the scene lets go, if it still should be).
+		_flashlight.call("set_failed", false)
 	if _flashlight != null and _flashlight.has_method("begin_scripted_light"):
 		# She has the flashlight (and may use it): it lights the night shots, whatever its switch was.
 		_flashlight_available = bool(_flashlight.get("flashlight_input_enabled")) and bool(_flashlight.call("_player_has_flashlight"))
@@ -2406,6 +2561,8 @@ func _release_player() -> void:
 	if _flashlight_scripted and _flashlight != null and is_instance_valid(_flashlight):
 		if _flashlight_available:
 			_flashlight.set("flashlight_on", true)
+		if _flash_failed:
+			_flashlight.call("set_failed", true)
 		_flashlight.call("end_scripted_light")
 	_flashlight_scripted = false
 
@@ -2541,6 +2698,24 @@ func _drive_camera(delta: float) -> void:
 	_lens_t = minf(_lens_t + delta / maxf(_lens_seconds, 0.001), 1.0)
 	_cam.global_transform = _shot_between(_move_from, _move_to, _ease(_move_t))
 	_cam.fov = lerpf(_lens_from, _lens_to, _ease(_lens_t))
+	_focus_on_the_card()
+
+
+## In the flashback (and only there: the door shots of the night have none) the scene's camera is focused on the postcard on the nightstand, close to the lens: the card
+## is sharp and the lamp behind it and the bed are soft.
+func _focus_on_the_card() -> void:
+	var card: Node3D = null
+	if in_memory:
+		if held_card != null and is_instance_valid(held_card) and held_card.visible:
+			card = held_card
+		elif postcard != null and is_instance_valid(postcard) and postcard.visible:
+			card = postcard
+	if card == null:
+		FocusBlur.clear(_cam)
+		return
+
+	var distance: float = _cam.global_position.distance_to(card.global_position)
+	FocusBlur.focus_on(_cam, distance, 1.0, memory_blur_amount, memory_blur_depth, memory_blur_falloff)
 
 
 func _ease(t: float) -> float:

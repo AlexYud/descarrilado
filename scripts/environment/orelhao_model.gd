@@ -2,38 +2,40 @@
 extends Node3D
 class_name OrelhaoModel
 
-## A stand-in model of an Orelhao, the yellow fibreglass shell payphone of Brazil,
-## built in code from primitives and CSG so the overlook scene can be played before
-## real art exists (put the real model in its place; keep the part names, the
-## `CloseUpCamera` marker and `Receiver`). Built facing +Z with the origin at the ground.
+## An Orelhao, the shell payphone of Brazil: the ready-made models `big_ear.glb` (the post, the egg shaped shell, the unit with its display,
+## keypad, cradle and coin return) and `big_ear_phone.glb` (the handset, a separate model so that it can move), turned to face +Z and moved so
+## that the unit keeps the place the blockout's had. The coiled cord, the coin slot's housing with its flap, the indicator and the fill light are
+## built here (the models have none): the indicator is the unit's own display strip, lit red until the line is paid and green after. Built facing
+## +Z with the origin at the ground; the part names, the `CloseUpCamera` marker and `Receiver` are what the sequence and the tests look for.
 ##
-## The shape follows the real ones: a deep egg-shaped shell, yellow outside and dark
-## inside, open to the front, tilted a little forward, on a slim post that joins it
-## underneath. The phone unit (faceplate, keypad, coin slot, coin return, cradle hook)
-## sits in the middle of the cavity; the handset hangs from the unit by its coiled cord.
-## The world is smaller than a real street (the player's eyes are at 1.3 m), so the
-## booth is built a little under real size: the unit's middle is at eye height.
+## The model's file frame to ours (see `file_to_model`): the booth faces +X in the file, so it is turned a quarter round about Y; the unit's front
+## (file x 0.355) is put at z -0.294 and the unit's middle (file y 1.378) is at the height it has in the file.
 
-const PLATE_CENTER: Vector3 = Vector3(0.0, 1.48, -0.3)
-## The plate is built at the size of a 30 x 56 cm plate and scaled down to the unit's
-## real size (22 x 41 cm).
+const BOOTH_SCENE: PackedScene = preload("res://assets/models/interactables/miscellaneous/big_ear/big_ear.glb")
+const HANDSET_SCENE: PackedScene = preload("res://assets/models/interactables/miscellaneous/big_ear/big_ear_phone.glb")
+
+## File frame to model frame: a quarter turn about Y (file +x faces +z; file z becomes -x) and a shift in z.
+const FILE_SHIFT: Vector3 = Vector3(0.0, 0.0, -0.649)
+## The handset's cord port in the file frame: the bottom end of the handset, as it hangs on its hook (the file has the handset in place).
+const HANDSET_PORT_IN_FILE: Vector3 = Vector3(0.372, 1.267, 0.074)
+
+## The unit's front, in this model's space: its middle (file x 0.355, y 1.378, z 0.009).
+const PLATE_CENTER: Vector3 = Vector3(-0.009, 1.378, -0.294)
+## The plate is the frame the coin slot is drawn in, scaled so that the token (its inventory model) is the size it was.
 const PLATE_SCALE: float = 0.74
-## Where the receiver's cord port hangs when it is off its hook, in the model's space,
-## directly below where the cord leaves the unit.
-const RECEIVER_HOME: Vector3 = Vector3(-0.081, 1.05, -0.24)
-## Where it sits on its hook: upside down, the earpiece in the fork at the top of the
-## unit's left side and the cord port (now at the bottom) just above the cord outlet.
-const HOOK_POSITION: Vector3 = Vector3(-0.0814, 1.391, -0.2556)
-## Slot housing (in plate space) and the top of its slit.
-const SLOT_POSITION: Vector3 = Vector3(0.075, 0.205, 0.025)
-const SLOT_TOP_Y: float = 0.25
-## The handle's middle, below the cord port (receiver space).
-const HANDLE_CENTER: Vector3 = Vector3(0.0, -0.105, 0.0)
-
-const SHELL_YELLOW: Color = Color(0.97, 0.74, 0.07)
-const SHELL_INSIDE: Color = Color(0.11, 0.115, 0.105)
-const UNIT_BLUE: Color = Color(0.2, 0.3, 0.45)
-const BLUE_PLASTIC: Color = Color(0.1, 0.24, 0.66)
+## Where the receiver's cord port hangs when it is off its hook, in the model's space, directly below where the cord leaves the unit.
+const RECEIVER_HOME: Vector3 = Vector3(-0.074, 1.03, -0.33)
+## Where it sits on its hook: the earpiece in the fork at the top of the unit's left side and the cord port (at the bottom) just above the
+## cord outlet. The handset is turned upside down against its hanging pose.
+const HOOK_POSITION: Vector3 = Vector3(-0.074, 1.267, -0.277)
+## Where the cord leaves the unit: its underside, under the handset.
+const CORD_OUTLET: Vector3 = Vector3(-0.074, 1.229, -0.33)
+## The coin slot's housing (in plate space), standing on the unit's top over the keypad column, and the top of its slit.
+const SLOT_POSITION: Vector3 = Vector3(0.066, 0.24, 0.0)
+const SLOT_TOP_Y: float = 0.275
+## The unit's display strip in the model's space, and the material name it has in the model.
+const DISPLAY_POSITION: Vector3 = Vector3(0.047, 1.478, -0.27)
+const DISPLAY_MATERIAL: String = "big_ear_phone_case_display"
 
 var plate: Node3D = null
 ## Pivots at the receiver's cord port; the handset hangs below it.
@@ -75,26 +77,23 @@ func _process(delta: float) -> void:
 	)
 
 
+## The model's file frame to this model's: a quarter turn about Y, then the shift.
+static func file_to_model(point_in_file: Vector3) -> Vector3:
+	return Basis(Vector3.UP, -PI * 0.5) * point_in_file + FILE_SHIFT
+
+
 # ============================================================
 # BUILDING
 # ============================================================
 
 func _build() -> void:
-	var shell_paint: StandardMaterial3D = JunctionProps.weathered(SHELL_YELLOW, 3.0, 0.5, 0.0)
-	var shell_inside: StandardMaterial3D = JunctionProps.weathered(SHELL_INSIDE, 3.0, 0.9, 0.0)
-	var steel: StandardMaterial3D = JunctionProps.weathered(Color(0.58, 0.6, 0.62), 6.0, 0.4, 0.85)
-	var unit_paint: StandardMaterial3D = JunctionProps.weathered(UNIT_BLUE, 5.0, 0.5, 0.6)
-	var dark_steel: StandardMaterial3D = JunctionProps.weathered(Color(0.16, 0.17, 0.18), 6.0, 0.5, 0.8)
-	var post_paint: StandardMaterial3D = JunctionProps.weathered(Color(0.12, 0.12, 0.13), 3.0, 0.6, 0.5)
-	var concrete: StandardMaterial3D = JunctionProps.weathered(JunctionProps.CONCRETE, 2.0, 0.95)
+	var booth: Node3D = BOOTH_SCENE.instantiate() as Node3D
+	booth.name = "Booth"
+	booth.transform = Transform3D(Basis(Vector3.UP, -PI * 0.5), FILE_SHIFT)
+	add_child(booth)
+	_make_display_indicator(booth)
 
-	# Footing and the slim post that joins the shell from underneath.
-	HouseProps.add_box(self, "Footing", Vector3(0.34, 0.08, 0.34), Vector3(0.0, 0.04, -0.12), concrete)
-	HouseProps.add_cylinder(self, "Post", 0.045, 0.76, Vector3(0.0, 0.38, -0.12), post_paint)
-	HouseProps.add_cylinder(self, "PostCollar", 0.065, 0.04, Vector3(0.0, 0.1, -0.12), dark_steel)
-	_build_shell(shell_paint, shell_inside)
-
-	_build_plate(steel, unit_paint, dark_steel)
+	_build_plate()
 	_build_receiver()
 	_build_camera_marker()
 
@@ -109,45 +108,32 @@ func _build() -> void:
 	add_child(fill)
 
 
-## The shell: a hollow egg, yellow outside and dark inside, with the front cut away
-## and tilted forward.
-func _build_shell(shell_paint: Material, shell_inside: Material) -> void:
-	var combiner: CSGCombiner3D = CSGCombiner3D.new()
-	combiner.name = "Shell"
-	combiner.position = Vector3(0.0, 1.32, -0.02)
-	combiner.rotation_degrees = Vector3(14.0, 0.0, 0.0)
-	combiner.use_collision = false
-	add_child(combiner)
+## The unit's display strip is the indicator: its material is replaced by one that glows red (and green after).
+func _make_display_indicator(booth: Node3D) -> void:
+	_indicator_material = StandardMaterial3D.new()
+	_indicator_material.albedo_color = Color(0.5, 0.02, 0.02)
+	_indicator_material.emission_enabled = true
+	_indicator_material.emission = Color(0.95, 0.05, 0.04)
+	_indicator_material.emission_energy_multiplier = 1.6
+	_indicator_material.roughness = 0.2
+	for node: Node in booth.find_children("*", "MeshInstance3D", true, false):
+		var instance: MeshInstance3D = node as MeshInstance3D
+		for surface: int in instance.mesh.get_surface_count():
+			var material: Material = instance.mesh.surface_get_material(surface)
+			if material != null and material.resource_name == DISPLAY_MATERIAL:
+				instance.set_surface_override_material(surface, _indicator_material)
 
-	_shell_sphere(combiner, "Outer", false, Vector3.ZERO, Vector3(0.46, 0.58, 0.54), shell_paint)
-	_shell_sphere(combiner, "Inner", true, Vector3.ZERO, Vector3(0.43, 0.55, 0.51), shell_inside)
-
-	# The opening: the front is cut away, the cut edge is the yellow rim.
-	var cutter: CSGBox3D = CSGBox3D.new()
-	cutter.name = "Opening"
-	cutter.operation = CSGShape3D.OPERATION_SUBTRACTION
-	cutter.size = Vector3(3.0, 4.0, 2.0)
-	cutter.position = Vector3(0.0, -0.12, 1.22)
-	cutter.material = shell_paint
-	combiner.add_child(cutter)
-
-
-func _shell_sphere(parent: Node, node_name: String, subtract: bool, pos: Vector3, radii: Vector3, mat: Material) -> void:
-	var sphere: CSGSphere3D = CSGSphere3D.new()
-	sphere.name = node_name
-	if subtract:
-		sphere.operation = CSGShape3D.OPERATION_SUBTRACTION
-
-	sphere.radius = 1.0
-	sphere.radial_segments = 40
-	sphere.rings = 20
-	sphere.position = pos
-	sphere.scale = radii
-	sphere.material = mat
-	parent.add_child(sphere)
+	indicator_light = OmniLight3D.new()
+	indicator_light.name = "IndicatorLight"
+	indicator_light.position = DISPLAY_POSITION + Vector3(0.0, 0.0, 0.05)
+	indicator_light.light_color = Color(1.0, 0.1, 0.06)
+	indicator_light.light_energy = 0.4
+	indicator_light.omni_range = 0.35
+	add_child(indicator_light)
 
 
-func _build_plate(steel: Material, unit_paint: Material, dark_steel: Material) -> void:
+## The frame of the coin slot (on the unit's front, in plate units), the slot's housing with its slit and the flap behind it, and the cord's outlet.
+func _build_plate() -> void:
 	plate = Node3D.new()
 	plate.name = "Plate"
 	plate.position = PLATE_CENTER
@@ -155,98 +141,41 @@ func _build_plate(steel: Material, unit_paint: Material, dark_steel: Material) -
 	add_child(plate)
 
 	var black: StandardMaterial3D = HouseProps.material(Color(0.02, 0.02, 0.025), 0.8)
-	var grey_plastic: StandardMaterial3D = HouseProps.material(Color(0.42, 0.42, 0.4), 0.7)
+	var housing: StandardMaterial3D = HouseProps.material(Color(0.1, 0.1, 0.11), 0.5, 0.6)
 	var brass: StandardMaterial3D = HouseProps.material(JunctionProps.BRASS, 0.5, 0.8)
-	var card: StandardMaterial3D = HouseProps.material(Color(0.8, 0.78, 0.7), 0.9)
-	var screen: StandardMaterial3D = HouseProps.material(Color(0.22, 0.32, 0.22), 0.4)
 
-	# The unit's body behind the face, painted blue like the real ones.
-	HouseProps.add_box(plate, "Body", Vector3(0.34, 0.6, 0.12), Vector3(0.0, 0.0, -0.07), unit_paint)
-	HouseProps.add_box(plate, "Face", Vector3(0.3, 0.56, 0.02), Vector3.ZERO, steel)
-	for sx: float in [-0.135, 0.135]:
-		for sy: float in [-0.255, 0.255]:
-			HouseProps.add_cylinder(plate, "Screw", 0.006, 0.004, Vector3(sx, sy, 0.011), dark_steel, Vector3(90.0, 0.0, 0.0))
-
-	# The instruction card and the little display at the top.
-	HouseProps.add_box(plate, "Card", Vector3(0.2, 0.07, 0.002), Vector3(-0.02, 0.235, 0.0105), card)
-	HouseProps.add_box(plate, "Display", Vector3(0.1, 0.03, 0.003), Vector3(-0.03, 0.17, 0.011), screen)
-
-	# Coin slot: a housing with a slit across its top and a flap on its front.
-	HouseProps.add_box(plate, "SlotHousing", Vector3(0.1, 0.09, 0.03), SLOT_POSITION, dark_steel)
-	HouseProps.add_box(plate, "Slit", Vector3(0.066, 0.002, 0.0095), SLOT_POSITION + Vector3(0.0, 0.0451, 0.0), black)
-	HouseProps.add_box(plate, "SlotWindow", Vector3(0.05, 0.026, 0.002), SLOT_POSITION + Vector3(0.0, -0.01, 0.0158), black)
+	# The housing: a box on the unit's top with a slit across its top and a window on its front, a flap behind the window.
+	HouseProps.add_box(plate, "SlotHousing", Vector3(0.1, 0.07, 0.04), SLOT_POSITION, housing)
+	HouseProps.add_box(plate, "Slit", Vector3(0.066, 0.002, 0.0095), SLOT_POSITION + Vector3(0.0, 0.0351, 0.0), black)
+	HouseProps.add_box(plate, "SlotWindow", Vector3(0.05, 0.026, 0.002), SLOT_POSITION + Vector3(0.0, -0.005, 0.0208), black)
 	_flap = Node3D.new()
 	_flap.name = "FlapHinge"
-	_flap.position = SLOT_POSITION + Vector3(0.0, -0.001, 0.0172)
+	_flap.position = SLOT_POSITION + Vector3(0.0, -0.001, 0.0222)
 	plate.add_child(_flap)
 	HouseProps.add_box(_flap, "Flap", Vector3(0.046, 0.022, 0.002), Vector3(0.0, -0.011, 0.0), brass)
 
-	# Indicator light: red until the line is paid.
-	HouseProps.add_cylinder(plate, "IndicatorRing", 0.0125, 0.006, Vector3(-0.1, 0.17, 0.011), dark_steel, Vector3(90.0, 0.0, 0.0))
-	_indicator_material = StandardMaterial3D.new()
-	_indicator_material.albedo_color = Color(0.5, 0.02, 0.02)
-	_indicator_material.emission_enabled = true
-	_indicator_material.emission = Color(0.95, 0.05, 0.04)
-	_indicator_material.emission_energy_multiplier = 1.6
-	_indicator_material.roughness = 0.2
-	HouseProps.add_cylinder(plate, "Indicator", 0.0085, 0.008, Vector3(-0.1, 0.17, 0.0135), _indicator_material, Vector3(90.0, 0.0, 0.0))
-	indicator_light = OmniLight3D.new()
-	indicator_light.name = "IndicatorLight"
-	indicator_light.position = Vector3(-0.1, 0.17, 0.05)
-	indicator_light.light_color = Color(1.0, 0.1, 0.06)
-	indicator_light.light_energy = 0.4
-	indicator_light.omni_range = 0.35
-	plate.add_child(indicator_light)
-
-	# The keypad: three columns, four rows (1-9, *, 0, #) of worn grey keys.
-	HouseProps.add_box(plate, "KeypadBase", Vector3(0.14, 0.2, 0.006), Vector3(0.0, 0.02, 0.012), black)
-	var legends: Array[String] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]
-	for index: int in 12:
-		var column: int = index % 3
-		var row: int = floori(float(index) / 3.0)
-		var key_pos: Vector3 = Vector3(-0.042 + column * 0.042, 0.083 - row * 0.043, 0.0185)
-		HouseProps.add_box(plate, "Key%d" % index, Vector3(0.034, 0.032, 0.01), key_pos, grey_plastic)
-		HouseProps.add_text(
-			plate, "Legend%d" % index, legends[index], key_pos + Vector3(0.0, 0.0, 0.0054),
-			32, 0.00042, Color(0.06, 0.06, 0.06), 0.0, true
-		)
-
-	# The coin return cup under the keypad.
-	HouseProps.add_box(plate, "ReturnCup", Vector3(0.1, 0.045, 0.05), Vector3(0.0, -0.21, 0.03), dark_steel)
-	HouseProps.add_box(plate, "ReturnOpening", Vector3(0.074, 0.022, 0.002), Vector3(0.0, -0.205, 0.0555), black)
-
-	# The cradle: a fork on the unit's left side that the earpiece of the receiver rests in.
-	HouseProps.add_box(plate, "CradleBase", Vector3(0.12, 0.03, 0.04), Vector3(-0.11, 0.146, 0.03), dark_steel)
-	HouseProps.add_box(plate, "CradleLeft", Vector3(0.014, 0.075, 0.045), Vector3(-0.162, 0.185, 0.04), dark_steel, Vector3(0.0, 0.0, -6.0))
-	HouseProps.add_box(plate, "CradleRight", Vector3(0.014, 0.075, 0.045), Vector3(-0.058, 0.185, 0.04), dark_steel, Vector3(0.0, 0.0, 6.0))
-
-	# The armoured cord leaves the unit's lower left edge.
-	HouseProps.add_cylinder(plate, "CordSleeve", 0.012, 0.04, Vector3(-0.11, -0.29, 0.012), dark_steel)
+	# The armoured cord leaves the unit's underside, under the handset.
 	cord_anchor = Node3D.new()
 	cord_anchor.name = "CordAnchor"
-	cord_anchor.position = Vector3(-0.11, -0.312, 0.012)
-	plate.add_child(cord_anchor)
+	cord_anchor.position = CORD_OUTLET
+	add_child(cord_anchor)
 
 
-## The handset, hanging by its cord from the port at its top: mouthpiece cup, handle,
-## earpiece cup, in blue plastic. The coiled cord joins the unit to the port.
+## The handset, hanging by its cord from the port at its bottom end (as it sits on its hook, turned upside down): the model with its port at the
+## pivot. The coiled cord joins the unit to the port.
 func _build_receiver() -> void:
 	receiver = Node3D.new()
 	receiver.name = "Receiver"
 	receiver.transform = get_hook_pose()
 	add_child(receiver)
 
-	var blue: StandardMaterial3D = HouseProps.material(BLUE_PLASTIC, 0.32)
-	var scuff: StandardMaterial3D = HouseProps.material(BLUE_PLASTIC.lightened(0.18), 0.6)
-	var black: StandardMaterial3D = HouseProps.material(Color(0.02, 0.02, 0.025), 0.8)
-
-	HouseProps.add_cylinder(receiver, "Mouthpiece", 0.027, 0.032, Vector3(0.0, -0.016, 0.0), blue, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(receiver, "Handle", 0.0135, 0.14, HANDLE_CENTER, blue)
-	HouseProps.add_box(receiver, "HandleWear", Vector3(0.005, 0.07, 0.006), Vector3(0.0, -0.105, 0.0128), scuff)
-	HouseProps.add_cylinder(receiver, "Earpiece", 0.031, 0.034, Vector3(0.0, -0.2, 0.0), blue, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(receiver, "MouthGrille", 0.018, 0.002, Vector3(0.0, -0.016, 0.0165), black, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(receiver, "EarGrille", 0.02, 0.002, Vector3(0.0, -0.2, 0.0175), black, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(receiver, "PortBoot", 0.0125, 0.03, Vector3(0.0, 0.015, 0.0), black)
+	# In the receiver's own frame the port is the origin and the handset hangs below it (the hanging pose is the identity); the model has it on
+	# its hook, so it is turned over (half a round about X) after the quarter turn of the whole booth.
+	var handset: Node3D = HANDSET_SCENE.instantiate() as Node3D
+	handset.name = "Handset"
+	var turn: Basis = Basis(Vector3.RIGHT, PI) * Basis(Vector3.UP, -PI * 0.5)
+	handset.transform = Transform3D(turn, -(turn * HANDSET_PORT_IN_FILE))
+	receiver.add_child(handset)
 
 	cord = CoiledCord.new()
 	cord.name = "Cord"
@@ -263,7 +192,7 @@ func _build_receiver() -> void:
 func _build_camera_marker() -> void:
 	close_up_camera = Marker3D.new()
 	close_up_camera.name = "CloseUpCamera"
-	close_up_camera.position = Vector3(0.0, 1.6, 0.72)
+	close_up_camera.position = Vector3(0.0, 1.5, 0.72)
 	# At the player's own eye height, looking down at the unit.
 	close_up_camera.rotation_degrees = Vector3(-18.0, 0.0, 0.0)
 	add_child(close_up_camera)
@@ -291,12 +220,6 @@ func put_on_hook() -> void:
 	on_hook = true
 	sway_enabled = false
 	receiver.transform = get_hook_pose()
-
-
-## The receiver is lifted off its hook (the sequence moves it from here on).
-func take_off_hook() -> void:
-	on_hook = false
-	sway_enabled = false
 
 
 ## Leaves the receiver hanging by its cord at once, swaying a little.

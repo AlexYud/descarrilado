@@ -50,6 +50,8 @@ signal toggled_by_player(is_on: bool)
 var flashlight_on: bool = true
 ## While true the key does nothing (a scene that has the flashlight in its own hands).
 var toggle_locked: bool = false
+## The flashlight is broken (a story beat, see `set_failed`): it gives no light and the key does nothing until it is repaired.
+var failed: bool = false
 ## A scene aims the beam itself (a scared hand): while on, the beam points along `scripted_aim_direction` (a world
 ## direction) instead of where the view points, following it `scripted_aim_speed` times as fast as usual.
 var scripted_aim_on: bool = false
@@ -202,6 +204,20 @@ func turn_on() -> void:
 
 	flashlight_on = true
 	_begin_startup_flicker()
+
+
+## The flashlight stops working (`value` true: no light, the key does nothing; its switch is left as it was) or is repaired (false: if it was on it comes
+## back with the usual start-up flicker). The story uses it for the stretch between the unfinished house's escape and Lucas's token.
+func set_failed(value: bool) -> void:
+	if failed == value:
+		return
+
+	failed = value
+	_reset_light_effects()
+	if failed:
+		visible = false
+	elif flashlight_on and not _scripted:
+		_begin_startup_flicker()
 
 
 ## Switches the light off from script. The player can switch it on again.
@@ -508,11 +524,11 @@ func _update_flicker(delta: float) -> void:
 
 
 func _should_emit_light() -> bool:
-	return flashlight_input_enabled and _player_has_flashlight() and not _player_flashlight_blocked() and flashlight_on
+	return flashlight_input_enabled and _player_has_flashlight() and not _player_flashlight_blocked() and flashlight_on and not failed
 
 
 func _can_toggle_flashlight() -> bool:
-	return flashlight_input_enabled and _player_has_flashlight() and not _player_flashlight_blocked()
+	return flashlight_input_enabled and _player_has_flashlight() and not _player_flashlight_blocked() and not failed
 
 
 func _player_has_flashlight() -> bool:

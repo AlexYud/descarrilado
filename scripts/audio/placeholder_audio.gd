@@ -92,94 +92,6 @@ static func make_footstep() -> AudioStreamWAV:
 	return _to_wav(samples, false)
 
 
-## A heavy door slammed shut: one deep boom with a splintering crack on top.
-static func make_slam() -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(0.9 * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 37
-	var smoothed: float = 0.0
-
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		var boom: float = sin(TAU * 48.0 * t) * exp(-t * 7.0)
-		var thud: float = sin(TAU * 95.0 * t) * exp(-t * 13.0) * 0.7
-		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.6)
-		var crack: float = smoothed * exp(-t * 40.0) * 1.1
-		samples[i] = clampf((boom + thud + crack) * 0.95, -1.0, 1.0)
-
-	return _to_wav(samples, false)
-
-
-## A hard, quick running footfall on boards: lighter and sharper than a walking step.
-static func make_run_step() -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(0.2 * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 71
-	var smoothed: float = 0.0
-
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		var thump: float = sin(TAU * 88.0 * t) * exp(-t * 24.0)
-		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.4)
-		var slap: float = smoothed * exp(-t * 55.0) * 0.8
-		var board: float = sin(TAU * 190.0 * t) * exp(-t * 38.0) * 0.4
-		samples[i] = (thump + slap + board) * 0.9
-
-	return _to_wav(samples, false)
-
-
-## A door hinge complaining: a falling, wavering scrape.
-static func make_creak(seconds: float = 1.6) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var phase: float = 0.0
-
-	for i: int in samples.size():
-		var progress: float = float(i) / samples.size()
-		var wobble: float = 1.0 + 0.08 * sin(TAU * 7.0 * progress * seconds)
-		var frequency: float = lerpf(310.0, 170.0, progress) * wobble
-		phase += TAU * frequency / MIX_RATE
-		var saw: float = fmod(phase / TAU, 1.0) * 2.0 - 1.0
-		var envelope: float = minf(progress * 6.0, 1.0) * minf((1.0 - progress) * 4.0, 1.0)
-		samples[i] = saw * envelope * 0.16
-
-	return _to_wav(samples, false)
-
-
-## A knuckle or fingernail tapping glass: short, bright and metallic.
-static func make_tap() -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(0.22 * MIX_RATE))
-
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		var ring: float = sin(TAU * 1850.0 * t) + 0.6 * sin(TAU * 2760.0 * t)
-		var body: float = sin(TAU * 420.0 * t) * 0.8
-		samples[i] = (ring * exp(-t * 55.0) + body * exp(-t * 90.0)) * 0.55
-
-	return _to_wav(samples, false)
-
-
-## Something large moving through dry leaves and undergrowth, then gone.
-static func make_rustle(seconds: float = 2.4) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 83
-	var smoothed: float = 0.0
-
-	for i: int in samples.size():
-		var progress: float = float(i) / samples.size()
-		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.5)
-		var crackle: float = 1.0 if rng.randf() < 0.02 else 0.25
-		var envelope: float = minf(progress * 10.0, 1.0) * (1.0 - progress)
-		samples[i] = smoothed * crackle * envelope * 0.4
-
-	return _to_wav(samples, false)
-
-
 ## A stiff iron lever thrown over: a dull thud and a short scrape of metal.
 static func make_lever() -> AudioStreamWAV:
 	var samples: PackedFloat32Array = PackedFloat32Array()
@@ -389,59 +301,6 @@ static func make_iron_clack() -> AudioStreamWAV:
 	return _to_wav(samples, false)
 
 
-## A voice on a telephone line, as a placeholder (it says nothing: syllables of a buzzing voice through a
-## narrow band, over a little hiss). `warm` is slow, low, soft and breathy, with long pauses; any other
-## kind is the desperate one: high, fast, loud, rough, with a tremble. `seconds` is how long it talks.
-static func make_phone_voice(warm: bool, seconds: float) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 5150 if warm else 6260
-
-	var pitch: float = 172.0 if warm else 236.0
-	var syllables: Array[Dictionary] = []
-	var at: float = 0.15
-	while at < seconds - 0.3:
-		var length: float = rng.randf_range(0.14, 0.3) if warm else rng.randf_range(0.07, 0.16)
-		var level: float = rng.randf_range(0.35, 0.6) if warm else rng.randf_range(0.7, 1.0)
-		syllables.append({"at": at, "len": length, "level": level})
-		at += length + (rng.randf_range(0.05, 0.16) if warm else rng.randf_range(0.015, 0.05))
-		# Phrases: a breath between them.
-		if rng.randf() < (0.22 if warm else 0.12):
-			at += rng.randf_range(0.35, 0.8) if warm else rng.randf_range(0.15, 0.3)
-
-	var phase: float = 0.0
-	var low: float = 0.0
-	var high_prev: float = 0.0
-	var band: float = 0.0
-	var breath: float = 0.0
-	var index: int = 0
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		while index < syllables.size() - 1 and t > float(syllables[index]["at"]) + float(syllables[index]["len"]):
-			index += 1
-
-		var level: float = 0.0
-		var s: Dictionary = syllables[index]
-		var local: float = t - float(s["at"])
-		if local >= 0.0 and local <= float(s["len"]):
-			level = sin(PI * local / float(s["len"])) * float(s["level"])
-
-		var wobble: float = 0.06 * sin(TAU * 4.5 * t) if warm else 0.1 * sin(TAU * 8.0 * t + sin(t * 3.0))
-		phase = fmod(phase + pitch * (1.0 + wobble + 0.15 * sin(TAU * 1.3 * t)) / MIX_RATE, 1.0)
-		var voice: float = phase * 2.0 - 1.0
-		breath = lerpf(breath, rng.randf_range(-1.0, 1.0), 0.5)
-		var source: float = voice * (0.55 if warm else 0.8) + breath * (0.45 if warm else 0.3)
-		# A narrow telephone band: roll off the lows and the highs.
-		low = lerpf(low, source, 0.32)
-		var rolled: float = low - high_prev
-		high_prev = lerpf(high_prev, low, 0.06)
-		band = lerpf(band, rolled, 0.9)
-		samples[i] = clampf(band * level * (1.4 if warm else 2.2) + rng.randf_range(-1.0, 1.0) * 0.012, -1.0, 1.0)
-
-	return _to_wav(samples, false)
-
-
 ## The line being cut at the other end: a soft, hollow click, and the hiss drops away.
 static func make_disconnect_click() -> AudioStreamWAV:
 	var samples: PackedFloat32Array = PackedFloat32Array()
@@ -460,100 +319,6 @@ static func make_disconnect_click() -> AudioStreamWAV:
 		samples[i] = clampf(hollow + body + tick + line, -1.0, 1.0)
 
 	return _to_wav(samples, false)
-
-
-## Heavy rain pounding on a wooden roof from underneath: a deep roar with big drops drumming on the
-## boards. Loops.
-static func make_roof_rain(seconds: float = 5.0) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 1313
-	var smoothed: float = 0.0
-	var deep: float = 0.0
-	# Drops: when, how hard, which note.
-	var drops: Array[Vector3] = []
-	var at: float = 0.0
-	while at < seconds:
-		drops.append(Vector3(at, rng.randf_range(0.4, 1.0), rng.randf_range(70.0, 190.0)))
-		at += rng.randf_range(0.012, 0.05)
-
-	var drop_index: int = 0
-	var ringing: Array[Vector3] = []
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		while drop_index < drops.size() and drops[drop_index].x <= t:
-			ringing.append(Vector3(t, drops[drop_index].y, drops[drop_index].z))
-			drop_index += 1
-
-		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.3)
-		deep = lerpf(deep, rng.randf_range(-1.0, 1.0), 0.04)
-		var value: float = smoothed * 0.16 + deep * 0.7
-		var kept: Array[Vector3] = []
-		for drop: Vector3 in ringing:
-			var age: float = t - drop.x
-			if age < 0.09:
-				value += sin(TAU * drop.z * age) * exp(-age * 55.0) * drop.y * 0.22
-				kept.append(drop)
-		ringing = kept
-		samples[i] = clampf(value, -1.0, 1.0)
-
-	# A seamless loop: blend the end into the start.
-	var blend: int = int(0.25 * MIX_RATE)
-	for i: int in blend:
-		var k: float = float(i) / float(blend)
-		samples[i] = lerpf(samples[samples.size() - blend + i], samples[i], k)
-
-	return _to_wav(samples.slice(0, samples.size() - blend), true)
-
-
-## Someone crying quietly: breathy, shaky sobs with a catch of breath between them. Loops.
-static func make_sobbing(seconds: float = 6.0) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 7070
-	var sobs: Array[Dictionary] = []
-	var at: float = 0.3
-	while at < seconds - 1.2:
-		var run: int = rng.randi_range(2, 4)
-		for k: int in run:
-			sobs.append({"at": at, "len": rng.randf_range(0.22, 0.34), "pitch": rng.randf_range(250.0, 330.0), "level": rng.randf_range(0.5, 0.8) * (1.0 - 0.15 * k)})
-			at += rng.randf_range(0.34, 0.5)
-		at += rng.randf_range(0.7, 1.2)
-
-	var phase: float = 0.0
-	var breath: float = 0.0
-	var low: float = 0.0
-	var index: int = 0
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		while index < sobs.size() - 1 and t > float(sobs[index]["at"]) + float(sobs[index]["len"]):
-			index += 1
-
-		var level: float = 0.0
-		var pitch: float = 280.0
-		var s: Dictionary = sobs[index]
-		var local: float = t - float(s["at"])
-		if local >= 0.0 and local <= float(s["len"]):
-			var q: float = local / float(s["len"])
-			level = sin(PI * q) * float(s["level"])
-			# The pitch falls through a sob and trembles.
-			pitch = float(s["pitch"]) * (1.15 - 0.3 * q) * (1.0 + 0.05 * sin(TAU * 14.0 * t))
-
-		phase = fmod(phase + pitch / MIX_RATE, 1.0)
-		breath = lerpf(breath, rng.randf_range(-1.0, 1.0), 0.45)
-		var voice: float = (phase * 2.0 - 1.0) * 0.5 + breath * 0.5
-		low = lerpf(low, voice, 0.28)
-		samples[i] = clampf(low * level * 1.6, -1.0, 1.0)
-
-	var fade: int = int(0.06 * MIX_RATE)
-	for i: int in fade:
-		var k: float = float(i) / float(fade)
-		samples[i] *= k
-		samples[samples.size() - 1 - i] *= k
-
-	return _to_wav(samples, true)
 
 
 ## A breathy whisper of seven syllables ("you're not sup-posed to be here"): shaped noise, no pitch.
@@ -830,24 +595,6 @@ static func make_locked_rattle() -> AudioStreamWAV:
 	return _to_wav(samples, false)
 
 
-## The faint hiss and hum of a telephone line, looping.
-static func make_line_hiss(seconds: float = 3.0) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 97
-	var smoothed: float = 0.0
-
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.55)
-		var hum: float = sin(TAU * 100.0 * t) * 0.05
-		var crackle: float = rng.randf_range(-1.0, 1.0) * 0.5 if rng.randf() < 0.0008 else 0.0
-		samples[i] = smoothed * 0.09 + hum + crackle
-
-	return _to_wav(samples, true)
-
-
 ## A receiver lifted off its hook or put back: a short plastic knock and a click.
 static func make_receiver_knock() -> AudioStreamWAV:
 	var samples: PackedFloat32Array = PackedFloat32Array()
@@ -905,66 +652,6 @@ static func make_lamp_pop() -> AudioStreamWAV:
 		samples[i] = snap + zap + thump
 
 	return _to_wav(samples, false)
-
-
-## A spring latch letting go: a sharp CLICK, then the SHRK of a steel catch scraping back along its slot
-## (filtered noise that brightens as it goes, with a short ring of the spring behind it).
-static func make_spring_latch() -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(0.55 * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 1889
-	var smoothed: float = 0.0
-
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		var click: float = (
-			rng.randf_range(-1.0, 1.0) * exp(-t * 300.0) * 0.6
-			+ sin(TAU * 2900.0 * t) * exp(-t * 150.0) * 0.5
-			+ sin(TAU * 240.0 * t) * exp(-t * 80.0) * 0.4
-		)
-		var scrape: float = 0.0
-		var late: float = t - 0.07
-		if late > 0.0 and late < 0.3:
-			var progress: float = late / 0.3
-			smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), lerpf(0.12, 0.85, progress))
-			scrape = smoothed * sin(PI * progress) * 0.75 * (0.7 + 0.3 * sin(TAU * 38.0 * late))
-
-		var spring: float = 0.0
-		if late > 0.0:
-			spring = sin(TAU * (1250.0 + 220.0 * exp(-late * 18.0)) * late) * exp(-late * 16.0) * 0.18
-
-		samples[i] = clampf(click + scrape + spring, -1.0, 1.0)
-
-	return _to_wav(samples, false)
-
-
-## A radio left on a dead channel, looping: a steady hiss of band limited noise that swells and thins very slowly, a faint whine of a carrier under
-## it, and now and then a soft crackle. The swell and the whine fit the loop exactly (whole cycles), so it has no seam.
-static func make_radio_static(seconds: float = 4.0) -> AudioStreamWAV:
-	var samples: PackedFloat32Array = PackedFloat32Array()
-	samples.resize(int(seconds * MIX_RATE))
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 1408
-	var smoothed: float = 0.0
-	var slow: float = 0.0
-	var crackle: float = 0.0
-
-	for i: int in samples.size():
-		var t: float = float(i) / MIX_RATE
-		var cycle: float = t / seconds
-		smoothed = lerpf(smoothed, rng.randf_range(-1.0, 1.0), 0.45)
-		slow = lerpf(slow, smoothed, 0.05)
-		var hiss: float = smoothed - slow
-		var swell: float = 0.8 + 0.2 * sin(TAU * 2.0 * cycle) * sin(TAU * 3.0 * cycle + 0.6)
-		var whine: float = sin(TAU * 1850.0 * t) * 0.02 * (0.5 + 0.5 * sin(TAU * cycle))
-		if rng.randf() < 0.0007:
-			crackle = rng.randf_range(0.25, 0.6) * (1.0 if rng.randf() < 0.5 else -1.0)
-
-		crackle *= 0.9
-		samples[i] = clampf(hiss * swell * 0.55 + whine + crackle * 0.5, -1.0, 1.0)
-
-	return _to_wav(samples, true)
 
 
 ## One step of a heavy steel combination dial: TICK TICK, two short hard ticks a hair apart (the second a little lighter) with a dull ring

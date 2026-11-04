@@ -43,13 +43,12 @@ func _ready() -> void:
 	Engine.time_scale = TIME_SCALE
 
 	await _check_layout()
-	await _check_note_rays()
+	await _check_unit_ray()
 	await _check_lamp_steady()
 	await _check_without_fichas()
 	await _check_first_ficha()
 	await _check_the_rest()
 	await _check_call()
-	_check_note()
 
 	Engine.time_scale = 1.0
 	SaveManager.delete_slot(1)
@@ -126,9 +125,13 @@ func _take_fichas_out() -> void:
 func _check_layout() -> void:
 	var model: OrelhaoModel = phone.model
 	_expect(model.plate != null and model.receiver != null and model.cord != null, "the booth has its plate, receiver and cord")
-	_expect(model.find_child("Key11", true, false) != null, "the keypad has twelve keys (1-9, *, 0, #)")
-	_expect(model.find_child("SlotHousing", true, false) != null and model.find_child("ReturnCup", true, false) != null, "the coin slot and the return cup are there")
-	_expect(model.find_child("CradleLeft", true, false) != null, "and the cradle's fork")
+	var booth: Node = model.get_node_or_null("Booth")
+	_expect(booth != null and booth.scene_file_path == "res://assets/models/interactables/miscellaneous/big_ear/big_ear.glb", "the booth is the ready-made model (post, shell, unit with its keypad and cradle)")
+	var handset: Node = model.receiver.get_node_or_null("Handset")
+	_expect(handset != null and handset.scene_file_path == "res://assets/models/interactables/miscellaneous/big_ear/big_ear_phone.glb", "and the handset is a model of its own, under the receiver's pivot")
+	_expect(model.find_child("SlotHousing", true, false) != null and model.find_child("Slit", true, false) != null and model.find_child("Flap", true, false) != null, "the coin slot (housing, slit, flap) is built on the unit")
+	var shell_box: AABB = (booth.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).get_aabb()
+	_expect(model.plate.global_position.y > 1.0 and model.plate.global_position.y < shell_box.end.y, "the unit is inside the shell, at about eye height (%.2f m up)" % model.plate.global_position.y)
 	_expect(not model._indicator_on, "the indicator starts red")
 	_expect(_stage(OverlookPhoneSequence.Stage.IDLE), "the puzzle starts idle")
 
@@ -444,7 +447,7 @@ func _check_call() -> void:
 	_expect(ending_left[0] > 5.0 and (call_ended_at[0] - ending_at[0]) * Engine.time_scale > 5.0 and (call_ended_at[0] - ending_at[0]) * Engine.time_scale < 12.0, "the end of the call is announced ahead of time, for the town's lights (%.1f s left, %.1f game seconds before it finished)" % [ending_left[0], (call_ended_at[0] - ending_at[0]) * Engine.time_scale])
 	_expect(not receiver_moved[0], "the receiver is not shown being picked up")
 	_expect(saw_listening[0], "the picture became a cutscene of the town (about 40 degrees to the left of the booth, centred on the town), without letterbox bars")
-	_expect(worst_move[0] > 0.5 and worst_move[0] < 4.0, "from a camera a little behind and above where she stands (%.2f m away)" % worst_move[0])
+	_expect(worst_move[0] > 0.5 and worst_move[0] < 6.0, "from a camera behind and well above where she stands, over the booth and the fence (%.2f m away)" % worst_move[0])
 	_expect(narrowest_fov[0] < phone.shot_fov - 4.0 and narrowest_fov[0] >= phone.call_zoom_fov - 0.5, "the view slowly pushes in on the city while she listens (field of view down to %.1f from %.1f)" % [narrowest_fov[0], phone.shot_fov])
 	_expect(lines.size() == 12, "the call is split into twelve short blocks that appear as it goes (%d)" % lines.size())
 	var longest: int = 0
@@ -500,17 +503,6 @@ func _check_call() -> void:
 	_expect(Time.get_ticks_msec() >= player._movement_hold_until_msec, "the player is let go when the next event releases them")
 
 
-func _check_note() -> void:
-	var note: Node = phone.get_node("Orelhao/PayphoneNote")
-	_expect(note is Inspectable, "a note is stuck to the booth's side")
-	var visual: Node3D = (note as Inspectable).get_visual_node()
-	_expect(str(visual.get_meta("readable_text", "")) == "READABLE_OVERLOOK_NOTE", "it is a readable document")
-	_expect(tr("READABLE_OVERLOOK_NOTE") == "One ficha for each of us.", "that says 'One ficha for each of us.'")
-	GameSettings.set_text_locale("pt_BR", false)
-	_expect(tr("READABLE_OVERLOOK_NOTE") == "Uma ficha para cada um de nós.", "and in Portuguese")
-	GameSettings.set_text_locale("en", false)
-
-
 ## The lamp burns steadily when nothing asks it to flicker.
 func _check_lamp_steady() -> void:
 	var lamp: OverlookPhoneDressing = phone.lamp
@@ -542,16 +534,8 @@ func _interactable_hit(from: Vector3, to: Vector3) -> Interactable:
 	return null
 
 
-## Looking at the note stuck to the booth offers the note, not the booth's own prompt.
-func _check_note_rays() -> void:
+## Looking at the booth's unit offers the booth (nothing else is stuck to the shell).
+func _check_unit_ray() -> void:
 	await get_tree().physics_frame
-	var note: Inspectable = phone.get_node("Orelhao/PayphoneNote") as Inspectable
-	var out: Vector3 = note.global_basis.z.normalized()
-	var from_side: Vector3 = note.global_position + out * 0.8
-	_expect(_interactable_hit(from_side, note.global_position) == note, "looking at the note offers the note (it can be examined)")
-	_expect(note.get_prompt_text() == "PROMPT_INSPECT", "'Examine', not 'Insert ficha'")
-	var from_diagonal: Vector3 = note.global_position + out * 0.6 + Vector3(0.0, 0.0, 0.5)
-	_expect(_interactable_hit(from_diagonal, note.global_position) == note, "also from a little in front of it")
-
 	var model: OrelhaoModel = phone.model
 	_expect(_interactable_hit(model.close_up_camera.global_position, model.plate.global_position) == phone.interactable, "looking at the unit still offers the booth")

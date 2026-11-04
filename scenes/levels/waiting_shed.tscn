@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/sophia_ficha.tscn" id="11_ficha"]
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/newspaper_clipping.tscn" id="12_clipping"]
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/camcorder.tscn" id="13_camcorder"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/marina_sister_note.tscn" id="14_sister_note"]
 [ext_resource type="Script" path="res://scripts/levels/shot_marker.gd" id="14_shot"]
 [ext_resource type="Script" path="res://scripts/levels/shelter_footage.gd" id="15_footage"]
 [ext_resource type="ArrayMesh" uid="uid://bfoll4ywqfmm4" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="16_fern_medium"]
@@ -104,6 +105,12 @@ kind = &"backpack"
 unique_name_in_owner = true
 position = Vector3(-4.52, 0.502, -5.74)
 rotation_degrees = Vector3(-90, 12, 0)
+
+; The note from Marina's sister, folded, on its own behind the notebook, beside the backpack (an optional readable: its own hit area, under nothing).
+[node name="MarinaSisterNote" parent="Platform/PersonalEffects" instance=ExtResource("14_sister_note")]
+unique_name_in_owner = true
+position = Vector3(-4.70, 0.5025, -5.955)
+rotation_degrees = Vector3(-90, 6, 0)
 
 [node name="NewspaperClipping" parent="Platform/PersonalEffects" instance=ExtResource("12_clipping")]
 unique_name_in_owner = true

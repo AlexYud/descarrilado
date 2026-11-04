@@ -26,7 +26,6 @@ const PREFIX: String = "mixamorig_"
 
 const BONE_CHANNELS: Array[String] = ["Hips", "Spine", "Spine1", "Spine2", "Neck", "Head", "LeftShoulder", "RightShoulder"]
 ## How far along the hand its middle is from the wrist (model units): the mitten is 7.5 cm long.
-const PALM_OFFSET: float = 0.04
 ## The A-pose's rest: how far the ankle is over the sole (model units).
 const ANKLE_HEIGHT: float = 0.085
 
@@ -144,14 +143,6 @@ func _paint() -> void:
 # THE CHANNELS
 # ============================================================
 
-func clear_channels() -> void:
-	_tracks.clear()
-
-
-func clear_one(channel: StringName) -> void:
-	_tracks.erase(channel)
-
-
 ## A key of a channel (times must not go back). Bone channels and the foot yaws are degrees (Vector3), the others metres.
 func key(channel: StringName, time: float, value: Vector3) -> void:
 	if not _tracks.has(channel):
@@ -176,10 +167,6 @@ func hold(channel: StringName, from: float, to: float, value: Vector3) -> void:
 	key(channel, from, value)
 	if to > from:
 		key(channel, to, value)
-
-
-func has_channel(channel: StringName) -> bool:
-	return _tracks.has(channel)
 
 
 ## A channel's value at `time`: a monotone cubic through its keys (`fallback` when it has none).
@@ -356,13 +343,6 @@ func _two_bone(root_name: String, mid_name: String, tip_name: String, target: Ve
 # ============================================================
 # WHAT THE POSE MEANS IN SPACE (for the props, the placement and the tests)
 # ============================================================
-
-## The middle of a palm (`side` is "Left" or "Right"), in the actor's frame, as the pose last sampled has it.
-func palm_point(side: String) -> Vector3:
-	var hand: Transform3D = _global_pose(int(_bones[side + "Hand"]))
-	var along: Vector3 = skeleton.get_bone_rest(int(_bones[side + "Hand"])).origin.normalized()
-	return from_model(hand.origin + hand.basis * (along * PALM_OFFSET))
-
 
 ## The way a bone faces (the model's +Z), in the actor's frame, as the pose last sampled has it: for the head, where the face looks.
 func bone_forward(bone_name: String) -> Vector3:

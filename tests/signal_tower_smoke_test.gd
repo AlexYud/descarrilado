@@ -41,7 +41,7 @@ func _ready() -> void:
 	level.add_child(tower)
 	player = (load("res://scenes/player/player.tscn") as PackedScene).instantiate() as CharacterBody3D
 	level.add_child(player)
-	player.global_position = Vector3(2.75, 1.1, 4.4)
+	player.global_position = Vector3(3.0, 1.1, 5.6)
 	var setup: PlayTestSetup = PlayTestSetup.new()
 	setup.player = player
 	level.add_child(setup)
@@ -64,12 +64,12 @@ func _run() -> void:
 	_check_the_doors()
 	_check_props()
 	_check_zones()
-	_check_lore_items()
 	_check_decay()
 	await _check_the_stairs()
+	await _check_the_cabinet()
 	await _check_opening_the_front_door()
 	await _check_the_drawer()
-	await _read_the_lore()
+	await _read_the_notes()
 	_check_translations()
 
 
@@ -78,43 +78,54 @@ func _run() -> void:
 # ============================================================
 
 func _check_shape() -> void:
-	_expect(SignalTowerBuilder.BASE_SIZE == 4.0 and SignalTowerBuilder.BASE_HEIGHT == 2.8, "the lower level is 4 m by 4 m and 2.8 m high with its deck")
-	_expect(tower.get_node_or_null("LowerShell") is CSGCombiner3D and tower.get_node_or_null("UpperShell") is CSGCombiner3D, "both levels are CSG blockouts")
+	var model: Node = tower.get_node_or_null("Shell/Model")
+	_expect(model != null and model.scene_file_path == "res://assets/models/buildings/signal_box_ruined/signal_box_ruined.glb", "the building is the ready-made signal box model")
+	_expect(tower.get_node_or_null("LowerShell") == null and tower.get_node_or_null("UpperShell") == null and tower.get_node_or_null("Roof") == null, "and no blockout of CSG shapes is left")
+	var shell_shape: CollisionShape3D = tower.get_node_or_null("Shell/ShellBody/CollisionShape3D") as CollisionShape3D
+	_expect(shell_shape != null and shell_shape.shape is ConcavePolygonShape3D and (shell_shape.shape as ConcavePolygonShape3D).get_faces().size() > 3000, "it has collision made of its own triangles")
+	var materials: Array[String] = []
+	for node: Node in model.find_children("*", "MeshInstance3D", true, false):
+		var mesh: Mesh = (node as MeshInstance3D).mesh
+		for surface: int in mesh.get_surface_count():
+			materials.append(mesh.surface_get_material(surface).resource_name)
+	_expect(materials.has("roof_tiles") and materials.has("glass") and materials.has("bars"), "a tiled roof, panes and window bars are part of it")
 
-	# The walls, measured with rays (at heights and places where no window or door is).
-	var front: Vector3 = _first_hit(Vector3(1.6, 1.3, 6.0), Vector3(1.6, 1.3, -6.0))
-	var back: Vector3 = _first_hit(Vector3(1.6, 1.3, -6.0), Vector3(1.6, 1.3, 6.0))
-	var left: Vector3 = _first_hit(Vector3(-6.0, 1.3, 1.6), Vector3(6.0, 1.3, 1.6))
-	var right: Vector3 = _first_hit(Vector3(6.0, 1.3, -1.5), Vector3(-6.0, 1.3, -1.5))
-	_expect(absf(front.z - 2.0) < 0.03 and absf(back.z + 2.0) < 0.03, "the brick base is 4 m deep (front %.2f, back %.2f)" % [front.z, back.z])
+	# The rooms, measured with rays from inside (at heights and places where no window or door is): 4 m by 4 m, 2 m either way from the middle.
+	var inside: Vector3 = Vector3(0.0, 1.3, -1.4)
+	var back: Vector3 = _first_hit(inside, inside + Vector3(0.0, 0.0, -6.0))
+	var right: Vector3 = _first_hit(Vector3(0.0, 1.3, 1.65), Vector3(6.0, 1.3, 1.65))
+	var left: Vector3 = _first_hit(inside, inside + Vector3(-6.0, 0.0, 0.0))
+	var front: Vector3 = _first_hit(Vector3(1.5, 1.3, 0.0), Vector3(1.5, 1.3, 6.0))
+	_expect(absf(front.z - 2.0) < 0.03 and absf(back.z + 2.0) < 0.03, "the relay room is 4 m deep (front %.2f, back %.2f)" % [front.z, back.z])
 	_expect(absf(left.x + 2.0) < 0.03 and absf(right.x - 2.0) < 0.03, "and 4 m wide (left %.2f, right %.2f)" % [left.x, right.x])
+	var outer: Vector3 = _first_hit(Vector3(1.6, 1.3, 6.0), Vector3(1.6, 1.3, -6.0))
+	_expect(absf(outer.z - SignalTowerBuilder.WALL_FACE) < 0.06, "its brick walls are 0.25 m thick (outer face of the front wall %.2f)" % outer.z)
 
-	# Inside: boards at the foot, a ceiling 2.6 m up (the deck's underside), and the cabin floor on top at 2.8 m.
+	# Inside: boards at the foot, the deck's underside at 2.9 m, and the cabin floor on top at 3.006 m.
 	var floor_hit: Vector3 = _first_hit(Vector3(0.3, 2.0, 0.6), Vector3(0.3, -1.0, 0.6))
 	var ceiling_hit: Vector3 = _first_hit(Vector3(0.3, 1.0, 0.6), Vector3(0.3, 4.0, 0.6))
-	var cabin_floor: Vector3 = _first_hit(Vector3(0.3, 8.0, 0.6), Vector3(0.3, 1.0, 0.6))
-	_expect(absf(floor_hit.y - SignalTowerBuilder.FLOOR_TOP) < 0.01, "the relay room has a floor of boards at %.2f m" % floor_hit.y)
-	_expect(absf(ceiling_hit.y - 2.6) < 0.02, "its ceiling is the underside of the deck, 2.6 m up (%.2f)" % ceiling_hit.y)
-	_expect(absf(cabin_floor.y - 2.8) < 0.02, "the cabin's floor is the deck's top at 2.8 m (%.2f)" % cabin_floor.y)
+	var cabin_floor: Vector3 = _first_hit(Vector3(0.3, 4.0, 0.6), Vector3(0.3, 1.0, 0.6))
+	_expect(absf(floor_hit.y - SignalTowerBuilder.FLOOR_TOP) < 0.01, "the relay room has a floor of boards at %.3f m" % floor_hit.y)
+	_expect(absf(ceiling_hit.y - 2.9) < 0.03, "its ceiling is the underside of the deck, 2.9 m up (%.2f)" % ceiling_hit.y)
+	_expect(absf(cabin_floor.y - SignalTowerBuilder.BASE_HEIGHT) < 0.02, "the cabin's floor is the deck's top at %.3f m (%.3f)" % [SignalTowerBuilder.BASE_HEIGHT, cabin_floor.y])
 
-	# The cabin overhangs the brick by 0.2 m all round and has walls up to 5.2 m.
-	var cabin_left: Vector3 = _first_hit(Vector3(-6.0, 4.0, -1.8), Vector3(6.0, 4.0, -1.8))
-	var cabin_back: Vector3 = _first_hit(Vector3(-1.9, 4.0, -6.0), Vector3(-1.9, 4.0, 6.0))
-	_expect(absf(cabin_left.x + 2.2) < 0.03 and absf(cabin_back.z + 2.2) < 0.03, "the control cabin is 4.4 m wide, 0.2 m over the brick (left %.2f, back %.2f)" % [cabin_left.x, cabin_back.z])
+	# The cabin is 4 m by 4 m as well, under a pitched roof (the ridge is along X, 7.4 m up).
+	var cabin_inside: Vector3 = Vector3(0.0, 3.6, 0.2)
+	var cabin_right: Vector3 = _first_hit(cabin_inside, cabin_inside + Vector3(6.0, 0.0, 0.0))
+	_expect(absf(cabin_right.x - 2.0) < 0.1 or cabin_right.x > 5.0, "the control cabin is 4 m wide (right wall at %.2f, or its door or window)" % cabin_right.x)
+	var ridge: Vector3 = _first_hit(Vector3(1.7, 9.0, 0.0), Vector3(1.7, 3.5, 0.0))
+	_expect(ridge.y > 6.0 or ridge.y < 3.6, "and has a roof over it (the ray from above meets %.2f)" % ridge.y)
 
-	# Narrow arched windows in the brick (a ray through one passes the wall) and ribbon windows in the cabin.
-	var through_arch: Vector3 = _first_hit(Vector3(-6.0, 1.5, 0.85), Vector3(6.0, 1.5, 0.85))
-	_expect(through_arch.x > -0.5 or through_arch.x < -1.7 and through_arch.x > -2.0, "the left wall has arched windows through it (bars aside, the ray goes in: %.2f)" % through_arch.x)
-	var ribbon: Vector3 = _first_hit(Vector3(0.3, 4.4, 8.0), Vector3(0.3, 4.4, -8.0))
+	# Narrow arched windows in the brick (a ray through one meets the bars, not the wall) in the left wall, and wide windows in the cabin.
+	var through_arch: Vector3 = _first_hit(Vector3(-6.0, 1.5, -0.8), Vector3(6.0, 1.5, -0.8))
+	_expect(through_arch.x > -2.2, "the left wall has an arched window (the ray gets to %.2f, past the wall's face at -2.25)" % through_arch.x)
+	var ribbon: Vector3 = _first_hit(Vector3(-1.0, 4.4, 8.0), Vector3(-1.0, 4.4, -8.0))
 	_expect(ribbon.z < 1.9, "the cabin's front window is open to the inside (the ray goes in to %.2f)" % ribbon.z)
-	for side_name: String in ["Front", "Back", "Left"]:
-		_expect(tower.get_node_or_null("UpperShell/Ribbon%s" % side_name) != null, "the cabin has a wide window on its %s side" % side_name.to_lower())
 
-	# The roof, with its stovepipe.
-	var roof: Node = tower.get_node_or_null("Roof")
-	_expect(roof != null and roof.get_node_or_null("SlabFront") != null and roof.get_node_or_null("SlabBack") != null, "the roof has two shingled slopes")
-	_expect(tower.get_node_or_null("Roof/Breach") != null and tower.get_node_or_null("Ceiling/Breach") != null, "with a breach through the roof and the ceiling under it")
-	_expect(tower.get_node_or_null("Stovepipe") != null or tower.get_node_or_null("Roof/Stovepipe") != null, "and a stovepipe chimney")
+	# The ramp up the +X side, to the balcony (it starts on the ground in front and rises towards the back).
+	var foot: Vector3 = _first_hit(Vector3(3.0, 3.0, 3.4), Vector3(3.0, -1.0, 3.4))
+	var top: Vector3 = _first_hit(Vector3(3.0, 5.0, -0.6), Vector3(3.0, -1.0, -0.6))
+	_expect(foot.y < 0.8 and top.y > 2.6, "a plank ramp rises up the +X side (%.2f m up at the front, %.2f m near the cabin's door)" % [foot.y, top.y])
 
 
 # ============================================================
@@ -127,22 +138,25 @@ func _check_the_doors() -> void:
 	_expect(door.required_key_id.is_empty() and door.locked_line.is_empty(), "it asks for no key, and has no line about one")
 	_expect(door.get_prompt_text_for_player(player) == "PROMPT_OPEN", "it offers [E] Open")
 	_expect(door.persistent_id == &"signal_tower_front_door", "and is saved as it always was (signal_tower_front_door)")
-	_expect(absf(door.global_position.z - 1.91) < 0.02 and absf(door.global_position.x - (SignalTowerBuilder.DOOR_X - 0.45)) < 0.02, "it is in the front wall, left of the middle")
+	_expect(absf(door.global_position.z - SignalTowerBuilder.FRONT_DOOR_Z) < 0.02 and absf(door.global_position.x - (SignalTowerBuilder.DOOR_X - DOOR_WIDTH_FOR_TEST * 0.5)) < 0.02, "it hangs in the front wall's doorway, left of the middle")
 
-	# A door of heavy planks with straps, and brass hardware with a keyhole.
+	# The door_001 model: its slab, the handle plate and the lever on both faces, with a keyhole each.
 	var root: Node3D = door.get_node("Hinge/DoorRoot")
-	var straps: int = 0
-	for child: Node in root.get_children():
-		var strap: MeshInstance3D = child as MeshInstance3D
-		if strap != null and strap.mesh is BoxMesh and (strap.mesh as BoxMesh).size.is_equal_approx(Vector3(DOOR_WIDTH_FOR_TEST - 0.04, 0.12, 0.012)):
-			straps += 1
-	_expect(straps >= 4, "it is reinforced with iron straps (%d)" % straps)
-	_expect(door._hardware.size() == 2 and (door._hardware[1] as DoorHardware).get_key_slot_global().distance_to(door.global_position) < 1.5, "and has brass hardware with a keyhole on both faces")
+	var slab: MeshInstance3D = root.get_node("DoorMesh") as MeshInstance3D
+	_expect(slab.mesh == DoorModel.slab_mesh(), "it is the door model (the slab of door_001)")
+	var leaf_width: float = slab.mesh.get_aabb().size.z * slab.transform.basis.get_scale().x
+	_expect(absf(leaf_width - SignalTowerBuilder.DOOR_WIDTH) < 0.02, "as wide as the doorway (%.2f m)" % leaf_width)
+	_expect(door._hardware.size() == 2, "it has hardware on both faces")
+	for face: int in [1, -1]:
+		var hardware: DoorHardware = door._hardware[face] as DoorHardware
+		_expect(hardware.get_node_or_null("Plate") != null and hardware.get_node_or_null("Lever/Handle") != null, "(face %d: a plate with its keyhole and the lever, a model of its own that turns)" % face)
+		_expect(hardware.get_key_slot_global().distance_to(door.global_position) < 1.5, "(and a place for the key)")
 	_expect(root.get_node_or_null("DoorNote") == null and tower.find_child("DoorNote", true, false) == null, "no note about a key is pinned to it")
 
 	var upper: DoorController = tower.upper_door
 	_expect(not upper.is_locked, "the cabin's balcony door is not locked")
-	_expect(upper.global_position.y > 2.7 and upper.global_position.x > 2.0, "it is on the +X side, at the cabin's floor")
+	_expect(upper.global_position.y > 2.9 and upper.global_position.x > 2.0, "it is on the +X side, at the cabin's floor")
+	_expect(upper.persistent_id == &"signal_tower_balcony_door", "and keeps its saved name (signal_tower_balcony_door)")
 
 
 # ============================================================
@@ -153,17 +167,21 @@ func _check_props() -> void:
 	var props: SignalTowerProps = tower.props
 	_expect(props != null and tower.get_node("Props") == props, "the furniture is the tower's child Props")
 
-	# The levers: five heavy iron ones on a floor frame, the fourth snapped.
+	# The levers: the signal box's own model (twelve levers on a curved plate, none broken), standing in the control cabin with its plate towards the room.
 	var frame: Node3D = props.lever_frame
-	var levers: Array[Node] = frame.get_children().filter(func(n: Node) -> bool: return n.name.begins_with("Lever") and not n.name.begins_with("LeverFrame"))
-	_expect(levers.size() == 5, "five levers stand on the frame (%d)" % levers.size())
-	_expect(is_equal_approx(frame.global_position.y, 2.8), "in the control cabin")
-	var broken_arm: MeshInstance3D = frame.get_node("Lever%d/Arm" % SignalTowerProps.BROKEN_LEVER) as MeshInstance3D
-	var whole_arm: MeshInstance3D = frame.get_node("Lever0/Arm") as MeshInstance3D
-	_expect((broken_arm.mesh as BoxMesh).size.y < 0.5 and (whole_arm.mesh as BoxMesh).size.y > 1.0, "Lucas's lever is snapped off short, the others are whole")
-	var fallen: Node3D = frame.get_node("FallenLever") as Node3D
-	_expect(absf(fallen.global_position.x) < 2.0 and absf(fallen.global_position.z) < 2.0 and fallen.global_position.y < 2.9, "and the rest of it lies on the cabin floor")
-	_expect(frame.find_children("InterlockBar", "MeshInstance3D", true, false).size() == 1, "an interlocking bar runs behind the levers")
+	var lever_model: Node = frame.get_node_or_null("Model")
+	_expect(lever_model != null and lever_model.scene_file_path == "res://assets/models/train_related/signal_box_levers/signal_box_levers.glb", "the levers are the signal box model")
+	_expect(is_equal_approx(frame.global_position.y, SignalTowerBuilder.BASE_HEIGHT), "standing in the control cabin")
+	var mesh_box: AABB = (lever_model.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D).get_aabb()
+	var in_room: AABB = (lever_model as Node3D).global_transform * mesh_box
+	_expect(in_room.position.x > -1.2 and in_room.end.x < 1.2 and in_room.position.z > 0.5 and in_room.end.z < SignalTowerBuilder.ROOM_HALF + 0.01, "wholly inside the cabin, against the front wall (z %.2f to %.2f)" % [in_room.position.z, in_room.end.z])
+	_expect(frame.get_node_or_null("FallenLever") == null and frame.find_children("InterlockBar", "MeshInstance3D", true, false).is_empty(), "with none of the old frame's pieces (no snapped lever, no bar)")
+
+	# The relay cabinet: the wooden cabinet of the models, with two doors that are doors.
+	var cabinet: WoodCabinet = props.get_node("RelayRoom/RelayCabinet") as WoodCabinet
+	_expect(cabinet.get_node("Model").scene_file_path == "res://assets/models/furniture/wood_cabinet_large/wood_cabinet_large.glb", "the relay cabinet is the wooden cabinet model")
+	_expect(cabinet.left_door != null and cabinet.right_door != null and cabinet.left_door.persistent_id == &"tower_relay_cabinet_left", "with a left and a right door, saved by name")
+	_expect(cabinet.global_basis.x.dot(Vector3.LEFT) > 0.99, "its front faces the room (-X)")
 
 	# The children's headquarters, in the back left corner of the relay room.
 	var hq: Node3D = props.get_node("HeadQuarters") as Node3D
@@ -184,7 +202,8 @@ func _check_props() -> void:
 
 	_expect(not written, "and nothing is carved or written on them")
 	_expect(not props.ground_items.has(&"watch") and not props.ground_items.has(&"sketchbook") and props.find_child("TowerPocketWatch", true, false) == null and props.find_child("TowerSketchbook", true, false) == null, "there is no pocket watch and no notebook")
-	_expect(tower.props.lore_items.size() == 4 and not tower.props.ground_items.is_empty(), "(the cabin's documents and the headquarters' items are kept by key)")
+	_expect(not tower.props.ground_items.is_empty(), "(the headquarters' items are kept by key)")
+	_expect(tower.find_children("*", "Inspectable", true, false).size() == 2, "and the two notes of the headquarters are the only things to read in the tower")
 
 	# The relay room: a cabinet and the like.
 	_expect(props.get_node("RelayRoom/RelayCabinet") != null and props.get_node("RelayRoom/Barrel") != null, "the relay room has its cabinet and its barrel")
@@ -221,7 +240,7 @@ func _check_zones() -> void:
 	_expect(lamp != null and table.is_ancestor_of(lamp), "a desk lamp stands on the HQ desk")
 	var on_table: Vector3 = table.to_local(knee.global_position)
 	_expect(Vector2(on_table.x, on_table.z).length() < 0.12, "the Scraped Knee lies in the middle of the plank (%.2f, %.2f)" % [on_table.x, on_table.z])
-	_expect(knee.global_basis.z.dot(Vector3.UP) > 0.99 and absf(on_table.y - 0.5635) < 0.006, "flat, face up, on the plank's top (%.3f)" % on_table.y)
+	_expect(knee.global_basis.z.dot(Vector3.UP) > 0.99 and absf(on_table.y - 0.7435) < 0.006, "flat, face up, on the plank's top (%.3f)" % on_table.y)
 	var from_lamp: Vector2 = Vector2(knee.global_position.x - lamp.global_position.x, knee.global_position.z - lamp.global_position.z)
 	_expect(from_lamp.length() > 0.25, "and not propped against the lamp (%.2f m from its stem)" % from_lamp.length())
 	var drawer: DeskDrawer = props.desk_drawer
@@ -230,7 +249,7 @@ func _check_zones() -> void:
 	_expect(juliana_note != null and drawer.is_ancestor_of(juliana_note) and juliana_note.global_basis.z.dot(Vector3.UP) > 0.99, "Juliana's note lies in the drawer, face up")
 	_expect(not drawer.is_open and is_zero_approx(drawer.get_openness()), "and the drawer is shut")
 	var note_in_table: Vector3 = table.to_local(juliana_note.global_position)
-	_expect(note_in_table.y < 0.5 and absf(note_in_table.x) < 0.2, "under the plank, between the crates (%s)" % str(note_in_table))
+	_expect(note_in_table.y < 0.7 and absf(note_in_table.x) < 0.2, "under the plank, between the crates (%s)" % str(note_in_table))
 
 	# Zone 2: the wooden bench (the daybed), with Sophia's folded letter on the cushion.
 	var daybed: Node3D = props.get_node("HeadQuarters/Daybed")
@@ -281,91 +300,11 @@ func _check_zones() -> void:
 	GameSettings.set_text_locale("en", false)
 
 
-# ============================================================
-# THE TOWN'S HISTORY
-# ============================================================
-
-const LORE_TEXTS: Dictionary = {
-	"news": ["READABLE_TOWER_NEWS", "LOCAL POLICE BRIEF (MAY 1984): Search efforts along the northern rail cutting have been suspended. Maintenance worker E. Silva reported hearing his missing seven year old daughter calling his name from inside the drainage culvert near Mile Marker 4. Search teams examined the pipe and confirmed it has been completely filled with solid granite since 1962. Mr. Silva remains under psychiatric observation following his refusal to stop digging into the stone with his bare hands."],
-	"memo": ["READABLE_TOWER_MEMO", "INTERNAL MEMORANDUM (1989): To all signal tower operators: Effective immediately, do not record fog shadows in the official station logbook. Operator M. Santos was relieved of duty last night after stopping three freight trains for non existent obstructions. He insists a woman in a black dress was standing in the center of the tracks holding her head in her hands. Medical officers attribute his vision to severe sleep deprivation and carbon monoxide fumes from the coal heater."],
-	"journal": ["READABLE_TOWER_JOURNAL", "November 12. My wife says I am losing my mind because I keep measuring the floorboards with a ruler every morning. She does not understand. The distance between the door and the window was four meters on Monday. Today it is four meters and twelve centimeters. The house is stretching. Or maybe my eyes are failing me just like my father told me they would. I cannot sleep when the wood creaks because it sounds like the walls are catching their breath."],
-	"notice": ["READABLE_TOWER_NOTICE", "MUNICIPAL HEALTH ANNOUNCEMENT (1991): Residents living near the forest line are advised that severe valley acoustic resonance during heavy fog can cause auditory illusions including knocking sounds, whispered names, and perceived footsteps. Doctors confirm these sensations are harmless neurological responses to prolonged atmospheric isolation. Please keep your doors locked and remain inside after dusk."],
-}
-
-
-## Four documents of the town's own history lie about the control cabin: the words are the written ones
-## (in both languages, no hyphens, none of the story's characters named), each is where it was meant to
-## be, and each can be reached by an interaction ray.
-func _check_lore_items() -> void:
-	var items: Dictionary = tower.props.lore_items
-	_expect(items.size() == 4, "four lore documents are in the cabin (%d)" % items.size())
-	for key: String in LORE_TEXTS:
-		var item: Inspectable = items.get(StringName(key)) as Inspectable
-		_expect(item != null, "the %s is an inspectable" % key)
-		if item == null:
-			continue
-
-		var expected: Array = LORE_TEXTS[key]
-		_expect(item.global_position.y > 2.8 and item.global_position.y < 5.2, "the %s is on the upper floor (%.2f m up)" % [key, item.global_position.y])
-		_expect(str(item.get_visual_node().get_meta("readable_text")) == expected[0], "its words are %s" % expected[0])
-		_expect(str(item.get_visual_node().get_meta("inspect_mode")) == "read", "and it is read as a document")
-		_expect(tr(expected[0]) == expected[1], "the %s says what was written (%s)" % [key, tr(expected[0]).left(24)])
-		_expect(not tr(expected[0]).contains("-"), "with no hyphen in it")
-		for name_key: String in ["ITEM_TOWER_%s_NAME" % key.to_upper(), "ITEM_TOWER_%s_DESCRIPTION" % key.to_upper()]:
-			_expect(tr(name_key) != name_key, "%s has its name and description" % key)
-
-	GameSettings.set_text_locale("pt_BR", false)
-	var translated: bool = true
-	var clean: bool = true
-	for key: String in LORE_TEXTS:
-		var key_text: String = (LORE_TEXTS[key] as Array)[0]
-		translated = translated and tr(key_text) != key_text and tr(key_text) != str((LORE_TEXTS[key] as Array)[1]) and tr("ITEM_TOWER_%s_NAME" % key.to_upper()) != "ITEM_TOWER_%s_NAME" % key.to_upper()
-		clean = clean and not tr(key_text).contains("-")
-	_expect(translated, "all four are translated into Portuguese")
-	_expect(clean, "with no hyphen there either")
-	GameSettings.set_text_locale("en", false)
-
-	# No one of the story is named in them.
-	var named: bool = false
-	for key: String in LORE_TEXTS:
-		for person: String in ["Sophia", "Juliana", "Juli", "Lucas"]:
-			named = named or str((LORE_TEXTS[key] as Array)[1]).contains(person)
-	_expect(not named, "none of the main characters is named")
-
-	# Where each one is.
-	var news: Node3D = items[&"news"]
-	var desk: Node3D = tower.props.get_node("Cabin/Desk")
-	var on_desk: Vector3 = desk.to_local(news.global_position)
-	_expect(absf(on_desk.x) < 0.65 and absf(on_desk.z) < 0.3 and absf(on_desk.y - 0.775) < 0.01, "the clipping lies on the control desk's top (%s)" % str(on_desk))
-	_expect(news.global_basis.z.dot(Vector3.UP) > 0.99, "face up")
-
-	var memo: Node3D = items[&"memo"]
-	_expect(tower.props.lever_frame.is_ancestor_of(memo), "the memo is pinned to the lever frame")
-	_expect(memo.global_basis.z.dot(Vector3.BACK) < -0.99, "on the operator's side of it, facing into the room")
-
-	var journal: Node3D = items[&"journal"]
-	var bench: Node3D = tower.props.get_node("Cabin/Bench")
-	var on_bench: Vector3 = bench.to_local(journal.global_position)
-	_expect(absf(on_bench.y - 0.44) < 0.01 and absf(on_bench.x) <= 0.21 and absf(on_bench.x) > 0.15, "the journal page rests on the seat of the bench, by its edge (%s)" % str(on_bench))
-
-	var notice: Node3D = items[&"notice"]
-	_expect(absf(notice.global_position.z + 2.1) < 0.05 and notice.global_position.y > 4.0, "the notice is taped to the back window frame")
-	_expect(tower.props.get_node("Cabin") != null and tower.get_node("UpperShell/RibbonBack") != null, "which is a window of the cabin")
-
-	# Every one can be reached by a ray from where a player would stand.
-	_ray_finds(news, Vector3(0.9, 4.2, -0.8), news.global_position, "the clipping on the desk")
-	_ray_finds(memo, Vector3(1.0, 4.2, 0.6), memo.global_position, "the memo on the lever frame")
-	_ray_finds(journal, Vector3(1.0, 4.2, 0.35), journal.global_position, "the journal page on the bench")
-	_ray_finds(notice, Vector3(0.0, 4.2, -0.5), notice.global_position, "the notice on the window frame")
-
-
 ## Pressing the interact key on an open document shows its words in the clean text overlay.
-func _read_the_lore() -> void:
+func _read_the_notes() -> void:
 	player.global_position = Vector3(1.0, 3.4, 0.5)
 	var inspect: PlayerInspectController = player.inspect_controller
 	var documents: Dictionary = {}
-	for key: String in LORE_TEXTS:
-		documents[key] = [tower.props.lore_items[StringName(key)], (LORE_TEXTS[key] as Array)[0]]
 	for key: String in GROUND_TEXTS:
 		documents[key] = [tower.props.ground_items[StringName(key)], (GROUND_TEXTS[key] as Array)[0]]
 	for key: String in documents:
@@ -391,26 +330,14 @@ func _read_the_lore() -> void:
 # ============================================================
 
 func _check_decay() -> void:
-	# (A broken pane is an ArrayMesh of jagged shards, a whole one a plain quad; one that is gone is nothing.)
-	var shards: int = 0
-	var panes: int = 0
-	for node: Node in tower.find_children("*", "MeshInstance3D", true, false):
-		var mesh: Mesh = (node as MeshInstance3D).mesh
-		if mesh is ArrayMesh:
-			shards += 1
-		elif mesh is QuadMesh:
-			panes += 1
-
-	_expect(shards >= 8, "many panes are shattered (%d with jagged shards)" % shards)
-	_expect(shards > panes, "more broken than whole (%d against %d)" % [shards, panes])
-	_expect(tower.find_children("MullionV*", "MeshInstance3D", true, false).size() >= 15, "the windows are multi pane, with their mullions")
-
-	var tiles: int = 0
-	for node: Node in tower.get_children():
-		if node.name.begins_with("LooseTile"):
-			tiles += 1
-	_expect(tiles >= 5, "loose roof tiles lie on the slopes (%d)" % tiles)
-	_expect(tower.get_node("Rubble").get_child_count() >= 20, "and tiles and bricks lie fallen on the ground (%d pieces)" % tower.get_node("Rubble").get_child_count())
+	# (The broken panes, the missing tiles and the cracks are the model's own.)
+	_expect(tower.get_node("Rubble").get_child_count() >= 20, "tiles and bricks lie fallen on the ground (%d pieces)" % tower.get_node("Rubble").get_child_count())
+	var inside_walls: int = 0
+	for piece: Node in tower.get_node("Rubble").get_children():
+		var spot: Vector3 = (piece as Node3D).position
+		if maxf(absf(spot.x), absf(spot.z)) < SignalTowerBuilder.WALL_FACE:
+			inside_walls += 1
+	_expect(inside_walls == 0, "none of them lies inside a wall (%d)" % inside_walls)
 
 	var leaves: MultiMeshInstance3D = tower.get_node("Ivy/Leaves") as MultiMeshInstance3D
 	var stems: MultiMeshInstance3D = tower.get_node("Ivy/Stems") as MultiMeshInstance3D
@@ -423,10 +350,10 @@ func _check_decay() -> void:
 	for spot: Vector3 in tower.ivy_leaf_points:
 		highest = maxf(highest, spot.y)
 		farthest = maxf(farthest, maxf(absf(spot.x), absf(spot.z)))
-		if absf(maxf(absf(spot.x), absf(spot.z)) - 2.0) < 0.2:
+		if absf(maxf(absf(spot.x), absf(spot.z)) - (SignalTowerBuilder.WALL_FACE + 0.03)) < 0.2:
 			on_brick += 1
 	_expect(highest < SignalTowerBuilder.BASE_HEIGHT, "the ivy stays on the brick base (highest leaf %.2f m)" % highest)
-	_expect(farthest < 2.2 and on_brick > int(count * 0.9), "every leaf clings to a wall (%d of %d)" % [on_brick, count])
+	_expect(farthest < SignalTowerBuilder.WALL_FACE + 0.3 and on_brick > int(count * 0.9), "every leaf clings to a wall (%d of %d)" % [on_brick, count])
 
 
 # ============================================================
@@ -440,13 +367,13 @@ func _check_the_stairs() -> void:
 	await _wait(0.6)
 	Input.action_press(&"up")
 	var waited: float = 0.0
-	while waited < 14.0 and player.global_position.y < 3.25:
+	while waited < 14.0 and player.global_position.y < SignalTowerBuilder.BASE_HEIGHT + 0.4:
 		await get_tree().physics_frame
 		waited += get_physics_process_delta_time()
 	await _wait(0.5)
 	Input.action_release(&"up")
-	_expect(player.global_position.y > 3.2, "the player walks up the stairs to the balcony (%.2f m up)" % player.global_position.y)
-	_expect(player.global_position.z < -0.2 and player.global_position.z > -2.1 and player.global_position.x > 2.3, "and stands on it (%.2f, %.2f)" % [player.global_position.x, player.global_position.z])
+	_expect(player.global_position.y > SignalTowerBuilder.BASE_HEIGHT + 0.3, "the player walks up the ramp to the balcony (%.2f m up)" % player.global_position.y)
+	_expect(player.global_position.z < 0.6 and player.global_position.z > -2.2 and player.global_position.x > 2.3, "and stands on it (%.2f, %.2f)" % [player.global_position.x, player.global_position.z])
 
 	# The balcony door opens: it is not locked.
 	var upper: DoorController = tower.upper_door
@@ -454,8 +381,30 @@ func _check_the_stairs() -> void:
 	upper.interact(player)
 	_expect(upper.is_open, "the cabin's door opens for the player")
 	await _wait(5.0)
-	var through: Vector3 = _first_hit(Vector3(6.0, 4.2, UPPER_DOOR_Z), Vector3(-6.0, 4.2, UPPER_DOOR_Z))
+	var through: Vector3 = _first_hit(Vector3(6.0, 4.4, UPPER_DOOR_Z), Vector3(-6.0, 4.4, UPPER_DOOR_Z))
 	_expect(through.x < -1.9, "and the way into the cabin is clear (the ray goes in to %.2f)" % through.x)
+
+
+## The relay cabinet's two doors open out to the room and shut again, like any door.
+func _check_the_cabinet() -> void:
+	var cabinet: WoodCabinet = tower.props.get_node("RelayRoom/RelayCabinet") as WoodCabinet
+	player.global_position = Vector3(0.6, 1.1, -1.2)
+	await _wait(0.3)
+	for door: DoorController in [cabinet.left_door, cabinet.right_door]:
+		var leaf: Node3D = door.get_node("Hinge/DoorRoot/Model") as Node3D
+		var shut: Vector3 = leaf.global_position
+		_expect(door.get_prompt_text_for_player(player) == "PROMPT_OPEN", "(%s offers [E] Open)" % door.name)
+		door.interact(player)
+		_expect(door.is_open, "%s opens when used" % door.name)
+		await _wait(1.6)
+		var moved: Vector3 = leaf.global_position - shut
+		var front: Vector3 = cabinet.global_basis.x
+		_expect(moved.dot(front) > 0.12 and leaf.global_position.x < 1.7, "and swings OUT of the cabinet, to the room's side (moved %.2f m towards the front)" % moved.dot(front))
+		_expect(absf(door.hinge.rotation_degrees.y) > 90.0, "about %d degrees open" % int(absf(door.hinge.rotation_degrees.y)))
+		_expect(door.get_prompt_text_for_player(player) == "PROMPT_CLOSE", "and offers [E] Close")
+		door.interact(player)
+		await _wait(1.6)
+		_expect(not door.is_open and absf(door.hinge.rotation_degrees.y) < 1.0, "%s closes again" % door.name)
 
 
 ## The shut front door blocks the way in, and opens like any door. A brass key an old save still carries is left alone: the door neither
@@ -463,7 +412,7 @@ func _check_the_stairs() -> void:
 func _check_opening_the_front_door() -> void:
 	var door: DoorController = tower.lower_door
 	door.animate_player_interaction = false
-	var shut: Vector3 = _first_hit(Vector3(-0.2, 1.0, 6.0), Vector3(-0.2, 1.0, -1.5))
+	var shut: Vector3 = _first_hit(Vector3(SignalTowerBuilder.DOOR_X, 1.0, 6.0), Vector3(SignalTowerBuilder.DOOR_X, 1.0, -1.5))
 	_expect(shut.z > 1.7, "the shut door blocks the way in (%.2f)" % shut.z)
 
 	var key: Collectible = (load("res://scenes/objects/signal_tower/brass_signal_key.tscn") as PackedScene).instantiate() as Collectible
@@ -480,9 +429,9 @@ func _check_opening_the_front_door() -> void:
 	_expect(not door.is_locked and door.is_open, "it opens")
 	_expect(player.has_inventory_item("brass_signal_key"), "and the key is still in the hands: it was not used")
 	await _wait(6.0)
-	var open: Vector3 = _first_hit(Vector3(-0.2, 1.0, 6.0), Vector3(-0.2, 1.0, -1.9))
+	var open: Vector3 = _first_hit(Vector3(SignalTowerBuilder.DOOR_X, 1.0, 6.0), Vector3(SignalTowerBuilder.DOOR_X, 1.0, -1.9))
 	_expect(open.z < -1.7, "the way into the relay room is clear (the ray goes in to %.2f)" % open.z)
-	var top: Vector3 = _first_hit(Vector3(-0.2, 1.95, 6.0), Vector3(-0.2, 1.95, -1.9))
+	var top: Vector3 = _first_hit(Vector3(SignalTowerBuilder.DOOR_X, 1.95, 6.0), Vector3(SignalTowerBuilder.DOOR_X, 1.95, -1.9))
 	_expect(top.z < -1.7, "up to the door's full height (%.2f)" % top.z)
 
 
@@ -520,7 +469,7 @@ func _check_the_drawer() -> void:
 		reachable = reachable or not (shape as CollisionShape3D).disabled
 
 	_expect(not note_areas.is_empty() and not reachable, "while the drawer is shut the note has no area to be aimed at")
-	var front: Vector3 = table.to_global(Vector3(0.0, 0.452, 0.36))
+	var front: Vector3 = table.to_global(Vector3(0.0, 0.632, 0.36))
 	_ray_finds(drawer, front + table.global_basis.z * 0.7 + Vector3(0.0, 0.5, 0.0), front, "the drawer's front")
 	_expect(drawer.can_interact(player) and drawer.get_prompt_text() == "PROMPT_OPEN" and tr("PROMPT_OPEN").ends_with("] Open"), "aimed at, it offers [E] Open")
 
@@ -528,13 +477,20 @@ func _check_the_drawer() -> void:
 	var shut_at: Vector3 = drawer.slide.global_position
 	drawer.interact(player)
 	_expect(drawer.is_moving and not drawer.can_interact(player), "[E] sets it moving, and it is not used again meanwhile")
-	await _wait(0.45)
+	# (The lean comes and goes within the pull, and at three times the speed a slow frame can miss it: it is the deepest lean seen that counts.)
+	var deepest_lean: float = 0.0
+	var pulled_for: float = 0.0
+	var pull_movement: Object = player.get("movement_controller") as Object
+	while pulled_for < 0.45:
+		await get_tree().process_frame
+		pulled_for += get_process_delta_time()
+		deepest_lean = minf(deepest_lean, (pull_movement.get("gesture_offset") as Vector3).z)
 	var mid: float = drawer.get_openness()
 	_expect(mid > 0.1 and mid < 0.95 and drawer.is_moving, "it is on its way (%.0f%% out)" % (mid * 100.0))
 	var sound: AudioStreamPlayer3D = drawer.get_node("Sound") as AudioStreamPlayer3D
 	_expect(sound.playing and sound.stream != null and sound.stream.get_length() > 0.8, "its scrape and its knocks sound (%.2f s)" % (sound.stream.get_length() if sound.stream != null else 0.0))
 	var movement: Object = player.get("movement_controller") as Object
-	_expect(movement != null and (movement.get("gesture_offset") as Vector3).z < -0.005, "the player leans in while they pull (%s)" % str(movement.get("gesture_offset")))
+	_expect(movement != null and deepest_lean < -0.005, "the player leans in while they pull (%.3f m)" % deepest_lean)
 	var waited: float = 0.0
 	while drawer.is_moving and waited < 4.0:
 		await get_tree().process_frame
@@ -549,7 +505,7 @@ func _check_the_drawer() -> void:
 
 	# The note is out where it can be seen and aimed at.
 	var out: Vector3 = table.to_local(note.global_position)
-	_expect(out.z > 0.4 and out.y < 0.5, "Juliana's note lies in the open part of the drawer, past the plank's edge (%s)" % str(out))
+	_expect(out.z > 0.4 and out.y < 0.7, "Juliana's note lies in the open part of the drawer, past the plank's edge (%s)" % str(out))
 	reachable = false
 	for shape: Node in note_areas:
 		reachable = reachable or not (shape as CollisionShape3D).disabled

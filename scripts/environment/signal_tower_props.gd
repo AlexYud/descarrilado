@@ -6,7 +6,7 @@ class_name SignalTowerProps
 ## `SignalTowerBuilder`, which adds this node as its child `Props`; both share the tower's frame: the
 ## origin at the middle of the foot, the front door facing +Z).
 ##
-##   Relay room (lower level, floor at y 0.04)  the children's headquarters, in three zones around an open
+##   Relay room (lower level, floor at y 0.005)  the children's headquarters, in three zones around an open
 ##       aisle. The one photograph the album needs from this place lies out in the open (no box, nothing to unlock):
 ##         1. the HQ desk, back left (a makeshift table of two crates and a plank with a drawer under it, two stools, a desk
 ##            lamp): Scraped Knee lies flat in the middle of the plank, and in the drawer (`DeskDrawer`, which slides out when it
@@ -14,43 +14,27 @@ class_name SignalTowerProps
 ##         2. the wooden bench on the right wall (a daybed with a cushion): Sophia's folded letter on graph paper;
 ##         3. the low shelf on the back wall: an open tin, with a few of a child's things on the lower board.
 ##       Also a relay cabinet, pipes, crates and a barrel, all kept out of the aisle.
-##   Control cabin (upper level, floor at y 2.8)  the floor frame with five heavy iron interlocking signal
-##       levers (the fourth is Lucas's, snapped off), a stove under the stovepipe, a desk with a telegraph,
-##       a bench, and four pieces of the town's own eerie history to read (`LORE_ITEMS`): a newspaper
-##       clipping on the desk, an internal memo pinned to the lever frame, an operator's journal page on the
-##       bench and a health notice taped to the back window.
+##   Control cabin (upper level, floor at y 3.006)  the signal box's levers (a model), a stove under the stovepipe, a desk with a telegraph and a bench.
+##       Nothing in it is read or picked up.
 ##
-## The inspectable pieces are scenes (the notes, Juliana's note); what they
+## The inspectable pieces are scenes (Juliana's and Sophia's notes); what they
 ## look like is built here too, for the kinds below, so that ProceduralProp can fill their `Visual` node.
 
-const HQ_TABLE: Vector3 = Vector3(-1.15, 0.04, -1.3)
-const HQ_WALL_Z: float = -1.82
+const HQ_TABLE: Vector3 = Vector3(-1.15, SignalTowerBuilder.FLOOR_TOP, -1.3)
+const HQ_WALL_Z: float = -2.0
 ## The middle of the back shelf and of the carved board over it, along the back wall.
 const SHELF_X: float = 0.45
-const LEVER_FRAME: Vector3 = Vector3(0.0, 2.8, 1.5)
-const LEVER_COUNT: int = 5
-## Which lever is snapped off (counting from 0 at the left): Lucas's.
-const BROKEN_LEVER: int = 3
-const STOVE_POSITION: Vector3 = Vector3(-1.4, 2.8, -0.9)
+const LEVER_FRAME: Vector3 = Vector3(0.0, SignalTowerBuilder.BASE_HEIGHT, 1.35)
+## The levers of the signal box (a model: a curved plate with twelve levers, two green and ten red, none broken and none that moves) and its box in its
+## own file frame; the operator stands on the plate's side (+X in the file).
+const LEVERS_SCENE: PackedScene = preload("res://assets/models/train_related/signal_box_levers/signal_box_levers.glb")
+const LEVERS_BOX: AABB = AABB(Vector3(-0.640, 0.003, -0.934), Vector3(1.173, 1.186, 1.885))
+const STOVE_POSITION: Vector3 = Vector3(-1.4, SignalTowerBuilder.BASE_HEIGHT, -0.9)
 
 const JULIANA_NOTE_SCENE_PATH: String = "res://scenes/objects/signal_tower/tower_juliana_note.tscn"
 
-const KIND_DOOR_NOTE: StringName = &"tower_door_note"
 const KIND_JULIANA_NOTE: StringName = &"juliana_note"
 const KIND_SOPHIA_NOTE: StringName = &"sophia_note"
-const KIND_NEWS: StringName = &"tower_news"
-const KIND_MEMO: StringName = &"tower_memo"
-const KIND_JOURNAL: StringName = &"tower_journal"
-const KIND_NOTICE: StringName = &"tower_notice"
-
-## The four lore documents of the control cabin: scene, and the node's name in `lore_items`.
-const LORE_ITEMS: Dictionary = {
-	&"news": "res://scenes/objects/signal_tower/tower_news.tscn",
-	&"memo": "res://scenes/objects/signal_tower/tower_memo.tscn",
-	&"journal": "res://scenes/objects/signal_tower/tower_journal.tscn",
-	&"notice": "res://scenes/objects/signal_tower/tower_notice.tscn",
-}
-
 ## The pieces other scripts and the tests look for.
 ## The photograph of the relay room, by item id (a Collectible in the game): only `photo_childhood`.
 var photos: Dictionary = {}
@@ -61,8 +45,6 @@ var desk_lamp: Node3D = null
 var desk_drawer: DeskDrawer = null
 var photo_tin: Node3D = null
 var lever_frame: Node3D = null
-## The lore documents by key (`news`, `memo`, `journal`, `notice`), as Inspectables in the game.
-var lore_items: Dictionary = {}
 
 var _iron: StandardMaterial3D
 var _rust: StandardMaterial3D
@@ -89,31 +71,23 @@ func _ready() -> void:
 # ============================================================
 
 static func has_kind(kind: StringName) -> bool:
-	return kind in [KIND_DOOR_NOTE, KIND_NEWS, KIND_MEMO, KIND_JOURNAL, KIND_NOTICE, KIND_JULIANA_NOTE, KIND_SOPHIA_NOTE]
+	return kind in [KIND_JULIANA_NOTE, KIND_SOPHIA_NOTE]
 
 
 static func build(kind: StringName, root: Node3D) -> void:
 	match kind:
-		KIND_DOOR_NOTE:
-			_build_note(root, true)
 		KIND_JULIANA_NOTE:
 			_build_juliana_note(root)
 		KIND_SOPHIA_NOTE:
 			_build_graph_paper(root)
-		KIND_NEWS, KIND_MEMO, KIND_JOURNAL, KIND_NOTICE:
-			_build_document(root, kind)
 		_:
 			push_warning("SignalTowerProps: unknown prop kind '%s'." % kind)
 
 
-## A page torn from a school notebook, facing +Z, centred on the origin. The words are not drawn on it (the
-## player reads them as an overlay); a few lines of a child's pencil stand for them. Pinned, it hangs from
-## a rusty nail by its top edge; unpinned, it is creased down the middle and stained by damp.
-static func _build_note(root: Node3D, pinned: bool, tint: Color = HouseProps.PAPER) -> void:
-	var paper: MeshInstance3D = HouseProps.add_box(
-		root, "Paper", Vector3(0.11, 0.08, 0.0015), Vector3.ZERO, HouseProps.material(tint, 0.96),
-		Vector3(0.0, 0.0, 3.0 if pinned else 0.0)
-	)
+## A page torn from a school notebook, facing +Z, centred on the origin. The words are not drawn on it (the player reads them as an overlay); a few
+## lines of a child's pencil stand for them. It is creased down the middle and stained by damp.
+static func _build_note(root: Node3D, tint: Color = HouseProps.PAPER) -> void:
+	var paper: MeshInstance3D = HouseProps.add_box(root, "Paper", Vector3(0.11, 0.08, 0.0015), Vector3.ZERO, HouseProps.material(tint, 0.96))
 	var pencil: StandardMaterial3D = HouseProps.material(Color(0.22, 0.22, 0.24), 1.0)
 	var widths: Array[float] = [0.088, 0.092, 0.07, 0.09, 0.082, 0.04]
 	for i: int in widths.size():
@@ -123,96 +97,15 @@ static func _build_note(root: Node3D, pinned: bool, tint: Color = HouseProps.PAP
 			Vector3(line_x, 0.026 - 0.0105 * float(i), 0.001), pencil
 		)
 
-	if pinned:
-		var rust: StandardMaterial3D = HouseProps.material(Color(0.34, 0.17, 0.08), 0.85, 0.5)
-		HouseProps.add_cylinder(paper, "Nail", 0.0055, 0.003, Vector3(0.0, 0.034, 0.0022), rust, Vector3(90.0, 0.0, 0.0))
-		HouseProps.add_box(
-			paper, "TornEdge", Vector3(0.11, 0.004, 0.0004), Vector3(0.0, -0.0398, 0.0009),
-			HouseProps.material(Color(0.6, 0.56, 0.46), 1.0)
-		)
-	else:
-		HouseProps.add_box(paper, "Crease", Vector3(0.0012, 0.08, 0.0004), Vector3(0.0, 0.0, 0.0009), HouseProps.material(Color(0.6, 0.57, 0.48), 1.0))
-		HouseProps.add_box(paper, "Damp", Vector3(0.05, 0.034, 0.0003), Vector3(0.026, -0.018, 0.0008), HouseProps.material(Color(0.5, 0.42, 0.3), 1.0))
-
-
-## One of the cabin's lore documents, facing +Z, centred on the origin. As with the notes, the words are not
-## drawn on it (the player reads them as an overlay): stand-ins for the print and the handwriting are a few
-## dark bars. A newspaper clipping is grey newsprint with a headline bar and two columns; the memo is white
-## with a letterhead and typed lines; the journal page is yellowed, ruled and written in ink; the health
-## notice has a heavy header band and a tape strip at each top corner.
-static func _build_document(root: Node3D, kind: StringName) -> void:
-	var paper_color: Color = HouseProps.NEWSPRINT
-	var ink_color: Color = Color(0.16, 0.16, 0.15)
-	var size: Vector2 = Vector2(0.12, 0.09)
-	match kind:
-		KIND_MEMO:
-			paper_color = Color(0.86, 0.85, 0.8)
-			size = Vector2(0.1, 0.13)
-		KIND_JOURNAL:
-			paper_color = Color(0.78, 0.7, 0.5)
-			ink_color = HouseProps.INK_BLUE
-			size = Vector2(0.11, 0.15)
-		KIND_NOTICE:
-			paper_color = Color(0.82, 0.8, 0.7)
-			size = Vector2(0.11, 0.15)
-
-	var paper: MeshInstance3D = HouseProps.add_box(
-		root, "Paper", Vector3(size.x, size.y, 0.0015), Vector3.ZERO, HouseProps.material(paper_color, 0.96)
-	)
-	var ink: StandardMaterial3D = HouseProps.material(ink_color, 1.0)
-	var top: float = size.y * 0.5 - 0.012
-	var left: float = -size.x * 0.5 + 0.008
-	var inner_width: float = size.x - 0.016
-	match kind:
-		KIND_NEWS:
-			HouseProps.add_box(paper, "Headline", Vector3(inner_width, 0.014, 0.0004), Vector3(0.0, top, 0.001), ink)
-			for column: int in 2:
-				for row: int in 5:
-					HouseProps.add_box(
-						paper, "Print%d_%d" % [column, row], Vector3(inner_width * 0.46, 0.0036, 0.0004),
-						Vector3(left + inner_width * (0.23 + 0.54 * float(column)), top - 0.026 - 0.0085 * float(row), 0.001), ink
-					)
-			# a torn edge
-			HouseProps.add_box(paper, "Torn", Vector3(0.03, 0.004, 0.0004), Vector3(0.03, -size.y * 0.5 + 0.002, 0.001), HouseProps.material(Color(0.55, 0.52, 0.42), 1.0))
-		KIND_MEMO:
-			HouseProps.add_box(paper, "Letterhead", Vector3(inner_width, 0.012, 0.0004), Vector3(0.0, top, 0.001), ink)
-			HouseProps.add_box(paper, "Rule", Vector3(inner_width, 0.0012, 0.0004), Vector3(0.0, top - 0.012, 0.001), ink)
-			for row: int in 8:
-				var width: float = inner_width * (1.0 if row < 7 else 0.5)
-				HouseProps.add_box(
-					paper, "Typed%d" % row, Vector3(width, 0.0028, 0.0004),
-					Vector3(left + width * 0.5, top - 0.03 - 0.0105 * float(row), 0.001), ink
-				)
-			HouseProps.add_box(paper, "Stamp", Vector3(0.026, 0.012, 0.0004), Vector3(0.026, -size.y * 0.5 + 0.016, 0.001), HouseProps.material(HouseProps.INK_RED, 1.0), Vector3(0.0, 0.0, 10.0))
-		KIND_JOURNAL:
-			var ruling: StandardMaterial3D = HouseProps.material(Color(0.55, 0.62, 0.7), 1.0)
-			for row: int in 11:
-				var line_y: float = top - 0.006 - 0.0115 * float(row)
-				HouseProps.add_box(paper, "Ruling%d" % row, Vector3(inner_width, 0.0006, 0.0003), Vector3(0.0, line_y - 0.004, 0.0009), ruling)
-				var width: float = inner_width * (0.95 - 0.12 * float(row % 3)) if row < 10 else inner_width * 0.4
-				HouseProps.add_box(paper, "Hand%d" % row, Vector3(width, 0.0026, 0.0004), Vector3(left + width * 0.5, line_y, 0.001), ink)
-			HouseProps.add_box(paper, "Margin", Vector3(0.0008, size.y - 0.01, 0.0003), Vector3(left + 0.012, 0.0, 0.0009), HouseProps.material(Color(0.7, 0.3, 0.3), 1.0))
-			# a coffee ring
-			HouseProps.add_ring(paper, "Ring", 0.012, 0.015, Vector3(0.03, -0.04, 0.001), HouseProps.material(Color(0.4, 0.28, 0.14), 1.0))
-		KIND_NOTICE:
-			HouseProps.add_box(paper, "Header", Vector3(inner_width, 0.026, 0.0004), Vector3(0.0, top - 0.004, 0.001), ink)
-			HouseProps.add_box(paper, "Subhead", Vector3(inner_width * 0.7, 0.006, 0.0004), Vector3(0.0, top - 0.026, 0.001), ink)
-			for row: int in 8:
-				var width: float = inner_width * (0.95 if row < 7 else 0.55)
-				HouseProps.add_box(
-					paper, "Print%d" % row, Vector3(width, 0.003, 0.0004),
-					Vector3(left + width * 0.5, top - 0.048 - 0.0105 * float(row), 0.001), ink
-				)
-			var tape: StandardMaterial3D = HouseProps.material(Color(0.78, 0.74, 0.55), 0.6)
-			for side: float in [-1.0, 1.0]:
-				HouseProps.add_box(paper, "Tape", Vector3(0.024, 0.011, 0.0007), Vector3(side * (size.x * 0.5 - 0.006), size.y * 0.5 - 0.004, 0.0012), tape, Vector3(0.0, 0.0, -side * 38.0))
+	HouseProps.add_box(paper, "Crease", Vector3(0.0012, 0.08, 0.0004), Vector3(0.0, 0.0, 0.0009), HouseProps.material(Color(0.6, 0.57, 0.48), 1.0))
+	HouseProps.add_box(paper, "Damp", Vector3(0.05, 0.034, 0.0003), Vector3(0.026, -0.018, 0.0008), HouseProps.material(Color(0.5, 0.42, 0.3), 1.0))
 
 
 ## The note Juliana wrote, facing +Z, centred on the origin: a page torn from a school notebook (cream, ruled with a few lines of her pencil, a
 ## crease down the middle where it was folded once), her little face with a fringe drawn in the top corner. The words are not drawn on it (the
 ## player reads them as an overlay).
 static func _build_juliana_note(root: Node3D) -> void:
-	_build_note(root, false, Color(0.86, 0.82, 0.68))
+	_build_note(root, Color(0.86, 0.82, 0.68))
 	var paper: Node3D = root.get_node("Paper") as Node3D
 	var pencil: StandardMaterial3D = HouseProps.material(Color(0.2, 0.2, 0.22), 1.0)
 	HouseProps.add_ring(paper, "Face", 0.0062, 0.0078, Vector3(0.039, 0.0275, 0.001), pencil)
@@ -284,36 +177,17 @@ func _build_relay_room() -> void:
 	room.name = "RelayRoom"
 	add_child(room)
 	var floor_y: float = SignalTowerBuilder.FLOOR_TOP
-	var inner: float = SignalTowerBuilder.BASE_SIZE * 0.5 - SignalTowerBuilder.BASE_WALL
+	var inner: float = SignalTowerBuilder.ROOM_HALF
 
-	# The relay cabinet against the right wall, in the back corner, its door hanging open on the coils inside.
-	# It faces the room (-X).
-	var cabinet: Node3D = Node3D.new()
+	# The relay cabinet against the right wall, in the back corner: the wooden cabinet of the models (its doors open and close like any door), turned to
+	# face the room (-X), with coils in its lower compartment.
+	var cabinet: WoodCabinet = WoodCabinet.new()
 	cabinet.name = "RelayCabinet"
-	cabinet.position = Vector3(inner - 0.24, floor_y, -1.2)
-	cabinet.rotation_degrees = Vector3(0.0, -90.0, 0.0)
+	cabinet.persistent_prefix = &"tower_relay_cabinet"
+	cabinet.coils = true
+	cabinet.position = Vector3(inner - 0.33, floor_y, -1.2)
+	cabinet.rotation_degrees = Vector3(0.0, 180.0, 0.0)
 	room.add_child(cabinet)
-	HouseProps.add_box(cabinet, "Back", Vector3(1.1, 1.7, 0.02), Vector3(0.0, 0.85, -0.22), _iron)
-	HouseProps.add_box(cabinet, "SideL", Vector3(0.02, 1.7, 0.46), Vector3(-0.55, 0.85, 0.0), _iron)
-	HouseProps.add_box(cabinet, "SideR", Vector3(0.02, 1.7, 0.46), Vector3(0.55, 0.85, 0.0), _iron)
-	HouseProps.add_box(cabinet, "Top", Vector3(1.12, 0.03, 0.48), Vector3(0.0, 1.7, 0.0), _rust)
-	for shelf: int in 4:
-		var shelf_y: float = 0.1 + 0.52 * float(shelf)
-		HouseProps.add_box(cabinet, "Shelf%d" % shelf, Vector3(1.08, 0.02, 0.44), Vector3(0.0, shelf_y, 0.0), _iron)
-		if shelf == 3:
-			continue
-
-		for coil: int in 5:
-			var coil_x: float = -0.4 + 0.2 * float(coil)
-			HouseProps.add_cylinder(cabinet, "Coil%d_%d" % [shelf, coil], 0.06, 0.2, Vector3(coil_x, shelf_y + 0.12, 0.0), HouseProps.material(Color(0.5, 0.26, 0.12), 0.45, 0.8))
-			HouseProps.add_cylinder(cabinet, "Core%d_%d" % [shelf, coil], 0.02, 0.26, Vector3(coil_x, shelf_y + 0.14, 0.0), _iron)
-	var cabinet_door: Node3D = Node3D.new()
-	cabinet_door.name = "CabinetDoor"
-	cabinet_door.position = Vector3(-0.55, 0.0, 0.23)
-	cabinet_door.rotation_degrees = Vector3(0.0, -105.0, 0.0)
-	cabinet.add_child(cabinet_door)
-	HouseProps.add_box(cabinet_door, "Leaf", Vector3(0.55, 1.68, 0.02), Vector3(0.275, 0.85, 0.0), _rust)
-	HouseProps.add_solid(cabinet, "Solid", Vector3(1.1, 1.7, 0.46), Vector3(0.0, 0.85, 0.0))
 
 	# Conduit along the back wall under the deck, with a drop to the floor between the window and the cabinet.
 	var pipe_y: float = 2.35
@@ -322,18 +196,18 @@ func _build_relay_room() -> void:
 	for bracket_x: float in [-1.4, -0.4, 0.6, 1.4]:
 		HouseProps.add_box(room, "Bracket", Vector3(0.04, 0.05, 0.05), Vector3(bracket_x, pipe_y, -inner + 0.03), _rust)
 
-	# Crates and a barrel in the front left corner, out of the aisle between the door and the zones.
-	_crate(room, "CrateLarge", Vector3(0.55, 0.5, 0.45), Vector3(-inner + 0.4, floor_y, inner - 0.35), 12.0)
-	_crate(room, "CrateSmall", Vector3(0.42, 0.38, 0.38), Vector3(-inner + 0.4, floor_y + 0.5, inner - 0.35), -8.0, false)
-	HouseProps.add_cylinder(room, "Barrel", 0.26, 0.8, Vector3(-inner + 0.3, floor_y + 0.4, inner - 1.0), _wood)
+	# Crates and a barrel along the left wall, out of the aisle between the door and the zones.
+	_crate(room, "CrateLarge", Vector3(0.55, 0.5, 0.45), Vector3(-inner + 0.4, floor_y, 0.75), 12.0)
+	_crate(room, "CrateSmall", Vector3(0.42, 0.38, 0.38), Vector3(-inner + 0.4, floor_y + 0.5, 0.75), -8.0, false)
+	HouseProps.add_cylinder(room, "Barrel", 0.26, 0.8, Vector3(-inner + 0.3, floor_y + 0.4, 0.0), _wood)
 	for band_y: float in [0.2, 0.6]:
-		HouseProps.add_cylinder(room, "BarrelBand", 0.268, 0.03, Vector3(-inner + 0.3, floor_y + band_y, inner - 1.0), _rust)
-	HouseProps.add_solid(room, "BarrelSolid", Vector3(0.5, 0.8, 0.5), Vector3(-inner + 0.3, floor_y + 0.4, inner - 1.0))
+		HouseProps.add_cylinder(room, "BarrelBand", 0.268, 0.03, Vector3(-inner + 0.3, floor_y + band_y, 0.0), _rust)
+	HouseProps.add_solid(room, "BarrelSolid", Vector3(0.5, 0.8, 0.5), Vector3(-inner + 0.3, floor_y + 0.4, 0.0))
 
 	# A gap in the floorboards by the door: two planks snapped, and black under them.
-	HouseProps.add_box(room, "FloorGap", Vector3(0.5, 0.002, 0.16), Vector3(0.5, floor_y + 0.0012, 0.9), HouseProps.black_material(), Vector3(0.0, 14.0, 0.0))
-	HouseProps.add_box(room, "BrokenPlankA", Vector3(0.42, 0.025, 0.1), Vector3(0.18, floor_y + 0.02, 1.02), _wood, Vector3(6.0, 14.0, 8.0))
-	HouseProps.add_box(room, "BrokenPlankB", Vector3(0.3, 0.025, 0.1), Vector3(0.78, floor_y + 0.012, 0.8), _wood, Vector3(0.0, 24.0, -6.0))
+	HouseProps.add_box(room, "FloorGap", Vector3(0.5, 0.002, 0.16), Vector3(-0.95, floor_y + 0.0012, 1.2), HouseProps.black_material(), Vector3(0.0, 14.0, 0.0))
+	HouseProps.add_box(room, "BrokenPlankA", Vector3(0.42, 0.025, 0.1), Vector3(-1.27, floor_y + 0.02, 1.32), _wood, Vector3(6.0, 14.0, 8.0))
+	HouseProps.add_box(room, "BrokenPlankB", Vector3(0.3, 0.025, 0.1), Vector3(-0.67, floor_y + 0.012, 1.1), _wood, Vector3(0.0, 24.0, -6.0))
 
 
 # ============================================================
@@ -361,7 +235,7 @@ func _build_zones() -> void:
 		)
 
 
-## Zone 1, the HQ desk in the back left corner: a table of two crates and a plank (the plank's top is 0.56 m over the floor) with a drawer under
+## Zone 1, the HQ desk in the back left corner: a table of two crates and a plank (the plank's top is 0.74 m over the floor, a real table's) with a drawer under
 ## the plank, two stools and a desk lamp. The Scraped Knee lies flat in the middle of the plank; in the drawer lies the note Juliana wrote.
 func _build_desk_zone(corner: Node3D) -> void:
 	var table: Node3D = Node3D.new()
@@ -370,16 +244,16 @@ func _build_desk_zone(corner: Node3D) -> void:
 	table.rotation_degrees = Vector3(0.0, 6.0, 0.0)
 	corner.add_child(table)
 	# (The crates stand a little apart: the drawer is between them, under the plank.)
-	_crate(table, "CrateLeft", Vector3(0.4, 0.52, 0.5), Vector3(-0.42, 0.0, 0.0), 0.0)
-	_crate(table, "CrateRight", Vector3(0.4, 0.52, 0.5), Vector3(0.42, 0.0, 0.0), 0.0)
-	HouseProps.add_box(table, "Plank", Vector3(1.24, 0.04, 0.66), Vector3(0.0, 0.54, 0.0), _wood_pale)
-	HouseProps.add_solid(table, "Solid", Vector3(1.24, 0.58, 0.66), Vector3(0.0, 0.29, 0.0))
-	HouseProps.add_cylinder(table, "Pencil", 0.005, 0.15, Vector3(0.2, 0.564, 0.2), HouseProps.material(Color(0.7, 0.55, 0.15), 0.6), Vector3(90.0, 40.0, 0.0))
+	_crate(table, "CrateLeft", Vector3(0.4, 0.70, 0.5), Vector3(-0.42, 0.0, 0.0), 0.0)
+	_crate(table, "CrateRight", Vector3(0.4, 0.70, 0.5), Vector3(0.42, 0.0, 0.0), 0.0)
+	HouseProps.add_box(table, "Plank", Vector3(1.24, 0.04, 0.66), Vector3(0.0, 0.72, 0.0), _wood_pale)
+	HouseProps.add_solid(table, "Solid", Vector3(1.24, 0.76, 0.66), Vector3(0.0, 0.38, 0.0))
+	HouseProps.add_cylinder(table, "Pencil", 0.005, 0.15, Vector3(0.2, 0.744, 0.2), HouseProps.material(Color(0.7, 0.55, 0.15), 0.6), Vector3(90.0, 40.0, 0.0))
 
 	# The desk lamp, back left on the plank: a round iron foot, a thin stem, an arm and a green enamel shade.
 	desk_lamp = Node3D.new()
 	desk_lamp.name = "DeskLamp"
-	desk_lamp.position = Vector3(-0.4, 0.56, -0.15)
+	desk_lamp.position = Vector3(-0.4, 0.74, -0.15)
 	table.add_child(desk_lamp)
 	var enamel: StandardMaterial3D = HouseProps.material(Color(0.12, 0.3, 0.22), 0.5, 0.3)
 	HouseProps.add_cylinder(desk_lamp, "Base", 0.07, 0.03, Vector3(0.0, 0.015, 0.0), _iron)
@@ -399,11 +273,11 @@ func _build_desk_zone(corner: Node3D) -> void:
 
 	# Photo 1, Scraped Knee, lies flat in the middle of the plank, a little turned (it was leaning against the lamp's base, which looked as if it
 	# were propped on a cup).
-	_place_photo("photo_childhood", "res://scenes/objects/photo_childhood.tscn", table, Vector3(0.0, 0.5635, 0.02), Vector3(-90.0, 7.0, 0.0))
+	_place_photo("photo_childhood", "res://scenes/objects/photo_childhood.tscn", table, Vector3(0.0, 0.7435, 0.02), Vector3(-90.0, 7.0, 0.0))
 
 	# The drawer under the plank, between the crates: its front flush with the plank's front edge. Juliana's note lies in it, near the front, so that it
 	# shows when the drawer is out.
-	desk_drawer = DeskDrawer.build(Vector3(0.0, 0.452, 0.332), 0.42, 0.11, 0.46, _wood, _wood_pale, _brass, _wood)
+	desk_drawer = DeskDrawer.build(Vector3(0.0, 0.632, 0.332), 0.42, 0.11, 0.46, _wood, _wood_pale, _brass, _wood)
 	desk_drawer.persistent_id = &"tower_desk_drawer"
 	desk_drawer.travel = 0.34
 	var note: Node3D = (load(JULIANA_NOTE_SCENE_PATH) as PackedScene).instantiate() as Node3D
@@ -421,23 +295,23 @@ func _build_desk_zone(corner: Node3D) -> void:
 ## Zone 2, the daybed along the right wall: a plank frame with a faded cushion, a bolster at the far end; on the
 ## cushion Sophia's folded letter.
 func _build_daybed_zone(corner: Node3D) -> void:
-	var inner: float = SignalTowerBuilder.BASE_SIZE * 0.5 - SignalTowerBuilder.BASE_WALL
+	var inner: float = SignalTowerBuilder.ROOM_HALF
 	var daybed: Node3D = Node3D.new()
 	daybed.name = "Daybed"
-	daybed.position = Vector3(inner - 0.3, SignalTowerBuilder.FLOOR_TOP, 0.45)
+	daybed.position = Vector3(inner - 0.43, SignalTowerBuilder.FLOOR_TOP, 0.45)
 	corner.add_child(daybed)
-	HouseProps.add_box(daybed, "FrameLeft", Vector3(0.04, 0.12, 1.8), Vector3(-0.23, 0.34, 0.0), _wood)
-	HouseProps.add_box(daybed, "FrameRight", Vector3(0.04, 0.12, 1.8), Vector3(0.23, 0.34, 0.0), _wood)
-	HouseProps.add_box(daybed, "FrameEndBack", Vector3(0.5, 0.12, 0.04), Vector3(0.0, 0.34, -0.9), _wood)
-	HouseProps.add_box(daybed, "FrameEndFront", Vector3(0.5, 0.12, 0.04), Vector3(0.0, 0.34, 0.9), _wood)
-	for leg_x: float in [-0.22, 0.22]:
+	HouseProps.add_box(daybed, "FrameLeft", Vector3(0.04, 0.12, 1.8), Vector3(-0.34, 0.34, 0.0), _wood)
+	HouseProps.add_box(daybed, "FrameRight", Vector3(0.04, 0.12, 1.8), Vector3(0.34, 0.34, 0.0), _wood)
+	HouseProps.add_box(daybed, "FrameEndBack", Vector3(0.72, 0.12, 0.04), Vector3(0.0, 0.34, -0.9), _wood)
+	HouseProps.add_box(daybed, "FrameEndFront", Vector3(0.72, 0.12, 0.04), Vector3(0.0, 0.34, 0.9), _wood)
+	for leg_x: float in [-0.33, 0.33]:
 		for leg_z: float in [-0.88, 0.88]:
 			HouseProps.add_box(daybed, "Leg", Vector3(0.06, 0.34, 0.06), Vector3(leg_x, 0.17, leg_z), _wood)
 	var fabric: StandardMaterial3D = JunctionProps.weathered(Color(0.4, 0.3, 0.26), 4.0, 1.0)
-	HouseProps.add_box(daybed, "Cushion", Vector3(0.46, 0.09, 1.76), Vector3(0.0, 0.445, 0.0), fabric)
-	var bolster: MeshInstance3D = HouseProps.add_cylinder(daybed, "Bolster", 0.08, 0.44, Vector3(0.0, 0.54, -0.8), fabric, Vector3(0.0, 0.0, 90.0))
+	HouseProps.add_box(daybed, "Cushion", Vector3(0.68, 0.09, 1.76), Vector3(0.0, 0.445, 0.0), fabric)
+	var bolster: MeshInstance3D = HouseProps.add_cylinder(daybed, "Bolster", 0.08, 0.64, Vector3(0.0, 0.54, -0.8), fabric, Vector3(0.0, 0.0, 90.0))
 	bolster.name = "Bolster"
-	HouseProps.add_solid(daybed, "Solid", Vector3(0.5, 0.49, 1.8), Vector3(0.0, 0.245, 0.0))
+	HouseProps.add_solid(daybed, "Solid", Vector3(0.72, 0.49, 1.8), Vector3(0.0, 0.245, 0.0))
 
 	# The cushion's top is at 0.49 above the daybed's origin.
 	var top: float = 0.49
@@ -514,14 +388,14 @@ func _stool(parent: Node3D, stool_name: String, pos: Vector3, yaw: float) -> voi
 	stool.position = pos
 	stool.rotation_degrees = Vector3(0.0, yaw, 0.0)
 	parent.add_child(stool)
-	HouseProps.add_cylinder(stool, "Seat", 0.17, 0.04, Vector3(0.0, 0.4, 0.0), _wood_pale)
+	HouseProps.add_cylinder(stool, "Seat", 0.18, 0.04, Vector3(0.0, 0.46, 0.0), _wood_pale)
 	for leg: int in 3:
 		var angle: float = TAU * float(leg) / 3.0
 		var leg_node: MeshInstance3D = HouseProps.add_cylinder(
-			stool, "Leg%d" % leg, 0.02, 0.42, Vector3(cos(angle) * 0.1, 0.2, sin(angle) * 0.1), _wood
+			stool, "Leg%d" % leg, 0.02, 0.48, Vector3(cos(angle) * 0.11, 0.23, sin(angle) * 0.11), _wood
 		)
 		leg_node.rotation = Vector3(-sin(angle) * 0.12, 0.0, cos(angle) * 0.12)
-	HouseProps.add_solid(stool, "Solid", Vector3(0.32, 0.42, 0.32), Vector3(0.0, 0.21, 0.0))
+	HouseProps.add_solid(stool, "Solid", Vector3(0.34, 0.48, 0.34), Vector3(0.0, 0.24, 0.0))
 
 
 ## A wooden crate: corner posts and a band of slats at the top and bottom. `solid` adds the collision.
@@ -557,73 +431,24 @@ func _build_cabin() -> void:
 	_build_desk(cabin)
 	_build_bench(cabin)
 	_scatter_glass(cabin)
-	_place_lore(cabin)
 
 
-## The floor frame with its heavy iron interlocking levers, in front of the windows. Lucas's lever (the
-## fourth) is snapped off at the knee, and the rest of it lies on the floor.
+## The signal box's levers (the model), standing on the floor in front of the windows with the plate towards the room: the file's +X (the operator's
+## side) is turned to face -Z and its length runs along X.
 func _build_lever_frame(cabin: Node3D) -> void:
 	lever_frame = Node3D.new()
 	lever_frame.name = "LeverFrame"
 	lever_frame.position = LEVER_FRAME
 	cabin.add_child(lever_frame)
 
-	HouseProps.add_box(lever_frame, "Base", Vector3(2.3, 0.1, 0.36), Vector3(0.0, 0.05, 0.0), _iron)
-	for end_x: float in [-1.12, 1.12]:
-		HouseProps.add_box(lever_frame, "Upright", Vector3(0.09, 0.62, 0.3), Vector3(end_x, 0.31, 0.0), _iron)
-	HouseProps.add_box(lever_frame, "Quadrant", Vector3(2.2, 0.05, 0.05), Vector3(0.0, 0.58, 0.12), _iron)
-	# The interlocking bar behind the levers, with a tappet at each of them.
-	HouseProps.add_cylinder(lever_frame, "InterlockBar", 0.02, 2.2, Vector3(0.0, 0.3, 0.13), _rust, Vector3(0.0, 0.0, 90.0))
-	HouseProps.add_solid(lever_frame, "Solid", Vector3(2.3, 0.5, 0.36), Vector3(0.0, 0.25, 0.0))
-
-	var tips: Array[Color] = [
-		Color(0.55, 0.08, 0.06), Color(0.62, 0.5, 0.08), Color(0.08, 0.08, 0.09), Color(0.1, 0.2, 0.5), Color(0.55, 0.08, 0.06),
-	]
-	var tilt_degrees: Array[float] = [0.0, -17.0, -4.0, -28.0, -21.0]
-	for i: int in LEVER_COUNT:
-		var x: float = -0.8 + 0.4 * float(i)
-		HouseProps.add_box(lever_frame, "Tappet%d" % i, Vector3(0.05, 0.07, 0.04), Vector3(x, 0.3, 0.13), _iron)
-		HouseProps.add_cylinder(lever_frame, "Pivot%d" % i, 0.045, 0.1, Vector3(x, 0.22, 0.0), _iron, Vector3(0.0, 0.0, 90.0))
-
-		var arm: Node3D = Node3D.new()
-		arm.name = "Lever%d" % i
-		arm.position = Vector3(x, 0.22, 0.0)
-		arm.rotation_degrees = Vector3(tilt_degrees[i], 0.0, 0.0)
-		lever_frame.add_child(arm)
-
-		var broken: bool = i == BROKEN_LEVER
-		var arm_length: float = 0.4 if broken else 1.05
-		HouseProps.add_box(arm, "Arm", Vector3(0.035, arm_length, 0.022), Vector3(0.0, arm_length * 0.5, 0.0), _iron)
-		HouseProps.add_cylinder(arm, "Weight", 0.05, 0.06, Vector3(0.0, -0.06, 0.0), _iron, Vector3(0.0, 0.0, 90.0))
-		HouseProps.add_box(arm, "CatchRod", Vector3(0.012, 0.5 if not broken else 0.3, 0.012), Vector3(0.0, 0.32, 0.022), _brass)
-		if broken:
-			# The snapped end, jagged and bright where the iron gave.
-			HouseProps.add_box(arm, "Stump", Vector3(0.04, 0.05, 0.026), Vector3(0.005, arm_length + 0.01, 0.0), _rust, Vector3(0.0, 0.0, 22.0))
-		else:
-			HouseProps.add_box(arm, "Grip", Vector3(0.05, 0.22, 0.04), Vector3(0.0, arm_length - 0.08, 0.0), HouseProps.material(tips[i], 0.7))
-
-		# The lever's number on a brass plate on the frame.
-		var label: Label3D = Label3D.new()
-		label.name = "Number%d" % i
-		label.text = str(i + 1)
-		label.font_size = 40
-		label.pixel_size = 0.0012
-		label.modulate = Color(0.12, 0.09, 0.04)
-		label.shaded = true
-		label.double_sided = false
-		label.position = Vector3(x, 0.103, 0.12)
-		label.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
-		lever_frame.add_child(label)
-
-	# The top of Lucas's lever, on the floor in front of the frame.
-	var fallen: Node3D = Node3D.new()
-	fallen.name = "FallenLever"
-	fallen.position = Vector3(0.75, 0.025, -0.75)
-	fallen.rotation_degrees = Vector3(0.0, 40.0, 0.0)
-	lever_frame.add_child(fallen)
-	HouseProps.add_box(fallen, "Arm", Vector3(0.035, 0.022, 0.7), Vector3(0.0, 0.0, 0.0), _iron)
-	HouseProps.add_box(fallen, "Grip", Vector3(0.05, 0.04, 0.2), Vector3(0.0, 0.01, 0.38), HouseProps.material(tips[BROKEN_LEVER], 0.7))
-	HouseProps.add_box(fallen, "Break", Vector3(0.04, 0.026, 0.05), Vector3(0.0, 0.0, -0.36), _rust, Vector3(0.0, 18.0, 0.0))
+	var model: Node3D = LEVERS_SCENE.instantiate() as Node3D
+	model.name = "Model"
+	var turn: Basis = Basis(Vector3.UP, PI * 0.5)
+	var centre: Vector3 = LEVERS_BOX.get_center()
+	model.transform = Transform3D(turn, -(turn * Vector3(centre.x, LEVERS_BOX.position.y, centre.z)))
+	lever_frame.add_child(model)
+	# The plate is solid up to knee height; the levers themselves are thin and are not.
+	HouseProps.add_solid(lever_frame, "Solid", Vector3(1.9, 0.5, 1.17), Vector3(0.0, 0.25, 0.0))
 
 
 func _build_stove(cabin: Node3D) -> void:
@@ -639,7 +464,7 @@ func _build_stove(cabin: Node3D) -> void:
 	HouseProps.add_box(stove, "Door", Vector3(0.2, 0.22, 0.02), Vector3(0.0, 0.5, 0.265), _rust)
 	HouseProps.add_box(stove, "DoorHandle", Vector3(0.02, 0.1, 0.02), Vector3(0.07, 0.5, 0.285), _brass)
 	# The pipe up to the ceiling (where the roof's stovepipe takes it on).
-	var pipe_height: float = SignalTowerBuilder.CABIN_HEIGHT - 0.9
+	var pipe_height: float = SignalTowerBuilder.STOVE_PIPE_TOP - 0.9
 	HouseProps.add_cylinder(stove, "Pipe", 0.075, pipe_height, Vector3(0.0, 0.9 + pipe_height * 0.5, 0.0), _iron)
 	HouseProps.add_cylinder(stove, "PipeBand", 0.085, 0.05, Vector3(0.0, 1.6, 0.0), _rust)
 	HouseProps.add_solid(stove, "Solid", Vector3(0.56, 0.9, 0.56), Vector3(0.0, 0.45, 0.0))
@@ -648,7 +473,7 @@ func _build_stove(cabin: Node3D) -> void:
 func _build_desk(cabin: Node3D) -> void:
 	var desk: Node3D = Node3D.new()
 	desk.name = "Desk"
-	desk.position = Vector3(0.4, 2.8, -1.72)
+	desk.position = Vector3(0.4, SignalTowerBuilder.BASE_HEIGHT, -1.68)
 	cabin.add_child(desk)
 	HouseProps.add_box(desk, "Top", Vector3(1.3, 0.05, 0.6), Vector3(0.0, 0.75, 0.0), _wood)
 	for leg_x: float in [-0.6, 0.6]:
@@ -673,7 +498,7 @@ func _build_desk(cabin: Node3D) -> void:
 func _build_bench(cabin: Node3D) -> void:
 	var bench: Node3D = Node3D.new()
 	bench.name = "Bench"
-	bench.position = Vector3(1.85, 2.8, 0.35)
+	bench.position = Vector3(SignalTowerBuilder.ROOM_HALF - 0.15, SignalTowerBuilder.BASE_HEIGHT, 0.45)
 	cabin.add_child(bench)
 	HouseProps.add_box(bench, "Seat", Vector3(0.42, 0.04, 1.1), Vector3(0.0, 0.42, 0.0), _wood_pale)
 	for leg_x: float in [-0.17, 0.17]:
@@ -683,52 +508,21 @@ func _build_bench(cabin: Node3D) -> void:
 	HouseProps.add_solid(bench, "Solid", Vector3(0.42, 0.44, 1.1), Vector3(0.0, 0.22, 0.0))
 
 
-## The four lore documents: where each one lies or hangs (see the header).
-func _place_lore(cabin: Node3D) -> void:
-	var desk: Node3D = cabin.get_node("Desk") as Node3D
-	var bench: Node3D = cabin.get_node("Bench") as Node3D
-
-	# The clipping lies flat on the desk, to the right of the log book.
-	_add_lore(&"news", desk, Vector3(0.49, 0.7765, 0.08), Vector3(-90.0, 14.0, 0.0))
-
-	# The memo is pinned to a small wooden board screwed to the right upright of the lever frame, on the
-	# operator's side (the frame's -Z face), above the frame's solid base so nothing hides it.
-	HouseProps.add_box(lever_frame, "SignalBoard", Vector3(0.3, 0.3, 0.02), Vector3(1.12, 0.52, -0.16), _wood_pale)
-	HouseProps.add_cylinder(lever_frame, "BoardPin", 0.005, 0.004, Vector3(1.12, 0.6, -0.1735), _rust, Vector3(90.0, 0.0, 0.0))
-	_add_lore(&"memo", lever_frame, Vector3(1.12, 0.52, -0.1735), Vector3(0.0, 180.0, 0.0))
-
-	# The journal page rests on the seat of the bench, half over its edge.
-	_add_lore(&"journal", bench, Vector3(-0.2, 0.4415, 0.05), Vector3(-90.0, 18.0, 0.0))
-
-	# The health notice is taped to the centre mullion of the back window, facing into the room.
-	_add_lore(&"notice", cabin, Vector3(0.0, 4.62, -2.1), Vector3.ZERO)
-
-
-func _add_lore(key: StringName, parent: Node3D, pos: Vector3, rotation_degrees_value: Vector3) -> void:
-	# (A plain node first: in the editor the scripts of instanced scenes are placeholders.)
-	var item: Node3D = (load(str(LORE_ITEMS[key])) as PackedScene).instantiate() as Node3D
-	item.name = "Lore%s" % str(key).capitalize()
-	item.position = pos
-	item.rotation_degrees = rotation_degrees_value
-	parent.add_child(item)
-	lore_items[key] = item as Inspectable
-
-
 ## Splinters of the broken panes on the floor under the windows.
 func _scatter_glass(cabin: Node3D) -> void:
 	var shards: Node3D = Node3D.new()
 	shards.name = "GlassShards"
 	cabin.add_child(shards)
-	var reach: float = SignalTowerBuilder.CABIN_SIZE * 0.5 - SignalTowerBuilder.CABIN_WALL - 0.15
+	var reach: float = SignalTowerBuilder.ROOM_HALF - 0.15
 	for i: int in 26:
 		var wall: int = _rng.randi_range(0, 2)
 		var along: float = _rng.randf_range(-1.5, 1.5)
 		var out: float = reach - _rng.randf_range(0.0, 0.7)
-		var pos: Vector3 = Vector3(along, 2.806, out)
+		var pos: Vector3 = Vector3(along, SignalTowerBuilder.BASE_HEIGHT + 0.006, out)
 		if wall == 1:
-			pos = Vector3(along, 2.806, -out)
+			pos = Vector3(along, SignalTowerBuilder.BASE_HEIGHT + 0.006, -out)
 		elif wall == 2:
-			pos = Vector3(-out, 2.806, along)
+			pos = Vector3(-out, SignalTowerBuilder.BASE_HEIGHT + 0.006, along)
 
 		var shard: MeshInstance3D = HouseProps.add_box(
 			shards, "Shard%d" % i, Vector3(_rng.randf_range(0.02, 0.09), 0.003, _rng.randf_range(0.02, 0.09)), pos, _glass

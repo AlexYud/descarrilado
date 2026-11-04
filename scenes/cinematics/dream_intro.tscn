@@ -601,7 +601,7 @@ directional_shadow_distance = 42.0
 script = ExtResource("1_2xo7o")
 
 [node name="Player" parent="." unique_id=1340821127 instance=ExtResource("1_rhmqu")]
-transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0.5692914, 1.065724, 3.0580819)
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0.5692914, 1.406924, 3.0580819)
 cold_breath_enabled = true
 
 [node name="Train" type="Node3D" parent="." unique_id=1716082974]

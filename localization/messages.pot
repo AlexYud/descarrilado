@@ -215,14 +215,6 @@ msgstr ""
 msgid "INVENTORY_INSPECT"
 msgstr ""
 
-#. TRANSLATORS: Keep {slot}; it is replaced with the slot number.
-msgid "INVENTORY_SLOT_EMPTY"
-msgstr ""
-
-#. TRANSLATORS: Keep {slot} and {item}; they are replaced at runtime.
-msgid "INVENTORY_SLOT_ITEM"
-msgstr ""
-
 msgid "INVENTORY_INSPECT_HINT"
 msgstr ""
 
@@ -347,12 +339,6 @@ msgstr ""
 msgid "PHOTO_FRONT_RECENT"
 msgstr ""
 
-msgid "PHOTO_BACK_CHILDHOOD"
-msgstr ""
-
-msgid "PHOTO_BACK_RECENT"
-msgstr ""
-
 msgid "ITEM_TRAIN_TICKET_NAME"
 msgstr ""
 
@@ -437,10 +423,6 @@ msgstr ""
 msgid "ALBUM_CAPTION_3"
 msgstr ""
 
-
-msgid "PROMPT_ENTER_CODE"
-msgstr ""
-
 msgid "LOCK_VIEW_TITLE"
 msgstr ""
 
@@ -478,15 +460,6 @@ msgid "ITEM_MASTER_KEY_NAME"
 msgstr ""
 
 msgid "ITEM_MASTER_KEY_DESCRIPTION"
-msgstr ""
-
-msgid "ITEM_LUCAS_DIARY_NAME"
-msgstr ""
-
-msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
-msgstr ""
-
-msgid "DIARY_TEXT"
 msgstr ""
 
 
@@ -527,16 +500,6 @@ msgid "BUS_TICKET_NAME_SOPHIA"
 msgstr ""
 
 msgid "BUS_TICKET_IF_YOU_WANT"
-msgstr ""
-
-msgid "DIARY_HEADING"
-msgstr ""
-
-# Waiting shed and signal box
-msgid "LEVER_UP"
-msgstr ""
-
-msgid "LEVER_DOWN"
 msgstr ""
 
 msgid "ITEM_SOPHIA_JOURNAL_NAME"
@@ -581,7 +544,6 @@ msgstr ""
 msgid "PROMPT_LEVER_PUSH_UP"
 msgstr ""
 
-
 msgid "JOURNAL_LEFT"
 msgstr ""
 
@@ -592,15 +554,6 @@ msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
 msgstr ""
 
 msgid "LANTERN_CLUE"
-msgstr ""
-
-msgid "ITEM_TICKET_PUNCHER_NAME"
-msgstr ""
-
-msgid "ITEM_TICKET_PUNCHER_DESCRIPTION"
-msgstr ""
-
-msgid "PUNCHER_CLUE"
 msgstr ""
 
 msgid "ITEM_WOODEN_WHISTLE_DESCRIPTION"
@@ -819,12 +772,6 @@ msgstr ""
 msgid "BINDING_INSPECT_RESET"
 msgstr ""
 
-msgid "INSPECT_FLIP"
-msgstr ""
-
-msgid "INSPECT_RESET"
-msgstr ""
-
 msgid "INSPECT_HINT_EXAMINE"
 msgstr ""
 
@@ -836,9 +783,6 @@ msgid "READABLE_RECIPE"
 msgstr ""
 
 msgid "READABLE_PANTRY_NOTE"
-msgstr ""
-
-msgid "READABLE_DIARY"
 msgstr ""
 
 msgid "READABLE_NOTE_CAPSULE"
@@ -1012,18 +956,6 @@ msgstr ""
 msgid "CAPTION_JULIANA_NEED_FICHAS"
 msgstr ""
 
-msgid "ITEM_PAYPHONE_NOTE_NAME"
-msgstr ""
-
-msgid "ITEM_PAYPHONE_NOTE_DESCRIPTION"
-msgstr ""
-
-msgid "OVERLOOK_NOTE_TEXT"
-msgstr ""
-
-msgid "READABLE_OVERLOOK_NOTE"
-msgstr ""
-
 # Overlook payphone: inserting fichas, the note
 msgid "OVERLOOK_PHONE_STEP_AWAY"
 msgstr ""
@@ -1044,55 +976,7 @@ msgstr ""
 msgid "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION"
 msgstr ""
 
-msgid "ITEM_TOWER_DOOR_NOTE_NAME"
-msgstr ""
-
-msgid "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_TOWER_DOOR_NOTE"
-msgstr ""
-
-msgid "CAPTION_TOWER_DOOR_LOCKED"
-msgstr ""
-
 # Signal tower: the town's history, on the control floor
-
-msgid "ITEM_TOWER_NEWS_NAME"
-msgstr ""
-
-msgid "ITEM_TOWER_NEWS_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_TOWER_NEWS"
-msgstr ""
-
-msgid "ITEM_TOWER_MEMO_NAME"
-msgstr ""
-
-msgid "ITEM_TOWER_MEMO_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_TOWER_MEMO"
-msgstr ""
-
-msgid "ITEM_TOWER_JOURNAL_NAME"
-msgstr ""
-
-msgid "ITEM_TOWER_JOURNAL_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_TOWER_JOURNAL"
-msgstr ""
-
-msgid "ITEM_TOWER_NOTICE_NAME"
-msgstr ""
-
-msgid "ITEM_TOWER_NOTICE_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_TOWER_NOTICE"
-msgstr ""
 
 # Signal tower: the children's headquarters
 
@@ -1124,18 +1008,6 @@ msgid "READABLE_THERMOS"
 msgstr ""
 
 msgid "PROMPT_INSPECT_LOCKBOX"
-msgstr ""
-
-msgid "PROMPT_INSPECT_RADIO"
-msgstr ""
-
-msgid "ITEM_RADIO_NAME"
-msgstr ""
-
-msgid "ITEM_RADIO_DESCRIPTION"
-msgstr ""
-
-msgid "READABLE_RADIO"
 msgstr ""
 
 msgid "LOCKBOX_VIEW_HINT"
@@ -1201,16 +1073,7 @@ msgstr ""
 msgid "CAPTION_HOUSE_BED_17"
 msgstr ""
 
-msgid "CAPTION_HOUSE_SHH"
-msgstr ""
-
 msgid "CAPTION_SPEAKER_LUCAS"
-msgstr ""
-
-msgid "ITEM_CAPSULE_KEY_DESCRIPTION"
-msgstr ""
-
-msgid "ITEM_CAPSULE_KEY_NAME"
 msgstr ""
 
 msgid "ITEM_POSTCARD_NAME"
@@ -1257,10 +1120,13 @@ msgstr ""
 msgid "PHOTO_CAPTION_SHELTER"
 msgstr ""
 
-msgid "ITEM_CAMCORDER_NAME"
+msgid "ITEM_MARINA_SISTER_NOTE_NAME"
 msgstr ""
 
-msgid "ITEM_CAMCORDER_DESCRIPTION"
+msgid "ITEM_MARINA_SISTER_NOTE_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_MARINA_SISTER_NOTE"
 msgstr ""
 
 msgid "CAPTION_SHED_MEM_01"
@@ -1270,6 +1136,9 @@ msgid "CAPTION_SHED_MEM_02"
 msgstr ""
 
 msgid "CAPTION_SHED_MEM_03"
+msgstr ""
+
+msgid "CAPTION_SHED_MEM_04"
 msgstr ""
 
 msgid "CAPTION_SHED_TALK_01"
@@ -1294,5 +1163,17 @@ msgid "CAPTION_SHED_TALK_07"
 msgstr ""
 
 msgid "CAPTION_SHED_TALK_08"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_09"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_10"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_11"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_12"
 msgstr ""
 

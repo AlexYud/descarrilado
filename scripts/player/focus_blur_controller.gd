@@ -8,18 +8,16 @@ class_name FocusBlurController
 ## can turn it off in the options (`GameSettings.depth_of_field_enabled`).
 
 ## How strongly the world behind an inspected item is blurred, and from how far
-## behind the item it starts to blur. **Off (0) by default:** the inspect view sits on a dark veil, so the blur
-## showed nothing of the world, but the engine's depth of field smeared the far black into the item's edge and
-## drew a jagged dark halo round every item held up. Raise it only with a background worth blurring (and
-## check the edges).
-@export_range(0.0, 1.0, 0.01) var inspect_amount: float = 0.0
-@export var inspect_gap: float = 0.25
-@export var inspect_transition: float = 1.2
-## The same for something the player looks at in the world (far gentler: it is a
-## hint of focus, not a lens).
-@export_range(0.0, 1.0, 0.01) var interact_amount: float = 0.06
-@export var interact_gap: float = 1.2
-@export var interact_transition: float = 7.0
+## behind the item it starts to blur: the item held up is sharp and everything behind it soft. (The engine's depth of field drew stacked dark ghosts along the edges of a bright item at its default quality: the blur is
+## set to its high quality with jitter (`FocusBlur.use_clean_quality`), and starts a little further behind the item.)
+@export_range(0.0, 1.0, 0.01) var inspect_amount: float = 0.25
+@export var inspect_gap: float = 0.7
+@export var inspect_transition: float = 2.5
+## The same for something the player looks at in the world (gentler: it is a
+## hint of focus, not a lens): what is close to the eyes is sharp, the far world soft.
+@export_range(0.0, 1.0, 0.01) var interact_amount: float = 0.12
+@export var interact_gap: float = 0.9
+@export var interact_transition: float = 5.0
 ## Seconds for the focus to come in and to go out.
 @export var focus_in_seconds: float = 0.25
 @export var focus_out_seconds: float = 0.45
@@ -44,6 +42,7 @@ func setup(player_node: CharacterBody3D) -> void:
 	interaction_controller = player.get_node_or_null("InteractionController") as PlayerInteractionController
 	inspect_controller = player.get_node_or_null("InspectController") as PlayerInspectController
 
+	FocusBlur.use_clean_quality()
 	attributes = CameraAttributesPractical.new()
 	attributes.dof_blur_far_enabled = false
 	attributes.dof_blur_near_enabled = false
@@ -76,7 +75,7 @@ func _process(delta: float) -> void:
 ## What is in focus right now: sets the profile and returns how much (0 if nothing).
 func _read_focus() -> float:
 	if inspect_controller != null and inspect_controller.is_open():
-		# An item held up: nothing behind it is blurred unless `inspect_amount` says so (see above), and the
+		# An item held up: the world behind it is blurred by `inspect_amount` (0: not at all), and the
 		# world focus below does not apply while the view is up.
 		if inspect_amount <= 0.0:
 			return 0.0

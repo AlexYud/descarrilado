@@ -39,6 +39,8 @@ const KEY_TURN_DEGREES: float = 90.0
 ## The default side the door swings to (for a script, and for a door that starts open): +1 towards its local -Z side, -1 towards +Z. A player opening it makes it swing away from them instead.
 @export_enum("Towards -Z:1", "Towards +Z:-1") var swing_sign: int = 1
 @export var rotate_speed: float = 0.6
+## The door opens only to its `swing_sign` side, whichever side the player is on (a cabinet door, which cannot swing into the cabinet).
+@export var one_way: bool = false
 @export var starts_open: bool = false
 @export var starts_locked: bool = false
 @export var required_key_id: String = ""
@@ -57,7 +59,11 @@ const KEY_TURN_DEGREES: float = 90.0
 @export var animate_player_interaction: bool = true
 ## Fits a lever handle and a keyhole in place of the round knobs of the standard door.
 @export var build_hardware: bool = true
-## Half the thickness of the door, where the handle and the keyhole sit.
+## The standard door's leaf is the `door_001` model (see `DoorModel`), stretched to this size in metres: wide enough for the doorway it stands in and
+## as tall as the opening. (Only a door with a `DoorMesh` box and knob interactables is dressed; the fence gate has its own meshes.)
+@export var leaf_width: float = 0.9
+@export var leaf_height: float = 2.0
+## Half the thickness of the door, where the handle and the keyhole sit (set from the model when the leaf is dressed).
 @export var door_half_thickness: float = 0.04
 ## How far from the door the player stands to push it, and how far away a player
 ## can be and still be walked up to it (farther than that, a script or a test is
@@ -110,6 +116,10 @@ var _hardware: Dictionary = {}
 var _door_bodies: Array[CollisionObject3D] = []
 var _body_layers: Dictionary = {}
 var _collision_suspended: bool = false
+## Whether this swing lets the player through: decided when a swing begins (see `_player_in_sweep`), so that a door that opens or closes on its own is solid to
+## anyone who walks at it, and only never pushes someone already standing where it swings.
+var _swing_suspends: bool = false
+var _was_swinging: bool = false
 
 var _choreo: StringName = &""
 var _choreo_t: float = 0.0
@@ -168,6 +178,7 @@ func _ready() -> void:
 	_cache_door_bodies()
 
 	if build_hardware:
+		_dress_leaf()
 		_build_hardware()
 
 	_restore_persistent_state()
@@ -203,9 +214,11 @@ func _process(delta: float) -> void:
 	var swing_speed: float = (
 		_swing_speed_override if _swing_speed_override > 0.0 else rotate_speed
 	)
-	_set_collision_suspended(
-		hinge.rotation_degrees.distance_squared_to(target_rotation) > 0.0004
-	)
+	var swinging: bool = hinge.rotation_degrees.distance_squared_to(target_rotation) > 0.0004
+	if swinging and not _was_swinging:
+		_swing_suspends = _player_in_sweep()
+	_was_swinging = swinging
+	_set_collision_suspended(swinging and _swing_suspends)
 	var weight: float = clamp(delta * swing_speed, 0.0, 1.0)
 	hinge.rotation_degrees = hinge.rotation_degrees.lerp(target_rotation, weight)
 
@@ -475,7 +488,7 @@ func _fixed_open_rotation() -> Vector3:
 func _choose_open_side(player: Node) -> void:
 	var magnitude: float = absf(open_angle_degrees)
 	var away: float = float(swing_sign)
-	if player is Node3D and is_inside_tree():
+	if not one_way and player is Node3D and is_inside_tree():
 		# The side of the door's plane the player is on; positive rotation swings towards -Z.
 		var local_z: float = to_local((player as Node3D).global_position).z
 		away = 1.0 if local_z >= 0.0 else -1.0
@@ -488,6 +501,22 @@ func _choose_open_side(player: Node) -> void:
 
 ## Replaces the round knobs of the standard door with a lever handle and a
 ## keyhole on each face. A door without knob meshes (the fence gate) is left alone.
+## Puts the door model on the standard door: the slab for the box, the root moved to the leaf's size, and the knob interactables to the handle's
+## pivot (the hardware goes to them). The sphere knobs stay in the scene, hidden, as the places the hardware is built on.
+func _dress_leaf() -> void:
+	var leaf: MeshInstance3D = door_root.get_node_or_null("DoorMesh") as MeshInstance3D
+	if leaf == null or not leaf.mesh is BoxMesh:
+		return
+
+	var hub: Vector2 = DoorModel.dress_leaf(door_root, leaf, leaf_width, leaf_height)
+	door_half_thickness = DoorModel.HALF_THICKNESS
+	var knobs: Array[DoorKnobInteractable] = []
+	_collect_knobs(door_root, knobs)
+	for knob: DoorKnobInteractable in knobs:
+		var side: float = 1.0 if knob.position.z >= 0.0 else -1.0
+		knob.position = Vector3(hub.x, hub.y, side * (door_half_thickness + 0.04))
+
+
 func _build_hardware() -> void:
 	var knobs: Array[DoorKnobInteractable] = []
 	_collect_knobs(door_root, knobs)
@@ -1560,6 +1589,21 @@ func _cache_door_bodies() -> void:
 			continue
 
 		_door_bodies.append(node as CollisionObject3D)
+
+
+## Whether the player stands where the leaf will sweep (within a leaf's width and a body's of the hinge): a door that starts to swing there is let through (it would
+## drag them), anywhere else the leaf stays solid while it moves.
+func _player_in_sweep() -> bool:
+	if not is_inside_tree() or hinge == null:
+		return false
+
+	var body: Node3D = get_tree().get_first_node_in_group(&"player") as Node3D
+	if body == null:
+		return false
+
+	var flat: Vector3 = body.global_position - hinge.global_position
+	flat.y = 0.0
+	return flat.length() < leaf_width + 0.45
 
 
 ## While suspended the door's solid parts are on no collision layer, so a swinging

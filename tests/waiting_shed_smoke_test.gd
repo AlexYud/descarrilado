@@ -81,6 +81,8 @@ func _load_level() -> void:
 	await get_tree().process_frame
 	shed = level.get_node("WaitingShed")
 	player = level.get_node("Player")
+	# The playtest scene has no forest sound of its own: this one is the real thing, to hear whether the memory silences it.
+	level.add_child(OutdoorAmbience.new())
 	container = shed.get_node("%SwitchBox")
 	vhs = shed.vhs
 	ficha = shed.ficha
@@ -133,11 +135,10 @@ func _check_layout() -> void:
 	_expect(not shed.archive_dressing.visible, "the recording's dressing is hidden in the present")
 	_expect(shed.replaced_plank != null and shed.replaced_plank.visible, "the replaced plank is shown in the present")
 	var camcorder: Node3D = shed.camcorder
-	_expect(camcorder != null and camcorder.visible and camcorder is Inspectable, "the camcorder stands in the level from the start, examinable")
+	_expect(camcorder != null and camcorder.visible and not (camcorder is Inspectable), "the camcorder stands in the level from the start, only to be looked at")
+	_expect(camcorder.find_children("*", "Area3D", true, false).is_empty() and camcorder.find_children("*", "Interactable", true, false).is_empty(), "it cannot be examined: nothing in it is interactive")
 	var led: MeshInstance3D = camcorder.find_child("Led", true, false) as MeshInstance3D
 	_expect(led != null and (led.material_override as StandardMaterial3D).emission_energy_multiplier == 0.0, "its recording light is off")
-	_expect(tr((camcorder as Inspectable).get_inspect_data()["name"]) == "Camcorder", "the camcorder is a Camcorder")
-	_expect(tr((camcorder as Inspectable).get_inspect_data()["description"]) == "A camcorder mounted on a tripod. Its lens faces the shelter bench.", "with its description")
 	var head: Node3D = camcorder.find_child("Head", true, false) as Node3D
 	_expect(head != null and absf(head.rotation_degrees.y - shed.camcorder_start_yaw_degrees) < 0.01, "its head is turned a little off the bench's middle")
 	var lens: Vector3 = head.to_global(Vector3(0.0, 0.1, -0.2))
@@ -151,6 +152,26 @@ func _check_layout() -> void:
 	_expect(facing.dot(to_bench) > 0.99, "its lens faces the bench")
 
 
+## The note from Marina's sister: one more optional readable on the bench (a world Inspectable, never an inventory item), with the approved name, description and words
+## in both languages, saying "sitting" where the clipping says "on the ground", and nothing the two cannot support.
+func _check_sister_note(undecided: Array[String]) -> void:
+	var note: Inspectable = shed.get_node("%MarinaSisterNote")
+	var visual: Node3D = note.get_node("Visual") as Node3D
+	_expect(note.scene_file_path == "res://scenes/objects/waiting_shed/marina_sister_note.tscn" and note.get_script() != load("res://scripts/interactions/collectible_interactable.gd") and not note.get("item_id"), "the sister's note is a world readable, not something to pick up")
+	_expect(str(visual.get_meta("inspect_id")) == "marina_sister_note" and str(visual.get_meta("inspect_mode")) == "read" and str(visual.get_meta("readable_text")) == "READABLE_MARINA_SISTER_NOTE", "with its own inspect id, read as a document")
+	_expect(_translated("ITEM_MARINA_SISTER_NOTE_NAME", "en") == "Note from Marina's Sister" and _translated("ITEM_MARINA_SISTER_NOTE_NAME", "pt_BR") == "Bilhete da irmã de Marina", "its name is the approved one in both languages")
+	_expect(_translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "en") == "A folded sheet kept with Sophia's clippings. Marina's sister describes the first phone call about the discovery of the body." and _translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "pt_BR") == "Uma folha dobrada, guardada com os recortes de Sophia. A irmã de Marina comenta o primeiro telefonema sobre a descoberta do corpo.", "and so is its description")
+	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "en") == "He said he had found Marina sitting down. I remember because I asked if she was waiting for someone.\n\nThe newspaper says she was on the ground.\n\nThey might have moved her. I just wanted him to explain without telling me to forget about it. It's been years, and no one has come back to talk to us.", "its English words are the approved ones")
+	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "pt_BR") == "Ele disse que tinha encontrado a Marina sentada. Eu lembro porque perguntei se ela estava esperando alguém.\n\nNo jornal está escrito que ela estava no chão.\n\nPode ser que tenham tirado ela de lá. Eu só queria que ele me contasse sem mandar esquecer. Já faz anos e ninguém voltou para falar com a gente.", "and so are the Portuguese ones")
+	for locale: String in ["en", "pt_BR"]:
+		var lowered: String = (_translated("READABLE_MARINA_SISTER_NOTE", locale) + " " + _translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", locale)).to_lower()
+		for word: String in undecided:
+			_expect(not lowered.contains(word), "the note says nothing of '%s' (%s)" % [word.strip_edges(), locale])
+		for proof: String in (["cover-up", "covered up", "proves", "murder", "killed", "police", "signed", "address"] if locale == "en" else ["encobr", "prova", "assassin", "matou", "polícia", "endereço"]):
+			_expect(not lowered.contains(proof), "and claims no proof, no name and no address ('%s', %s)" % [proof, locale])
+	_expect(_translated("READABLE_CLIPPING", "en").contains("on the ground between the bench") and _translated("READABLE_CLIPPING", "pt_BR").contains("no chão, entre o banco"), "the clipping still says the body was on the ground (the two accounts stay in conflict)")
+	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "en").contains("sitting down") and not _translated("READABLE_CLIPPING", "en").contains("sitting"), "while only the note says sitting down")
+
 func _check_text() -> void:
 	var journal: Inspectable = shed.get_node("%SophiaJournal")
 	_expect(tr(journal.get_inspect_data()["name"]) == "Sophia's Notebook", "the notebook is Sophia's Notebook")
@@ -163,7 +184,8 @@ func _check_text() -> void:
 			for word: String in old_words:
 				_expect(not text.contains(word), "%s (%s) has none of the old clue %s" % [key, locale, word])
 
-	# The notebook: the copy has no sound (once), the sister thinks Marina knew the person, who was filming; no help, no timestamp, no cause.
+	# The notebook: the copy has no sound (once), the two accounts of how Marina was found (the newspaper: on the ground; her sister's first call: sitting down), who was
+	# filming; no help, no timestamp, no cause, and no explanation chosen.
 	var undecided: Array[String] = ["stabb", "knife", "firearm", "pistol", "bullet", "gunshot", "revólver", "arma de fogo", "strangl", "poison", "overdose", "beaten", "weapon", "wound", "autopsy", "faca", "tiro", "arma ", "estrangul", "veneno", "espancad", "ferimento", "autópsia", "facada"]
 	for locale: String in ["en", "pt_BR"]:
 		var full: String = _translated("READABLE_JOURNAL", locale)
@@ -175,17 +197,28 @@ func _check_text() -> void:
 		_expect(full.contains(margin), "and the margin note (%s)" % locale)
 		_expect(_translated("JOURNAL_EXTRACT", locale).contains(extract), "the world page carries the extract too (%s)" % locale)
 		var no_sound: String = "The copy I was lent has no sound." if locale == "en" else "A cópia que me emprestaram está sem som."
-		_expect(full.count(no_sound) == 1 and _translated("JOURNAL_RIGHT", locale).count(no_sound) == 1, "the notebook says the copy has no sound, once, in the reading text and on the page (%s)" % locale)
+		_expect(full.count(no_sound) == 1 and _translated("JOURNAL_LEFT", locale).count(no_sound) == 1, "the notebook says the copy has no sound, once, in the reading text and on the page (%s)" % locale)
+		var ground: String = "The newspaper says the body was on the ground. Her sister remembers being told in the first call that Marina was sitting down. Check with the railway employee who found her." if locale == "en" else "O jornal diz que o corpo estava no chão. A irmã lembra que, no primeiro telefonema, disseram que Marina estava sentada. Confirmar com o funcionário que encontrou ela."
+		_expect(full.count(ground) == 1 and _translated("JOURNAL_LEFT", locale).count(ground) == 1, "the notebook sets the two accounts side by side, once, and goes no further than checking (%s)" % locale)
+		var other_cases: String = "Marina wasn't the first case I looked into. Other families I've spoken to still don't know who did it either. Request the newspaper issues that followed the other clippings." if locale == "en" else "Marina não foi o primeiro caso que procurei. Outras famílias com quem falei também continuam sem saber quem foi. Pedir as edições seguintes aos outros recortes."
+		_expect(full.count(other_cases) == 1 and _translated("JOURNAL_RIGHT", locale).count(other_cases) == 1, "Sophia has been looking into other cases, as her own report (%s)" % locale)
+		for questions: String in (["Who was filming?\nWho passed on the copy?\nWho kept the original?"] if locale == "en" else ["Quem estava filmando?\nQuem passou a cópia?\nQuem ficou com o original?"]):
+			_expect(full.contains(questions) and _translated("JOURNAL_RIGHT", locale).contains(questions), "the three questions are on the list (%s)" % locale)
+		for sentence: String in (["Call Marina's sister again."] if locale == "en" else ["Voltar a ligar para a irmã de Marina."]):
+			_expect(full.count(sentence) == 1 and _translated("JOURNAL_RIGHT", locale).count(sentence) == 1, "and the call to the sister (%s)" % locale)
 		var knew: String = "Her sister thinks Marina knew the person in the recording. She asked me to look again." if locale == "en" else "A irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo."
 		_expect(full.contains(knew) and _translated("JOURNAL_LEFT", locale).contains(knew), "the sister thinks Marina knew the person, in the reading text and on the page (%s)" % locale)
 		for old: String in (["tried to help", "someone was with her at the end"] if locale == "en" else ["tentou ajudá-la", "havia alguém com ela no fim"]):
 			_expect(not full.contains(old) and not _translated("JOURNAL_LEFT", locale).contains(old), "the old sentence '%s' is gone (%s)" % [old, locale])
 		var filming: String = "Who was filming?" if locale == "en" else "Quem estava filmando?"
 		_expect(full.count(filming) == 1 and _translated("JOURNAL_RIGHT", locale).count(filming) == 1, "'Who was filming?' is on the list, once (%s)" % locale)
-		_expect(full.contains("excerpt" if locale == "en" else "trecho") and full.contains("Ask who passed on the copy" if locale == "en" else "quem passou a cópia") and full.contains("Ask who kept the original" if locale == "en" else "quem ficou com o original"), "the questions about the copy and the original stay (%s)" % locale)
-		_expect(full.contains("— Sophia") and full.contains("“No witnesses”" if locale == "en" else "“Sem testemunhas”"), "the signature and the 'no witnesses' caution stay (%s)" % locale)
+		for gone_sentence: String in (["The recording I was lent is only an excerpt", "Ask who passed on the copy", "No witnesses", "voice"] if locale == "en" else ["A gravação que me emprestaram é só um trecho", "Perguntar quem passou a cópia", "Sem testemunhas", "voz"]):
+			_expect(not full.contains(gone_sentence) and not _translated("JOURNAL_LEFT", locale).contains(gone_sentence) and not _translated("JOURNAL_RIGHT", locale).contains(gone_sentence), "the old note '%s' is gone (%s)" % [gone_sentence, locale])
+		_expect(full.contains("— Sophia"), "the notebook is signed (%s)" % locale)
 		for last_word: String in (["last person", "that night", "same night"] if locale == "en" else ["última pessoa", "naquela noite", "mesma noite"]):
 			_expect(not full.to_lower().contains(last_word), "the notebook does not say '%s' (%s)" % [last_word, locale])
+
+	_check_sister_note(undecided)
 
 	# The clipping with its photograph: name, description, reading text and caption, in both languages; the cause of death left undisclosed.
 	var clipping: Inspectable = shed.get_node("%NewspaperClipping")
@@ -233,40 +266,49 @@ func _check_text() -> void:
 			_expect(not en_text.is_empty() and en_text != key and not pt_text.is_empty() and pt_text != key, "%s is written in both languages" % key)
 			var speaker: String = str(cue.get("speaker", ""))
 			_expect(speaker == CaptionTracks.SPEAKER_SOPHIA or speaker == CaptionTracks.SPEAKER_JULIANA, "%s is spoken by Sophia or Juliana, never by anyone in the recording" % key)
-			_expect(en_text.length() < 60 and pt_text.length() < 60, "%s is one short line" % key)
+			_expect(en_text.length() < 66 and pt_text.length() < 66, "%s is one short line (a longer sentence is split into contiguous groups)" % key)
 			for banned: String in ["help", "ajud", "lip", "lábio", "watch it again", "ver de novo", "bag", "bolsa", "turn it off", "desliga"]:
 				_expect(not en_text.to_lower().contains(banned) and not pt_text.to_lower().contains(banned), "%s has nothing of the old scene (%s)" % [key, banned])
-	_expect(cue_count == 11, "three lines of introduction and eight of conversation (%d)" % cue_count)
+	_expect(cue_count == 16, "four lines of introduction and twelve groups of conversation (%d)" % cue_count)
 	_expect(_translated("CAPTION_SPEAKER_SOPHIA", "en") == "Sophia" and _translated("CAPTION_SPEAKER_JULIANA", "en") == "Juliana", "the speakers are labelled with their names")
 	var intro: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY)
 	var talk: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK)
-	_expect(intro >= 8.0 and intro <= 10.0, "the introduction is about 8 to 10 s (%.1f)" % intro)
-	_expect(talk >= 18.0 and talk <= 23.0, "the conversation is about 18 to 23 s (%.1f)" % talk)
+	_expect(intro >= 10.0 and intro <= 13.0, "the introduction is about 10 to 13 s (%.1f)" % intro)
+	_expect(talk >= 32.0 and talk <= 38.0, "the conversation is about 32 to 38 s (%.1f)" % talk)
 	var talk_cues: Array = CaptionTracks.get_cues(CaptionTracks.SHED_REMEMBERED_TALK)
+	# Nothing flashes and nothing waits: every group is on screen long enough to read (about 14 characters a second at the most, never under a second), the groups
+	# of a split sentence meet exactly, and the gaps between speakers are short.
 	var widest_gap: float = 0.0
-	var gap_before: String = ""
-	for i: int in range(1, talk_cues.size()):
-		var gap: float = float(talk_cues[i]["start"]) - float(talk_cues[i - 1]["end"])
-		if gap > widest_gap:
-			widest_gap = gap
-			gap_before = str(talk_cues[i]["key"])
-	_expect(widest_gap >= 1.0 and widest_gap <= 2.5 and gap_before == "CAPTION_SHED_TALK_08", "a small unfilled pause (%.1f s) comes before Sophia's last answer (%s)" % [widest_gap, gap_before])
+	for i: int in talk_cues.size() - 1:
+		var cue: Dictionary = talk_cues[i]
+		var shown: float = float(cue["end"]) - float(cue["start"])
+		var characters: int = _translated(str(cue["key"]), "en").length()
+		_expect(shown >= 1.0 and float(characters) / shown <= 20.0, "%s stays %.1f s for %d characters" % [cue["key"], shown, characters])
+		if i > 0:
+			widest_gap = maxf(widest_gap, float(cue["start"]) - float(talk_cues[i - 1]["end"]))
+	_expect(widest_gap <= 0.8, "no long pause between the lines of the conversation (%.1f s at the most)" % widest_gap)
+	var last_two: float = float(talk_cues[10]["end"]) - float(talk_cues[10]["start"]) + float(talk_cues[11]["end"]) - float(talk_cues[11]["start"])
+	_expect(last_two >= 6.0 and float(talk_cues[11]["end"]) - float(talk_cues[11]["start"]) >= 2.7, "Sophia's last two sentences get time to be read (%.1f s together)" % last_two)
+	_expect(float(talk_cues[2]["start"]) == float(talk_cues[1]["end"]) and float(talk_cues[11]["start"]) == float(talk_cues[10]["end"]), "and the groups of a split sentence meet exactly")
+	_expect(_translated("CAPTION_SHED_TALK_02", "en") + " " + _translated("CAPTION_SHED_TALK_03", "en") == "I tried. When I asked about the bench, he wanted to know who had given me the tape." and _translated("CAPTION_SHED_TALK_11", "en") + " " + _translated("CAPTION_SHED_TALK_12", "en") == "I asked her to call me if she remembered anything else. I'm not going to pretend she didn't call.", "the split sentences read as one in English")
+	_expect(_translated("CAPTION_SHED_TALK_02", "pt_BR") + " " + _translated("CAPTION_SHED_TALK_03", "pt_BR") == "Tentei. Quando perguntei sobre o banco, ele quis saber quem tinha me dado a fita." and _translated("CAPTION_SHED_TALK_11", "pt_BR") + " " + _translated("CAPTION_SHED_TALK_12", "pt_BR") == "Eu pedi para ela me ligar se lembrasse de mais alguma coisa. Agora não vou fingir que ela não ligou.", "and in Portuguese")
 	var expected_lines: Dictionary = {
-		"CAPTION_SHED_MEM_01": ["This is the copy Marina's sister lent me.", "Essa é a cópia que a irmã da Marina me emprestou."],
-		"CAPTION_SHED_MEM_02": ["There's no sound?", "Tá sem som?"],
-		"CAPTION_SHED_MEM_03": ["The copy came like this.", "A cópia veio assim."],
-		"CAPTION_SHED_TALK_01": ["Does she know that person?", "Ela conhece essa pessoa?"],
-		"CAPTION_SHED_TALK_02": ["Her sister thinks so.", "A irmã acha que sim."],
-		"CAPTION_SHED_TALK_03": ["Did you recognize them?", "Você reconheceu?"],
-		"CAPTION_SHED_TALK_04": ["No.", "Não."],
-		"CAPTION_SHED_TALK_05": ["And who's filming?", "E quem está filmando?"],
-		"CAPTION_SHED_TALK_06": ["That's what I asked.", "Foi o que eu perguntei."],
-		"CAPTION_SHED_TALK_07": ["And?", "E?"],
-		"CAPTION_SHED_TALK_08": ["They offered me a better copy.", "Me ofereceram uma cópia melhor."],
+		"CAPTION_SHED_MEM_01": ["You're still looking into those cases in the Fenda?", "Você ainda tá atrás desses casos da Fenda?"],
+		"CAPTION_SHED_MEM_02": ["I spoke to Marina's sister. She lent me this copy.", "Falei com a irmã da Marina. Ela me emprestou essa cópia."],
+		"CAPTION_SHED_MEM_03": ["There's no sound?", "Tá sem som?"],
+		"CAPTION_SHED_MEM_04": ["The copy came like this.", "A cópia veio assim."],
+		"CAPTION_SHED_TALK_01": ["Did you talk to the man who found her?", "Você falou com o homem que encontrou ela?"],
+		"CAPTION_SHED_TALK_04": ["Maybe he just didn't want to remember.", "Ele podia só não querer lembrar."],
+		"CAPTION_SHED_TALK_05": ["Maybe. I told him he didn't have to talk that day.", "Podia. Eu disse que não precisava falar naquele dia."],
+		"CAPTION_SHED_TALK_06": ["Are you going back?", "E você vai voltar?"],
+		"CAPTION_SHED_TALK_07": ["Her sister is waiting for me to call.", "A irmã dela está esperando uma ligação minha."],
+		"CAPTION_SHED_TALK_08": ["You didn't even know Marina.", "Você nem conhecia a Marina."],
+		"CAPTION_SHED_TALK_09": ["No.", "Não."],
+		"CAPTION_SHED_TALK_10": ["Then why are you getting involved?", "Então por que você está se metendo nisso?"],
 	}
 	for key: String in expected_lines:
 		_expect(_translated(key, "en") == (expected_lines[key] as Array)[0] and _translated(key, "pt_BR") == (expected_lines[key] as Array)[1], "%s reads as written (both languages)" % key)
-	for gone: String in ["CAPTION_SPEAKER_MARINA", "CAPTION_SPEAKER_RECORDED_VOICE", "CAPTION_SHED_REC_01", "CAPTION_SHED_REC_07", "CAPTION_SHED_OFF", "CAPTION_SHED_REVIEW_01", "CAPTION_SHED_REVIEW_03", "CAPTION_SHED_TALK_09", "CAPTION_SHED_TALK_11", "CAPTION_SHED_TALK_12", "CAPTION_SHED_TALK_13"]:
+	for gone: String in ["CAPTION_SPEAKER_MARINA", "CAPTION_SPEAKER_RECORDED_VOICE", "CAPTION_SHED_REC_01", "CAPTION_SHED_REC_07", "CAPTION_SHED_OFF", "CAPTION_SHED_REVIEW_01", "CAPTION_SHED_REVIEW_03", "CAPTION_SHED_TALK_13", "CAPTION_SHED_TALK_13"]:
 		_expect(_translated(gone, "en").is_empty() and _translated(gone, "pt_BR").is_empty(), "%s no longer exists" % gone)
 
 
@@ -277,6 +319,7 @@ func _check_bench_fit() -> void:
 		"backpack": shed.get_node("Platform/PersonalEffects/Backpack"),
 		"notebook": shed.get_node("%SophiaJournal"),
 		"clipping": shed.get_node("%NewspaperClipping"),
+		"sister's note": shed.get_node("%MarinaSisterNote"),
 		"box": shed.get_node("%SwitchBox"),
 		"tape set down": shed.vhs_set_down,
 	}
@@ -291,11 +334,11 @@ func _check_bench_fit() -> void:
 		_expect(bounds.position.y >= seat.end.y - 0.03 and bounds.position.y <= seat.end.y + 0.07, "%s rests on the seat (%.3f over it)" % [label, bounds.position.y - seat.end.y])
 
 	# The three groups do not overlap in plan (only the clipping lies over the notebook, on purpose).
-	for a: String in ["backpack", "notebook", "box", "tape set down"]:
-		for b: String in ["backpack", "notebook", "box", "tape set down"]:
+	for a: String in ["backpack", "notebook", "sister's note", "box", "tape set down"]:
+		for b: String in ["backpack", "notebook", "sister's note", "box", "tape set down"]:
 			if a < b:
 				_expect(not _overlap_plan(boxes[a], boxes[b]), "%s and %s do not overlap on the seat" % [a, b])
-	_expect(not _overlap_plan(boxes["clipping"], boxes["box"]) and not _overlap_plan(boxes["clipping"], boxes["tape set down"]), "the clipping touches neither the box nor the tape's place")
+	_expect(not _overlap_plan(boxes["clipping"], boxes["box"]) and not _overlap_plan(boxes["clipping"], boxes["tape set down"]) and not _overlap_plan(boxes["clipping"], boxes["sister's note"]), "the clipping touches neither the box, the tape's place nor the sister's note")
 	_expect(_overlap_plan(boxes["clipping"], boxes["notebook"]), "the clipping lies over the notebook's page")
 
 	# The open lid stays clear of the notebook, the backpack and anything behind the bench.
@@ -357,7 +400,8 @@ func _check_box_and_rays() -> void:
 	await _ray_finds(notebook, _stand_for(Vector3(-4.7, 0.0, 0.0)), notebook.global_position + Vector3(-0.07, 0.01, 0.0), "the notebook")
 	var clipping: Inspectable = shed.get_node("%NewspaperClipping")
 	await _ray_finds(clipping, _stand_for(Vector3(-4.43, 0.0, 0.0)), clipping.global_position + Vector3(0.0, 0.012, 0.0), "the clipping, over the notebook")
-	await _ray_finds(shed.camcorder, shed.to_global(Vector3(-4.3, 0.0, -0.8)), shed.camcorder.global_position + Vector3(0.0, 1.33, 0.0), "the camcorder, from 2 m away")
+	var sister_note: Inspectable = shed.get_node("%MarinaSisterNote")
+	await _ray_finds(sister_note, _stand_for(Vector3(-4.70, 0.0, 0.0)), sister_note.global_position + Vector3(0.0, 0.012, 0.0), "the sister's note, on its own beside the notebook")
 
 
 func _check_scene_plays_once() -> void:
@@ -390,7 +434,7 @@ func _check_scene_plays_once() -> void:
 	await get_tree().process_frame
 
 	_expect(not shed.is_recording_running() and shed.is_recording_done(), "the scene ends by itself")
-	_expect(waited > 60.0 and waited < 90.0, "it lasts about seventy seconds (%.0f s)" % waited)
+	_expect(waited > 92.0 and waited < 125.0, "it lasts under two minutes: the introduction, the 50 s recording, the photograph, the conversation (%.0f s)" % waited)
 	_expect(completed_count == 1, "it is announced once")
 	_expect(player.global_position.distance_to(start_position) < 0.05, "the player was never moved")
 	_expect(not player.view_locked and not player.manual_save_blocked and player.scripted_flashlight == scripted_before, "the view, saving and the flashlight scripting are given back")
@@ -409,7 +453,11 @@ func _check_scene_plays_once() -> void:
 	_expect(int(_seen.get("cast_in_talk", 0)) == 0, "and not in the present shots (%d frames)" % int(_seen.get("cast_in_talk", 0)))
 	_expect(int(_seen.get("foreground_outside", 0)) == 0 and bool(_seen.get("foreground_seen", false)), "the ferns are in the recording and nowhere else (%d frames outside)" % int(_seen.get("foreground_outside", 0)))
 	_expect(int(_seen.get("caption_in_recording", 0)) == 0 and int(_seen.get("caption_in_photo", 0)) == 0, "no caption while the silent footage plays, nor over the photograph (%d, %d frames)" % [int(_seen.get("caption_in_recording", 0)), int(_seen.get("caption_in_photo", 0))])
-	_expect(int(_seen.get("source_sounds", 0)) == 0, "no sound at all while the recording's picture is up (%d frames)" % int(_seen.get("source_sounds", 0)))
+	_expect(int(_seen.get("source_sounds", 0)) == 0, "no sound but the tape's own noise while the recording's picture is up (%d frames)" % int(_seen.get("source_sounds", 0)))
+	_expect(int(_seen.get("tape_frames", 0)) > 100 and int(_seen.get("tape_silent_frames", 0)) <= 2, "and that noise plays the whole time (%d frames with it, %d without)" % [int(_seen.get("tape_frames", 0)), int(_seen.get("tape_silent_frames", 0))])
+	_expect(bool(_seen.get("tape_loops", false)) and str(_seen.get("tape_path", "")).ends_with("placeholder_video_tape.mp3") and int(_seen.get("tape_outside", 0)) == 0, "it is placeholder_video_tape, looped, and nowhere else (%d frames outside the recording)" % int(_seen.get("tape_outside", 0)))
+	_expect(int(_seen.get("silenced_frames", 0)) > 100 and int(_seen.get("not_silenced_in_cinema", 0)) == 0, "the wind and the night chorus are silent through the whole memory (%d frames not silent in a shot)" % int(_seen.get("not_silenced_in_cinema", 0)))
+	_expect(int(_seen.get("stale_frames", 0)) > 20 and int(_seen.get("moving_frames", 0)) > 20, "the tape's picture holds still between its own frames and stalls, and does move (%d held, %d moved)" % [int(_seen.get("stale_frames", 0)), int(_seen.get("moving_frames", 0))])
 	_expect(shed.get_node_or_null("RecordedVoices") == null and shed.get_node_or_null("ArchiveTexture") == null and shed.get_node_or_null("ArchiveMotif") == null and shed.get_node_or_null("RewindFoley") == null, "the old recorded-voice, texture, motif and rewind players are gone: nothing is replayed")
 	_expect(float(_seen.get("max_footage_time", 0.0)) >= shed.footage.length_seconds - 0.2, "the footage ran to its end, once (%.1f s)" % float(_seen.get("max_footage_time", 0.0)))
 	_expect(int(_seen.get("footage_restarts", 0)) == 0, "and never went back (%d restarts)" % int(_seen.get("footage_restarts", 0)))
@@ -418,18 +466,15 @@ func _check_scene_plays_once() -> void:
 	_expect(int(_seen.get("photo_frames", 0)) > 25 and int(_seen.get("photo_present_frames", 0)) == int(_seen.get("photo_frames", 0)), "the photograph's close view was held, with the present's dressing whole and nobody in it (%d frames)" % int(_seen.get("photo_frames", 0)))
 	_expect(float(_seen.get("talk_camera_move", 1.0)) < 0.0001 and int(_seen.get("talk_frames", 0)) > 80, "the conversation is one still shot (%.5f m over %d frames)" % [float(_seen.get("talk_camera_move", 1.0)), int(_seen.get("talk_frames", 0))])
 	_expect(int(_seen.get("black_frames", 0)) == 0, "no black or dissolve frame between the recording, the photograph and the conversation (%d frames of a black picture)" % int(_seen.get("black_frames", 0)))
-	_expect(bool(_seen.get("led_on", false)) and int(_seen.get("led_on_in_cinema", 0)) == 0, "the red light came on, in her own view")
-	_expect(float(_seen.get("head_turn", 0.0)) >= 2.95 and float(_seen.get("head_turn", 0.0)) <= 8.5, "the camcorder's head turned a small amount (%.1f degrees)" % float(_seen.get("head_turn", 0.0)))
-	_expect(float(_seen.get("min_fov", 75.0)) < 70.0, "the lens narrowed a little (%.0f)" % float(_seen.get("min_fov", 75.0)))
-	_expect(bool(_seen.get("flash_on_in_shot5", false)), "her flashlight was on for the camcorder")
-	_expect(bool(_seen.get("flash_off_in_memory", false)), "and out for the memory")
-	_expect(float(_seen.get("flash_energy_min", 15.0)) >= 14.9, "the flashlight was never weakened")
-	_expect(bool(_seen.get("mark_shown", false)), "the token's mark was shown at the end")
+	_expect(not bool(_seen.get("led_on", false)), "the camcorder's light never came on: it is only there")
+	_expect(is_equal_approx(float(_seen.get("head_turn", 0.0)), 0.0), "and it never turned (%.1f degrees)" % float(_seen.get("head_turn", 0.0)))
+	_expect(bool(_seen.get("flash_off_in_memory", false)), "her flashlight was out for the memory")
+	var after_last: float = float(_seen.get("ended_ms", 0.0)) - float(_seen.get("last_line_ms", 0.0))
+	_expect(_seen.has("last_line_ms") and _seen.has("ended_ms") and after_last >= 0.0 and after_last < 9000.0 / maxf(TIME_SCALE, 0.1), "the controls come back when the conversation is over, with nothing played after it (%.1f s after the last line, real time)" % (after_last / 1000.0))
+	_expect(int(_seen.get("eyes_frames_with_scene", 0)) == 0, "nothing of the scene's own camera or recording shows once her eyes are back (%d frames)" % int(_seen.get("eyes_frames_with_scene", 0)))
 	_expect(not bool(_seen.get("saw_marina", false)) and not bool(_seen.get("saw_recorded", false)), "no subtitle ever spoke for Marina or a recorded voice")
-	_expect(bool(_seen.get("saw_last", false)), "the subtitles reached the last line, 'They offered me a better copy.'")
+	_expect(bool(_seen.get("saw_last", false)), "the subtitles reached the last line, 'I'm not going to pretend she didn't call.'")
 	_expect(str(_seen.get("order_ok", "")) == "yes", "the subtitles came in order and none was left behind across a cut (%s)" % str(_seen.get("order_ok", "")))
-	var final_head: Node3D = shed.camcorder.find_child("Head", true, false)
-	_expect(absf(final_head.rotation_degrees.y - shed.camcorder_start_yaw_degrees) >= 2.95, "the camcorder stays turned toward her")
 	var led: MeshInstance3D = shed.camcorder.find_child("Led", true, false)
 	_expect((led.material_override as StandardMaterial3D).emission_energy_multiplier == 0.0 and shed.camcorder.visible, "its light is out and it is still there")
 	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)), "completion is saved")
@@ -531,10 +576,10 @@ func _check_cancel() -> void:
 	await _wait(1.0)
 	player.flashlight_controller.flashlight_on = true
 	await _read_and_close_tape()
-	# In the footage while the visitor walks (the footage begins about 10 s in).
-	await _wait(10.0 + 4.8)
+	# In the footage while the visitor walks (the footage begins after the introduction's track and a short beat).
+	await _wait(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY) + 0.8 + 9.3)
 	_expect(shed.is_recording_running() and not shed.effects_root.visible and shed.footage.visible and shed.archive_foreground.visible, "(in the recording: the cast and the ferns on screen)")
-	_expect(shed.footage.current_time > 3.0 and shed.footage.current_time < shed.footage.arrive_time, "(the visitor is walking in: %.1f s)" % shed.footage.current_time)
+	_expect(shed.footage.current_time > shed.footage.visitor_start_seconds and shed.footage.current_time < shed.footage.arrive_time, "(the visitor is walking in: %.1f s)" % shed.footage.current_time)
 	shed.cancel_recording()
 	await _wait(0.3)
 	_expect(not shed.is_recording_running() and not shed.is_recording_done(), "cutting the scene short leaves it to be played")
@@ -560,8 +605,8 @@ func _check_pause() -> void:
 	container.interact(player)
 	await _wait(1.0)
 	await _read_and_close_tape()
-	# While the visitor walks (the footage begins about 10 s in): the picture stands still, the cast with it, and the visitor does not keep walking.
-	await _wait(10.0 + 4.6)
+	# While the visitor walks (the footage begins after the introduction): the picture stands still, the cast with it, and the visitor does not keep walking.
+	await _wait(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY) + 0.8 + 9.3)
 	var cinema: Camera3D = shed.get_node_or_null("CinemaCamera")
 	_expect(shed.is_recording_running() and cinema != null and shed.footage.visible, "(in the footage, the visitor walking)")
 	var time_before: float = shed.footage.current_time
@@ -576,7 +621,7 @@ func _check_pause() -> void:
 
 	# Through the exchange, the exit and the photograph's close view.
 	var guard: float = 0.0
-	while shed.footage.visible and guard < 60.0:
+	while shed.footage.visible and guard < 90.0:
 		await get_tree().process_frame
 		guard += get_process_delta_time()
 	await _wait(1.0)
@@ -656,11 +701,12 @@ func _check_footage() -> void:
 	_expect(not marina.palette[&"top"].is_equal_approx(visitor.palette[&"top"]) and not is_equal_approx(marina.actor_scale, visitor.actor_scale), "the two are dressed differently and are two different heights")
 
 	# The timing: about 22 s, the visitor at an ordinary pace with short ramps, in the right order.
-	_expect(footage.length_seconds >= 20.0 and footage.length_seconds <= 24.0, "the excerpt is about 22 s (%.1f)" % footage.length_seconds)
+	_expect(footage.length_seconds >= 45.0 and footage.length_seconds <= 55.0, "the tape is long, about 50 s (%.1f)" % footage.length_seconds)
 	_expect(footage.walk_speed >= 1.0 and footage.walk_speed <= 1.3, "the visitor walks at an ordinary pace (%.2f m/s)" % footage.walk_speed)
 	_expect(footage.accel_seconds <= 0.6 and footage.decel_seconds <= 0.7, "with short ramps, not a multi-second float (%.1f s, %.1f s)" % [footage.accel_seconds, footage.decel_seconds])
 	_expect(footage.visitor_start_seconds < footage.arrive_time and footage.arrive_time < footage.depart_time and footage.depart_time < footage.walk_out_time and footage.walk_out_time < footage.length_seconds, "they walk in, stop, speak, turn and walk out, in that order")
-	_expect(footage.arrive_time >= 4.5 and footage.arrive_time <= 7.5 and footage.depart_time >= 12.0 and footage.depart_time <= 15.0, "they stop about 5.5 s in and turn away about 13.5 s in (%.1f, %.1f)" % [footage.arrive_time, footage.depart_time])
+	_expect(footage.arrive_time >= 10.0 and footage.arrive_time <= 13.5 and footage.depart_time >= 26.0 and footage.depart_time <= 30.0, "they stop about 11.5 s in, stay a long while and turn away about 27.5 s in (%.1f, %.1f)" % [footage.arrive_time, footage.depart_time])
+	_expect(footage.depart_time - footage.arrive_time >= 14.0 and footage.length_seconds - footage.walk_out_time >= 18.0, "they stay at least fourteen seconds, and she is alone for the last eighteen or more")
 
 	# Marina sits ON the bench: pelvis on the seat, thighs on it, feet on the floor, hands on her thighs, the legs not mirrored.
 	footage.seek(0.0)
@@ -814,8 +860,8 @@ func _check_footage() -> void:
 		first = false
 		time += step
 	_expect(head_inside == 0 and worst_chin < -0.02, "the visitor's head never enters the picture: through the whole excerpt the lowest head vertex is %.3f of the picture's height above its top edge" % -worst_chin)
-	_expect(first_seen >= 3.0 and first_seen <= 4.2, "nobody is in the picture for the first three seconds; the visitor appears at %.1f s" % first_seen)
-	_expect(last_seen >= 14.5 and last_seen <= 17.5, "and has left it by %.1f s, with Marina alone for the rest" % last_seen)
+	_expect(first_seen >= 8.0 and first_seen <= 10.5, "nobody is in the picture for the first eight seconds; the visitor appears at %.1f s" % first_seen)
+	_expect(last_seen >= 29.0 and last_seen <= 34.0, "and has left it by %.1f s, with Marina alone for the rest" % last_seen)
 	_expect(marina_face_worst > 0.03 and overlap_frames == 0, "Marina's face stays in the picture (%.2f of it from the nearest edge) and is never covered by the visitor (%d frames overlap)" % [marina_face_worst, overlap_frames])
 	_expect(worst_reach < 0.01, "every hand and foot reaches where it is asked, all through the footage (worst %.4f m)" % worst_reach)
 	_expect(worst_floor > -0.02, "the visitor is never under the floor (%.3f m)" % worst_floor)
@@ -830,8 +876,8 @@ func _check_footage() -> void:
 	var gait: ArchiveGait = footage.gait
 	_expect(gait.steps_taken[0] >= 6 and gait.steps_taken[1] >= 6, "both feet take real steps (%d and %d)" % [gait.steps_taken[0], gait.steps_taken[1]])
 	var lifts: int = 0
-	var window_start: int = int(round(2.0 / ArchiveGait.DT))
-	var window_end: int = int(round(4.0 / ArchiveGait.DT))
+	var window_start: int = int(round((footage.visitor_start_seconds + 1.0) / ArchiveGait.DT))
+	var window_end: int = int(round((footage.visitor_start_seconds + 3.0) / ArchiveGait.DT))
 	for f: int in 2:
 		for i: int in range(window_start + 1, window_end):
 			if gait.foot_up[f][i] > 0.0005 and gait.foot_up[f][i - 1] <= 0.0005:
@@ -861,12 +907,19 @@ func _check_footage() -> void:
 	footage.seek(footage.arrive_time + 1.5)
 	var speaking_gaze: float = _gaze_angle(marina, "Head", visitor.to_global(visitor.bone_point("Head")))
 	_expect(speaking_gaze < 45.0 and waiting_gaze > speaking_gaze + 15.0, "Marina waits looking aside (%.0f degrees from where they will stand) and then looks at the visitor (%.0f degrees off)" % [waiting_gaze, speaking_gaze])
-	footage.seek(footage.length_seconds - 0.5)
+	footage.seek(footage.walk_out_time + footage.marina_follow_after_walk_out + footage.marina_settle_seconds + 1.0)
 	var settled_gaze: float = _gaze_angle(marina, "Head", stop_head)
 	_expect(settled_gaze > speaking_gaze + 15.0, "after they have gone she is waiting again (%.0f degrees from where they stood)" % settled_gaze)
+	footage.seek(footage.length_seconds - 0.5)
+	var lens_gaze: float = _gaze_angle(marina, "Head", footage.lens_point)
+	_expect(footage.lens_point.is_finite() and lens_gaze < 14.0, "and at the end of the tape, alone, her face is turned to the camera's lens (%.0f degrees off it)" % lens_gaze)
+	var turn_start: float = footage.walk_out_time + footage.marina_follow_after_walk_out + footage.marina_settle_seconds + footage.marina_lens_after_settle_seconds
+	footage.seek(turn_start + footage.marina_lens_blend_seconds * 0.3)
+	var turning_gaze: float = _gaze_angle(marina, "Head", footage.lens_point)
+	_expect(turning_gaze > lens_gaze + 8.0 and turn_start + footage.marina_lens_blend_seconds < footage.length_seconds - 8.0, "she turns to it slowly (%.0f degrees off it a third of the way round) and then stays, looking at it, for the last eight seconds or more" % turning_gaze)
 
 	# The footage is a pure function of the time: any order, any number of times, the same picture. No other animation can run on it.
-	var probe_times: Array[float] = [0.5, 4.2, 5.6, 9.0, 13.5, 14.4, 15.3, 18.0, 21.9]
+	var probe_times: Array[float] = [0.5, 8.0, 10.2, 12.0, 20.0, 27.9, 30.0, 36.0, 49.5]
 	var reference: Dictionary = {}
 	for t: float in probe_times:
 		footage.seek(0.0)
@@ -1074,16 +1127,19 @@ func _watch() -> void:
 	var head: Node3D = shed.camcorder.find_child("Head", true, false)
 	var led: StandardMaterial3D = (shed.camcorder.find_child("Led", true, false) as MeshInstance3D).material_override
 	var start_yaw: float = head.rotation_degrees.y
+	var ambience: Node = get_tree().get_first_node_in_group(OutdoorAmbience.GROUP)
+	var last_tape_time: float = -1.0
+	var was_done: bool = shed.is_recording_done()
 	var last_cinema_origin: Vector3 = Vector3.ZERO
 	var shots_seen: int = 0
 	var captions: Array[String] = []
 	var expected: Array[String] = [
-		"Sophia: This is the copy Marina's sister lent me.", "Juliana: There's no sound?", "Sophia: The copy came like this.",
-		"Juliana: Does she know that person?", "Sophia: Her sister thinks so.", "Juliana: Did you recognize them?", "Sophia: No.",
-		"Juliana: And who's filming?", "Sophia: That's what I asked.", "Juliana: And?", "Sophia: They offered me a better copy.",
+		"Juliana: You're still looking into those cases in the Fenda?", "Sophia: I spoke to Marina's sister. She lent me this copy.", "Juliana: There's no sound?", "Sophia: The copy came like this.",
+		"Juliana: Did you talk to the man who found her?", "Sophia: I tried. When I asked about the bench,", "Sophia: he wanted to know who had given me the tape.",
+		"Juliana: Maybe he just didn't want to remember.", "Sophia: Maybe. I told him he didn't have to talk that day.", "Juliana: Are you going back?",
+		"Sophia: Her sister is waiting for me to call.", "Juliana: You didn't even know Marina.", "Sophia: No.", "Juliana: Then why are you getting involved?",
+		"Sophia: I asked her to call me if she remembered anything else.", "Sophia: I'm not going to pretend she didn't call.",
 	]
-	_seen["flash_energy_min"] = 99.0
-	_seen["min_fov"] = 75.0
 	while _watching and is_instance_valid(shed):
 		await get_tree().process_frame
 		if not _watching:
@@ -1152,21 +1208,48 @@ func _watch() -> void:
 				_seen["black_frames"] = int(_seen.get("black_frames", 0)) + 1
 		if overlay != null and overlay.visible and overlay.is_picture_shown():
 			for child: Node in shed.get_children():
-				if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing:
+				if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing and child.name != "TapeSound":
 					_seen["source_sounds"] = int(_seen.get("source_sounds", 0)) + 1
+		# The tape's own noise: playing all through the recording's picture, looped, and at no other time.
+		var tape: AudioStreamPlayer = shed.get_node_or_null("TapeSound") as AudioStreamPlayer
+		if tape != null:
+			if overlay != null and overlay.visible and overlay.is_picture_shown():
+				if tape.playing:
+					_seen["tape_frames"] = int(_seen.get("tape_frames", 0)) + 1
+					_seen["tape_loops"] = tape.stream is AudioStreamMP3 and (tape.stream as AudioStreamMP3).loop
+					_seen["tape_path"] = tape.stream.resource_path
+				else:
+					_seen["tape_silent_frames"] = int(_seen.get("tape_silent_frames", 0)) + 1
+			elif tape.playing:
+				_seen["tape_outside"] = int(_seen.get("tape_outside", 0)) + 1
+		# The picture of the tape holds between its own frames (12 a second) and in its stalls.
+		if playing:
+			var shown_time: float = shed.footage.current_time
+			if is_equal_approx(shown_time, last_tape_time):
+				_seen["stale_frames"] = int(_seen.get("stale_frames", 0)) + 1
+			else:
+				_seen["moving_frames"] = int(_seen.get("moving_frames", 0)) + 1
+			last_tape_time = shown_time
+		# The wind and the night chorus: silent while the memory's shots are up (the ambience's own silence level, once it has had time to fall).
+		if ambience != null and in_cinema:
+			if float(ambience.get("_silence")) > 0.9:
+				_seen["silenced_frames"] = int(_seen.get("silenced_frames", 0)) + 1
+			elif float(ambience.get("_silence")) < 0.5 and float(_seen.get("cinema_frames", 0.0)) > 120.0:
+				_seen["not_silenced_in_cinema"] = int(_seen.get("not_silenced_in_cinema", 0)) + 1
+		if in_cinema:
+			_seen["cinema_frames"] = float(_seen.get("cinema_frames", 0.0)) + 1.0
+		# Once the scene is over her own eyes are current: nothing of the scene's camera, the overlay or the cast is up.
+		if not was_done and shed.is_recording_done() and not shed.is_recording_running() and not _seen.has("ended_ms"):
+			_seen["ended_ms"] = float(Time.get_ticks_msec())
+		if _seen.has("ended_ms") and (in_cinema or (overlay != null and overlay.visible) or shed.footage.visible):
+			_seen["eyes_frames_with_scene"] = int(_seen.get("eyes_frames_with_scene", 0)) + 1
 		if led.emission_energy_multiplier > 0.0:
 			_seen["led_on"] = true
 			if in_cinema:
 				_seen["led_on_in_cinema"] = int(_seen.get("led_on_in_cinema", 0)) + 1
 		_seen["head_turn"] = maxf(float(_seen.get("head_turn", 0.0)), absf(head.rotation_degrees.y - start_yaw))
-		_seen["min_fov"] = minf(float(_seen["min_fov"]), camera.fov)
-		if not in_cinema and flash.visible:
-			_seen["flash_on_in_shot5"] = true
-			_seen["flash_energy_min"] = minf(float(_seen["flash_energy_min"]), flash.light_energy)
 		if in_cinema and not flash.visible:
 			_seen["flash_off_in_memory"] = true
-		if not in_cinema and player.movement_controller.look_pitch != 0.0 and shed.ficha.mark_while_held:
-			_seen["mark_shown"] = true
 		# Subtitles, in order of appearance.
 		if CaptionManager.panel.visible:
 			var text: String = CaptionManager.label.text
@@ -1174,7 +1257,9 @@ func _watch() -> void:
 				captions.append(text)
 				_seen["saw_marina"] = bool(_seen.get("saw_marina", false)) or text.begins_with("Marina:")
 				_seen["saw_recorded"] = bool(_seen.get("saw_recorded", false)) or text.begins_with("Recorded voice:")
-				_seen["saw_last"] = bool(_seen.get("saw_last", false)) or text == "Sophia: They offered me a better copy."
+				_seen["saw_last"] = bool(_seen.get("saw_last", false)) or text == "Sophia: I'm not going to pretend she didn't call."
+				if text == "Sophia: I'm not going to pretend she didn't call." and not _seen.has("last_line_ms"):
+					_seen["last_line_ms"] = float(Time.get_ticks_msec())
 				# A subtitle of the girls never lingers over her own eyes except by their own track (none exists then).
 				if in_cinema == false:
 					_seen["order_ok"] = "a line over her own eyes: " + text

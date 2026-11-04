@@ -73,7 +73,7 @@ func _check_site() -> void:
 		var world: Vector3 = tower.to_global(Vector3(local.x, 0.0, local.y))
 		worst = maxf(worst, absf(_ground(world.x, world.z) - at.y))
 	_expect(worst < 0.2, "the ground is level under it (worst %.2f m off)" % worst)
-	var stair_foot: Vector3 = tower.to_global(Vector3(2.75, 0.0, 3.4))
+	var stair_foot: Vector3 = tower.to_global(Vector3(3.0, 0.0, 3.8))
 	var balcony_side: Vector3 = tower.to_global(Vector3(3.3, 0.0, -1.2))
 	_expect(absf(_ground(stair_foot.x, stair_foot.z) - at.y) < 0.35 and absf(_ground(balcony_side.x, balcony_side.z) - at.y) < 0.6, "and under the foot of the stairs and the balcony (%.2f, %.2f)" % [_ground(stair_foot.x, stair_foot.z) - at.y, _ground(balcony_side.x, balcony_side.z) - at.y])
 	var path_height: float = _ground(PATH_POINT.x, PATH_POINT.y)
@@ -159,7 +159,7 @@ func _check_the_tower_inside() -> void:
 	var to_point: Vector3 = tower.to_global(Vector3(1.6, 1.3, -6.0))
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from_point, to_point)
 	var hit: Dictionary = space.intersect_ray(query)
-	_expect(not hit.is_empty() and absf(tower.to_local(hit["position"] as Vector3).z - 2.0) < 0.08, "its brick wall stops a ray at 2 m from its middle")
+	_expect(not hit.is_empty() and absf(tower.to_local(hit["position"] as Vector3).z - SignalTowerBuilder.WALL_FACE) < 0.08, "its brick wall stops a ray at its outer face, 2.25 m from its middle")
 
 
 ## The real player, walking: from the loop to the door, in through it, and up the stairs to the balcony. (A
@@ -174,7 +174,7 @@ func _check_walking() -> void:
 	var base_y: float = tower.global_position.y
 
 	# 1. From the middle of the path, east, to the door.
-	await _place(player, Vector2(94.5, -36.5), 90.0)
+	await _place(player, Vector2(94.5, -36.955), 90.0)
 	await _walk(player, 3.6)
 	_expect(player.global_position.x > 98.3 and player.global_position.x < 99.6, "the player walks from the path to the door (x %.2f)" % player.global_position.x)
 
@@ -187,7 +187,7 @@ func _check_walking() -> void:
 	_expect(player.global_position.x > 100.6 and absf(player.global_position.y - base_y) < 1.8, "and in through it (x %.2f)" % player.global_position.x)
 
 	# 3. From the pad, the stairs: east along their length from the foot, up to the balcony.
-	await _place(player, Vector2(97.4, -33.25), 90.0)
+	await _place(player, Vector2(97.4, -33.0), 90.0)
 	# (The stairs are climbed slowly now, one step to two treads: walk until the top, for as long as it takes.)
 	await _walk_until(player, func() -> bool: return player.global_position.y > base_y + 2.7, 16.0)
 	_expect(player.global_position.y > base_y + 2.7, "the player climbs the stairs to the balcony (%.2f m up)" % (player.global_position.y - base_y))

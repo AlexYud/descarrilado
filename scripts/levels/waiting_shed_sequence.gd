@@ -8,18 +8,19 @@ class_name WaitingShedSequence
 ## Examining the tape is the one interaction that matters. The FIRST time that view is closed the scene takes the player's eyes
 ## and plays once, without giving control back between its parts (all subtitles for now; the voice clips are optional hooks):
 ##   1. The tape set down beside the box, the notebook in the shot; Juliana remembers Sophia showing her the copy.
-##   2. The recording itself, SILENT, about 22 s, from a hidden camera that does not move, across the clearing where the camcorder stands:
-##      the same shelter with an ordinary, usable bench, seen through a few ferns close to the lens. Marina sits on the bench, waiting;
-##      someone (their head never in the picture) walks in on the near side, stops, appears to speak with her, and walks out; she follows
-##      them with her head and waits again. `ShelterFootage` performs it on one clock. No sound belongs to it and no caption speaks for it.
+##   2. The recording itself, about 50 s, a worn, copied home-video tape (`ArchiveVideoOverlay`: coarse picture, bleeding colour, tracking
+##      lines, dropouts, 12 frames a second, with stalls) from a hidden camera that does not move, across the clearing where the camcorder stands:
+##      the same shelter with an ordinary, usable bench, seen through a few ferns close to the lens. Marina sits on the bench, waiting, a long
+##      time; someone (their head never in the picture) walks in on the near side, stops, stays a long time appearing to speak with her, and
+##      walks out; she follows them with her head, waits alone, and slowly turns her face to the lens and stays so until the tape ends in static.
+##      `ShelterFootage` performs it on one clock. Only the tape's own noise (`placeholder_video_tape`, looped) is heard in it; no caption speaks for it.
 ##   3. The photograph: a hard cut to the print mounted on Sophia's clipping, among her things, about 4 s, with no sound and no words. It
 ##      shows this shelter after the body was taken away, blood on the bench, the floor and the pillar's foot.
 ##   4. The conversation that followed, remembered, in one still shot over the notebook, the photograph, the tape and the open box.
-##   5. Juliana's own eyes: the forest alone, one click from the camcorder; her view (and her flashlight) turns to it, its red
-##      light comes on, its head makes a small turn toward her, and the light goes out. It stays where it is.
-##   6. Her view comes back to the bench: the token in the open box, the tape beside it. She has her eyes back.
-## The scene never runs twice. Its completion is saved apart from the token's collection. The token is the same Collectible as
-## before (`sophia_ficha`); it cannot be taken while the tape lies on it, nor during the scene.
+##   Then the view is hers again, at once (a short dissolve to her own eyes): nothing more is played.
+## The wind and the night chorus are silent from the first shot to the last (the scene is a memory). The scene never runs twice. Its completion is
+## saved apart from the token's collection. The token is the same Collectible as before (`sophia_ficha`); it cannot be taken while the tape lies on
+## it, nor during the scene.
 ##
 ## The two people in the recording and the ferns that hide its camera are never in the present: they are shown only inside the recording
 ## and are hidden (the cast put back at its first frame) before any cut to the present, on finishing, on cancelling and on leaving. The
@@ -47,8 +48,9 @@ const KEY_LEVER_BOX_OPEN: StringName = &"junction_signal_box_open"
 const KEY_FICHAS: StringName = &"orelhao_fichas"
 const TOKEN_ID: String = "sophia_ficha"
 const VHS_INSPECT_ID: StringName = &"sophia_vhs"
-## The asker's name when the sequence pushes the forest back while the memory plays.
+## The asker's name when the sequence silences the forest while the memory plays.
 const MUFFLE_SOURCE: StringName = &"shed_recording"
+const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 
 @export_category("Items")
 ## `inspect_id` metadata of the Ficha (its view being closed raises `sequence_completed`).
@@ -100,49 +102,33 @@ const MUFFLE_SOURCE: StringName = &"shed_recording"
 ## Cross-fade into the first shot, hiding the tape being set down.
 @export var dissolve_into_scene_seconds: float = 0.4
 
-## Shot 2, the recording, has no exports here: it is silent and fixed, its length and every moment of the performance are on the `Footage`
-## node (`ShelterFootage`), and its framing is the marker `shot_recording`.
+@export_category("Shot 2: the recording (a worn tape)")
+## The tape's own noise, looped under the whole recording (and only there): the placeholder recording when empty.
+@export var tape_sound: AudioStream
+@export var tape_volume_db: float = -4.0
+@export var tape_fade_seconds: float = 0.4
+## Stalls of the picture, as (start, seconds) pairs in footage seconds: the picture holds one frame (the tape's noise goes on) and then jumps on.
+@export var tape_stalls: PackedFloat32Array = PackedFloat32Array([13.0, 0.8, 22.5, 1.2, 33.0, 0.6, 43.0, 1.6])
+## The tape ends in static over this many last seconds of the footage.
+@export var tape_end_seconds: float = 0.5
+## The rest of the performance (its length and every moment of it) is on the `Footage` node (`ShelterFootage`), and its framing is the marker `shot_recording`.
 
 @export_category("Shot 3: the photograph")
 ## How long the close view of the print is held (no sound, no words).
 @export var photo_shot_seconds: float = 4.0
 
-@export_category("Shot 5: the camcorder")
-## The forest alone, then the click, then the turn.
-@export var forest_alone_seconds: float = 2.0
-@export var click_to_turn_seconds: float = 0.8
-@export var turn_to_camcorder_seconds: float = 2.2
-@export var settle_seconds: float = 0.5
-## The lens narrows a little once the view has settled (the field of view in degrees), and widens when it is over.
-@export var narrow_fov_degrees: float = 42.0
-@export var narrow_fov_seconds: float = 0.9
-## The camcorder as the level has it (yaw in degrees of the head, from facing -Z), a little off the bench's middle.
+@export_category("Camcorder")
+## The camcorder as the level has it (yaw in degrees of the head, from facing -Z), a little off the bench's middle. It is only a thing in the clearing.
 @export var camcorder_start_yaw_degrees: float = 2.5
-## After the light comes on, how long the camcorder is held before it turns, how long the turn takes, how far it is allowed to turn
-## from where it stood (never less than the minimum, so that it shows) and how long the picture is held afterwards.
-@export var led_on_hold_seconds: float = 3.0
-@export var camcorder_turn_seconds: float = 1.3
-@export var camcorder_turn_min_degrees: float = 3.0
-@export var camcorder_turn_max_degrees: float = 8.0
-@export var hold_after_turn_seconds: float = 0.7
-@export var hold_after_light_out_seconds: float = 1.2
-
-@export_category("Shot 6: the token")
-@export var look_back_seconds: float = 1.8
-@export var token_hold_seconds: float = 2.0
-## The token's mark is shown from where the player stands plus this much.
-@export var token_mark_extra_distance: float = 0.6
 
 @export_category("Optional audio (assign later)")
 ## One clip per part, timed from the start of its shot. Empty: that part is subtitles only. The `_en` clips are used when the voice
 ## language is English; the plain ones (Portuguese) are the fallback. These are the girls' remembered voices: the recording has no
-## sound of its own, so there is nothing to assign for it.
+## voice at all (only the tape's noise, see `tape_sound`).
 @export var voice_copy: AudioStream
 @export var voice_copy_en: AudioStream
 @export var voice_talk: AudioStream
 @export var voice_talk_en: AudioStream
-## The click of the camcorder (the placeholder click when empty).
-@export var camcorder_click: AudioStream
 
 @export_category("Ground")
 ## How the ground under the shed is tilted, as the rise in metres per metre going
@@ -198,7 +184,7 @@ var _world_state: WorldState = WorldState.PRESENT
 
 # The audio layers: each its own player. The recording has none of its own (nor a rewind: it is not replayed).
 var _remembered_player: AudioStreamPlayer = null
-var _click_player: AudioStreamPlayer3D = null
+var _tape_player: AudioStreamPlayer = null
 
 
 func _enter_tree() -> void:
@@ -222,6 +208,9 @@ func _ready() -> void:
 	_apply_saved_scene_state()
 	_connect_to_player.call_deferred()
 	# The cast of the recording is built and posed now, out of sight, so that nothing is made while the scene is being watched.
+	if footage != null and shot_recording != null:
+		# The hidden camera's lens: where Marina, alone at the end of the tape, turns her face.
+		footage.lens_point = shot_recording.global_position
 	if _stage == Stage.AVAILABLE and footage != null:
 		footage.prepare.call_deferred()
 
@@ -451,7 +440,7 @@ func _play_recording(run: int) -> void:
 	if not _alive(run):
 		return
 
-	# Shot 2: the silent recording. Everything of the present that is not in it goes under the cut, and the cast is posed at its first
+	# Shot 2: the recording (its tape noise only). Everything of the present that is not in it goes under the cut, and the cast is posed at its first
 	# frame before it is shown. The camera does not move from here to the end.
 	_show_camera(shot_recording, true)
 	_apply_footage(0.0)
@@ -478,19 +467,12 @@ func _play_recording(run: int) -> void:
 	if not _alive(run):
 		return
 
-	# Shot 5: her own eyes, the forest, the camcorder.
+	# Then the view is hers: the scene's work done and the controls back, with a short dissolve from the last shot to her own eyes (the still it fades
+	# is the last frame drawn, so it is taken after the change is made, in the same frame).
 	_back_to_her_eyes()
-	await _shot_camcorder(run)
-	if not _alive(run):
-		return
-
-	# Shot 6: the bench again, the token in the open box; then the view is hers.
 	_mark_done()
-	await _shot_token(run)
-	if not _alive(run):
-		return
-
 	_finish_recording()
+	_dissolve(dissolve_into_scene_seconds)
 
 
 ## Waits until the examined tape has flown back and the inspect view is gone (it is shut by the player; it is not closed for them here).
@@ -513,18 +495,20 @@ func _shot_copy(run: int) -> void:
 		_remembered_player.stop()
 
 
-## The silent recording: the footage clock runs from zero to the footage's length, frame by frame (and stops with the pause). No caption speaks
-## for it, no sound belongs to it, and nothing is a timer that could drift from the picture. It is not replayed.
+## The recording: the footage clock runs from zero to the footage's length, frame by frame (and stops with the pause). No caption speaks
+## for it and no voice; the tape's own noise is looped under it. Nothing is a timer that could drift from the picture. It is not replayed.
 func _shot_footage(run: int) -> void:
 	CaptionManager.clear()
 	_footage_time = 0.0
 	_footage_playing = true
+	_start_tape_sound()
 	var length: float = footage.length_seconds if footage != null else 0.0
 	while _alive(run) and _footage_playing and _footage_time < length:
 		await get_tree().process_frame
 	if _alive(run):
 		_footage_playing = false
 		_apply_footage(length)
+	_stop_tape_sound()
 
 
 ## The photograph's print, held in a close view among Sophia's things (the real print, a model in the present world): no sound, no words.
@@ -551,62 +535,6 @@ func _back_to_her_eyes() -> void:
 	if camera != null:
 		camera.make_current()
 	_free_cinema_camera()
-
-
-func _shot_camcorder(run: int) -> void:
-	var movement: PlayerMovementController = _get_movement()
-	if movement == null or camcorder == null:
-		return
-
-	# The forest alone for a moment: nothing of the recording, the lamp steady.
-	await _wait(forest_alone_seconds)
-	if not _alive(run):
-		return
-
-	# One small click from the camcorder across the clearing.
-	_play_camcorder_click()
-	await _wait(click_to_turn_seconds)
-	if not _alive(run):
-		return
-
-	# Her view turns to it, her flashlight with it (switched on if it was off, once, steady).
-	_set_flashlight_scene(true)
-	_look_at_point(_camcorder_lens_point(), turn_to_camcorder_seconds)
-	await _wait(turn_to_camcorder_seconds + settle_seconds)
-	if not _alive(run):
-		return
-
-	# The lens narrows a little, and the red light comes on.
-	_change_lens(narrow_fov_degrees, narrow_fov_seconds)
-	await _wait(narrow_fov_seconds * 0.5)
-	if not _alive(run):
-		return
-	_set_camcorder_light(true)
-	await _wait(led_on_hold_seconds)
-	if not _alive(run):
-		return
-
-	# The head turns a few degrees toward where she stands.
-	_turn_camcorder_to_player(camcorder_turn_seconds)
-	await _wait(camcorder_turn_seconds + hold_after_turn_seconds)
-	if not _alive(run):
-		return
-
-	_set_camcorder_light(false)
-	await _wait(hold_after_light_out_seconds)
-
-
-func _shot_token(run: int) -> void:
-	# Her attention goes back to the bench in one calm movement, the lens wide again.
-	_change_lens(0.0, look_back_seconds)
-	var point: Vector3 = _token_point()
-	_prepare_token_mark(point)
-	_look_at_point(point, look_back_seconds)
-	await _wait(look_back_seconds)
-	if not _alive(run):
-		return
-
-	await _wait(token_hold_seconds)
 
 
 ## The view is hers again; the token can be taken with the usual interaction.
@@ -667,7 +595,7 @@ func _cleanup_scene() -> void:
 	_stop_footage()
 	_duck_forest(false)
 	_set_camcorder_light(false)
-	_prepare_token_mark_off()
+	_stop_tape_sound()
 
 
 # ============================================================
@@ -683,13 +611,26 @@ func _tick_footage(delta: float) -> void:
 	_apply_footage(_footage_time)
 
 
-## The cast at `time`. A pure function of the time (the camera is fixed and has nothing to follow).
+## The cast at `time`, as the tape shows it. A pure function of the time (the camera is fixed and has nothing to follow).
 func _apply_footage(time: float) -> void:
 	if footage != null:
-		footage.seek(time)
+		footage.seek(_tape_time(time))
+	if _overlay != null and is_instance_valid(_overlay) and footage != null:
+		var left: float = footage.length_seconds - time
+		_overlay.set_burst(smoothstep(tape_end_seconds, 0.0, left) if left < tape_end_seconds else 0.0)
 	# The camera is fixed, but the window may change: the lens follows it so that the picture's own 4:3 frame stays the designed one.
 	if _world_state == WorldState.RECORDING and _cinema != null and is_instance_valid(_cinema) and shot_recording != null:
 		_cinema.fov = ArchiveVideoOverlay.matched_fov(shot_recording.fov, get_viewport().get_visible_rect().size)
+
+
+## The footage time the tape shows at `time`: the tape updates only `ArchiveVideoOverlay.TAPE_FPS` times a second, and holds the picture during a stall.
+func _tape_time(time: float) -> float:
+	var held: float = time
+	for i: int in range(0, tape_stalls.size() - 1, 2):
+		if time >= tape_stalls[i] and time < tape_stalls[i] + tape_stalls[i + 1]:
+			held = tape_stalls[i]
+			break
+	return floorf(held * ArchiveVideoOverlay.TAPE_FPS) / ArchiveVideoOverlay.TAPE_FPS
 
 
 ## The footage stops and the cast is put away at its first frame, whatever it was doing.
@@ -784,20 +725,13 @@ func _show_overlay(on: bool) -> void:
 	_overlay.show_picture()
 
 
-func _show_overlay_black() -> void:
-	if _overlay == null or not is_instance_valid(_overlay):
-		_overlay = ArchiveVideoOverlay.new()
-		add_child(_overlay)
-	_overlay.show_black()
-
-
-## The forest pushed back while the memory plays (the recording has its own sound), and let back for her own eyes.
+## The forest silent while the memory plays (no wind, no night chorus; the recording has its own sound), and let back for her own eyes.
 func _duck_forest(on: bool) -> void:
 	if on == _ducking or not is_inside_tree():
 		return
 
 	_ducking = on
-	get_tree().call_group(OutdoorAmbience.GROUP, "set_muffle", MUFFLE_SOURCE, 0.85 if on else 0.0)
+	get_tree().call_group(OutdoorAmbience.GROUP, "set_silenced", MUFFLE_SOURCE, on)
 
 
 func _head() -> Node3D:
@@ -813,59 +747,6 @@ func _set_camcorder_yaw(degrees: float) -> void:
 func _set_camcorder_light(on: bool) -> void:
 	if camcorder != null:
 		ShedRecordingProps.camcorder_set_recording(camcorder, on)
-
-
-## Where the lens is, in the world: what her view turns to.
-func _camcorder_lens_point() -> Vector3:
-	var head: Node3D = _head()
-	if head == null:
-		return camcorder.global_position + Vector3(0.0, 1.1, 0.0)
-
-	return head.to_global(Vector3(0.0, 0.1, -0.2))
-
-
-## The camcorder's head turns toward where the player's eyes are, a few degrees (never less than the minimum, so that it shows, nor
-## more than the maximum, so that it stays a small adjustment), over `seconds`, eased.
-func _turn_camcorder_to_player(seconds: float) -> void:
-	var head: Node3D = _head()
-	var eye: Camera3D = _get_camera()
-	if head == null or eye == null:
-		return
-
-	var local: Vector3 = camcorder.to_local(eye.global_position)
-	var wanted: float = rad_to_deg(atan2(-local.x, -local.z))
-	var from: float = head.rotation_degrees.y
-	var delta: float = clampf(wanted - from, -camcorder_turn_max_degrees, camcorder_turn_max_degrees)
-	if absf(delta) < camcorder_turn_min_degrees:
-		delta = camcorder_turn_min_degrees * (signf(delta) if delta != 0.0 else -1.0)
-
-	var turn: Tween = _track(create_tween())
-	turn.tween_property(head, "rotation_degrees:y", from + delta, maxf(seconds, 0.01)) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-
-## Where the token lies (the middle of the box if it is gone).
-func _token_point() -> Vector3:
-	if ficha != null and is_instance_valid(ficha) and ficha.is_inside_tree():
-		return ficha.global_position
-	if container != null:
-		return container.to_global(Vector3(0.0, -0.05, 0.0))
-	return global_position
-
-
-## The token's mark has a reach of its own so that it is seen from where the player stands.
-func _prepare_token_mark(point: Vector3) -> void:
-	if ficha == null or not is_instance_valid(ficha):
-		return
-
-	var eye: Camera3D = _get_camera()
-	ficha.mark_notice_distance = (eye.global_position.distance_to(point) if eye != null else 1.5) + token_mark_extra_distance
-	ficha.mark_while_held = true
-
-
-func _prepare_token_mark_off() -> void:
-	if ficha != null and is_instance_valid(ficha):
-		ficha.mark_while_held = false
 
 
 # ============================================================
@@ -930,59 +811,6 @@ func _release_player() -> void:
 	_held.set("scripted_flashlight", _held_scripted_flashlight)
 	_held.call("set_manual_save_blocked", _held_save_block)
 	_held = null
-
-
-## The player's view turns to look at `point` over `seconds` (0: at once), eased in and out: her own, authored head turn, on the same
-## physics step the player's look is applied on.
-func _look_at_point(point: Vector3, seconds: float) -> void:
-	var movement: PlayerMovementController = _get_movement()
-	if movement == null:
-		return
-
-	var angles: Vector2 = _look_angles(point)
-	var from: Vector2 = Vector2(movement.look_yaw, movement.look_pitch)
-	var to: Vector2 = Vector2(from.x + wrapf(angles.x - from.x, -180.0, 180.0), clampf(angles.y, -35.0, 75.0))
-	if seconds <= 0.0:
-		movement.look_yaw = to.x
-		movement.look_pitch = to.y
-		return
-
-	var turn: Tween = _track(create_tween())
-	turn.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
-	turn.tween_method(
-		func(value: Vector2) -> void:
-			movement.look_yaw = value.x
-			movement.look_pitch = value.y,
-		from, to, seconds
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-
-
-## Yaw and pitch (the movement controller's degrees) that look from the player's eye at `point`.
-func _look_angles(point: Vector3) -> Vector2:
-	var movement: PlayerMovementController = _get_movement()
-	var body: Node3D = _get_player()
-	var eye: Vector3 = movement.camera.global_position
-	var d: Vector3 = body.global_basis.inverse() * (point - eye)
-	var yaw: float = rad_to_deg(atan2(d.x, -d.z))
-	var pitch: float = clampf(rad_to_deg(atan2(-d.y, Vector2(d.x, d.z).length())), -35.0, 75.0)
-	return Vector2(yaw, pitch)
-
-
-## The field of view of her eyes goes to `degrees` over `seconds` (0: back to the game's own).
-func _change_lens(degrees: float, seconds: float) -> void:
-	var movement: PlayerMovementController = _get_movement()
-	if movement == null:
-		return
-
-	var from: float = movement.scripted_fov if movement.scripted_fov > 0.0 else PlayerMovementController.BASE_FOV
-	var to: float = degrees if degrees > 0.0 else PlayerMovementController.BASE_FOV
-	var lens: Tween = _track(create_tween())
-	lens.tween_method(
-		func(value: float) -> void: movement.scripted_fov = value,
-		from, to, maxf(seconds, 0.01)
-	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	if degrees <= 0.0:
-		lens.tween_callback(func() -> void: movement.scripted_fov = 0.0)
 
 
 # ============================================================
@@ -1110,14 +938,10 @@ func _clear_freeze() -> void:
 # SOUND
 # ============================================================
 
-## One player for each layer of the mix. They only play what is assigned (or a placeholder foley); nothing waits for any of them to finish.
+## One player for each layer of the mix. They only play what is assigned (or a placeholder); nothing waits for any of them to finish.
 func _build_audio() -> void:
 	_remembered_player = _make_player("RememberedVoices")
-	_click_player = AudioStreamPlayer3D.new()
-	_click_player.name = "CamcorderClick"
-	_click_player.unit_size = 4.0
-	_click_player.max_distance = 40.0
-	add_child(_click_player)
+	_tape_player = _make_player("TapeSound")
 
 
 func _make_player(player_name: String) -> AudioStreamPlayer:
@@ -1142,15 +966,26 @@ func _play_voice(target: AudioStreamPlayer, clip: AudioStream) -> void:
 	target.play()
 
 
-## One small mechanical click from the camcorder, in the room: from where it stands.
-func _play_camcorder_click() -> void:
-	if _click_player == null or camcorder == null:
+## The tape's noise comes in with the recording's first frame and loops until it ends.
+func _start_tape_sound() -> void:
+	if _tape_player == null:
 		return
 
-	_click_player.stream = camcorder_click if camcorder_click != null else PlaceholderAudio.make_click()
-	_click_player.volume_db = -2.0
-	_click_player.global_position = _camcorder_lens_point()
-	_click_player.play()
+	var clip: AudioStream = tape_sound if tape_sound != null else load(TAPE_SOUND_PATH) as AudioStream
+	if clip == null:
+		return
+
+	if clip is AudioStreamMP3:
+		(clip as AudioStreamMP3).loop = true
+	_tape_player.stream = clip
+	_tape_player.volume_db = -60.0
+	_tape_player.play()
+	create_tween().tween_property(_tape_player, "volume_db", tape_volume_db, maxf(tape_fade_seconds, 0.01))
+
+
+func _stop_tape_sound() -> void:
+	if _tape_player != null and _tape_player.playing:
+		_tape_player.stop()
 
 
 # ============================================================

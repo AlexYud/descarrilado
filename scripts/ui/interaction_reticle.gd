@@ -4,7 +4,7 @@ class_name InteractionReticle
 ## The quiet way the game says "this can be used", with nothing else on the screen (the way the horror games with no HUD do it):
 ##  - near something usable that the player can see, a tiny white ring sits on the thing itself (the thing is not a random asset);
 ##  - with that, a tiny dot appears in the middle of the screen, which is where the interaction ray goes: put the dot on the thing;
-##  - when the ray is on it, the ring becomes a small icon of the kind of use (an eye to inspect, a hand otherwise);
+##  - when the ray is on it, the ring becomes a small icon of the kind of use (an eye to inspect, a telephone handset at the payphone, a hand otherwise);
 ##    the text prompt (`InteractionPromptView`) is shown as before.
 ## Nothing is shown otherwise. Every mark fades in and out. The marks go through the horror filter's lens (`lens_position`), so they stay
 ## on what they mark, and are laid over the picture from a 3D position every frame.
@@ -20,6 +20,7 @@ class_name InteractionReticle
 
 const KIND_HAND: StringName = &"hand"
 const KIND_EYE: StringName = &"eye"
+const KIND_PHONE: StringName = &"phone"
 
 var _player: CharacterBody3D = null
 var _camera: Camera3D = null
@@ -53,8 +54,10 @@ func set_active(active: bool) -> void:
 	_active = active
 
 
-## The kind of use shown for `item`: an eye to inspect, a hand otherwise.
+## The kind of use shown for `item`: an eye to inspect, a handset for the payphone, a hand otherwise.
 static func kind_of(item: Interactable) -> StringName:
+	if item is OrelhaoInteractable:
+		return KIND_PHONE
 	if item is Collectible:
 		return KIND_HAND
 	if item is Inspectable:
@@ -259,6 +262,8 @@ func _draw_icon(kind: StringName, at: Vector2, radius: float, alpha: float, unit
 		match kind:
 			KIND_EYE:
 				_icon_eye(origin, radius, colour, width)
+			KIND_PHONE:
+				_icon_phone(origin, radius, colour, width)
 			_:
 				_icon_hand(origin, radius, colour, width)
 
@@ -276,6 +281,22 @@ func _icon_eye(c: Vector2, r: float, colour: Color, width: float) -> void:
 	draw_polyline(lower, colour, width, true)
 	draw_arc(c, r * 0.34, 0.0, TAU, 20, colour, width, true)
 	draw_circle(c, r * 0.12, colour)
+
+
+## A telephone handset, a line drawing: a curved grip with the earpiece and the mouthpiece hanging from its ends.
+func _icon_phone(c: Vector2, r: float, colour: Color, width: float) -> void:
+	var middle: Vector2 = c + Vector2(0.0, 0.5) * r
+	var from_angle: float = deg_to_rad(-152.0)
+	var to_angle: float = deg_to_rad(-28.0)
+	draw_arc(middle, 0.95 * r, from_angle, to_angle, 20, colour, width, true)
+	draw_arc(middle, 0.55 * r, from_angle, to_angle, 20, colour, width, true)
+	for angle: float in [from_angle, to_angle]:
+		var outer: Vector2 = middle + Vector2(cos(angle), sin(angle)) * 0.95 * r
+		var inner: Vector2 = middle + Vector2(cos(angle), sin(angle)) * 0.55 * r
+		# The earpiece / mouthpiece: a small block under the end of the grip.
+		var left: float = minf(outer.x, inner.x) - 0.06 * r
+		var right: float = maxf(outer.x, inner.x) + 0.06 * r
+		draw_rect(Rect2(Vector2(left, outer.y - 0.02 * r), Vector2(right - left, 0.5 * r)), colour, false, width)
 
 
 ## An open hand, a line drawing: four fingers on a palm, and the thumb.

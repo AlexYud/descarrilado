@@ -7,7 +7,7 @@ extends Node
 
 const PROMPT_KEYS: Array[String] = [
 	"PROMPT_INTERACT", "PROMPT_PICK_UP", "PROMPT_OPEN", "PROMPT_CLOSE", "PROMPT_LOCKED", "PROMPT_UNLOCK", "PROMPT_INSPECT",
-	"PROMPT_OPEN_ALBUM", "PROMPT_ENTER_CODE", "PROMPT_EXAMINE_ORELHAO", "PROMPT_PICK_UP_RECEIVER", "PROMPT_ROTATE_FILTER",
+	"PROMPT_OPEN_ALBUM", "PROMPT_EXAMINE_ORELHAO", "PROMPT_PICK_UP_RECEIVER", "PROMPT_ROTATE_FILTER",
 ]
 
 var test_failed: bool = false
@@ -28,10 +28,8 @@ func _ready() -> void:
 
 	GameSettings.set_text_locale("en", false)
 	_expect(tr("PROMPT_EXAMINE_ORELHAO") == "Examine Payphone", "the payphone's prompt is in English in English: '%s'" % tr("PROMPT_EXAMINE_ORELHAO"))
-	_expect(tr("CAPTION_TOWER_DOOR_LOCKED") == "Where is the HQ key?", "the tower door's line asks for the key")
 	GameSettings.set_text_locale("pt_BR", false)
 	_expect(tr("PROMPT_EXAMINE_ORELHAO") == "Examinar o orelhão", "and in Portuguese in Portuguese")
-	_expect(tr("CAPTION_TOWER_DOOR_LOCKED") == "Onde está a chave do QG?", "the tower door's line in Portuguese")
 	GameSettings.set_text_locale("en", false)
 
 	# The way a text is split into the cap and the word.

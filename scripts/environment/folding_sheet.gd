@@ -19,7 +19,6 @@ class_name FoldingSheet
 ## looked over again. Nothing is lost when the sheet is folded: `fold_to()` moves it a little and does not touch what is
 ## printed. The inspect view (`PlayerInspectController`) folds and opens it through `set_closed`, `close_over`, `open_out`.
 
-const COVER_NAME: StringName = &"Cover"
 
 @export var sheet_size: Vector2 = Vector2(0.7, 0.56)
 @export var thickness: float = 0.002

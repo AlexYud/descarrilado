@@ -104,7 +104,7 @@ func _run() -> void:
 	_expect(no_hyphens, "and none of the six photograph notes has a hyphen, in either language")
 	GameSettings.set_text_locale("en", false)
 
-	# The camp and the HQ: the clothesline, the radio, the thermos and the open box in the camp; the tower's door.
+	# The camp and the HQ: the clothesline, the thermos and the open box in the camp; the tower's door.
 	await _check_the_camp_and_the_hq()
 	# A lockbox of the scene's own: shut, with its dial and its close-up, as before.
 	await _check_a_shut_lockbox()
@@ -245,7 +245,6 @@ func _run() -> void:
 	_expect(ash != null and ash.visible, "the fire pit is cold ash")
 	var camp: FigClearingProps = clearing.get_node("CampDressing") as FigClearingProps
 	_expect(camp.lights_out and not camp.lantern_light.visible and camp.lantern_glass_material.emission_energy_multiplier < 0.01 and not camp.lantern_flame.visible, "the lantern on the memory table is out")
-	_expect(not camp.radio_static.playing and camp.radio_lamp_material.emission_energy_multiplier < 0.01, "and the railway radio is silent, its lamp dark")
 	_expect(clearing.rain_player != null and not clearing.rain_player.playing, "the rain has stopped")
 	_expect(not clearing.recorder.is_turning(), "and so have the reels")
 	_expect(bool(flashlight.get("flashlight_on")), "the flashlight is on, as she was using it")
@@ -636,7 +635,7 @@ func _check_loaded_again(with_ficha: bool) -> void:
 	_expect(CaptionManager._active_run.is_empty() and CaptionManager._runs.is_empty(), when + ": nothing is said again")
 	_expect(not again.fire.is_lit and (again.fire.get_node("ColdAsh") as Node3D).visible, when + ": the fire is cold ash")
 	var dressing: FigClearingProps = again.get_node("CampDressing") as FigClearingProps
-	_expect(dressing.lights_out and not dressing.lantern_light.visible and not dressing.radio_static.playing, when + ": the camp's lights stay out")
+	_expect(dressing.lights_out and not dressing.lantern_light.visible, when + ": the camp's lights stay out")
 	_expect(dressing.thermos == null and dressing.lockbox == null, when + ": Table B stays clear")
 	var fichas: Array[Collectible] = []
 	for node: Node in again.find_children("*", "Collectible", true, false):
@@ -720,7 +719,7 @@ func _check_photo_back(photo: Collectible, note_key: String) -> void:
 	_expect(visual.find_child("BackLabel", true, false) == null, "and no text is drawn on the model's back")
 
 
-## The camp and the HQ, with nothing between the player and the album: the radio is scenery, the thermos says where the childhood photo
+## The camp and the HQ, with nothing between the player and the album: the thermos says where the childhood photo
 ## is, the J & S box stands open with Rain at the Station in it (no code, no key), and the tower's door opens like any door, with no note
 ## about a key pinned to it.
 func _check_the_camp_and_the_hq() -> void:
@@ -749,7 +748,6 @@ func _check_the_camp_and_the_hq() -> void:
 
 	_expect(not FigClearingProps.has_kind(&"clothesline_note") and not FigClearingProps.has_kind(&"bus_ticket_1994") and not FigClearingProps.has_kind(&"signal_lantern"), "and so are the models of the note, the ticket and the old lantern")
 
-	await _check_the_radio(dressing)
 	await _check_the_camp_layout(dressing)
 
 	# The log table next to the campfire, with a bench, the thermos at one end and the lockbox at the other.
@@ -784,7 +782,7 @@ func _check_the_camp_and_the_hq() -> void:
 	_expect(not tr("READABLE_THERMOS").contains("-"), "with no hyphen")
 	for stale: String in ["key", "lockbox", "password", "radio", "board", "code"]:
 		_expect(not tr("READABLE_THERMOS").to_lower().contains(stale), "and no '%s' in it" % stale)
-	for piece: Node3D in [thermos, lockbox, dressing.radio]:
+	for piece: Node3D in [thermos, lockbox]:
 		_expect(piece.find_children("*", "PhysicsBody3D", true, false).is_empty() and piece.find_children("*", "CSGShape3D", true, false).is_empty(), piece.name + " is nothing solid: it cannot block the player or a ray")
 	GameSettings.set_text_locale("pt_BR", false)
 	_expect(tr("READABLE_THERMOS") == "Juli, a foto de quando a gente era pequena ficou na mesa do QG. Não bebe o café todo de uma vez. — Sophia", "the thermos note is Sophia's Portuguese, word for word")
@@ -855,110 +853,10 @@ func _check_the_camp_and_the_hq() -> void:
 	await get_tree().process_frame
 
 
-## The railway radio on its crate by the western trail entrance: it faces the way the player arrives, its dial is locked by a bar bolted over the
-## slider with masking tape marked HQ above it, `[E] Inspect Radio` shows its front panel close up and offers its words, and the words are plain
-## scenery now, in both languages: no frequency is a clue, so the needle rests between two printed numbers and none is picked out.
-func _check_the_radio(dressing: FigClearingProps) -> void:
-	var radio: Inspectable = dressing.radio
-	var crate: Node3D = dressing.radio_crate
-	_expect(radio != null and crate != null and radio.get_parent() == crate, "a railway radio stands on a wooden crate")
-	var spot_in_clearing: Vector3 = clearing.to_local(radio.global_position)
-	_expect(spot_in_clearing.x < -4.5 and Vector2(spot_in_clearing.x, spot_in_clearing.z).length() < 7.5, "by the western trail entrance, inside the clearing (%.1f, %.1f)" % [spot_in_clearing.x, spot_in_clearing.z])
-	_expect(absf(radio.global_position.y - crate.global_position.y - FigClearingProps.RADIO_CRATE_SIZE.y) < 0.01, "on top of the crate")
-	_expect(crate.find_child("Solid", false, false) != null, "the crate is solid")
-	_expect(radio.find_children("*", "PhysicsBody3D", true, false).is_empty(), "and the radio on it is not (its area is what the ray finds)")
-	var arriving: Vector3 = clearing.to_global(Vector3(-9.0, 0.0, 0.5)) - radio.global_position
-	arriving.y = 0.0
-	var faces: float = arriving.normalized().dot(radio.global_basis.z)
-	_expect(faces > 0.8, "the radio faces the way the player arrives along the trail (%.2f)" % faces)
-	_expect(radio.get_prompt_text() == "PROMPT_INSPECT_RADIO" and radio.can_interact(player), "it offers 'Inspect Radio'")
-	_expect(dressing.battery != null and dressing.radio_crate.find_child("Cable", true, false) != null, "a heavy cable runs from its back to a car battery on the ground")
-
-	var visual: Node3D = radio.get_visual_node()
-	var meshes: int = visual.find_children("*", "MeshInstance3D", true, false).size()
-	var crate_meshes: int = crate.find_children("*", "MeshInstance3D", true, false).size() - meshes
-	_expect(meshes < 40 and crate_meshes < 20, "the radio and its crate are a few dozen meshes, not two hundred: their plain parts are folded by material (%d and %d)" % [meshes, crate_meshes])
-	var spot: ReadableSpot = visual.get_node_or_null("PanelSpot") as ReadableSpot
-	_expect(spot != null and spot.text_key == "READABLE_RADIO" and spot.obvious, "its front panel is a readable spot, offered from the start")
-	_expect(spot != null and spot.get_facing_normal().dot(visual.global_basis.z) > 0.99, "facing front")
-
-	# The dial: a scale printed from 14.00 to 14.20 MHz, all in one colour, the red needle between two numbers, the slider locked under a bar, tape above.
-	var labels: Array[String] = []
-	var number_x: Array[float] = []
-	var one_colour: bool = true
-	for i: int in 6:
-		var number: Label3D = visual.find_child("Freq%d" % i, true, false) as Label3D
-		labels.append(number.text if number != null else "?")
-		number_x.append(number.position.x if number != null else 0.0)
-		one_colour = one_colour and number != null and number.modulate.g > 0.7 and number.shaded
-
-	_expect(labels == ["14.00", "14.04", "14.08", "14.12", "14.16", "14.20"], "the dial's scale is printed from 14.00 to 14.20 MHz (%s)" % str(labels))
-	_expect(one_colour, "every number in the same cream: none is picked out in red")
-	var needle: MeshInstance3D = visual.get_node_or_null("Needle") as MeshInstance3D
-	_expect(needle != null, "the dial has a needle")
-	var needle_color: Color = (needle.material_override as StandardMaterial3D).albedo_color
-	_expect(needle_color.r > 0.6 and needle_color.g < 0.15 and needle_color.b < 0.15, "a red one")
-	var nearest: float = INF
-	for x: float in number_x:
-		nearest = minf(nearest, absf(needle.position.x - x))
-	_expect(nearest > 0.01, "resting between two printed numbers, pointing at none (%.0f mm from the nearest)" % (nearest * 1000.0))
-	var number_label: Label3D = visual.find_child("Freq2", true, false) as Label3D
-	_expect(needle.position.y + (needle.mesh as BoxMesh).size.y * 0.5 < number_label.position.y, "the needle ends under the numbers, not over them")
-	var slider: Node3D = visual.get_node_or_null("Slider") as Node3D
-	var lock: Node3D = visual.get_node_or_null("LockBar") as Node3D
-	_expect(slider != null and absf(slider.position.x - needle.position.x) < 0.001, "the needle sits on the slider, under the dial")
-	_expect(lock != null and absf(lock.position.x - slider.position.x) < 0.001 and is_equal_approx(lock.position.y, slider.position.y), "which is locked in place by a steel bar over it")
-	# (Two parts of one name are renamed by the engine, so the bolts are the hexagonal heads.)
-	var bolts: int = 0
-	for part: Node in lock.find_children("*", "MeshInstance3D", false, false):
-		var head: CylinderMesh = (part as MeshInstance3D).mesh as CylinderMesh
-		bolts += 1 if head != null and head.radial_segments == 6 else 0
-
-	_expect(bolts == 2 and lock.get_node_or_null("Seal") != null, "bolted at both ends (%d hex bolts), with a dab of red sealing wax on one" % bolts)
-	var tape: Node3D = visual.get_node_or_null("Tape") as Node3D
-	var bezel: MeshInstance3D = visual.get_node_or_null("DialBezel") as MeshInstance3D
-	_expect(tape != null and bezel != null and tape.position.y > bezel.position.y + (bezel.mesh as BoxMesh).size.y * 0.5 and absf(tape.position.x - needle.position.x) < 0.02, "a strip of masking tape is stuck above the dial, over the needle")
-	var tape_mark: Label3D = tape.get_node_or_null("Mark") as Label3D
-	_expect(tape_mark != null and tape_mark.text == "HQ", "marked HQ")
-
-	# The words, in both languages: an old transmitter, no frequency.
-	_expect(tr("READABLE_RADIO") == "An old railway transmitter marked HQ.", "the radio's words in English (%s)" % tr("READABLE_RADIO"))
-	_expect(not tr("READABLE_RADIO").contains("14") and not tr("ITEM_RADIO_DESCRIPTION").contains("14"), "with no frequency in them")
-	_expect(tr("PROMPT_INSPECT_RADIO") == "Inspect Radio" and tr("ITEM_RADIO_NAME") != "ITEM_RADIO_NAME" and tr("ITEM_RADIO_DESCRIPTION") != "ITEM_RADIO_DESCRIPTION", "[E] Inspect Radio, with a name and a description")
-	GameSettings.set_text_locale("pt_BR", false)
-	_expect(tr("READABLE_RADIO") == "Um velho transmissor ferroviário marcado com HQ.", "and in Portuguese")
-	_expect(not tr("READABLE_RADIO").contains("14"), "with no frequency either")
-	_expect(tr("PROMPT_INSPECT_RADIO") == "Examinar o rádio" and tr("ITEM_RADIO_NAME") != "ITEM_RADIO_NAME" and tr("ITEM_RADIO_DESCRIPTION") != "ITEM_RADIO_DESCRIPTION", "with the prompt, the name and the description translated")
-	GameSettings.set_text_locale("en", false)
-
-	# A ray from where the player stands in front of it reaches the radio: the crate's solid is below it, nothing is in front.
-	var radio_eye: Vector3 = radio.global_position + radio.global_basis.z.normalized() * 0.9
-	radio_eye.y = 1.5
-	await _ray_finds(radio, radio_eye, radio.global_position + Vector3(0.0, 0.2, 0.0), "the railway radio")
-
-	# Inspecting it: the view comes up on the front panel, squarely, with the writing offered to read; reading shows its words; closing frees the player.
-	radio.interact(player)
-	await _wait(0.9)
-	var inspect_view: PlayerInspectController = player.inspect_controller
-	_expect(inspect_view.is_open() and inspect_view.readables.has_obvious_reading(), "the radio opens in the inspect view with the writing on its panel offered to read")
-	var front_dot: float = inspect_view.current_visual_copy.global_basis.z.dot(inspect_view.camera.global_basis.z)
-	_expect(front_dot > 0.97, "its front panel faces the player squarely (%.2f)" % front_dot)
-	_expect(inspect_view.inspect_mode == PlayerInspectController.MODE_EXAMINE, "and it can be turned in every direction")
-	inspect_view.readables.activate()
-	await _wait(1.6)
-	_expect(inspect_view.readables.is_reading() and inspect_view.readables._body.text == tr("READABLE_RADIO"), "reading it shows what the panel says (%s)" % inspect_view.readables._body.text.left(40))
-	inspect_view.readables.close_text()
-	await _wait(0.6)
-	inspect_view.close(false)
-	player.inventory_ui_controller.close()
-	await _wait(0.8)
-	_expect(not inspect_view.is_open() and not player.modal_ui_open and not player.view_locked, "and the player is free again afterwards")
-
-
 ## The camp is laid out like a camp, and the way through it is clear: the tents are pitched apart with their doors toward the fire, the fire has three
 ## logs to sit on round it (the side toward the trail left open), the memory table stands clear of the fig tree and of its roots with its front toward
 ## the trail and a lit lantern on it, the roots run out from the trunk along the ground (they were four poles all leaning the same way), nothing
-## overlaps anything, a player can walk the trail from one side of the clearing to the other, and the radio hisses on a dead channel.
+## overlaps anything, and a player can walk the trail from one side of the clearing to the other.
 func _check_the_camp_layout(dressing: FigClearingProps) -> void:
 	var scenery: Node3D = clearing.get_node("Scenery") as Node3D
 	var fire: Node3D = scenery.get_node("Campfire") as Node3D
@@ -1083,12 +981,6 @@ func _check_the_camp_layout(dressing: FigClearingProps) -> void:
 
 	_expect(blocked.is_empty(), "a player can walk the trail from the west side to the east side without meeting anything (%s)" % str(blocked))
 
-	# The radio hisses on a dead channel, faintly, so that it is heard before it is seen.
-	var hiss: AudioStreamPlayer3D = dressing.radio_static
-	var hiss_stream: AudioStreamWAV = hiss.stream as AudioStreamWAV if hiss != null else null
-	_expect(hiss != null and hiss.playing and hiss_stream != null and hiss_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "the railway radio hisses (a looping dead channel)")
-	_expect(hiss != null and hiss.volume_db < -12.0 and hiss.max_distance >= 8.0 and hiss.global_position.distance_to(clearing.to_global(Vector3(-7.0, 1.2, 0.5))) < hiss.max_distance, "faintly, and it carries to the trail")
-	_expect(dressing.radio_lamp_material != null and dressing.radio_lamp_material.emission_enabled and dressing.radio_lamp_material.emission_energy_multiplier > 0.3, "and its lamp glows red")
 
 
 ## A lockbox of the scene's own (`js_lockbox.tscn` as it is, not the camp's open one): shut, its code the scene's, its contents out of the

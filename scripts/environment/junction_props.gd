@@ -17,7 +17,6 @@ const CONCRETE_DARK: Color = Color(0.3, 0.3, 0.29)
 const RUST: Color = Color(0.34, 0.17, 0.08)
 const RUST_DARK: Color = Color(0.2, 0.1, 0.05)
 const IRON: Color = Color(0.13, 0.13, 0.14)
-const MOLD: Color = Color(0.16, 0.26, 0.12)
 ## Damp wood and moss in the shelter's bench and box: dark, so that it never reads as a sheet of paper under a light.
 const MOLD_DAMP: Color = Color(0.085, 0.115, 0.07)
 const WOOD_OLD: Color = Color(0.27, 0.2, 0.13)
@@ -30,14 +29,13 @@ const TRACK_HALF_LENGTH: float = 21.0
 ## Height of the walkable bank under the track model.
 const TRACK_BANK_TOP: float = 0.14
 
-const SIGNAL_BOX_CENTER_Y: float = 1.1
 const LEVER_REST_Y: float = 0.9
 
 
 static func has_kind(kind: StringName) -> bool:
 	return kind in [
 		&"sophia_journal", &"railway_lantern", &"switch_box", &"carved_whistle",
-		&"sophia_ficha", &"juliana_ficha", &"lucas_ficha", &"ficha_note", &"payphone_note", &"signal_box", &"waiting_shelter", &"ticket_puncher",
+		&"sophia_ficha", &"juliana_ficha", &"lucas_ficha", &"ficha_note", &"waiting_shelter",
 		&"shelter_bench", &"backpack", &"track_bank", &"mile_marker",
 	]
 
@@ -48,8 +46,6 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_journal(root)
 		&"railway_lantern":
 			_build_lantern(root)
-		&"ticket_puncher":
-			_build_ticket_puncher(root)
 		&"switch_box":
 			_build_switch_box(root)
 		&"carved_whistle":
@@ -62,10 +58,6 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_ficha(root, "FICHA_NUMBER_2", &"lucas")
 		&"ficha_note":
 			_build_ficha_note(root)
-		&"payphone_note":
-			_build_payphone_note(root)
-		&"signal_box":
-			_build_signal_box(root)
 		&"waiting_shelter":
 			_build_shelter(root)
 		&"shelter_bench":
@@ -230,11 +222,11 @@ static func _build_journal(root: Node3D) -> void:
 
 	HouseProps.add_paragraphs(
 		root, "LeftText", "JOURNAL_LEFT",
-		Vector3(-0.118, 0.075, 0.0042), 22, 0.00025, HouseProps.INK_BLUE, 400.0
+		Vector3(-0.118, 0.077, 0.0042), 19, 0.00025, HouseProps.INK_BLUE, 440.0
 	)
 	HouseProps.add_paragraphs(
 		root, "RightText", "JOURNAL_RIGHT",
-		Vector3(0.013, 0.075, 0.0042), 22, 0.00025, HouseProps.INK_BLUE, 400.0
+		Vector3(0.013, 0.077, 0.0042), 19, 0.00025, HouseProps.INK_BLUE, 440.0
 	)
 
 	# The maintenance record Sophia copied out, on a scrap pasted low on the right page, and a note in the margin.
@@ -315,40 +307,6 @@ static func _build_switch_box(root: Node3D) -> void:
 
 	_stain(root, "MouldFront", Vector3(0.12, 0.05, 0.0016), Vector3(-0.05, -0.02, 0.1005), MOLD_DAMP)
 	_stain(root, "MouldSide", Vector3(0.0016, 0.06, 0.08), Vector3(0.1505, -0.01, 0.03), MOLD_DAMP)
-
-
-## A heavy cast-iron conductor's ticket puncher, held open: two crossed arms on a
-## brass pivot, a punch on one jaw. The clue is etched along the back of one arm:
-## turn it over. Origin at the pivot, jaws to the left (-X), handles to the right.
-static func _build_ticket_puncher(root: Node3D) -> void:
-	var iron: StandardMaterial3D = weathered(Color(0.2, 0.2, 0.21), 4.0, 0.55, 0.7)
-	var brass: StandardMaterial3D = HouseProps.material(BRASS, 0.4, 0.85)
-	var grip: StandardMaterial3D = HouseProps.material(Color(0.2, 0.09, 0.06), 0.8)
-	var open_degrees: float = 13.0
-
-	for side: float in [-1.0, 1.0]:
-		var arm: Node3D = Node3D.new()
-		arm.name = "ArmUpper" if side > 0.0 else "ArmLower"
-		arm.rotation_degrees = Vector3(0.0, 0.0, side * open_degrees)
-		root.add_child(arm)
-		# The jaw (left of the pivot) and the handle (right), one piece of iron.
-		HouseProps.add_box(arm, "Jaw", Vector3(0.09, 0.022, 0.014), Vector3(-0.045, 0.0, 0.0), iron)
-		HouseProps.add_box(arm, "Handle", Vector3(0.115, 0.016, 0.014), Vector3(0.0575, 0.0, 0.0), iron)
-		HouseProps.add_box(arm, "Grip", Vector3(0.07, 0.022, 0.018), Vector3(0.075, 0.0, 0.0), grip)
-
-	# The punch on the lower jaw and the hole it fits in, on the upper jaw.
-	var lower: Node3D = root.get_node("ArmLower")
-	var upper: Node3D = root.get_node("ArmUpper")
-	HouseProps.add_cylinder(lower, "Punch", 0.005, 0.016, Vector3(-0.075, 0.016, 0.0), brass)
-	HouseProps.add_cylinder(upper, "Anvil", 0.007, 0.006, Vector3(-0.075, -0.014, 0.0), brass)
-	HouseProps.add_cylinder(root, "Pivot", 0.008, 0.017, Vector3.ZERO, brass, Vector3(90.0, 0.0, 0.0))
-	_stain(root, "Rust", Vector3(0.03, 0.01, 0.0004), Vector3(0.03, 0.0, 0.0072), RUST_DARK, Vector3(0.0, 0.0, 13.0))
-
-	# The clue, etched along the back of the upper arm.
-	_engraving(
-		upper, "ClueSpot", "PUNCHER_CLUE", &"puncher_clue", Vector3(-0.054, 0.0, -0.0073),
-		Vector3(0.0, 180.0, 0.0), 0.05, Color(0.82, 0.74, 0.55)
-	)
 
 
 ## A hand-carved wooden train whistle on a faded cord. Its carved face is the
@@ -439,85 +397,9 @@ static func _build_ficha_note(root: Node3D) -> void:
 	)
 
 
-## The little note taped to the side of the overlook payphone: a scrap of paper, two
-## lines in felt pen, held by two strips of tape. Faces +Z, centred on the origin.
-static func _build_payphone_note(root: Node3D) -> void:
-	var note: MeshInstance3D = HouseProps._add_paper(
-		root, "Paper", Vector2(0.1, 0.07), Vector3.ZERO, HouseProps.PAPER
-	)
-	var tape: StandardMaterial3D = HouseProps.material(Color(0.78, 0.74, 0.55), 0.6)
-	HouseProps.add_box(root, "TapeLeft", Vector3(0.026, 0.012, 0.0007), Vector3(-0.042, 0.034, 0.0012), tape, Vector3(0.0, 0.0, 28.0))
-	HouseProps.add_box(root, "TapeRight", Vector3(0.026, 0.012, 0.0007), Vector3(0.042, 0.034, 0.0012), tape, Vector3(0.0, 0.0, -24.0))
-	HouseProps.add_paragraphs(
-		note, "Text", "OVERLOOK_NOTE_TEXT",
-		Vector3(-0.043, 0.014, 0.0009), 22, 0.00022, HouseProps.INK_BLUE, 400.0
-	)
-
-
 # ============================================================
 # SIGNAL CONTROL BOX
 # ============================================================
-
-## An iron post with a grey-green control box on top: a glass window above a
-## chute and coin tray, and three levers in slots. Origin at the foot of the post;
-## the front (with the controls) faces +Z. The levers are `Lever1..3` (nodes that
-## slide up and down in their slot) so the script can pose them.
-static func _build_signal_box(root: Node3D) -> void:
-	var iron: StandardMaterial3D = weathered(IRON, 3.0, 0.7, 0.6)
-	var paint: StandardMaterial3D = weathered(Color(0.26, 0.31, 0.27), 2.0, 0.85, 0.3)
-	var rust: StandardMaterial3D = weathered(RUST, 3.0, 0.9, 0.5)
-	var brass: StandardMaterial3D = HouseProps.material(BRASS, 0.45, 0.85)
-	var dark: StandardMaterial3D = HouseProps.black_material()
-	var cy: float = SIGNAL_BOX_CENTER_Y
-
-	# Post and foot.
-	HouseProps.add_cylinder(root, "Post", 0.045, 0.75, Vector3(0.0, 0.375, 0.0), iron)
-	HouseProps.add_cylinder(root, "Foot", 0.11, 0.06, Vector3(0.0, 0.03, 0.0), rust)
-	HouseProps.add_cylinder(root, "Collar", 0.065, 0.05, Vector3(0.0, 0.7, 0.0), rust)
-
-	# The box and a little rain hood.
-	HouseProps.add_box(root, "Body", Vector3(0.64, 0.8, 0.28), Vector3(0.0, cy, 0.0), paint)
-	HouseProps.add_box(root, "Hood", Vector3(0.7, 0.025, 0.36), Vector3(0.0, cy + 0.41, 0.03), iron, Vector3(6.0, 0.0, 0.0))
-	HouseProps.add_box(root, "Plate", Vector3(0.58, 0.74, 0.006), Vector3(0.0, cy, 0.142), iron)
-	_stain(root, "RustRun0", Vector3(0.03, 0.4, 0.002), Vector3(0.24, cy - 0.1, 0.1465), RUST)
-	_stain(root, "RustRun1", Vector3(0.02, 0.26, 0.002), Vector3(-0.22, cy + 0.05, 0.1465), RUST_DARK)
-
-	# The window: glass over a dark mechanism of brass rings.
-	HouseProps.add_box(root, "WindowBack", Vector3(0.36, 0.2, 0.01), Vector3(0.0, 1.38, 0.138), dark)
-	HouseProps.add_ring(root, "Gear0", 0.03, 0.045, Vector3(-0.07, 1.38, 0.15), brass)
-	HouseProps.add_ring(root, "Gear1", 0.022, 0.034, Vector3(0.05, 1.4, 0.151), brass)
-	HouseProps.add_box(root, "WindowGlass", Vector3(0.36, 0.2, 0.004), Vector3(0.0, 1.38, 0.1515), HouseProps.glass_material(Color(0.6, 0.72, 0.7, 0.2)))
-	HouseProps.add_frame(root, "WindowFrame", Vector2(0.37, 0.21), Vector3(0.0, 1.38, 0.154), 0.014, iron)
-
-	# The chute slot, the coin tray under it.
-	HouseProps.add_box(root, "Slot", Vector3(0.14, 0.03, 0.004), Vector3(0.0, 1.2, 0.1465), dark)
-	HouseProps.add_box(root, "TrayFloor", Vector3(0.34, 0.008, 0.16), Vector3(0.0, 1.152, 0.2), brass)
-	HouseProps.add_box(root, "TrayLeft", Vector3(0.008, 0.014, 0.16), Vector3(-0.166, 1.159, 0.2), brass)
-	HouseProps.add_box(root, "TrayRight", Vector3(0.008, 0.014, 0.16), Vector3(0.166, 1.159, 0.2), brass)
-	HouseProps.add_box(root, "TrayFront", Vector3(0.34, 0.006, 0.008), Vector3(0.0, 1.155, 0.28), brass)
-
-	# Three levers, each swinging on its own hub in a slot, with a number above it
-	# and UP/DOWN marks. A lever points up (rotation 0) or down (rotation z 180).
-	for i: int in 3:
-		var x: float = (i - 1) * 0.18
-		HouseProps.add_box(root, "LeverSlot%d" % (i + 1), Vector3(0.05, 0.28, 0.004), Vector3(x, LEVER_REST_Y, 0.1465), dark)
-		HouseProps.add_cylinder(root, "LeverHub%d" % (i + 1), 0.026, 0.012, Vector3(x, LEVER_REST_Y, 0.152), brass, Vector3(90.0, 0.0, 0.0))
-		var lever: Node3D = Node3D.new()
-		lever.name = "Lever%d" % (i + 1)
-		lever.position = Vector3(x, LEVER_REST_Y, 0.162)
-		root.add_child(lever)
-		HouseProps.add_cylinder(lever, "Stem", 0.009, 0.1, Vector3(0.0, 0.05, 0.0), iron)
-		_sphere(lever, "Knob", 0.022, 0.044, Vector3(0.0, 0.108, 0.0), HouseProps.material(Color(0.5, 0.1, 0.08), 0.5))
-		_etch(root, "Number%d" % (i + 1), "%d" % (i + 1), Vector3(x, 1.065, 0.1465), 26, 0.0008)
-
-	# Lettering for the two ends of a lever's travel.
-	_etch(root, "UpMark", "LEVER_UP", Vector3(-0.255, 1.01, 0.1465), 14, 0.0008, Vector3.ZERO, 0.0)
-	_etch(root, "DownMark", "LEVER_DOWN", Vector3(-0.255, 0.79, 0.1465), 14, 0.0008, Vector3.ZERO, 0.0)
-
-	# Solid: the post and the box, so the player cannot walk through them.
-	HouseProps.add_solid(root, "PostSolid", Vector3(0.18, 0.7, 0.18), Vector3(0.0, 0.35, 0.0))
-	HouseProps.add_solid(root, "BodySolid", Vector3(0.64, 0.8, 0.28), Vector3(0.0, cy, 0.0))
-
 
 # ============================================================
 # THE SHELTER AND ITS CONTENTS

@@ -1,15 +1,21 @@
 extends CanvasLayer
 class_name ArchiveVideoOverlay
 
-## The presentation of the recording in the waiting shed: a 4:3 picture with black bars around it, and the picture itself
-## drained, grainy and softly scanned (assets/shaders/archive_video.gdshader). It sits above the game's own filters and below
+## The presentation of the recording in the waiting shed: a 4:3 picture with black bars around it, and the picture itself made into a worn, copied
+## home-video tape (assets/shaders/archive_video.gdshader): a coarse low-resolution picture with the colour bleeding, tracking lines, dropouts and
+## grain, updating at a low frame rate, with the playing machine's own "PLAY" on it. It sits above the game's own filters and below
 ## the subtitles, and is only built, shown and freed by the shed's sequence. It does not touch the player's settings: with
-## the player's video filter off, only the colour is drained and the bars stay (no grain, scanlines or vignette).
+## the player's video filter off, only the colour is drained and the bars stay (nothing worn, moving or grained).
 
 const ASPECT: float = 4.0 / 3.0
 const SHADER: Shader = preload("res://assets/shaders/archive_video.gdshader")
+## The tape's frame rate: what the recording shows is posed at this rate (see `WaitingShedSequence`), the picture's noise follows it.
+const TAPE_FPS: float = 12.0
 
 var _picture: ColorRect = null
+var _material: ShaderMaterial = null
+var _play_label: Label = null
+var _full_look: bool = true
 var _black: ColorRect = null
 var _bars: Array[ColorRect] = []
 
@@ -22,16 +28,18 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	var material: ShaderMaterial = ShaderMaterial.new()
-	material.shader = SHADER
-	var full_look: bool = GameSettings.get_vhs_filter_enabled()
-	material.set_shader_parameter(&"grain", 0.05 if full_look else 0.0)
-	material.set_shader_parameter(&"scanlines", 0.035 if full_look else 0.0)
-	material.set_shader_parameter(&"vignette", 0.35 if full_look else 0.0)
+	_material = ShaderMaterial.new()
+	_material.shader = SHADER
+	_full_look = GameSettings.get_vhs_filter_enabled()
+	_material.set_shader_parameter(&"degrade", 1.0 if _full_look else 0.0)
+	_material.set_shader_parameter(&"fps", TAPE_FPS)
+	_material.set_shader_parameter(&"grain", 0.16 if _full_look else 0.0)
+	_material.set_shader_parameter(&"scanlines", 0.05 if _full_look else 0.0)
+	_material.set_shader_parameter(&"vignette", 0.85 if _full_look else 0.0)
 
 	_picture = ColorRect.new()
 	_picture.name = "Picture"
-	_picture.material = material
+	_picture.material = _material
 	_picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_picture)
 
@@ -50,6 +58,16 @@ func _ready() -> void:
 		add_child(bar)
 		_bars.append(bar)
 
+	# The playing machine's own word, in a corner of the picture (it is the machine's, so not a translated text).
+	_play_label = Label.new()
+	_play_label.name = "Play"
+	_play_label.text = "PLAY"
+	_play_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_play_label.add_theme_color_override(&"font_color", Color(0.86, 0.9, 0.8, 0.82))
+	_play_label.add_theme_color_override(&"font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	_play_label.add_theme_constant_override(&"outline_size", 4)
+	add_child(_play_label)
+
 	_layout()
 
 
@@ -66,19 +84,20 @@ func show_picture() -> void:
 	_layout()
 
 
-## The picture goes out, the bars stay (the tape is stopped).
-func show_black() -> void:
-	visible = true
-	if _black != null:
-		_black.visible = true
-	_layout()
-
-
 ## Everything away: the present again.
 func hide_overlay() -> void:
 	visible = false
+	set_burst(0.0)
 	if _black != null:
 		_black.visible = false
+
+
+## The end of the tape: 0 is the picture, 1 is nothing but static.
+func set_burst(amount: float) -> void:
+	if _material != null:
+		_material.set_shader_parameter(&"burst", clampf(amount, 0.0, 1.0))
+	if _play_label != null:
+		_play_label.visible = amount < 0.5
 
 
 func is_picture_shown() -> bool:
@@ -109,6 +128,11 @@ func _layout() -> void:
 	var rect: Rect2 = get_picture_rect()
 	_picture.position = rect.position
 	_picture.size = rect.size
+	_material.set_shader_parameter(&"picture_pixels", rect.size)
+	if _play_label != null:
+		var font_size: int = maxi(int(rect.size.y * 0.055), 12)
+		_play_label.add_theme_font_size_override(&"font_size", font_size)
+		_play_label.position = rect.position + Vector2(rect.size.x * 0.05, rect.size.y * 0.06)
 	_black.position = rect.position
 	_black.size = rect.size
 	# Left, right, top, bottom; each a little over-size so no seam shows.

@@ -150,7 +150,7 @@ func place_position(place: String, distance: float = DEFAULT_DISTANCE) -> Varian
 		return null
 
 	if place == "train":
-		return node.to_global(Vector3(-0.18, 0.7657, 3.1))
+		return node.to_global(Vector3(-0.18, 1.1069, 3.1))
 
 	if place == "overlook":
 		var phone: Node = _find_phone()

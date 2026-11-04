@@ -238,14 +238,6 @@ msgstr "Você não está carregando nada."
 msgid "INVENTORY_INSPECT"
 msgstr "Inspecionar"
 
-#. TRANSLATORS: Mantenha {slot}; o valor é substituído pelo número do espaço.
-msgid "INVENTORY_SLOT_EMPTY"
-msgstr "Espaço {slot}\nVazio"
-
-#. TRANSLATORS: Mantenha {slot} e {item}; os valores são substituídos durante o jogo.
-msgid "INVENTORY_SLOT_ITEM"
-msgstr "Espaço {slot}\n{item}"
-
 msgid "INVENTORY_INSPECT_HINT"
 msgstr "Arrastar: girar    Roda: zoom    {inspect_flip}: virar    {inspect_reset}: restaurar    Botão direito: voltar"
 
@@ -560,10 +552,6 @@ msgstr "O ano da chuva."
 msgid "ALBUM_CAPTION_3"
 msgstr "Há pouco tempo."
 
-
-msgid "PROMPT_ENTER_CODE"
-msgstr "Digitar o código"
-
 msgid "LOCK_VIEW_TITLE"
 msgstr "Cápsula do tempo"
 
@@ -602,15 +590,6 @@ msgstr "Chave Enferrujada"
 
 msgid "ITEM_MASTER_KEY_DESCRIPTION"
 msgstr "Uma chave enferrujada da porta do quarto."
-
-msgid "ITEM_LUCAS_DIARY_NAME"
-msgstr "Caderno de Lucas"
-
-msgid "ITEM_LUCAS_DIARY_DESCRIPTION"
-msgstr "Um caderno com marcas de uso. Uma das páginas está dobrada no canto."
-
-msgid "DIARY_TEXT"
-msgstr "Ela perguntou se eu estava confortável. Eu estava com metade do corpo fora da cama e um braço dormente. Disse que sim.\n\nSophia riu e me puxou para o meio.\n\nQuando começou a clarear, ela se sentou. Passou a mão no ombro e olhou para cima. Depois passou de novo.\n\nDisse que tinha alguma coisa pingando.\n\nOlhei para o teto. Não consegui enxergar nada molhado. Encostei a mão no lençol, perto dela. Também estava seco.\n\nEla pediu que eu parasse de olhar para ela e olhasse para cima.\n\nFoi quando disse que o quarto estava sangrando.\n\nPegou a roupa do chão. Eu ainda estava tentando entender quando ela saiu pelo corredor.\n\nEncontrei Sophia perto da porta da frente, descalça. Fui buscar seus sapatos. Quando voltei, ela tinha sentado na soleira.\n\nFicamos ali até o céu clarear de vez.\n\nDepois fui comprar pão. Trouxe para dois, mas ela já tinha ido para casa quando voltei.\n\nLucas"
 
 
 msgid "ITEM_HOUSE_AD_NAME"
@@ -651,16 +630,6 @@ msgstr "Sophia"
 
 msgid "BUS_TICKET_IF_YOU_WANT"
 msgstr "Se quiser."
-
-msgid "DIARY_HEADING"
-msgstr "6h da manhã."
-
-# Waiting shed and signal box
-msgid "LEVER_UP"
-msgstr "CIMA"
-
-msgid "LEVER_DOWN"
-msgstr "BAIXO"
 
 msgid "ITEM_SOPHIA_JOURNAL_NAME"
 msgstr "Caderno de Sophia"
@@ -704,27 +673,17 @@ msgstr "Puxar a alavanca %d para baixo"
 msgid "PROMPT_LEVER_PUSH_UP"
 msgstr "Empurrar a alavanca %d para cima"
 
-
 msgid "JOURNAL_LEFT"
-msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nO jornal foi publicado antes de a fita circular. “Sem testemunhas” pode ser só falta de informação naquela manhã.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo."
+msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nA cópia que me emprestaram está sem som.\n\nO jornal diz que o corpo estava no chão. A irmã lembra que, no primeiro telefonema, disseram que Marina estava sentada. Confirmar com o funcionário que encontrou ela.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo."
 
 msgid "JOURNAL_RIGHT"
-msgstr "A gravação que me emprestaram é só um trecho.\nA cópia que me emprestaram está sem som.\n\nPerguntar quem passou a cópia.\nPerguntar quem ficou com o original.\nQuem estava filmando?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia"
+msgstr "Marina não foi o primeiro caso que procurei. Outras famílias com quem falei também continuam sem saber quem foi. Pedir as edições seguintes aos outros recortes.\n\nQuem estava filmando?\nQuem passou a cópia?\nQuem ficou com o original?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia"
 
 msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
 msgstr "Uma velha lanterna ferroviária de latão, usada por vigias noturnos."
 
 msgid "LANTERN_CLUE"
 msgstr "Mantenha sua luz acima da neblina."
-
-msgid "ITEM_TICKET_PUNCHER_NAME"
-msgstr "Furador de Bilhetes de Latão"
-
-msgid "ITEM_TICKET_PUNCHER_DESCRIPTION"
-msgstr "Um pesado furador de bilhetes de ferro fundido, de condutor."
-
-msgid "PUNCHER_CLUE"
-msgstr "Aperte fundo no papel."
 
 msgid "ITEM_WOODEN_WHISTLE_DESCRIPTION"
 msgstr "Um apito de condutor entalhado à mão, preso a um cordão desbotado."
@@ -942,12 +901,6 @@ msgstr "Virar o item"
 msgid "BINDING_INSPECT_RESET"
 msgstr "Restaurar a vista do item"
 
-msgid "INSPECT_FLIP"
-msgstr "Virar"
-
-msgid "INSPECT_RESET"
-msgstr "Restaurar"
-
 msgid "INSPECT_HINT_EXAMINE"
 msgstr "Arrastar: girar    Roda: zoom    {inspect_flip}: virar"
 
@@ -961,9 +914,6 @@ msgstr "[b]SOPA DE BATATA[/b]\n\nQuatro batatas, uma cebola pequena, dois dentes
 msgid "READABLE_PANTRY_NOTE"
 msgstr "Presos dentro desta despensa minúscula e escura enquanto sua família gritava uns com os outros na sala de jantar.\n\nO ar estava empoeirado e cheirava a madeira velha. Suas mãos tremiam nas minhas enquanto prendíamos a respiração, com medo de que alguém abrisse a porta e nos flagrasse.\n\nQuando você finalmente se inclinou e me beijou no escuro total, os gritos lá fora sumiram em nada. Lembro de pensar, bem ali, que eu nunca quis voltar para aquele corredor.\n\nS."
 
-msgid "READABLE_DIARY"
-msgstr "[b]6h da manhã.[/b]\n\nEla perguntou se eu estava confortável. Eu estava com metade do corpo fora da cama e um braço dormente. Disse que sim.\n\nSophia riu e me puxou para o meio.\n\nQuando começou a clarear, ela se sentou. Passou a mão no ombro e olhou para cima. Depois passou de novo.\n\nDisse que tinha alguma coisa pingando.\n\nOlhei para o teto. Não consegui enxergar nada molhado. Encostei a mão no lençol, perto dela. Também estava seco.\n\nEla pediu que eu parasse de olhar para ela e olhasse para cima.\n\nFoi quando disse que o quarto estava sangrando.\n\nPegou a roupa do chão. Eu ainda estava tentando entender quando ela saiu pelo corredor.\n\nEncontrei Sophia perto da porta da frente, descalça. Fui buscar seus sapatos. Quando voltei, ela tinha sentado na soleira.\n\nFicamos ali até o céu clarear de vez.\n\nDepois fui comprar pão. Trouxe para dois, mas ela já tinha ido para casa quando voltei.\n\nLucas"
-
 msgid "READABLE_NOTE_CAPSULE"
 msgstr "Para abrir daqui a cinco anos.\n\nSophia,\n\nGuardei o anúncio com as outras coisas.\n\nLiguei outra vez. Ainda não venderam. Vou pedir as medidas do quarto.\n\nLucas"
 
@@ -971,7 +921,7 @@ msgid "READABLE_FICHA_NOTE"
 msgstr "Eu sabia que você ia achar, Juli. Você é a única que realmente presta atenção.\n\nLeve a ficha até o topo do morro — vamos fazer essa ligação."
 
 msgid "READABLE_JOURNAL"
-msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nO jornal foi publicado antes de a fita circular. “Sem testemunhas” pode ser só falta de informação naquela manhã.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo.\n\nA gravação que me emprestaram é só um trecho.\nA cópia que me emprestaram está sem som.\n\nPerguntar quem passou a cópia.\nPerguntar quem ficou com o original.\nQuem estava filmando?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia\n\n[center]· · ·[/center]\n\n[i][b]ABRIGO DO RAMAL — SERVIÇO CONCLUÍDO[/b]\n\nLavagem do piso.\nSubstituição de uma tábua do banco.\nSem danos nos pilares.\n\nLiberado para uso.\n\nManutenção da Linha\n\nNa manhã seguinte à retirada do corpo.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Pedir a segunda via do histórico escolar.[/i]"
+msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nA cópia que me emprestaram está sem som.\n\nO jornal diz que o corpo estava no chão. A irmã lembra que, no primeiro telefonema, disseram que Marina estava sentada. Confirmar com o funcionário que encontrou ela.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo.\n\nMarina não foi o primeiro caso que procurei. Outras famílias com quem falei também continuam sem saber quem foi. Pedir as edições seguintes aos outros recortes.\n\nQuem estava filmando?\nQuem passou a cópia?\nQuem ficou com o original?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia\n\n[center]· · ·[/center]\n\n[i][b]ABRIGO DO RAMAL — SERVIÇO CONCLUÍDO[/b]\n\nLavagem do piso.\nSubstituição de uma tábua do banco.\nSem danos nos pilares.\n\nLiberado para uso.\n\nManutenção da Linha\n\nNa manhã seguinte à retirada do corpo.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Pedir a segunda via do histórico escolar.[/i]"
 
 msgid "READABLE_HOUSE_AD"
 msgstr "[b]CASA À VENDA[/b]\n\nSala, cozinha, dois quartos e despensa.\n\nAcabamento por concluir.\n\n[b][i]NOSSA?\nLucas[/i][/b]\n\n[i]As janelas azuis são bonitas.\nSophia[/i]"
@@ -1147,18 +1097,6 @@ msgstr "Colocar ficha %d"
 msgid "CAPTION_JULIANA_NEED_FICHAS"
 msgstr "Preciso de umas fichas..."
 
-msgid "ITEM_PAYPHONE_NOTE_NAME"
-msgstr "Bilhete Colado"
-
-msgid "ITEM_PAYPHONE_NOTE_DESCRIPTION"
-msgstr "Colado na lateral do orelhão."
-
-msgid "OVERLOOK_NOTE_TEXT"
-msgstr "Uma ficha para cada um de nós."
-
-msgid "READABLE_OVERLOOK_NOTE"
-msgstr "Uma ficha para cada um de nós."
-
 # Overlook payphone: inserting fichas, the note
 msgid "OVERLOOK_PHONE_STEP_AWAY"
 msgstr "Afastar-se"
@@ -1175,55 +1113,7 @@ msgstr "Chave de Latão da Torre"
 msgid "ITEM_BRASS_SIGNAL_KEY_DESCRIPTION"
 msgstr "Uma pesada chave de latão, com a argola polida por polegares pequenos. Gravado na haste: TORRE DE SINALIZAÇÃO."
 
-msgid "ITEM_TOWER_DOOR_NOTE_NAME"
-msgstr "Bilhete Preso na Porta"
-
-msgid "ITEM_TOWER_DOOR_NOTE_DESCRIPTION"
-msgstr "Uma folha arrancada de caderno escolar, presa à madeira por um prego enferrujado. A chuva não chegou até ela, sob a verga."
-
-msgid "READABLE_TOWER_DOOR_NOTE"
-msgstr "Não podemos deixar ninguém achar este lugar, Sophia, ou perdemos nosso QG para sempre. Vou ficar com a chave no acampamento da figueira até a chuva parar. — Juliana"
-
-msgid "CAPTION_TOWER_DOOR_LOCKED"
-msgstr "Onde está a chave do QG?"
-
 # Signal tower: the town's history, on the control floor
-
-msgid "ITEM_TOWER_NEWS_NAME"
-msgstr "Recorte de Jornal"
-
-msgid "ITEM_TOWER_NEWS_DESCRIPTION"
-msgstr "Um recorte amarelado de um jornal local, dobrado em quatro e deixado sobre a mesa. Os cantos ficaram macios de tanto manuseio."
-
-msgid "READABLE_TOWER_NEWS"
-msgstr "BREVE POLICIAL LOCAL (MAIO DE 1984): As buscas ao longo do corte ferroviário do norte foram suspensas. O funcionário de manutenção E. Silva afirmou ter ouvido sua filha desaparecida, de sete anos, chamando o nome dele de dentro do bueiro de drenagem perto do Marco de Milha 4. As equipes de busca examinaram o cano e confirmaram que ele está completamente preenchido com granito maciço desde 1962. O Sr. Silva continua sob observação psiquiátrica depois de se recusar a parar de cavar a pedra com as próprias mãos."
-
-msgid "ITEM_TOWER_MEMO_NAME"
-msgstr "Memorando Interno"
-
-msgid "ITEM_TOWER_MEMO_DESCRIPTION"
-msgstr "Um memorando datilografado, preso a uma tábua na estrutura das alavancas, com um carimbo vermelho borrado no rodapé."
-
-msgid "READABLE_TOWER_MEMO"
-msgstr "MEMORANDO INTERNO (1989): A todos os operadores das torres de sinalização: Com efeito imediato, não registrem sombras de neblina no livro de registro oficial da estação. O operador M. Santos foi afastado do serviço na noite passada depois de parar três trens de carga por obstáculos inexistentes. Ele insiste que uma mulher de vestido preto estava parada no meio dos trilhos, segurando a própria cabeça com as mãos. Os médicos atribuem a visão à privação severa de sono e aos gases de monóxido de carbono do aquecedor a carvão."
-
-msgid "ITEM_TOWER_JOURNAL_NAME"
-msgstr "Página do Diário do Operador"
-
-msgid "ITEM_TOWER_JOURNAL_DESCRIPTION"
-msgstr "Uma página pautada arrancada de um diário, escrita com mão trêmula. Está na beirada do banco, como se pudesse cair a qualquer momento."
-
-msgid "READABLE_TOWER_JOURNAL"
-msgstr "12 de novembro. Minha esposa diz que estou perdendo a cabeça porque toda manhã eu meço as tábuas do assoalho com uma régua. Ela não entende. A distância entre a porta e a janela era de quatro metros na segunda. Hoje são quatro metros e doze centímetros. A casa está esticando. Ou talvez minha vista esteja falhando, assim como meu pai me avisou que aconteceria. Não consigo dormir quando a madeira range, porque parece que as paredes estão recuperando o fôlego."
-
-msgid "ITEM_TOWER_NOTICE_NAME"
-msgstr "Aviso de Saúde Pública"
-
-msgid "ITEM_TOWER_NOTICE_DESCRIPTION"
-msgstr "Um aviso municipal impresso, colado ao caixilho da janela pelos cantos de cima. A fita secou e está enrolando."
-
-msgid "READABLE_TOWER_NOTICE"
-msgstr "AVISO DA SAÚDE MUNICIPAL (1991): Os moradores próximos à linha da floresta são informados de que a forte ressonância acústica do vale durante a neblina intensa pode causar ilusões auditivas, incluindo batidas, nomes sussurrados e passos percebidos. Os médicos confirmam que essas sensações são respostas neurológicas inofensivas ao isolamento atmosférico prolongado. Mantenha as portas trancadas e permaneça dentro de casa após o anoitecer."
 
 # Signal tower: the children's headquarters
 
@@ -1256,18 +1146,6 @@ msgstr "Juli, a foto de quando a gente era pequena ficou na mesa do QG. Não beb
 
 msgid "PROMPT_INSPECT_LOCKBOX"
 msgstr "Examinar a caixa de segurança"
-
-msgid "PROMPT_INSPECT_RADIO"
-msgstr "Examinar o rádio"
-
-msgid "ITEM_RADIO_NAME"
-msgstr "Rádio Ferroviário"
-
-msgid "ITEM_RADIO_DESCRIPTION"
-msgstr "Um transmissor pesado, verde acinzentado, dos anos noventa, daqueles que a ferrovia guardava nas casinhas de sinalização. O seletor de frequência está preso por uma trava, e uma tira de fita crepe velha acima do mostrador diz HQ."
-
-msgid "READABLE_RADIO"
-msgstr "Um velho transmissor ferroviário marcado com HQ."
 
 msgid "LOCKBOX_VIEW_HINT"
 msgstr "Clique nas setas ou role o mouse sobre uma roda para girá-la."
@@ -1332,17 +1210,8 @@ msgstr "Quer que eu guarde?"
 msgid "CAPTION_HOUSE_BED_17"
 msgstr "Não. Deixa onde estava."
 
-msgid "CAPTION_HOUSE_SHH"
-msgstr "Shhh."
-
 msgid "CAPTION_SPEAKER_LUCAS"
 msgstr "Lucas"
-
-msgid "ITEM_CAPSULE_KEY_DESCRIPTION"
-msgstr "Uma pequena chave da cápsula na sala."
-
-msgid "ITEM_CAPSULE_KEY_NAME"
-msgstr "Chave da cápsula"
 
 msgid "ITEM_POSTCARD_NAME"
 msgstr "Cartão-postal"
@@ -1442,42 +1311,60 @@ msgstr "[b]MULHER ENCONTRADA MORTA NO ABRIGO DO RAMAL[/b]\n\nMarina, de 34 anos,
 msgid "PHOTO_CAPTION_SHELTER"
 msgstr "Abrigo do ramal, após a retirada do corpo."
 
-msgid "ITEM_CAMCORDER_NAME"
-msgstr "Filmadora"
+msgid "ITEM_MARINA_SISTER_NOTE_NAME"
+msgstr "Bilhete da irmã de Marina"
 
-msgid "ITEM_CAMCORDER_DESCRIPTION"
-msgstr "Uma filmadora montada num tripé. A lente está voltada para o banco do abrigo."
+msgid "ITEM_MARINA_SISTER_NOTE_DESCRIPTION"
+msgstr "Uma folha dobrada, guardada com os recortes de Sophia. A irmã de Marina comenta o primeiro telefonema sobre a descoberta do corpo."
+
+msgid "READABLE_MARINA_SISTER_NOTE"
+msgstr "Ele disse que tinha encontrado a Marina sentada. Eu lembro porque perguntei se ela estava esperando alguém.\n\nNo jornal está escrito que ela estava no chão.\n\nPode ser que tenham tirado ela de lá. Eu só queria que ele me contasse sem mandar esquecer. Já faz anos e ninguém voltou para falar com a gente."
 
 msgid "CAPTION_SHED_MEM_01"
-msgstr "Essa é a cópia que a irmã da Marina me emprestou."
+msgstr "Você ainda tá atrás desses casos da Fenda?"
 
 msgid "CAPTION_SHED_MEM_02"
-msgstr "Tá sem som?"
+msgstr "Falei com a irmã da Marina. Ela me emprestou essa cópia."
 
 msgid "CAPTION_SHED_MEM_03"
+msgstr "Tá sem som?"
+
+msgid "CAPTION_SHED_MEM_04"
 msgstr "A cópia veio assim."
 
 msgid "CAPTION_SHED_TALK_01"
-msgstr "Ela conhece essa pessoa?"
+msgstr "Você falou com o homem que encontrou ela?"
 
 msgid "CAPTION_SHED_TALK_02"
-msgstr "A irmã acha que sim."
+msgstr "Tentei. Quando perguntei sobre o banco,"
 
 msgid "CAPTION_SHED_TALK_03"
-msgstr "Você reconheceu?"
+msgstr "ele quis saber quem tinha me dado a fita."
 
 msgid "CAPTION_SHED_TALK_04"
-msgstr "Não."
+msgstr "Ele podia só não querer lembrar."
 
 msgid "CAPTION_SHED_TALK_05"
-msgstr "E quem está filmando?"
+msgstr "Podia. Eu disse que não precisava falar naquele dia."
 
 msgid "CAPTION_SHED_TALK_06"
-msgstr "Foi o que eu perguntei."
+msgstr "E você vai voltar?"
 
 msgid "CAPTION_SHED_TALK_07"
-msgstr "E?"
+msgstr "A irmã dela está esperando uma ligação minha."
 
 msgid "CAPTION_SHED_TALK_08"
-msgstr "Me ofereceram uma cópia melhor."
+msgstr "Você nem conhecia a Marina."
+
+msgid "CAPTION_SHED_TALK_09"
+msgstr "Não."
+
+msgid "CAPTION_SHED_TALK_10"
+msgstr "Então por que você está se metendo nisso?"
+
+msgid "CAPTION_SHED_TALK_11"
+msgstr "Eu pedi para ela me ligar se lembrasse de mais alguma coisa."
+
+msgid "CAPTION_SHED_TALK_12"
+msgstr "Agora não vou fingir que ela não ligou."
 

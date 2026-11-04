@@ -1,11 +1,12 @@
 extends Node3D
 class_name ShelterFootage
 
-## The performance in the waiting shed's archival recording, and nothing else of it: ONE short excerpt of a hidden, fixed camera. Marina sits on the
-## shelter's bench, waiting. Someone walks in from the right, on the near side of the bench, stops by her, appears to speak with her for a while,
-## turns and walks out the way they came; she follows them with her head, then settles back into waiting. The visitor's head is never in the picture
+## The performance in the waiting shed's archival recording, and nothing else of it: ONE long, slow excerpt (about 50 s) of a hidden, fixed camera. Marina
+## sits on the shelter's bench, waiting, for a long while. Someone walks in from the right, on the near side of the bench, stops by her, stays a long time
+## appearing to speak with her, turns and walks out the way they came; she follows them with her head, waits alone, and then slowly turns her face to the
+## camera's lens and stays so, looking into it, until the tape ends (`lens_point`). The visitor's head is never in the picture
 ## (the camera is set so that the top of the 4:3 frame is under their chin, see `WaitingShedSequence.shot_recording`), nothing is carried or touched,
-## and nothing says what was said, whether they knew each other, or what happened next.
+## and nothing says what was said, whether they knew each other, who is filming, or what happened next.
 ##
 ## Everything is a pure function of one clock, the footage time (`seek`): both actors' poses (see `ArchiveActor`), the visitor's place on the
 ## path, Marina's gaze. A pause, a cancel or a seek to any time gives the same picture; nothing is a timer, a tween or a callback. The visitor's walk
@@ -31,36 +32,43 @@ const KEY_FRAMES: int = 2
 @export var visitor_scale: float = 0.97
 
 @export_category("Footage")
-@export var length_seconds: float = 22.0
+## The tape is long and slow on purpose: a long wait before anyone comes, a long unanswered stay, and the end of it alone with her.
+@export var length_seconds: float = 50.0
+## Where the hidden camera's lens is (world space, set by the sequence from its recording shot; infinite: no lens, nobody looks at it).
+var lens_point: Vector3 = Vector3(INF, INF, INF)
 
 @export_category("Marina")
-## Her head turns to the visitor (they are in the picture from about 3.9 s), she nods once as they begin, makes one small hand movement and nods once more.
-@export var marina_notice_seconds: float = 4.3
+## Her head turns to the visitor `marina_notice_after_start` seconds after they start to walk (they come into the picture a little before), she nods as they begin
+## (offsets are seconds after they stop), makes one small hand movement and nods once more.
+@export var marina_notice_after_start: float = 3.1
 @export var marina_notice_blend_seconds: float = 0.9
-@export var marina_nod_times: PackedFloat32Array = PackedFloat32Array([6.6, 11.6])
-@export var marina_gesture_start: float = 9.0
+@export var marina_nod_offsets: PackedFloat32Array = PackedFloat32Array([0.7, 10.0])
+@export var marina_gesture_offset: float = 6.0
 @export var marina_gesture_seconds: float = 1.5
-## She follows them with her head until this time, then lets go of it over `marina_settle_seconds` and waits again.
-@export var marina_follow_until: float = 15.6
+## She follows them with her head until `marina_follow_after_walk_out` seconds after they begin to walk out, then lets go of it over `marina_settle_seconds` and waits again.
+@export var marina_follow_after_walk_out: float = 1.3
 @export var marina_settle_seconds: float = 1.4
+## Alone, she waits this long after letting go; then her head turns slowly to the camera's lens over `marina_lens_blend_seconds` and stays there to the end of the tape.
+@export var marina_lens_after_settle_seconds: float = 3.0
+@export var marina_lens_blend_seconds: float = 4.0
 
 @export_category("Visitor path (metres per second, seconds)")
-@export var visitor_start_seconds: float = 1.2
+@export var visitor_start_seconds: float = 7.0
 @export var walk_speed: float = 1.2
 ## The ramps are short: most of the walk is at steady speed.
 @export var accel_seconds: float = 0.4
 @export var decel_seconds: float = 0.5
 ## How long they stand and speak, from the moment they have stopped, and how long the turn back takes (the walk out begins part-way through it).
-@export var exchange_seconds: float = 8.0
+@export var exchange_seconds: float = 16.0
 @export var turn_seconds: float = 0.9
 ## How long before they stop the body has finished turning to Marina.
 @export var turn_in_seconds: float = 0.7
 
 @export_category("Visitor exchange (seconds after they stop)")
 ## One restrained gesture with the right hand, a small one with the left, and the nods of the head (not in the picture).
-@export var gesture_a_offset: float = 1.6
+@export var gesture_a_offset: float = 3.2
 @export var gesture_a_seconds: float = 1.6
-@export var gesture_b_offset: float = 5.0
+@export var gesture_b_offset: float = 11.0
 @export var gesture_b_seconds: float = 1.2
 
 var marina: ArchiveActor = null
@@ -309,7 +317,7 @@ func _key_visitor() -> void:
 		# The trunk: the pelvis and the shoulders turn against each other a little with the stride, and the body leans a touch toward the one
 		# they are speaking to (the head dips with it; it is above the picture's top edge).
 		var speaking: float = _smooth(clampf((time - arrive_time) / 0.8, 0.0, 1.0)) * (1.0 - _smooth(clampf((time - depart_time) / 0.8, 0.0, 1.0)))
-		var nod: float = _pulse(time, arrive_time + 0.6, 0.7) + _pulse(time, arrive_time + 4.1, 0.7)
+		var nod: float = _pulse(time, arrive_time + 0.6, 0.7) + _pulse(time, arrive_time + 8.6, 0.7)
 		(channels[&"Hips"] as Array).append(Vector3(1.0, -8.0 * phase * moving, 0.0))
 		(channels[&"Spine"] as Array).append(Vector3(2.0 + 3.0 * moving + 2.0 * speaking, 3.0 * phase * moving, 0.0))
 		(channels[&"Spine1"] as Array).append(Vector3(1.0 + 1.0 * speaking, 3.0 * phase * moving, 0.0))
@@ -358,7 +366,7 @@ func _key_marina() -> void:
 	for i: int in range(0, int(round(end / DT)) + 1, KEY_FRAMES):
 		var time: float = float(i) * DT
 		hand_times.append(time)
-		hand_values.append(rest.lerp(raised, _pulse(time, marina_gesture_start, marina_gesture_seconds)))
+		hand_values.append(rest.lerp(raised, _pulse(time, arrive_time + marina_gesture_offset, marina_gesture_seconds)))
 	m.set_channel(&"hand_r", hand_times, hand_values)
 
 
@@ -385,11 +393,22 @@ func _key_marina_gaze() -> void:
 	var necks: Array = []
 	var heads: Array = []
 	var head_point: Vector3 = m.bone_point("Head")
+	var notice: float = visitor_start_seconds + marina_notice_after_start
+	var follow_until: float = walk_out_time + marina_follow_after_walk_out
+	var lens_start: float = follow_until + marina_settle_seconds + marina_lens_after_settle_seconds
+	# The camera's lens, from where her head is: straight ahead of her across the clearing.
+	var lens_yaw: float = 0.0
+	var lens_pitch: float = 0.0
+	var has_lens: bool = lens_point.is_finite()
+	if has_lens:
+		var to_lens: Vector3 = m.to_local(lens_point) - head_point
+		lens_yaw = clampf(rad_to_deg(atan2(to_lens.x, to_lens.z)), -70.0, 70.0)
+		lens_pitch = clampf(-rad_to_deg(atan2(to_lens.y, Vector2(to_lens.x, to_lens.z).length())), -30.0, 30.0)
 	for i: int in range(0, count, KEY_FRAMES):
 		var time: float = float(i) * DT
 		times.append(time)
-		var weight: float = _smooth(clampf((time - marina_notice_seconds) / maxf(marina_notice_blend_seconds, 0.01), 0.0, 1.0))
-		weight *= 1.0 - _smooth(clampf((time - marina_follow_until) / maxf(marina_settle_seconds, 0.01), 0.0, 1.0))
+		var weight: float = _smooth(clampf((time - notice) / maxf(marina_notice_blend_seconds, 0.01), 0.0, 1.0))
+		weight *= 1.0 - _smooth(clampf((time - follow_until) / maxf(marina_settle_seconds, 0.01), 0.0, 1.0))
 		# Where she would look: at the visitor's face (their chest height if they are far), from where her head is.
 		var target_world: Vector3 = Vector3(_root[i].x, _floor_y + 1.45 * visitor_scale, _root[i].y)
 		var d: Vector3 = m.to_local(target_world) - head_point
@@ -397,9 +416,13 @@ func _key_marina_gaze() -> void:
 		var track_pitch: float = -rad_to_deg(atan2(d.y, Vector2(d.x, d.z).length()))
 		var yaw: float = lerpf(34.0, clampf(track_yaw, -70.0, 70.0), weight)
 		var pitch: float = lerpf(12.0, clampf(track_pitch, -30.0, 30.0), weight)
+		if has_lens:
+			var on_lens: float = _smooth(clampf((time - lens_start) / maxf(marina_lens_blend_seconds, 0.01), 0.0, 1.0))
+			yaw = lerpf(yaw, lens_yaw, on_lens)
+			pitch = lerpf(pitch, lens_pitch, on_lens)
 		var nod: float = 0.0
-		for nod_time: float in marina_nod_times:
-			nod += _pulse(time, nod_time, 0.7)
+		for nod_offset: float in marina_nod_offsets:
+			nod += _pulse(time, arrive_time + nod_offset, 0.7)
 		pitch += 9.0 * nod
 		necks.append(Vector3(pitch * 0.4, yaw * 0.4, 0.0))
 		heads.append(Vector3(pitch * 0.6, yaw * 0.6, 0.0))

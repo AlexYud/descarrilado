@@ -108,9 +108,9 @@ const STEP_AWAY_GRACE_SECONDS: float = 0.7
 ## While Sophia speaks the picture is a cutscene, not the player's eyes: a camera behind and above where she
 ## stands, looking out over the fence at the whole town (the way she looked at it), wide at first, with
 ## letterbox bars, then pushing in slowly.
-@export var shot_height: float = 1.6
+@export var shot_height: float = 4.2
 @export var shot_back: float = 1.6
-@export var shot_pitch_degrees: float = -5.0
+@export var shot_pitch_degrees: float = -6.0
 ## The view is turned this many degrees from where she looked at the town (negative: back towards the booth)
 ## so that the middle of the town is the middle of the picture.
 @export var shot_yaw_offset_degrees: float = -26.0

@@ -7,8 +7,8 @@ extends RefCounted
 ## ProceduralProp calls `build()` for these kinds. No model here has a person in it, or a shape that could be taken for one; the two people of the
 ## recording are the rigged model, performed by `ShelterFootage`.
 ##
-## Inspectable props (tape, clipping, camcorder) are built facing +Z with +Y up and centred on the origin, as the inspect view
-## shows them; scenery stands on the ground with the origin at floor level.
+## Inspectable props (tape, clipping) are built facing +Z with +Y up and centred on the origin, as the inspect view shows them; scenery
+## (the camcorder, which is not examined) stands on the ground with the origin at floor level.
 
 const PAPER_NEWS: Color = Color(0.78, 0.74, 0.64)
 const INK_DARK: Color = Color(0.1, 0.09, 0.08)
@@ -21,7 +21,7 @@ const PHOTO_ASPECT: float = 4.0 / 3.0
 
 
 static func has_kind(kind: StringName) -> bool:
-	return kind in [&"vhs_tape", &"camcorder", &"newspaper_clipping", &"shelter_archive", &"shelter_bin"]
+	return kind in [&"vhs_tape", &"camcorder", &"newspaper_clipping", &"marina_sister_note", &"shelter_archive", &"shelter_bin"]
 
 
 static func build(kind: StringName, root: Node3D) -> void:
@@ -32,6 +32,8 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_camcorder(root)
 		&"newspaper_clipping":
 			_build_newspaper_clipping(root)
+		&"marina_sister_note":
+			_build_marina_sister_note(root)
 		&"shelter_archive":
 			_build_shelter_archive(root)
 		&"shelter_bin":
@@ -233,6 +235,37 @@ static func _build_newspaper_clipping(root: Node3D) -> void:
 				root, "Line%d_%d" % [column, row], Vector3(length, 0.0034, 0.0004),
 				Vector3(-0.0275 + column * 0.055 + (length - 0.05) * 0.5, -0.0545 - row * 0.0085, 0.001), faded
 			)
+
+
+# ============================================================
+# THE SISTER'S NOTE
+# ============================================================
+
+## The note from Marina's sister: one sheet of lined paper, folded in three and opened out again, its creases still across it, written in dark ink in a
+## looser hand than Sophia's. The words are read in the inspect view (`readable_text`); on the model they are only strips. 105 x 145 mm, facing +Z.
+static func _build_marina_sister_note(root: Node3D) -> void:
+	var ink: StandardMaterial3D = HouseProps.material(Color(0.14, 0.14, 0.17), 1.0)
+	var ruling: StandardMaterial3D = HouseProps.material(Color(0.62, 0.68, 0.74), 1.0)
+
+	HouseProps._add_paper(root, "Paper", Vector2(0.105, 0.145), Vector3.ZERO, Color(0.86, 0.84, 0.76))
+	# The two folds of a letter folded in three: a light edge and a dark one each.
+	for fold_y: float in [0.0242, -0.0242]:
+		JunctionProps._stain(root, "FoldLight", Vector3(0.105, 0.0011, 0.0003), Vector3(0.0, fold_y, 0.0009), Color(0.94, 0.92, 0.86))
+		JunctionProps._stain(root, "FoldDark", Vector3(0.105, 0.0007, 0.0003), Vector3(0.0, fold_y - 0.0011, 0.0009), Color(0.55, 0.52, 0.45))
+
+	# The ruling, and the handwriting on it: three paragraphs, the last a little longer, the lines a little uneven.
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 1411
+	var rows: Array = [4, 1, 5]
+	var line_y: float = 0.061
+	for paragraph: int in rows.size():
+		for row: int in int(rows[paragraph]):
+			HouseProps.add_box(root, "Ruling%d_%d" % [paragraph, row], Vector3(0.093, 0.0005, 0.0003), Vector3(0.0, line_y - 0.0035, 0.0008), ruling)
+			var length: float = 0.088 - rng.randf_range(0.0, 0.016) if row < int(rows[paragraph]) - 1 else rng.randf_range(0.03, 0.06)
+			var skew: float = rng.randf_range(-0.8, 0.8)
+			HouseProps.add_box(root, "Hand%d_%d" % [paragraph, row], Vector3(length, 0.0026, 0.0004), Vector3(-0.0465 + length * 0.5, line_y, 0.001), ink, Vector3(0.0, 0.0, skew))
+			line_y -= 0.0092
+		line_y -= 0.0075
 
 
 ## The shipped photograph (null, with a warning, if the file is missing: it is art, never generated at run time).

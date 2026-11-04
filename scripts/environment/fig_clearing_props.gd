@@ -7,10 +7,6 @@ class_name FigClearingProps
 ##
 ##   The clothesline  near the western trail entrance (Trail Entrance A): a rope strung between two of the forest's own trees
 ##       (the project's medium tree model) with a damp jacket hung over it. A dressing only: nothing on it is searched or read.
-##   The railway radio  on a wooden crate by the same entrance, south of the trail and facing the way the player arrives: a heavy
-##       industrial transmitter of the nineties (`RailwayRadio`, `[E] Inspect Radio`, `READABLE_RADIO`). It is scenery, not a clue: its analog
-##       dial is locked by a bar bolted over the slider, and a strip of old masking tape above it says HQ. It hisses
-##       faintly (a dead channel) and its lamp glows red, so that it is found from the trail. A heavy cable runs from its back to a car battery.
 ##   The memory table  (`Scenery/CampTable` in the scene, with the cassette recorder, the photo album and Bus Stop Departure on it) stands in the open
 ##       beside the fig tree, clear of its trunk and roots, its front toward the trail; a lit hurricane lantern on it (`CampLantern`) lights it as the
 ##       fire lights the other side of the trail, so that the two lights show the way into the camp from the entrance.
@@ -24,15 +20,27 @@ class_name FigClearingProps
 ##   The wood yard  a chopping block with an axe in it, split wood and kindling, where the camp's first tent used to stand. The two tents (in
 ##       the scene) are pitched with their doors toward the middle of the camp, each with an open door and some gear in front of it.
 ##
-## The inspectable pieces are scenes in `scenes/objects/fig_clearing/` (the radio, the thermos, the lockbox);
+## The inspectable pieces are scenes in `scenes/objects/fig_clearing/` (the thermos, the lockbox);
 ## what they look like is built here too, for the kinds below, so that ProceduralProp can fill their `Visual` node.
 
-const RADIO_SCENE_PATH: String = "res://scenes/objects/fig_clearing/railway_radio.tscn"
+
+## The ready-made models the camp's wood is made of, and each one's box in its own file frame (position, size; metres), which `_place_model` fits to the
+## size a prop has here.
+const TABLE_SCENE: PackedScene = preload("res://assets/models/wooden_structures/wood_table/wood_table.glb")
+const BENCH_SCENE: PackedScene = preload("res://assets/models/wooden_structures/wood_bench/wood_bench.glb")
+const LOG_SCENE: PackedScene = preload("res://assets/models/wooden_structures/log/log.glb")
+const STUMP_SCENE: PackedScene = preload("res://assets/models/wooden_structures/log_small/log_small.glb")
+const AXE_SCENE: PackedScene = preload("res://assets/models/weapons/axe/axe.glb")
+const STICK_SCENE: PackedScene = preload("res://assets/models/wooden_structures/wood_piece_medium/wood_piece_medium.glb")
+const TABLE_BOX: AABB = AABB(Vector3(-0.622, -0.008, -1.404), Vector3(1.215, 0.997, 2.761))
+const BENCH_BOX: AABB = AABB(Vector3(-0.197, -0.034, -1.187), Vector3(0.392, 0.519, 2.407))
+const LOG_BOX: AABB = AABB(Vector3(-0.308, -0.296, -1.579), Vector3(0.615, 0.583, 3.112))
+const STUMP_BOX: AABB = AABB(Vector3(-0.255, -0.053, -0.243), Vector3(0.510, 0.647, 0.479))
+const STICK_BOX: AABB = AABB(Vector3(-0.307, -0.016, -0.015), Vector3(0.614, 0.031, 0.030))
 const THERMOS_SCENE_PATH: String = "res://scenes/objects/fig_clearing/camp_thermos.tscn"
 const LOCKBOX_SCENE_PATH: String = "res://scenes/objects/fig_clearing/js_lockbox.tscn"
 const TREE_SCENE_PATH: String = "res://assets/models/trees/medium_generic_tree/mediun_generic_tree.glb"
 
-const KIND_RADIO: StringName = &"railway_radio"
 const KIND_THERMOS: StringName = &"camp_thermos"
 const KIND_LOCKBOX: StringName = &"js_lockbox"
 
@@ -47,34 +55,6 @@ const ROPE_HEIGHT_B: float = 2.05
 const ROPE_SAG: float = 0.34
 const ROPE_SEGMENTS: int = 18
 const JACKET_AT: float = 0.4
-
-# The radio's crate, by the western trail entrance (the clearing's frame). The trail comes in from the west and southwest and meets the
-# clearing's rim near z = 0.5; the crate stands two metres south of the trail and a good way inside the rim, and its front (+Z, where the radio
-# faces) turns toward the trail's last stretch, so that a player coming in sees the panel, and stands on open ground in front of it (the rim,
-# past 7.5 m, is thicket). The size is the crate's width, height (lid included) and depth.
-const RADIO_CRATE_POSITION: Vector3 = Vector3(-5.7, 0.0, 2.3)
-const RADIO_CRATE_YAW: float = -131.0
-const RADIO_CRATE_SIZE: Vector3 = Vector3(0.74, 0.52, 0.5)
-const RADIO_ON_CRATE: Vector3 = Vector3(-0.02, 0.0, 0.0)
-## The car battery the radio is wired to, on the ground behind the crate (the crate's frame).
-const BATTERY_AT: Vector3 = Vector3(0.32, 0.0, -0.95)
-const BATTERY_SIZE: Vector3 = Vector3(0.26, 0.2, 0.17)
-## How loud the hiss of the radio is at a metre or two.
-const RADIO_STATIC_DB: float = -21.0
-
-# The railway radio (origin at the middle of the body's underside, front toward +Z): the cabinet's width, height and depth, the height of its
-# rubber feet, the rack panel in front (size, and the plane of its face), the dial (the height of its middle on the panel, the scale it prints
-# and where the slider is locked, between two printed numbers: the radio is scenery, and no frequency on it is a clue).
-const RADIO_BODY: Vector3 = Vector3(0.46, 0.3, 0.3)
-const RADIO_FEET: float = 0.014
-const RADIO_PANEL: Vector2 = Vector2(0.5, 0.32)
-const RADIO_FRONT_Z: float = 0.162
-const RADIO_DIAL_Y: float = 0.045
-const RADIO_SLOT_Y: float = -0.02
-const RADIO_SCALE_START: float = 14.0
-const RADIO_SCALE_END: float = 14.2
-const RADIO_SCALE_WIDTH: float = 0.3
-const RADIO_LOCKED_AT: float = 14.13
 
 # The camp round the fire (the clearing's frame; the tents, the memory table and the firewood are in the scene). The three seats are logs lying along the
 # ring (a position and the yaw of the log's length), the kettle stands on a stone on the fire's north east side, and the wood yard is where the first tent
@@ -108,7 +88,6 @@ const LOCKBOX_ON_TABLE: Vector3 = Vector3(0.62, 0.0, 0.03)
 const LOCKBOX_YAW: float = 88.0
 
 # The thermos, the centre of its body at the origin.
-const THERMOS_HEIGHT: float = 0.31
 const THERMOS_BOTTOM: float = -0.15
 
 # The J & S lockbox (origin at the middle of the base's underside, front toward +Z): the body's width, height and depth, the lid's height, and
@@ -135,9 +114,6 @@ var trees: Array[Node3D] = []
 var rope_points: PackedVector3Array = PackedVector3Array()
 ## The damp jacket on the rope: a dressing, nothing to search.
 var jacket: Node3D = null
-var radio_crate: Node3D = null
-var radio: Inspectable = null
-var battery: Node3D = null
 var log_table: Node3D = null
 var log_bench: Node3D = null
 var thermos: Inspectable = null
@@ -145,13 +121,11 @@ var lockbox: JSLockbox = null
 ## The three logs round the fire and the two tents (the scene's), which get their doors and gear here.
 var seats: Array[Node3D] = []
 var tents: Array[Node3D] = []
-## The lit lantern on the memory table, its light, its glass's material and its flame, and the radio's hiss and the material of its lamp.
+## The lit lantern on the memory table, its light, its glass's material and its flame.
 var lantern: Node3D = null
 var lantern_light: OmniLight3D = null
 var lantern_glass_material: StandardMaterial3D = null
 var lantern_flame: MeshInstance3D = null
-var radio_static: AudioStreamPlayer3D = null
-var radio_lamp_material: StandardMaterial3D = null
 ## True once `put_out_lights` has been called: the camp's lights stay out.
 var lights_out: bool = false
 ## How much of its light the lantern gives (0 to 1): the sequence dims it in dips before the camp goes dark.
@@ -173,7 +147,6 @@ func _ready() -> void:
 
 	_make_materials()
 	_build_clothesline()
-	_build_radio_stand()
 	_build_log_table()
 	_build_bench()
 	_build_fire_ring()
@@ -189,13 +162,11 @@ func _ready() -> void:
 # ============================================================
 
 static func has_kind(kind: StringName) -> bool:
-	return kind in [KIND_RADIO, KIND_THERMOS, KIND_LOCKBOX]
+	return kind in [KIND_THERMOS, KIND_LOCKBOX]
 
 
 static func build(kind: StringName, root: Node3D) -> void:
 	match kind:
-		KIND_RADIO:
-			_build_railway_radio(root)
 		KIND_THERMOS:
 			_build_thermos(root)
 		KIND_LOCKBOX:
@@ -262,269 +233,6 @@ static func _build_thermos(root: Node3D) -> void:
 		HouseProps.add_box(spot, "Line%d" % i, Vector3(line_widths[i], 0.0017, 0.0004), Vector3(0.0, 0.025 - 0.0125 * float(i), 0.0), pencil)
 
 	HouseProps.add_cylinder(root, "Pin", 0.0055, 0.004, Vector3(0.0, 0.0075, 0.0428), brass, Vector3(90.0, 0.0, 0.0))
-
-
-## Where a frequency is on the radio's dial: across the panel from its middle, in metres (the printed scale runs from `RADIO_SCALE_START` to
-## `RADIO_SCALE_END` over `RADIO_SCALE_WIDTH`).
-static func radio_scale_x(frequency: float) -> float:
-	return (inverse_lerp(RADIO_SCALE_START, RADIO_SCALE_END, frequency) - 0.5) * RADIO_SCALE_WIDTH
-
-
-## A point on the radio's front panel: `x` and `y` from the middle of the panel, `out` out of its face.
-static func _on_panel(x: float, y: float, out: float = 0.0) -> Vector3:
-	return Vector3(x, RADIO_FEET + RADIO_BODY.y * 0.5 + y, RADIO_FRONT_Z + out)
-
-
-## The railway radio, a heavy industrial transmitter of the nineties, 50 cm wide, 33 cm tall and 31 cm deep, its front toward +Z and its
-## origin at the middle of the body's underside: a grey green steel cabinet on four rubber feet with a carrying handle on each side, and a rack
-## panel in front. The dial is a window with a printed scale from 14.00 to 14.20 MHz (`Freq0`..`Freq5`), and a red needle (`Needle`) on a slider
-## (`Slider`) that is locked where it stands, between two numbers, by a steel bar bolted over it (`LockBar`, with a dab of red sealing wax on a bolt).
-## Above the dial a strip of old masking tape is marked HQ in marker (`Tape`). Below it: two knobs, a signal meter, two toggle switches
-## and a socket. The words the overlay gives (`READABLE_RADIO`) are not drawn: the panel is a readable spot facing front (`PanelSpot`), offered
-## as soon as the radio is looked at. The back has a plate with the power socket the cable goes into (`RearSocket`).
-static func _build_railway_radio(root: Node3D) -> void:
-	var body_paint: StandardMaterial3D = HouseProps.material(Color(0.15, 0.185, 0.14), 0.66, 0.35)
-	var panel_paint: StandardMaterial3D = HouseProps.material(Color(0.22, 0.26, 0.2), 0.58, 0.3)
-	var dark: StandardMaterial3D = HouseProps.material(Color(0.045, 0.045, 0.05), 0.55, 0.5)
-	var bakelite: StandardMaterial3D = HouseProps.material(Color(0.05, 0.045, 0.045), 0.32, 0.1)
-	var steel: StandardMaterial3D = HouseProps.material(Color(0.55, 0.55, 0.52), 0.45, 0.7)
-	var bare: StandardMaterial3D = HouseProps.material(Color(0.55, 0.54, 0.5), 0.5, 0.8)
-	var rust: StandardMaterial3D = HouseProps.material(Color(0.4, 0.2, 0.1), 0.95, 0.2)
-	var grime: StandardMaterial3D = HouseProps.material(Color(0.1, 0.095, 0.08), 1.0)
-	var brass: StandardMaterial3D = HouseProps.material(HouseProps.BRASS, 0.3, 0.85)
-	var cream: StandardMaterial3D = HouseProps.material(Color(0.88, 0.83, 0.66), 0.8)
-	var rubber: StandardMaterial3D = HouseProps.material(Color(0.03, 0.03, 0.03), 0.95)
-	# The needle is a clear red, and keeps a glow of its own so that it is red in the beam of a flashlight and in the dim of a night camp alike.
-	var red: StandardMaterial3D = HouseProps.material(Color(0.62, 0.02, 0.02), 0.9)
-	red.metallic_specular = 0.1
-	red.emission_enabled = true
-	red.emission = Color(0.72, 0.03, 0.03)
-	red.emission_energy_multiplier = 0.3
-
-	var body: Vector3 = RADIO_BODY
-	var middle_y: float = RADIO_FEET + body.y * 0.5
-
-	# The cabinet: on four rubber feet, vents in the top, a carrying handle each side (two posts and a bar), wear on its sides.
-	HouseProps.add_box(root, "Body", body, Vector3(0.0, middle_y, 0.0), body_paint)
-	for foot_x: float in [-0.19, 0.19]:
-		for foot_z: float in [-0.11, 0.11]:
-			HouseProps.add_cylinder(root, "Foot", 0.017, RADIO_FEET, Vector3(foot_x, RADIO_FEET * 0.5, foot_z), rubber)
-
-	for vent: int in 7:
-		HouseProps.add_box(root, "Vent", Vector3(0.3, 0.0012, 0.007), Vector3(0.0, RADIO_FEET + body.y + 0.0006, -0.1 + 0.022 * float(vent)), dark)
-
-	for side: float in [-1.0, 1.0]:
-		for post_z: float in [-0.07, 0.07]:
-			HouseProps.add_cylinder(root, "HandlePost", 0.0065, 0.032, Vector3(side * (body.x * 0.5 + 0.016), middle_y, post_z), steel, Vector3(0.0, 0.0, 90.0))
-
-		HouseProps.add_cylinder(root, "Handle", 0.0075, 0.154, Vector3(side * (body.x * 0.5 + 0.032), middle_y, 0.0), steel, Vector3(90.0, 0.0, 0.0))
-
-	HouseProps.add_box(root, "SideRust", Vector3(0.0005, 0.07, 0.12), Vector3(body.x * 0.5 + 0.0003, middle_y - 0.06, 0.02), rust)
-	HouseProps.add_box(root, "SideChip", Vector3(0.0005, 0.03, 0.05), Vector3(-body.x * 0.5 - 0.0003, middle_y + 0.07, -0.05), bare)
-
-	# The back: a plate with the power socket (where the cable goes in), a fuse, an earth screw and a plate with the supply.
-	var back_z: float = -body.z * 0.5
-	HouseProps.add_box(root, "RearPlate", Vector3(0.42, 0.27, 0.004), Vector3(0.0, middle_y, back_z - 0.002), dark)
-	HouseProps.add_cylinder(root, "RearSocket", 0.014, 0.022, Vector3(0.13, middle_y - 0.03, back_z - 0.015), steel, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(root, "RearFuse", 0.01, 0.016, Vector3(0.05, middle_y - 0.03, back_z - 0.012), brass, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(root, "EarthScrew", 0.007, 0.012, Vector3(-0.15, middle_y - 0.03, back_z - 0.01), steel, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_box(root, "RearLabel", Vector3(0.09, 0.03, 0.001), Vector3(-0.1, middle_y + 0.07, back_z - 0.0045), brass)
-	for slot: int in 5:
-		HouseProps.add_box(root, "RearVent", Vector3(0.12, 0.005, 0.002), Vector3(0.1, middle_y + 0.05 + 0.014 * float(slot), back_z - 0.005), bakelite)
-
-	# The rack panel in front, screwed on at its corners, its paint worn through here and there, with a darker dirt along its foot and rust under the left screws.
-	HouseProps.add_box(root, "Panel", Vector3(RADIO_PANEL.x, RADIO_PANEL.y, 0.012), Vector3(0.0, middle_y, RADIO_FRONT_Z - 0.006), panel_paint)
-	for screw_x: float in [-0.232, 0.232]:
-		for screw_y: float in [-0.148, 0.148]:
-			var screw: MeshInstance3D = HouseProps.add_cylinder(root, "PanelScrew", 0.0052, 0.003, _on_panel(screw_x, screw_y, 0.0015), steel, Vector3(90.0, 0.0, 0.0))
-			(screw.mesh as CylinderMesh).radial_segments = 6
-
-	HouseProps.add_box(root, "ChipA", Vector3(0.026, 0.011, 0.0004), _on_panel(0.222, -0.147, 0.0002), bare, Vector3(0.0, 0.0, 12.0))
-	HouseProps.add_box(root, "ChipB", Vector3(0.011, 0.02, 0.0004), _on_panel(-0.241, 0.09, 0.0002), bare)
-	HouseProps.add_box(root, "RustStreak", Vector3(0.004, 0.05, 0.0005), _on_panel(-0.232, -0.12, 0.0003), rust)
-	HouseProps.add_box(root, "Grime", Vector3(0.3, 0.012, 0.0004), _on_panel(0.03, -0.154, 0.0002), grime)
-	HouseProps.add_box(root, "Groove", Vector3(0.46, 0.0012, 0.0008), _on_panel(0.0, -0.05, 0.0004), dark)
-
-	# A nameplate and a small red lamp along the top edge.
-	HouseProps.add_box(root, "Nameplate", Vector3(0.1, 0.028, 0.002), _on_panel(-0.15, 0.13, 0.001), HouseProps.material(Color(0.74, 0.58, 0.24), 0.35, 0.7))
-	var plate_ink: Color = Color(0.03, 0.025, 0.02)
-	var plate_text: Label3D = HouseProps.add_text(root, "NameplateText", "RT 94", _on_panel(-0.15, 0.13, 0.0022), 48, 0.00034, plate_ink, 0.0, true)
-	plate_text.outline_size = 3
-	plate_text.outline_modulate = plate_ink
-	HouseProps.add_cylinder(root, "LampRing", 0.0125, 0.005, _on_panel(0.2, 0.13, 0.0025), steel, Vector3(90.0, 0.0, 0.0))
-	# The lamp is on, dimly (the battery is wired in): a small red point that a player finds in the dark.
-	var jewel: StandardMaterial3D = HouseProps.material(Color(0.4, 0.03, 0.03), 0.2)
-	jewel.emission_enabled = true
-	jewel.emission = Color(0.9, 0.05, 0.04)
-	jewel.emission_energy_multiplier = 0.9
-	HouseProps.add_cylinder(root, "LampJewel", 0.0092, 0.007, _on_panel(0.2, 0.13, 0.0045), jewel, Vector3(90.0, 0.0, 0.0))
-
-	# The dial: a dark window with a printed scale (a tick every 0.01 MHz, a longer one every 0.02 and the longest, with its number, every 0.04).
-	var dial_y: float = RADIO_DIAL_Y
-	HouseProps.add_box(root, "DialBezel", Vector3(0.356, 0.098, 0.006), _on_panel(0.0, dial_y, 0.003), dark)
-	HouseProps.add_box(root, "DialFace", Vector3(0.34, 0.082, 0.001), _on_panel(0.0, dial_y, 0.0065), HouseProps.material(Color(0.07, 0.075, 0.07), 0.6, 0.2))
-	var print_z: float = 0.0074
-	var base_y: float = dial_y - 0.018
-	HouseProps.add_box(root, "ScaleLine", Vector3(RADIO_SCALE_WIDTH + 0.002, 0.0012, 0.0006), _on_panel(0.0, base_y, print_z), cream)
-	for step: int in 21:
-		var frequency: float = RADIO_SCALE_START + 0.01 * float(step)
-		var tick_x: float = radio_scale_x(frequency)
-		var tall: float = 0.027 if step % 4 == 0 else (0.019 if step % 2 == 0 else 0.012)
-		HouseProps.add_box(root, "Tick%d" % step, Vector3(0.0013, tall, 0.0006), _on_panel(tick_x, base_y + tall * 0.5, print_z), cream)
-		if step % 4 == 0:
-			HouseProps.add_text(
-				root, "Freq%d" % floori(float(step) / 4.0), "%.2f" % frequency, _on_panel(tick_x, dial_y + 0.024, print_z + 0.0003),
-				48, 0.00031, cream.albedo_color, 0.0, true
-			)
-
-	HouseProps.add_text(root, "Unit", "MHz", _on_panel(0.133, dial_y - 0.032, print_z + 0.0003), 40, 0.00026, cream.albedo_color, 0.0, true)
-
-	# The slider under the dial, in its slot between two brass rails, with the needle (a thin red bar, in front of the dial) rising from it over the
-	# baseline, between two printed numbers (the radio is scenery: no frequency on it means anything).
-	var needle_x: float = radio_scale_x(RADIO_LOCKED_AT)
-	var knob_top: float = RADIO_SLOT_Y + 0.014
-	var needle_top: float = base_y + 0.0335
-	HouseProps.add_box(root, "SlotRecess", Vector3(0.34, 0.016, 0.002), _on_panel(0.0, RADIO_SLOT_Y, 0.001), dark)
-	HouseProps.add_box(root, "SlotRailTop", Vector3(0.34, 0.0018, 0.0035), _on_panel(0.0, RADIO_SLOT_Y + 0.0095, 0.00175), brass)
-	HouseProps.add_box(root, "SlotRailBottom", Vector3(0.34, 0.0018, 0.0035), _on_panel(0.0, RADIO_SLOT_Y - 0.0095, 0.00175), brass)
-	HouseProps.add_box(root, "Needle", Vector3(0.0028, needle_top - knob_top, 0.0016), _on_panel(needle_x, (needle_top + knob_top) * 0.5, 0.0095), red)
-	var slider: Node3D = Node3D.new()
-	slider.name = "Slider"
-	slider.position = _on_panel(needle_x, RADIO_SLOT_Y, 0.0)
-	root.add_child(slider)
-	HouseProps.add_box(slider, "Knob", Vector3(0.02, 0.028, 0.014), Vector3(0.0, 0.0, 0.007), bakelite)
-	for grip: int in 3:
-		HouseProps.add_box(slider, "Grip", Vector3(0.016, 0.0016, 0.0016), Vector3(0.0, -0.007 + 0.007 * float(grip), 0.0145), steel)
-
-	# What locks it: a steel bar over the knob, held off the panel on two posts with a hex bolt at each end, and a dab of red sealing wax on one.
-	var lock: Node3D = Node3D.new()
-	lock.name = "LockBar"
-	lock.position = _on_panel(needle_x, RADIO_SLOT_Y, 0.0)
-	root.add_child(lock)
-	var lock_steel: StandardMaterial3D = HouseProps.material(Color(0.3, 0.3, 0.29), 0.5, 0.6)
-	HouseProps.add_box(lock, "Bar", Vector3(0.09, 0.011, 0.004), Vector3(0.0, 0.0, 0.0185), lock_steel)
-	HouseProps.add_box(lock, "BarRust", Vector3(0.02, 0.0112, 0.0005), Vector3(0.022, 0.0, 0.0207), rust)
-	for end: float in [-1.0, 1.0]:
-		HouseProps.add_cylinder(lock, "Post", 0.0045, 0.0165, Vector3(end * 0.04, 0.0, 0.00825), steel, Vector3(90.0, 0.0, 0.0))
-		var bolt: MeshInstance3D = HouseProps.add_cylinder(lock, "Bolt", 0.0065, 0.004, Vector3(end * 0.04, 0.0, 0.0225), lock_steel, Vector3(90.0, 0.0, 0.0))
-		(bolt.mesh as CylinderMesh).radial_segments = 6
-
-	var wax: MeshInstance3D = MeshInstance3D.new()
-	wax.name = "Seal"
-	var wax_mesh: SphereMesh = SphereMesh.new()
-	wax_mesh.radius = 0.0078
-	wax_mesh.height = 0.0156
-	wax.mesh = wax_mesh
-	wax.material_override = HouseProps.material(Color(0.5, 0.04, 0.03), 0.35)
-	wax.position = Vector3(-0.04, 0.0, 0.0245)
-	wax.scale = Vector3(1.0, 1.0, 0.55)
-	lock.add_child(wax)
-
-	# The strip of masking tape above the dial: yellowed, stained, creased, with HQ on it in marker.
-	var tape: Node3D = Node3D.new()
-	tape.name = "Tape"
-	tape.position = _on_panel(needle_x + 0.004, dial_y + 0.069, 0.0)
-	tape.rotation_degrees = Vector3(0.0, 0.0, 2.5)
-	root.add_child(tape)
-	HouseProps.add_box(tape, "Strip", Vector3(0.08, 0.025, 0.0008), Vector3(0.0, 0.0, 0.0004), HouseProps.material(Color(0.76, 0.69, 0.5), 0.92))
-	HouseProps.add_box(tape, "Stain", Vector3(0.022, 0.012, 0.0003), Vector3(-0.022, -0.004, 0.0009), HouseProps.material(Color(0.55, 0.47, 0.3), 1.0), Vector3(0.0, 0.0, 12.0))
-	HouseProps.add_box(tape, "Crease", Vector3(0.0008, 0.025, 0.0003), Vector3(0.027, 0.0, 0.0009), HouseProps.material(Color(0.86, 0.8, 0.62), 1.0))
-	var ink: Color = Color(0.06, 0.055, 0.05)
-	var mark: Label3D = HouseProps.add_text(tape, "Mark", "HQ", Vector3(0.0, 0.0, 0.0012), 64, 0.00031, ink, 0.0, true, Vector3(0.0, 0.0, -1.5))
-	mark.outline_size = 5
-	mark.outline_modulate = ink
-
-	# The controls under the dial: two bakelite knobs, a signal meter (at rest), two toggle switches, a socket; each named in a few letters.
-	_add_radio_knob(root, "KnobVolume", -0.165, -0.097, bakelite, cream, -20.0)
-	_add_radio_knob(root, "KnobSquelch", -0.095, -0.097, bakelite, cream, 35.0)
-	_add_radio_gauge(root, -0.015, -0.093, dark, brass, cream)
-	_add_radio_toggle(root, "TogglePower", 0.06, -0.09, steel, dark, 16.0)
-	_add_radio_toggle(root, "ToggleTransmit", 0.1, -0.09, steel, dark, -16.0)
-	HouseProps.add_ring(root, "SocketRing", 0.007, 0.0115, _on_panel(0.195, -0.1, 0.004), steel)
-	HouseProps.add_cylinder(root, "SocketHole", 0.0072, 0.002, _on_panel(0.195, -0.1, 0.0016), dark, Vector3(90.0, 0.0, 0.0))
-	var legends: Array[String] = ["VOL", "SQL", "SIG", "PWR", "TX", "MIC"]
-	var legend_x: Array[float] = [-0.165, -0.095, -0.015, 0.06, 0.1, 0.195]
-	for i: int in legends.size():
-		HouseProps.add_text(root, "Legend", legends[i], _on_panel(legend_x[i], -0.145, 0.0006), 40, 0.00024, cream.albedo_color, 0.0, true)
-
-	var spot: ReadableSpot = ReadableSpot.new()
-	spot.name = "PanelSpot"
-	spot.spot_id = &"radio_panel"
-	spot.text_key = "READABLE_RADIO"
-	spot.title_key = ""
-	spot.obvious = true
-	spot.facing_angle_degrees = 50.0
-	spot.position = _on_panel(0.0, 0.03, 0.009)
-	root.add_child(spot)
-
-	# Some hundred and fifty boxes and cylinders are a draw call each: the plain ones fold into one mesh a material, and only what a test or a
-	# hand looks up by name stays (the needle and the dial's frame, the slider, its lock and the tape).
-	_merge_by_material(root, [&"Needle", &"DialBezel", &"Slider", &"LockBar", &"Tape", &"LampJewel"])
-
-
-## A bakelite knob on the front panel with a cream pointer (`pointer_degrees` clockwise from straight up) and a ring of scale marks round it.
-static func _add_radio_knob(root: Node3D, node_name: String, x: float, y: float, bakelite: Material, cream: Material, pointer_degrees: float) -> void:
-	var knob: Node3D = Node3D.new()
-	knob.name = node_name
-	knob.position = _on_panel(x, y, 0.0)
-	root.add_child(knob)
-	HouseProps.add_cylinder(knob, "Skirt", 0.0305, 0.008, Vector3(0.0, 0.0, 0.004), bakelite, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(knob, "Grip", 0.0265, 0.022, Vector3(0.0, 0.0, 0.015), bakelite, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_cylinder(knob, "Cap", 0.0205, 0.004, Vector3(0.0, 0.0, 0.028), bakelite, Vector3(90.0, 0.0, 0.0))
-	var pointer: Node3D = Node3D.new()
-	pointer.name = "Pointer"
-	pointer.rotation_degrees = Vector3(0.0, 0.0, -pointer_degrees)
-	knob.add_child(pointer)
-	HouseProps.add_box(pointer, "Line", Vector3(0.0036, 0.017, 0.0008), Vector3(0.0, 0.0105, 0.0304), cream)
-	for mark: int in 9:
-		var around: float = deg_to_rad(-135.0 + 33.75 * float(mark))
-		HouseProps.add_box(
-			knob, "Mark", Vector3(0.0018, 0.005, 0.0006), Vector3(sin(around) * 0.0385, cos(around) * 0.0385, 0.0003), cream,
-			Vector3(0.0, 0.0, -rad_to_deg(around))
-		)
-
-
-## A round signal meter in a brass bezel, its needle resting at the left end of the scale: the radio is dead.
-static func _add_radio_gauge(root: Node3D, x: float, y: float, dark: Material, brass: Material, cream: Material) -> void:
-	var gauge: Node3D = Node3D.new()
-	gauge.name = "SignalMeter"
-	gauge.position = _on_panel(x, y, 0.0)
-	root.add_child(gauge)
-	HouseProps.add_cylinder(gauge, "Housing", 0.0365, 0.014, Vector3(0.0, 0.0, 0.007), dark, Vector3(90.0, 0.0, 0.0))
-	HouseProps.add_ring(gauge, "Bezel", 0.031, 0.0365, Vector3(0.0, 0.0, 0.0145), brass)
-	HouseProps.add_cylinder(gauge, "Face", 0.0315, 0.001, Vector3(0.0, 0.0, 0.0143), cream, Vector3(90.0, 0.0, 0.0))
-	for mark: int in 9:
-		var around: float = deg_to_rad(-50.0 + 12.5 * float(mark))
-		var tall: float = 0.006 if mark % 2 == 0 else 0.0035
-		HouseProps.add_box(
-			gauge, "Mark", Vector3(0.0012, tall, 0.0004), Vector3(sin(around) * 0.0245, cos(around) * 0.0245 - 0.008, 0.0151), dark,
-			Vector3(0.0, 0.0, -rad_to_deg(around))
-		)
-
-	var pivot: Node3D = Node3D.new()
-	pivot.name = "NeedlePivot"
-	pivot.position = Vector3(0.0, -0.008, 0.0154)
-	pivot.rotation_degrees = Vector3(0.0, 0.0, 48.0)
-	gauge.add_child(pivot)
-	HouseProps.add_box(pivot, "MeterNeedle", Vector3(0.0014, 0.026, 0.0006), Vector3(0.0, 0.013, 0.0003), dark)
-	HouseProps.add_cylinder(gauge, "Hub", 0.0035, 0.003, Vector3(0.0, -0.008, 0.0162), dark, Vector3(90.0, 0.0, 0.0))
-
-
-## A toggle switch: a hex nut, a collar and a lever that leans `lever_degrees` (above 0 down, below 0 up).
-static func _add_radio_toggle(root: Node3D, node_name: String, x: float, y: float, steel: Material, dark: Material, lever_degrees: float) -> void:
-	var toggle: Node3D = Node3D.new()
-	toggle.name = node_name
-	toggle.position = _on_panel(x, y, 0.0)
-	root.add_child(toggle)
-	var nut: MeshInstance3D = HouseProps.add_cylinder(toggle, "Nut", 0.0095, 0.005, Vector3(0.0, 0.0, 0.0025), steel, Vector3(90.0, 0.0, 0.0))
-	(nut.mesh as CylinderMesh).radial_segments = 6
-	HouseProps.add_cylinder(toggle, "Collar", 0.0055, 0.01, Vector3(0.0, 0.0, 0.009), dark, Vector3(90.0, 0.0, 0.0))
-	var lever: Node3D = Node3D.new()
-	lever.name = "Lever"
-	lever.position = Vector3(0.0, 0.0, 0.014)
-	lever.rotation_degrees = Vector3(lever_degrees, 0.0, 0.0)
-	toggle.add_child(lever)
-	HouseProps.add_cylinder(lever, "Rod", 0.0028, 0.024, Vector3(0.0, 0.0, 0.012), steel, Vector3(90.0, 0.0, 0.0))
 
 
 ## Folds the plain meshes under `root` (the boxes, cylinders and rings a model is built from, a draw call each) into one mesh with a surface for
@@ -864,113 +572,21 @@ func _build_jacket(parent: Node3D) -> void:
 
 
 # ============================================================
-# THE RADIO'S STAND
+# FITTING A MODEL
 # ============================================================
 
-## The wooden crate by the trail entrance with the radio on it, and the car battery the radio is wired to. The crate's front (+Z) is the way the
-## radio faces: toward the player coming in along the trail. The crate is solid (a player cannot walk through it), the radio on it is not (its area
-## is what the interaction ray finds).
-func _build_radio_stand() -> void:
-	radio_crate = Node3D.new()
-	radio_crate.name = "RadioStand"
-	radio_crate.position = RADIO_CRATE_POSITION
-	radio_crate.rotation_degrees = Vector3(0.0, RADIO_CRATE_YAW, 0.0)
-	add_child(radio_crate)
-
-	# The crate: four courses of planks on every side (a gap between them, and a dark inside behind), a post at each corner, a lid of three
-	# planks with a batten across each end, and "RT 94" stencilled on the front, faded.
-	var size: Vector3 = RADIO_CRATE_SIZE
-	var half_x: float = size.x * 0.5
-	var half_z: float = size.z * 0.5
-	var walls_height: float = size.y - 0.022
-	var course_height: float = (walls_height - 0.012) / 4.0
-	HouseProps.add_box(radio_crate, "Inside", Vector3(size.x - 0.03, walls_height, size.z - 0.03), Vector3(0.0, walls_height * 0.5, 0.0), HouseProps.material(Color(0.04, 0.03, 0.02), 1.0))
-	for course: int in 4:
-		var y: float = (course_height + 0.004) * (float(course) + 0.5)
-		var plank: StandardMaterial3D = _wood_pale if course % 2 == 0 else _wood
-		HouseProps.add_box(radio_crate, "Front", Vector3(size.x, course_height, 0.02), Vector3(0.0, y, half_z - 0.01), plank)
-		HouseProps.add_box(radio_crate, "Back", Vector3(size.x, course_height, 0.02), Vector3(0.0, y, -half_z + 0.01), plank)
-		for side: float in [-1.0, 1.0]:
-			HouseProps.add_box(radio_crate, "Side", Vector3(0.02, course_height, size.z - 0.04), Vector3(side * (half_x - 0.01), y, 0.0), plank)
-
-	for post_x: float in [-1.0, 1.0]:
-		for post_z: float in [-1.0, 1.0]:
-			HouseProps.add_box(radio_crate, "Post", Vector3(0.05, walls_height, 0.05), Vector3(post_x * (half_x - 0.02), walls_height * 0.5, post_z * (half_z - 0.02)), _bark)
-
-	var lid_depth: float = size.z + 0.03
-	for lid_plank: int in 3:
-		HouseProps.add_box(
-			radio_crate, "LidPlank", Vector3(size.x + 0.03, 0.022, lid_depth / 3.0 - 0.004),
-			Vector3(0.0, walls_height + 0.011, (float(lid_plank) - 1.0) * lid_depth / 3.0), _wood_pale if lid_plank % 2 == 0 else _wood
-		)
-
-	for batten_x: float in [-1.0, 1.0]:
-		HouseProps.add_box(radio_crate, "Batten", Vector3(0.05, 0.016, lid_depth), Vector3(batten_x * (half_x - 0.04), size.y + 0.007, 0.0), _bark)
-
-	HouseProps.add_text(radio_crate, "Stencil", "RT 94", Vector3(-0.14, 0.3, half_z + 0.0012), 64, 0.0006, Color(0.66, 0.64, 0.54), 0.0, true)
-	HouseProps.add_solid(radio_crate, "Solid", size, Vector3(0.0, size.y * 0.5, 0.0))
-
-	# The radio on top, facing the way the crate does (a little off true).
-	radio = (load(RADIO_SCENE_PATH) as PackedScene).instantiate() as Inspectable
-	radio.name = "RailwayRadio"
-	radio.position = RADIO_ON_CRATE + Vector3(0.0, size.y + 0.0005, 0.0)
-	radio.rotation_degrees = Vector3(0.0, 3.0, 0.0)
-	radio_crate.add_child(radio)
-	# (In the editor the instanced scene's script is only a placeholder: it has no methods.)
-	var radio_visual: Node3D = radio.get_node_or_null("Visual") as Node3D
-	var jewel: MeshInstance3D = radio_visual.find_child("LampJewel", true, false) as MeshInstance3D if radio_visual != null else null
-	radio_lamp_material = jewel.material_override as StandardMaterial3D if jewel != null else null
-	# It is on a dead channel: a faint hiss that carries a few metres, so that it is heard before it is seen (not in the editor).
-	radio_static = AudioStreamPlayer3D.new()
-	radio_static.name = "Static"
-	radio_static.stream = PlaceholderAudio.make_radio_static()
-	radio_static.volume_db = RADIO_STATIC_DB
-	radio_static.unit_size = 1.6
-	radio_static.max_distance = 12.0
-	radio_static.position = radio.position + Vector3(0.0, 0.2, 0.0)
-	radio_crate.add_child(radio_static)
-	if not Engine.is_editor_hint():
-		radio_static.play()
-
-	# The battery on the ground behind the crate, and the cable between: from the radio's rear socket down the back of the crate and across the
-	# ground (a chain of short rubber cylinders, like the clothesline's rope).
-	battery = Node3D.new()
-	battery.name = "Battery"
-	battery.position = BATTERY_AT
-	radio_crate.add_child(battery)
-	var case: StandardMaterial3D = HouseProps.material(Color(0.08, 0.09, 0.1), 0.6, 0.1)
-	var lead: StandardMaterial3D = HouseProps.material(Color(0.42, 0.43, 0.45), 0.4, 0.8)
-	var terminal_red: StandardMaterial3D = HouseProps.material(Color(0.5, 0.06, 0.05), 0.5, 0.2)
-	var box: Vector3 = BATTERY_SIZE
-	HouseProps.add_box(battery, "Case", box, Vector3(0.0, box.y * 0.5, 0.0), case)
-	HouseProps.add_box(battery, "Lid", Vector3(box.x + 0.006, 0.02, box.z + 0.006), Vector3(0.0, box.y - 0.01, 0.0), HouseProps.material(Color(0.14, 0.15, 0.16), 0.6, 0.1))
-	HouseProps.add_cylinder(battery, "TerminalMinus", 0.011, 0.028, Vector3(-0.075, box.y + 0.014, box.z * 0.25), lead)
-	HouseProps.add_cylinder(battery, "TerminalPlus", 0.011, 0.028, Vector3(0.075, box.y + 0.014, box.z * 0.25), terminal_red)
-	HouseProps.add_solid(battery, "Solid", box, Vector3(0.0, box.y * 0.5, 0.0))
-
-	var rubber: StandardMaterial3D = HouseProps.material(Color(0.03, 0.03, 0.035), 0.7)
-	var start: Vector3 = radio.position + Vector3(0.13, RADIO_FEET + RADIO_BODY.y * 0.5 - 0.03, -RADIO_BODY.z * 0.5 - 0.03)
-	var behind: float = -half_z - 0.04
-	var front_of_battery: float = BATTERY_AT.z + box.z * 0.5
-	var points: Array[Vector3] = [
-		start,
-		start + Vector3(0.0, -0.01, -0.07),
-		Vector3(start.x, start.y - 0.08, behind),
-		Vector3(start.x, 0.3, behind - 0.005),
-		Vector3(start.x, 0.05, behind - 0.02),
-		Vector3(start.x + 0.02, 0.014, behind - 0.14),
-		Vector3(start.x + 0.1, 0.014, behind - 0.34),
-		Vector3(BATTERY_AT.x - 0.02, 0.016, front_of_battery + 0.1),
-		Vector3(BATTERY_AT.x - 0.02, 0.1, front_of_battery + 0.005),
-	]
-	var cable: Node3D = Node3D.new()
-	cable.name = "Cable"
-	radio_crate.add_child(cable)
-	for i: int in points.size() - 1:
-		_add_beam(cable, "Segment%d" % i, points[i], points[i + 1], 0.011, rubber)
-
-	# The planks, posts, lid, battery and cable are plain meshes: they fold into a few draws (the radio keeps its own, the cable stays a group).
-	_merge_by_material(radio_crate, [&"RailwayRadio", &"Cable"])
+## A ready-made model stretched to a box: the model's own box (`file_box`, in its file frame) is turned `yaw_degrees` about Y, then stretched to `size`
+## (in the frame of `parent`), and the middle of its base is put at `base`. Returns the model's root.
+static func _place_model(parent: Node3D, scene: PackedScene, node_name: String, file_box: AABB, size: Vector3, base: Vector3, yaw_degrees: float) -> Node3D:
+	var model: Node3D = scene.instantiate() as Node3D
+	model.name = node_name
+	var turn: Basis = Basis(Vector3.UP, deg_to_rad(yaw_degrees))
+	var in_file: Vector3 = (turn.inverse() * size).abs()
+	var fitted: Basis = turn * Basis.from_scale(Vector3(in_file.x / file_box.size.x, in_file.y / file_box.size.y, in_file.z / file_box.size.z))
+	var centre: Vector3 = file_box.get_center()
+	model.transform = Transform3D(fitted, base - fitted * Vector3(centre.x, file_box.position.y, centre.z))
+	parent.add_child(model)
+	return model
 
 
 # ============================================================
@@ -984,27 +600,9 @@ func _build_log_table() -> void:
 	log_table.rotation_degrees = Vector3(0.0, TABLE_YAW, 0.0)
 	add_child(log_table)
 
-	# The top is four hewn planks laid on two log rails, on four log legs.
-	var plank_depth: float = (TABLE_DEPTH - 0.03) / 4.0
-	for i: int in 4:
-		var z: float = -TABLE_DEPTH * 0.5 + plank_depth * (float(i) + 0.5) + 0.01 * float(i)
-		var plank: MeshInstance3D = HouseProps.add_box(
-			log_table, "Plank%d" % i, Vector3(TABLE_LENGTH - 0.01 * float(i % 2), 0.045, plank_depth),
-			Vector3(0.0, TABLE_TOP_Y - 0.0225, z), _wood_pale if i % 2 == 0 else _wood
-		)
-		plank.rotation_degrees.y = 0.4 * (1.0 - 2.0 * float(i % 2))
-
-	for rail_x: float in [-0.56, 0.56]:
-		HouseProps.add_cylinder(log_table, "Rail", 0.045, TABLE_DEPTH - 0.04, Vector3(rail_x, TABLE_TOP_Y - 0.045 - 0.04, 0.0), _bark, Vector3(90.0, 0.0, 0.0))
-
-	for leg_x: float in [-0.56, 0.56]:
-		for leg_z: float in [-0.29, 0.29]:
-			HouseProps.add_cylinder(log_table, "Leg", 0.05, TABLE_TOP_Y - 0.13, Vector3(leg_x, (TABLE_TOP_Y - 0.13) * 0.5, leg_z), _bark)
-
+	# The table of the models: four hewn planks on log rails, on four log legs.
+	_place_model(log_table, TABLE_SCENE, "Table", TABLE_BOX, Vector3(TABLE_LENGTH, TABLE_TOP_Y, TABLE_DEPTH), Vector3.ZERO, 90.0)
 	HouseProps.add_solid(log_table, "Solid", Vector3(TABLE_LENGTH, TABLE_TOP_Y, TABLE_DEPTH), Vector3(0.0, TABLE_TOP_Y * 0.5, 0.0))
-
-	# A dark ring on the planks where a mug stood, and one knot.
-	HouseProps.add_cylinder(log_table, "MugRing", 0.04, 0.0006, Vector3(-0.1, TABLE_TOP_Y + 0.0005, 0.2), HouseProps.material(Color(0.2, 0.13, 0.08), 1.0))
 
 	_place_on_table()
 
@@ -1036,10 +634,7 @@ func _build_bench() -> void:
 	log_bench.position = TABLE_POSITION + Basis(Vector3.UP, deg_to_rad(TABLE_YAW)) * BENCH_OFFSET
 	log_bench.rotation_degrees = Vector3(0.0, TABLE_YAW + 3.0, 0.0)
 	add_child(log_bench)
-	HouseProps.add_box(log_bench, "Seat", Vector3(1.5, 0.05, 0.3), Vector3(0.0, 0.425, 0.0), _wood_pale)
-	for stump_x: float in [-0.56, 0.56]:
-		HouseProps.add_cylinder(log_bench, "Stump", 0.11, 0.4, Vector3(stump_x, 0.2, 0.0), _bark)
-
+	_place_model(log_bench, BENCH_SCENE, "Bench", BENCH_BOX, Vector3(1.5, 0.45, 0.3), Vector3.ZERO, 90.0)
 	HouseProps.add_solid(log_bench, "Solid", Vector3(1.5, 0.45, 0.3), Vector3(0.0, 0.225, 0.0))
 
 
@@ -1062,10 +657,7 @@ func _build_fire_ring() -> void:
 		seats.append(seat)
 		var length: float = seat_length(i)
 		var radius: float = seat_radius(i)
-		HouseProps.add_cylinder(seat, "Log", radius, length, Vector3(0.0, radius - SEAT_SINK, 0.0), _bark, Vector3(0.0, 0.0, 90.0))
-		for end: float in [-1.0, 1.0]:
-			HouseProps.add_cylinder(seat, "CutEnd", radius * 0.9, 0.012, Vector3(end * (length * 0.5 + 0.002), radius - SEAT_SINK, 0.0), _wood_pale, Vector3(0.0, 0.0, 90.0))
-
+		_place_model(seat, LOG_SCENE, "Log", LOG_BOX, Vector3(length, radius * 2.0, radius * 2.0), Vector3(0.0, -SEAT_SINK, 0.0), 90.0)
 		HouseProps.add_cylinder(seat, "Stub", 0.022, 0.1, Vector3(seat_stub_x(i), radius + 0.035, 0.02), _bark, Vector3(8.0, 0.0, 24.0))
 		HouseProps.add_solid(seat, "Solid", Vector3(length, radius * 1.9, radius * 2.0), Vector3(0.0, radius * 0.95 - 0.02, 0.0))
 
@@ -1115,21 +707,20 @@ func _build_wood_yard() -> void:
 	yard.position = BLOCK_AT
 	add_child(yard)
 	var steel: StandardMaterial3D = HouseProps.material(Color(0.22, 0.23, 0.25), 0.5, 0.7)
-	HouseProps.add_cylinder(yard, "Block", 0.25, 0.42, Vector3(0.0, 0.21, 0.0), _bark)
-	HouseProps.add_cylinder(yard, "BlockTop", 0.238, 0.012, Vector3(0.0, 0.426, 0.0), _wood_pale)
-	for ring_radius: float in [0.07, 0.14, 0.2]:
-		var growth: MeshInstance3D = HouseProps.add_ring(yard, "Growth", ring_radius - 0.003, ring_radius + 0.003, Vector3(0.0, 0.4325, 0.0), _wood)
-		# (A ring is drawn standing up by default: this one lies on the block.)
-		growth.rotation_degrees = Vector3.ZERO
+	# The chopping block is the models' stump (its cut top, with its rings, is part of it).
+	_place_model(yard, STUMP_SCENE, "Block", STUMP_BOX, Vector3(0.46, 0.43, 0.46), Vector3.ZERO, 0.0)
 
+	# The axe is stuck in it, blade down, the model turned over (head up in the file) with its blade sunk a little into the block.
 	var axe: Node3D = Node3D.new()
 	axe.name = "Axe"
 	axe.position = Vector3(0.03, 0.43, -0.02)
 	axe.rotation_degrees = Vector3(0.0, 24.0, -13.0)
 	yard.add_child(axe)
-	HouseProps.add_cylinder(axe, "Handle", 0.017, 0.8, Vector3(0.0, 0.4, 0.0), _wood_pale)
-	HouseProps.add_box(axe, "Head", Vector3(0.17, 0.1, 0.03), Vector3(0.06, 0.05, 0.0), steel)
-	HouseProps.add_box(axe, "Edge", Vector3(0.012, 0.115, 0.012), Vector3(0.152, 0.04, 0.0), HouseProps.material(Color(0.62, 0.63, 0.64), 0.35, 0.85))
+	var axe_model: Node3D = AXE_SCENE.instantiate() as Node3D
+	axe_model.name = "Model"
+	var flip: Basis = Basis(Vector3.RIGHT, PI) * Basis.from_scale(Vector3.ONE * 0.78)
+	axe_model.transform = Transform3D(flip, Vector3(0.0, 0.459 * 0.78 - 0.06, 0.0))
+	axe.add_child(axe_model)
 	HouseProps.add_solid(yard, "Solid", Vector3(0.5, 0.42, 0.5), Vector3(0.0, 0.21, 0.0))
 
 	# Split wood and kindling on the ground, as it fell.
@@ -1140,10 +731,10 @@ func _build_wood_yard() -> void:
 		half.rotation_degrees = Vector3(90.0, split_yaws[i], 0.0)
 		half.scale = Vector3(1.0, 1.0, 0.7)
 
-	var stick: StandardMaterial3D = HouseProps.material(Color(0.5, 0.38, 0.22), 0.95)
 	var stick_spots: Array[Vector3] = [Vector3(0.7, 0.015, -0.12), Vector3(0.62, 0.015, 0.02), Vector3(-0.2, 0.015, 0.62), Vector3(-0.62, 0.015, 0.05), Vector3(0.12, 0.015, 0.7)]
 	for i: int in stick_spots.size():
-		HouseProps.add_box(yard, "Kindling%d" % i, Vector3(0.34 - 0.03 * float(i % 3), 0.03, 0.03), stick_spots[i], stick, Vector3(0.0, 33.0 * float(i) - 20.0, 4.0 * float(i % 2)))
+		var stick: Node3D = _place_model(yard, STICK_SCENE, "Kindling%d" % i, STICK_BOX, Vector3(0.34 - 0.03 * float(i % 3), 0.03, 0.03), Vector3(0.0, -0.015, 0.0), 0.0)
+		stick.transform = Transform3D(Basis(Vector3.UP, deg_to_rad(33.0 * float(i) - 20.0)) * Basis(Vector3.BACK, deg_to_rad(4.0 * float(i % 2))) * stick.transform.basis, stick_spots[i] + Vector3(0.0, 0.015, 0.0))
 
 	var chip: StandardMaterial3D = HouseProps.material(Color(0.72, 0.6, 0.4), 1.0)
 	for i: int in 7:
@@ -1262,8 +853,7 @@ func _build_camp_lantern() -> void:
 	_merge_by_material(lantern, [&"Glass", &"Flame"], false)
 
 
-## Puts every light of the camp that is not the fire out at once (the fire does it itself): the lantern (its light, glass and flame), the lamp of the
-## railway radio and its hiss. They stay out. (The camp's own ending no longer calls it: only the fire goes out there.)
+## Puts every light of the camp that is not the fire out at once (the fire does it itself): the lantern (its light, glass and flame), They stay out. (The camp's own ending no longer calls it: only the fire goes out there.)
 func put_out_lights() -> void:
 	lights_out = true
 	lantern_level = 0.0
@@ -1276,11 +866,6 @@ func put_out_lights() -> void:
 	if lantern_flame != null:
 		lantern_flame.visible = false
 
-	if radio_lamp_material != null:
-		radio_lamp_material.emission_energy_multiplier = 0.0
-
-	if radio_static != null and radio_static.playing:
-		radio_static.stop()
 
 
 ## The lantern gives `level` of its light (its glass and flame with it): 1 as it burns, 0 out (the light itself is not put out: `put_out_lights` does).
