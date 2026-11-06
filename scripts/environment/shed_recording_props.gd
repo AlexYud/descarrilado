@@ -21,7 +21,7 @@ const PHOTO_ASPECT: float = 4.0 / 3.0
 
 
 static func has_kind(kind: StringName) -> bool:
-	return kind in [&"vhs_tape", &"camcorder", &"newspaper_clipping", &"marina_sister_note", &"shelter_archive", &"shelter_bin"]
+	return kind in [&"vhs_tape", &"camcorder", &"newspaper_clipping", &"marina_sister_note", &"helena_clarke_notice", &"shelter_archive", &"shelter_bin"]
 
 
 static func build(kind: StringName, root: Node3D) -> void:
@@ -34,6 +34,8 @@ static func build(kind: StringName, root: Node3D) -> void:
 			_build_newspaper_clipping(root)
 		&"marina_sister_note":
 			_build_marina_sister_note(root)
+		&"helena_clarke_notice":
+			_build_helena_clarke_notice(root)
 		&"shelter_archive":
 			_build_shelter_archive(root)
 		&"shelter_bin":
@@ -266,6 +268,33 @@ static func _build_marina_sister_note(root: Node3D) -> void:
 			HouseProps.add_box(root, "Hand%d_%d" % [paragraph, row], Vector3(length, 0.0026, 0.0004), Vector3(-0.0465 + length * 0.5, line_y, 0.001), ink, Vector3(0.0, 0.0, skew))
 			line_y -= 0.0092
 		line_y -= 0.0075
+
+
+# ============================================================
+# THE RECENT NOTICE (paper pinned to a post)
+# ============================================================
+
+## A small recent clipping about the missing woman, pinned by its top edge to a shelter post: newsprint, a heavy headline, a few lines of print and a steel pin.
+## 95 x 130 mm, facing +Z (the words are read in the inspect view, `readable_text`).
+static func _build_helena_clarke_notice(root: Node3D) -> void:
+	var ink: StandardMaterial3D = HouseProps.material(Color(0.16, 0.15, 0.13), 1.0)
+	HouseProps._add_paper(root, "Paper", Vector2(0.095, 0.13), Vector3.ZERO, Color(0.84, 0.81, 0.72))
+	JunctionProps._stain(root, "EdgeStain", Vector3(0.095, 0.011, 0.0003), Vector3(0.0, -0.062, 0.0009), Color(0.66, 0.6, 0.45))
+	HouseProps.add_box(root, "Headline0", Vector3(0.078, 0.01, 0.0004), Vector3(0.0, 0.043, 0.001), ink)
+	HouseProps.add_box(root, "Headline1", Vector3(0.056, 0.01, 0.0004), Vector3(-0.011, 0.03, 0.001), ink)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 2217
+	for row: int in 7:
+		var length: float = 0.078 if row < 6 else 0.04
+		HouseProps.add_box(root, "Line%d" % row, Vector3(length, 0.0034, 0.0004), Vector3(-0.039 + length * 0.5, 0.008 - 0.0105 * float(row), 0.001), ink)
+	_pin(root, Vector3(0.0, 0.056, 0.0016))
+
+
+## A steel drawing pin through the top of a sheet.
+static func _pin(root: Node3D, at: Vector3) -> void:
+	var metal: StandardMaterial3D = HouseProps.material(Color(0.62, 0.62, 0.6), 0.4, 0.7)
+	var pin: MeshInstance3D = HouseProps.add_cylinder(root, "Pin", 0.0045, 0.003, at, metal, Vector3(90.0, 0.0, 0.0))
+	pin.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 ## The shipped photograph (null, with a warning, if the file is missing: it is art, never generated at run time).

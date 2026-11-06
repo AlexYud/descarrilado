@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/shed_vertical_bench_preview.gd" id="1_preview"]
+
+; DEVELOPER LOOK TEST (not part of the game): the shelter's bench stood upright against a pillar with Emily held against its seat. Run this scene directly.
+; `vhs_overlay_enabled` compares the recording's tape look with the clean picture. It touches no save, token, trigger or setting.
+[node name="ShedVerticalBenchPreview" type="Node3D"]
+script = ExtResource("1_preview")

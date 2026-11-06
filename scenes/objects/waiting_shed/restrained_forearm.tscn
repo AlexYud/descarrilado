@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/environment/restrained_forearm.gd" id="1_forearm"]
+
+; The static close-up insert of the waiting shed's recording (angle B): a clothed forearm, a closed gloved hand on the bench's plank, the band and strap that hold it
+; to the wood. Built in code by RestrainedForearm.build from the footage's own numbers; scenery for one camera shot, hidden with the cast.
+[node name="RestrainedForearm" type="Node3D"]
+script = ExtResource("1_forearm")

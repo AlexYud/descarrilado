@@ -632,10 +632,10 @@ msgid "BUS_TICKET_IF_YOU_WANT"
 msgstr "Se quiser."
 
 msgid "ITEM_SOPHIA_JOURNAL_NAME"
-msgstr "Caderno de Sophia"
+msgstr "Caderno de Sophia Bennett"
 
 msgid "ITEM_SOPHIA_JOURNAL_DESCRIPTION"
-msgstr "Recortes dobrados entre páginas de anotações sobre o abrigo."
+msgstr "Anotações sobre Emily Miller, a origem da fita e o desaparecimento recente de Helena Clarke."
 
 msgid "ITEM_RAILWAY_LANTERN_NAME"
 msgstr "Lanterna Ferroviária Enferrujada"
@@ -674,10 +674,10 @@ msgid "PROMPT_LEVER_PUSH_UP"
 msgstr "Empurrar a alavanca %d para cima"
 
 msgid "JOURNAL_LEFT"
-msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nA cópia que me emprestaram está sem som.\n\nO jornal diz que o corpo estava no chão. A irmã lembra que, no primeiro telefonema, disseram que Marina estava sentada. Confirmar com o funcionário que encontrou ela.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo."
+msgstr "Emily Miller\n\nA cópia não tem som. Não sei quem estava do outro lado da câmera.\n\nProcurar quem passou a primeira fita, não outra cópia do mesmo trecho."
 
 msgid "JOURNAL_RIGHT"
-msgstr "Marina não foi o primeiro caso que procurei. Outras famílias com quem falei também continuam sem saber quem foi. Pedir as edições seguintes aos outros recortes.\n\nQuem estava filmando?\nQuem passou a cópia?\nQuem ficou com o original?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia"
+msgstr "Helena Clarke — desapareceu na semana passada. Vista perto dos trilhos. Confirmar com Daniel o local.\n\nPedir as edições seguintes aos outros recortes. Comparar o que foi publicado com o que as famílias lembram.\n\n— Sophia Bennett"
 
 msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
 msgstr "Uma velha lanterna ferroviária de latão, usada por vigias noturnos."
@@ -921,7 +921,7 @@ msgid "READABLE_FICHA_NOTE"
 msgstr "Eu sabia que você ia achar, Juli. Você é a única que realmente presta atenção.\n\nLeve a ficha até o topo do morro — vamos fazer essa ligação."
 
 msgid "READABLE_JOURNAL"
-msgstr "Marina, 34 anos.\n\nA irmã mora fora. A cópia passou por pelo menos três pessoas antes de chegar até ela. Uma delas não sabia o nome de Marina.\n\nA cópia que me emprestaram está sem som.\n\nO jornal diz que o corpo estava no chão. A irmã lembra que, no primeiro telefonema, disseram que Marina estava sentada. Confirmar com o funcionário que encontrou ela.\n\nA irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo.\n\nMarina não foi o primeiro caso que procurei. Outras famílias com quem falei também continuam sem saber quem foi. Pedir as edições seguintes aos outros recortes.\n\nQuem estava filmando?\nQuem passou a cópia?\nQuem ficou com o original?\n\nVoltar a ligar para a irmã de Marina.\n\n— Sophia\n\n[center]· · ·[/center]\n\n[i][b]ABRIGO DO RAMAL — SERVIÇO CONCLUÍDO[/b]\n\nLavagem do piso.\nSubstituição de uma tábua do banco.\nSem danos nos pilares.\n\nLiberado para uso.\n\nManutenção da Linha\n\nNa manhã seguinte à retirada do corpo.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Pedir a segunda via do histórico escolar.[/i]"
+msgstr "Emily Miller\n\nA cópia não tem som. Não sei quem estava do outro lado da câmera.\n\nProcurar quem passou a primeira fita, não outra cópia do mesmo trecho.\n\nHelena Clarke — desapareceu na semana passada. Vista perto dos trilhos. Confirmar com Daniel o local.\n\nPedir as edições seguintes aos outros recortes. Comparar o que foi publicado com o que as famílias lembram.\n\n— Sophia Bennett\n\n[center]· · ·[/center]\n\n[i][b]ABRIGO DO RAMAL — SERVIÇO CONCLUÍDO[/b]\n\nLavagem do piso.\nSubstituição de uma tábua do banco.\nSem danos nos pilares.\n\nLiberado para uso.\n\nManutenção da Linha\n\nNa manhã seguinte à retirada do corpo.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Pedir a segunda via do histórico escolar.[/i]"
 
 msgid "READABLE_HOUSE_AD"
 msgstr "[b]CASA À VENDA[/b]\n\nSala, cozinha, dois quartos e despensa.\n\nAcabamento por concluir.\n\n[b][i]NOSSA?\nLucas[/i][/b]\n\n[i]As janelas azuis são bonitas.\nSophia[/i]"
@@ -1288,10 +1288,10 @@ msgid "JOURNAL_MARGIN"
 msgstr "Pedir a segunda via do histórico escolar."
 
 msgid "ITEM_VHS_NAME"
-msgstr "Fita de vídeo"
+msgstr "Fita de vídeo — Emily Miller"
 
 msgid "ITEM_VHS_DESCRIPTION"
-msgstr "Uma cópia sem som, associada à investigação da morte de Marina. A etiqueta não identifica quem fez a gravação."
+msgstr "Uma cópia sem som, associada à investigação da morte de Emily Miller. A etiqueta não identifica quem fez a gravação."
 
 msgid "PROMPT_EXAMINE_TAPE"
 msgstr "Examinar fita"
@@ -1300,71 +1300,107 @@ msgid "READABLE_VHS_LABEL"
 msgstr "[b]ABRIGO / CÓPIA[/b]\n\nDevolver na sexta."
 
 msgid "ITEM_CLIPPING_NAME"
-msgstr "Recorte com fotografia"
+msgstr "Recorte com fotografia — Emily Miller"
 
 msgid "ITEM_CLIPPING_DESCRIPTION"
 msgstr "Uma fotografia do abrigo foi presa ao recorte. O sangue cobre parte do assento, escorre entre as tábuas e escurece o piso ao redor. O corpo já havia sido retirado quando a imagem foi feita."
 
 msgid "READABLE_CLIPPING"
-msgstr "[b]MULHER ENCONTRADA MORTA NO ABRIGO DO RAMAL[/b]\n\nMarina, de 34 anos, foi encontrada morta na manhã de ontem no abrigo do antigo ramal ferroviário. Um funcionário da linha localizou o corpo no chão, entre o banco e um dos pilares.\n\nSegundo as informações repassadas à reportagem, as roupas estavam ensanguentadas e havia sangue no banco e no piso. O corpo foi retirado antes da liberação do local.\n\nMoradores ouvidos afirmaram não ter presenciado o ocorrido. A polícia investiga a morte como homicídio. A causa da morte não havia sido divulgada até o fechamento desta edição. Não há suspeitos identificados."
+msgstr "[b]EMILY MILLER ENCONTRADA MORTA NO ABRIGO DO RAMAL[/b]\n\nEmily Miller, de 34 anos, foi encontrada morta ontem pela manhã por um funcionário da linha. O corpo estava no chão, próximo ao banco do abrigo.\n\nHavia sangue no assento, no piso e na base de um dos pilares. Parte do banco estava danificada. O local foi liberado após a retirada do corpo.\n\nA polícia investiga a morte como homicídio. A causa da morte não havia sido divulgada até o fechamento desta edição."
 
 msgid "PHOTO_CAPTION_SHELTER"
 msgstr "Abrigo do ramal, após a retirada do corpo."
 
 msgid "ITEM_MARINA_SISTER_NOTE_NAME"
-msgstr "Bilhete da irmã de Marina"
+msgstr "Bilhete da irmã de Emily"
 
 msgid "ITEM_MARINA_SISTER_NOTE_DESCRIPTION"
-msgstr "Uma folha dobrada, guardada com os recortes de Sophia. A irmã de Marina comenta o primeiro telefonema sobre a descoberta do corpo."
+msgstr "Uma folha dobrada guardada entre os papéis de Sophia. Faz referência à cópia da gravação."
 
 msgid "READABLE_MARINA_SISTER_NOTE"
-msgstr "Ele disse que tinha encontrado a Marina sentada. Eu lembro porque perguntei se ela estava esperando alguém.\n\nNo jornal está escrito que ela estava no chão.\n\nPode ser que tenham tirado ela de lá. Eu só queria que ele me contasse sem mandar esquecer. Já faz anos e ninguém voltou para falar com a gente."
+msgstr "Essa é a cópia que me passaram. Disseram que era só esse pedaço.\n\nSe você descobrir quem gravou, me avisa. Não manda outra fita sem falar comigo antes."
+
+msgid "ITEM_HELENA_NOTICE_NAME"
+msgstr "Notícia recente — Helena Clarke"
+
+msgid "ITEM_HELENA_NOTICE_DESCRIPTION"
+msgstr "Um recorte recente sobre o desaparecimento de Helena Clarke, moradora da Fenda."
+
+msgid "READABLE_HELENA_NOTICE"
+msgstr "[b]CONTINUAM AS BUSCAS POR HELENA CLARKE[/b]\n\nHelena Clarke, moradora da Fenda, continua desaparecida. Segundo as informações recebidas pela equipe de busca, ela foi vista pela última vez nas proximidades da linha férrea.\n\nA família pede que qualquer informação sobre seu paradeiro seja comunicada ao posto local."
 
 msgid "CAPTION_SHED_MEM_01"
-msgstr "Você ainda tá atrás desses casos da Fenda?"
+msgstr "Essa é a cópia que a irmã da Emily me emprestou."
 
 msgid "CAPTION_SHED_MEM_02"
-msgstr "Falei com a irmã da Marina. Ela me emprestou essa cópia."
-
-msgid "CAPTION_SHED_MEM_03"
 msgstr "Tá sem som?"
 
-msgid "CAPTION_SHED_MEM_04"
+msgid "CAPTION_SHED_MEM_03"
 msgstr "A cópia veio assim."
 
 msgid "CAPTION_SHED_TALK_01"
-msgstr "Você falou com o homem que encontrou ela?"
+msgstr "Você não devia ficar vendo esse tipo de coisa."
 
 msgid "CAPTION_SHED_TALK_02"
-msgstr "Tentei. Quando perguntei sobre o banco,"
+msgstr "Eu queria saber quem estava desse lado da câmera."
 
 msgid "CAPTION_SHED_TALK_03"
-msgstr "ele quis saber quem tinha me dado a fita."
+msgstr "Esquece isso."
 
 msgid "CAPTION_SHED_TALK_04"
-msgstr "Ele podia só não querer lembrar."
+msgstr "Os guardas devem estar investigando."
 
 msgid "CAPTION_SHED_TALK_05"
-msgstr "Podia. Eu disse que não precisava falar naquele dia."
+msgstr "Perguntei pro Daniel."
 
 msgid "CAPTION_SHED_TALK_06"
-msgstr "E você vai voltar?"
+msgstr "Eles estão atrás da Helena Clarke agora."
 
 msgid "CAPTION_SHED_TALK_07"
-msgstr "A irmã dela está esperando uma ligação minha."
+msgstr "Eu li esse nome… Mas faz tempo, não faz?"
 
 msgid "CAPTION_SHED_TALK_08"
-msgstr "Você nem conhecia a Marina."
+msgstr "Semana passada. Viram ela perto dos trilhos."
 
 msgid "CAPTION_SHED_TALK_09"
-msgstr "Não."
+msgstr "Aqui não é seguro."
 
 msgid "CAPTION_SHED_TALK_10"
-msgstr "Então por que você está se metendo nisso?"
+msgstr "Nunca foi. Eu achei umas notícias antigas e…"
 
 msgid "CAPTION_SHED_TALK_11"
-msgstr "Eu pedi para ela me ligar se lembrasse de mais alguma coisa."
+msgstr "Não."
 
 msgid "CAPTION_SHED_TALK_12"
-msgstr "Agora não vou fingir que ela não ligou."
+msgstr "Eu tenho que trabalhar amanhã."
+
+msgid "CAPTION_SHED_TALK_13"
+msgstr "Não quero sair de casa pensando nisso."
+
+msgid "CAPTION_SHED_TALK_14"
+msgstr "Desculpa."
+
+msgid "CAPTION_SHED_TALK_15"
+msgstr "Quer ver Sociedade dos Poetas Mortos?"
+
+msgid "CAPTION_SHED_TALK_16"
+msgstr "Claro. Só se fizermos um brigadeiro antes?"
+
+msgid "CAPTION_SHED_REPLAY_01"
+msgstr "Aqui. Atrás dela."
+
+msgid "CAPTION_SHED_REPLAY_02"
+msgstr "Sophia…"
+
+msgid "CAPTION_SHED_REPLAY_03"
+msgstr "Eu achei que fosse parte do pilar."
+
+msgid "CAPTION_SHED_REPLAY_04"
+msgstr "Ela pode ter ouvido alguma coisa."
+
+msgid "CAPTION_SHED_REPLAY_05"
+msgstr "Pode."
+
+msgid "CAPTION_SHED_REPLAY_06"
+msgstr "Não. Pode parar, por favor."
 

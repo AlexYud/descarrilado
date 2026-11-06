@@ -65,6 +65,9 @@ var _main_bone: PackedStringArray = PackedStringArray()
 var _sampled_at: float = -1.0e9
 ## Added to the hips' height (see `settle_hips_on_floor`).
 var hips_shift: float = 0.0
+## Bones (by name) whose bone pose is collapsed to a point while they are listed, with everything they carry: this instance's own skeleton only, the shared model is never touched.
+## What a hidden bone draws is replaced by something else for a shot (the footage's sleeve and glove); `bone_point` and the solved pose are unaffected. Set before `sample`.
+var hidden_bones: PackedStringArray = PackedStringArray()
 
 
 ## Makes the local model (once). `palette` and `actor_scale` are set before.
@@ -270,6 +273,10 @@ func sample(time: float) -> void:
 	for bone: int in skeleton.get_bone_count():
 		skeleton.set_bone_pose_rotation(bone, _rotations.get(bone, Quaternion.IDENTITY) as Quaternion)
 	skeleton.set_bone_pose_position(int(_bones["Hips"]), _hips_model)
+	for bone: int in skeleton.get_bone_count():
+		var wanted: Vector3 = Vector3(0.0001, 0.0001, 0.0001) if hidden_bones.has(skeleton.get_bone_name(bone).trim_prefix(PREFIX)) else Vector3.ONE
+		if not skeleton.get_bone_pose_scale(bone).is_equal_approx(wanted):
+			skeleton.set_bone_pose_scale(bone, wanted)
 
 
 ## Breathing, and a slow drift of the head and the weight: a sum of slow sines of the time (degrees).
@@ -385,7 +392,8 @@ func vertices_of(names: Array[String]) -> PackedInt32Array:
 
 ## Lowers or raises the hips (`hips_shift`) so that the lowest vertex of the pelvis and the thighs' tops, as `time` poses it, is `clearance`
 ## over the floor. For the actor that sits: its pelvis genuinely on the floor. Returns the shift it settled on.
-func settle_hips_on_floor(time: float, clearance: float = 0.0, groups: Array[String] = ["Hips", "*UpLeg"]) -> float:
+## `footprint` (world x and z, empty for none) limits the vertices that count to those over it: a sitter's thighs are on the seat over its footprint, and past its front edge they go down to the knees.
+func settle_hips_on_floor(time: float, clearance: float = 0.0, groups: Array[String] = ["Hips", "*UpLeg"], footprint: Rect2 = Rect2()) -> float:
 	var group: PackedInt32Array = vertices_of(groups)
 	var low: float = -0.4
 	var high: float = 0.4
@@ -395,6 +403,10 @@ func settle_hips_on_floor(time: float, clearance: float = 0.0, groups: Array[Str
 		var vertices: PackedVector3Array = skinned_vertices()
 		var lowest: float = 1.0e9
 		for index: int in group:
+			if footprint.has_area():
+				var world: Vector3 = to_global(vertices[index])
+				if not footprint.has_point(Vector2(world.x, world.z)):
+					continue
 			lowest = minf(lowest, vertices[index].y)
 		if lowest > clearance:
 			high = hips_shift

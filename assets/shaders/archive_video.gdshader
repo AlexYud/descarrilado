@@ -21,7 +21,7 @@ uniform float degrade : hint_range(0.0, 1.0) = 1.0;
 // The tape's own frame rate: what moves in the picture, and the noise on it, changes this many times a second.
 uniform float fps : hint_range(4.0, 30.0) = 12.0;
 // The coarse picture's size in "pixels" (the tape's resolution), across and down.
-uniform vec2 tape_size = vec2(300.0, 225.0);
+uniform vec2 tape_size = vec2(340.0, 255.0);
 // The end of the tape: 1 is nothing but static.
 uniform float burst : hint_range(0.0, 1.0) = 0.0;
 
@@ -79,12 +79,12 @@ void fragment() {
 	// Dropouts: short bright dashes along a line, gone the next frame.
 	float dash_row = hash(vec2(row, frame));
 	float start = hash(vec2(row, frame + 7.0));
-	float dash = step(0.9975, dash_row) * step(start, uv.x) * step(uv.x, start + 0.08 + 0.22 * hash(vec2(row, frame + 3.0)));
+	float dash = step(0.9985, dash_row) * step(start, uv.x) * step(uv.x, start + 0.08 + 0.22 * hash(vec2(row, frame + 3.0)));
 	c = mix(c, vec3(0.88), dash * 0.8 * degrade);
 
 	// The noisy band along the bottom edge.
 	float band_noise = hash(vec2(floor(uv.x * tape_size.x * 0.5), row + frame * 3.0));
-	c = mix(c, vec3(band_noise * 0.9), foot * 0.65 * degrade);
+	c = mix(c, vec3(band_noise * 0.9), foot * 0.45 * degrade);
 
 	c -= scanlines * (0.5 + 0.5 * sin(FRAGCOORD.y * 3.14159)) * mix(1.0, 0.0, 1.0 - degrade);
 	vec2 d = UV - 0.5;

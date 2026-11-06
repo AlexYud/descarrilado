@@ -8,21 +8,22 @@ class_name WaitingShedSequence
 ## Examining the tape is the one interaction that matters. The FIRST time that view is closed the scene takes the player's eyes
 ## and plays once, without giving control back between its parts (all subtitles for now; the voice clips are optional hooks):
 ##   1. The tape set down beside the box, the notebook in the shot; Juliana remembers Sophia showing her the copy.
-##   2. The recording itself, about 50 s, a worn, copied home-video tape (`ArchiveVideoOverlay`: coarse picture, bleeding colour, tracking
-##      lines, dropouts, 12 frames a second, with stalls) from a hidden camera that does not move, across the clearing where the camcorder stands:
-##      the same shelter with an ordinary, usable bench, seen through a few ferns close to the lens. Marina sits on the bench, waiting, a long
-##      time; someone (their head never in the picture) walks in on the near side, stops, stays a long time appearing to speak with her, and
-##      walks out; she follows them with her head, waits alone, and slowly turns her face to the lens and stays so until the tape ends in static.
-##      `ShelterFootage` performs it on one clock. Only the tape's own noise (`placeholder_video_tape`, looped) is heard in it; no caption speaks for it.
-##   3. The photograph: a hard cut to the print mounted on Sophia's clipping, among her things, about 4 s, with no sound and no words. It
-##      shows this shelter after the body was taken away, blood on the bench, the floor and the pillar's foot.
-##   4. The conversation that followed, remembered, in one still shot over the notebook, the photograph, the tape and the open box.
-##   Then the view is hers again, at once (a short dissolve to her own eyes): nothing more is played.
+##   2. The recording itself, about 31 s, a worn, copied home-video tape (`ArchiveVideoOverlay`: coarse picture, bleeding colour, tracking lines, dropouts, 12 frames a second), silent, in four shots
+##      and three hard cuts (`ShelterFootage` performs it on one clock): a hidden, locked camera watches Emily sit on the bench, and after five seconds she turns toward her right and greets
+##      someone out of the picture with a short wave (to 10 s); a camera carried forward, pointed at the forest floor (to 16 s); the empty, bloodstained shelter with its bench broken, from the
+##      aftermath photograph's own viewpoint, held by someone who walks slowly from side to side showing it, the head bobbing a little (to 23 s); and the carried camera again over the forest floor,
+##      along another strip (to 31 s), where the tape ends. Only the tape's own noise (`placeholder_video_tape`, looped) is heard in it; no caption speaks for it.
+##   3. The tape stops (static, the machine's last sound) and starts AGAIN at once: the second viewing, with PLAY on it, from `replay_from_seconds` (just before Emily turns). Just as Juliana begins
+##      to ask Sophia to stop ("Não. Pode parar, por favor.") the picture is held, with PAUSE on it, on the greeting; the machine stops, and the talk goes on over the held picture.
+##   4. A moment after Juliana's "Sophia…" the picture cuts to the photograph (the print mounted on Sophia's clipping, the shelter after the body was taken away, blood on the bench, the floor and the
+##      pillar's foot) and stays there through the rest of the conversation, to its last word. Then the view is hers again, at once (a short dissolve to her own eyes): nothing more is played.
+##      The machine's own sounds (placeholder_tape_player_sounds, see `TapePlayerSounds`): the first viewing begins 2.30 s after the machine starts (static, the
+##      machine taking the tape, the play button), the running sound loops for as long as the tape plays and the last part plays when it ends or is stopped.
 ## The wind and the night chorus are silent from the first shot to the last (the scene is a memory). The scene never runs twice. Its completion is
 ## saved apart from the token's collection. The token is the same Collectible as before (`sophia_ficha`); it cannot be taken while the tape lies on
 ## it, nor during the scene.
 ##
-## The two people in the recording and the ferns that hide its camera are never in the present: they are shown only inside the recording
+## Emily in the recording, the blood of its last shot and the ferns that hide its first camera are never in the present: they are shown only inside the recording
 ## and are hidden (the cast put back at its first frame) before any cut to the present, on finishing, on cancelling and on leaving. The
 ## shelter has three looks that never mix (see `WorldState`): the recording's, the present's, and the aftermath that the shipped
 ## photograph was captured in (only a developer's capture tool ever asks for that one).
@@ -83,11 +84,9 @@ const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 @export var shot_recording: ShotMarker
 ## The close view of the photograph's print among Sophia's things.
 @export var shot_photo: ShotMarker
-## The remembered conversation: one still shot over the notebook, the photograph, the tape and the box.
-@export var shot_talk: ShotMarker
 
 @export_category("Look of the shots")
-## A faint cold light on the bench for the shots over the notebook, the tape and the box (shots 1 and 4), at the camera: the lamp alone leaves the box dark.
+## A faint cold light on the bench for the shot over the notebook, the tape and the box (shot 1), at the camera: the lamp alone leaves the box dark.
 @export var shot_light_energy: float = 1.8
 ## The same light for the close view of the print (nearer, so weaker).
 @export var photo_light_energy: float = 0.7
@@ -108,14 +107,24 @@ const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 @export var tape_volume_db: float = -4.0
 @export var tape_fade_seconds: float = 0.4
 ## Stalls of the picture, as (start, seconds) pairs in footage seconds: the picture holds one frame (the tape's noise goes on) and then jumps on.
-@export var tape_stalls: PackedFloat32Array = PackedFloat32Array([13.0, 0.8, 22.5, 1.2, 33.0, 0.6, 43.0, 1.6])
+@export var tape_stalls: PackedFloat32Array = PackedFloat32Array()
 ## The tape ends in static over this many last seconds of the footage.
 @export var tape_end_seconds: float = 0.5
-## The rest of the performance (its length and every moment of it) is on the `Footage` node (`ShelterFootage`), and its framing is the marker `shot_recording`.
-
-@export_category("Shot 3: the photograph")
-## How long the close view of the print is held (no sound, no words).
-@export var photo_shot_seconds: float = 4.0
+## The machine's sounds (`TapePlayerSounds`): their level. The first viewing's picture comes after the machine's first part (static meanwhile), 2.30 s.
+@export var machine_volume_db: float = -3.0
+## The second viewing (section 3): the picture is held (PAUSE, the machine stops) this long after Juliana begins to ask Sophia to stop,
+## and the photograph cuts in this long after Juliana's "Sophia…".
+@export var replay_stop_after_start_seconds: float = 0.3
+@export var photo_after_replay_seconds: float = 1.8
+## Where in the footage the second viewing begins (seconds of the source): a few seconds before Emily turns, so that it is held (PAUSE) on her raised hand.
+@export var replay_from_seconds: float = 10.4
+## The faint light the carried camera (the recording's second shot) throws on the ground ahead of it.
+@export var walk_light_energy: float = 1.6
+## A faint fill at the last shot's camera so that the blood and the broken bench read through the tape (the photograph was taken with a flash).
+@export var aftermath_light_energy: float = 3.4
+@export var aftermath_light_range: float = 9.0
+## The rest of the performance (its length and every moment of it) is on the `Footage` node (`ShelterFootage`); its three cameras are the markers `shot_a`, the strip
+## `walk_start` to `walk_end`, and `shot_c` there (`shot_recording` is shot A: where the recording begins).
 
 @export_category("Camcorder")
 ## The camcorder as the level has it (yaw in degrees of the head, from facing -Z), a little off the bench's middle. It is only a thing in the clearing.
@@ -185,6 +194,9 @@ var _world_state: WorldState = WorldState.PRESENT
 # The audio layers: each its own player. The recording has none of its own (nor a rewind: it is not replayed).
 var _remembered_player: AudioStreamPlayer = null
 var _tape_player: AudioStreamPlayer = null
+var _machine_player: AudioStreamPlayer = null
+## True while the second viewing is on (the sequence's own flag, for the tests and the pause menu's sake).
+var replay_running: bool = false
 
 
 func _enter_tree() -> void:
@@ -199,6 +211,7 @@ func _ready() -> void:
 	if replaced_plank == null:
 		replaced_plank = get_node_or_null(^"Platform/Bench/ReplacedPlank") as Node3D
 	_build_audio()
+	TapePlayerSounds.prepare()
 	_set_recording_world(false)
 	_set_camcorder_yaw(camcorder_start_yaw_degrees)
 	_set_camcorder_light(false)
@@ -208,9 +221,6 @@ func _ready() -> void:
 	_apply_saved_scene_state()
 	_connect_to_player.call_deferred()
 	# The cast of the recording is built and posed now, out of sight, so that nothing is made while the scene is being watched.
-	if footage != null and shot_recording != null:
-		# The hidden camera's lens: where Marina, alone at the end of the tape, turns her face.
-		footage.lens_point = shot_recording.global_position
 	if _stage == Stage.AVAILABLE and footage != null:
 		footage.prepare.call_deferred()
 
@@ -451,19 +461,8 @@ func _play_recording(run: int) -> void:
 	if not _alive(run):
 		return
 
-	# Shot 3: the photograph. A hard cut (the present, with Sophia's things, is whole again before it is seen; the cast is put away).
-	_set_recording_world(false)
-	_show_overlay(false)
-	_show_camera(shot_photo)
-	_set_shot_light(true, photo_light_energy)
-	await _shot_photo(run)
-	if not _alive(run):
-		return
-
-	# Shot 4: the conversation, remembered, in one still shot (a cut back from the print to the notebook, the tape and the box).
-	_show_camera(shot_talk)
-	_set_shot_light(true)
-	await _shot_talk(run)
+	# Shot 3: the tape again, the talk over the held picture, and (after "Pode.") the photograph, which stays to the end of the conversation.
+	await _shot_conversation(run)
 	if not _alive(run):
 		return
 
@@ -495,11 +494,24 @@ func _shot_copy(run: int) -> void:
 		_remembered_player.stop()
 
 
-## The recording: the footage clock runs from zero to the footage's length, frame by frame (and stops with the pause). No caption speaks
-## for it and no voice; the tape's own noise is looped under it. Nothing is a timer that could drift from the picture. It is not replayed.
+## The recording: the machine starts (its first part: static on the screen, the tape taken, the play button down), and at 2.30 s the picture comes with PLAY on it and the
+## footage clock runs from zero to the footage's length, frame by frame (and stops with the pause); the machine's running sound loops under it with the tape's own noise.
+## No caption speaks for it and no voice. At its end the machine's last part plays once. Nothing is a timer that could drift from the picture.
 func _shot_footage(run: int) -> void:
 	CaptionManager.clear()
 	_footage_time = 0.0
+	_footage_playing = false
+	_start_machine(true)
+	if _overlay != null and is_instance_valid(_overlay):
+		_overlay.set_paused(false)
+		_overlay.set_burst(1.0)
+	await _wait_for_machine(run)
+	if not _alive(run):
+		return
+
+	if _overlay != null and is_instance_valid(_overlay):
+		_overlay.set_burst(0.0)
+	_apply_footage(0.0)
 	_footage_playing = true
 	_start_tape_sound()
 	var length: float = footage.length_seconds if footage != null else 0.0
@@ -509,22 +521,74 @@ func _shot_footage(run: int) -> void:
 		_footage_playing = false
 		_apply_footage(length)
 	_stop_tape_sound()
+	_stop_machine()
+	# The machine's last part plays over the static; when it is over the tape starts again at once.
+	if _overlay != null and is_instance_valid(_overlay):
+		_overlay.set_burst(1.0)
+	await _wait(TapePlayerSounds.stop_stream().get_length())
 
 
-## The photograph's print, held in a close view among Sophia's things (the real print, a model in the present world): no sound, no words.
-func _shot_photo(run: int) -> void:
-	CaptionManager.clear()
-	await _wait(photo_shot_seconds)
-
-
-## The remembered conversation, one still shot (no drift: the girls are not in the room).
-func _shot_talk(run: int) -> void:
+## The conversation, remembered, on the caption track's one clock, in two shots. The tape starts again at once (the same camera, the picture from replay_from, PLAY
+## on it, the machine's running sound): a few seconds later Juliana asks Sophia to stop, the picture is held with PAUSE on it and the machine's last part plays, and the talk
+## goes on over the held picture until Sophia's "Pode."; then a hard cut to the photograph (the present, with Sophia's things, whole again before it is seen; the cast put
+## away), which stays through the rest of the conversation to its last word. The marks come from the cues of the track.
+func _shot_conversation(run: int) -> void:
 	_play_voice(_remembered_player, _pick_voice(voice_talk, voice_talk_en))
 	CaptionManager.clear()
 	CaptionManager.play_scripted(CaptionTracks.SHED_REMEMBERED_TALK)
-	await _wait(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK))
+	var total: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK)
+	var stop_at: float = _cue_time(&"CAPTION_SHED_REPLAY_06", "start") + replay_stop_after_start_seconds
+	var photo_at: float = _cue_time(&"CAPTION_SHED_REPLAY_02", "end") + photo_after_replay_seconds
+
+	# The tape starts again.
+	replay_running = true
+	var from: float = replay_from()
+	_footage_time = from
+	_apply_footage(from)
+	if _overlay != null and is_instance_valid(_overlay):
+		_overlay.set_paused(false)
+		_overlay.set_burst(0.0)
+	_footage_playing = true
+	_start_machine(false)
+	_start_tape_sound()
+	await _wait(stop_at)
+	if not _alive(run):
+		replay_running = false
+		return
+
+	# "Não. Pode parar, por favor.": the picture is held (the cut to the walking shot never comes), the machine says PAUSE and stops.
+	_footage_playing = false
+	if _overlay != null and is_instance_valid(_overlay):
+		_overlay.set_paused(true)
+	_stop_tape_sound()
+	_stop_machine()
+	await _wait(maxf(photo_at - stop_at, 0.0))
+	if not _alive(run):
+		replay_running = false
+		return
+
+	# The photograph, to the end.
+	_set_recording_world(false)
+	_show_overlay(false)
+	_show_camera(shot_photo)
+	_set_shot_light(true, photo_light_energy)
+	replay_running = false
+	await _wait(maxf(total - photo_at, 0.0))
 	if _alive(run):
 		_remembered_player.stop()
+
+
+## Where in the footage the second viewing begins: `replay_from_seconds`, a few seconds before Emily turns (it is held there on her greeting, as Juliana asks to stop, before the first cut).
+func replay_from() -> float:
+	return clampf(replay_from_seconds, 0.0, footage.cut_walk_seconds - 0.5) if footage != null else 0.0
+
+
+## When a cue of the conversation's track starts or ends ("start" or "end"), in seconds of the track; 0 if the track has no such cue.
+func _cue_time(key: StringName, edge: String) -> float:
+	for cue: Dictionary in CaptionTracks.get_cues(CaptionTracks.SHED_REMEMBERED_TALK):
+		if StringName(str(cue["key"])) == key:
+			return float(cue[edge])
+	return 0.0
 
 
 ## Back to the player's own camera, where her view was left (the shot cameras are gone).
@@ -596,6 +660,8 @@ func _cleanup_scene() -> void:
 	_duck_forest(false)
 	_set_camcorder_light(false)
 	_stop_tape_sound()
+	if _machine_player != null:
+		_machine_player.stop()
 
 
 # ============================================================
@@ -613,15 +679,43 @@ func _tick_footage(delta: float) -> void:
 
 ## The cast at `time`, as the tape shows it. A pure function of the time (the camera is fixed and has nothing to follow).
 func _apply_footage(time: float) -> void:
+	var shown: float = _tape_time(time)
 	if footage != null:
-		footage.seek(_tape_time(time))
+		footage.seek(shown)
 	if _overlay != null and is_instance_valid(_overlay) and footage != null:
 		var left: float = footage.length_seconds - time
 		_overlay.set_burst(smoothstep(tape_end_seconds, 0.0, left) if left < tape_end_seconds else 0.0)
-	# The camera is fixed, but the window may change: the lens follows it so that the picture's own 4:3 frame stays the designed one.
-	if _world_state == WorldState.RECORDING and _cinema != null and is_instance_valid(_cinema) and shot_recording != null:
-		_cinema.fov = ArchiveVideoOverlay.matched_fov(shot_recording.fov, get_viewport().get_visible_rect().size)
+	# Each shot has its own camera, a pure function of the source time (locked, walking, drifting), and its own shelter: the intact bench and the ferns at the lens in the first, the broken bench
+	# and the blood in the last. Only while the recording is on screen (the photograph's camera and the player's are never touched). The window may change: the lens follows it so that the
+	# picture's own 4:3 frame stays the designed one.
+	if _world_state == WorldState.RECORDING and footage != null:
+		var passage: StringName = footage.passage_at(shown)
+		_set_shot_dressing(passage)
+		if _cinema != null and is_instance_valid(_cinema):
+			var state: Dictionary = footage.camera_at(shown)
+			_cinema.global_transform = state["transform"] as Transform3D
+			_cinema.fov = ArchiveVideoOverlay.matched_fov(float(state["fov"]), get_viewport().get_visible_rect().size)
 
+
+## The shelter as the shot shows it: the bench whole and the ferns near the lens in the first, the bench broken (and the blood, which the footage shows with its last shot) in the last.
+func _set_shot_dressing(passage: StringName) -> void:
+	# The bench is whole in the first shot and broken in the last two (the second walk is later than the aftermath, by an unknown time).
+	var aftermath: bool = passage == &"aftermath" or passage == &"walk2"
+	if archive_dressing != null:
+		var intact: Node3D = archive_dressing.get_node_or_null("Intact") as Node3D
+		var damaged: Node3D = archive_dressing.get_node_or_null("Damaged") as Node3D
+		if intact != null:
+			intact.visible = not aftermath
+		if damaged != null:
+			damaged.visible = aftermath
+	if archive_foreground != null:
+		archive_foreground.visible = passage == &"A"
+	# The carried camera sees the ground by a faint light of its own (the lamp of a camcorder), in both of its shots; shot A has none.
+	_set_shot_light(passage == &"walk" or passage == &"walk2", walk_light_energy)
+	if passage == &"aftermath":
+		_set_shot_light(true, aftermath_light_energy)
+	if _shot_light != null and is_instance_valid(_shot_light):
+		_shot_light.spot_range = aftermath_light_range if passage == &"aftermath" else shot_light_range
 
 ## The footage time the tape shows at `time`: the tape updates only `ArchiveVideoOverlay.TAPE_FPS` times a second, and holds the picture during a stall.
 func _tape_time(time: float) -> float:
@@ -662,10 +756,10 @@ func preview_footage(time: float) -> bool:
 		return false
 
 	_show_camera(shot_recording, true)
-	_apply_footage(time)
 	_set_recording_world(true)
-	_show_overlay(true)
 	_set_shot_light(false)
+	_apply_footage(time)
+	_show_overlay(true)
 	return true
 
 
@@ -942,6 +1036,7 @@ func _clear_freeze() -> void:
 func _build_audio() -> void:
 	_remembered_player = _make_player("RememberedVoices")
 	_tape_player = _make_player("TapeSound")
+	_machine_player = _make_player("TapeMachine")
 
 
 func _make_player(player_name: String) -> AudioStreamPlayer:
@@ -986,6 +1081,43 @@ func _start_tape_sound() -> void:
 func _stop_tape_sound() -> void:
 	if _tape_player != null and _tape_player.playing:
 		_tape_player.stop()
+
+
+## Waits until the machine's first part is over: the picture begins when its sound has played to 2.30 s exactly (the machine's own clock, not a timer's: they
+## would drift apart). Without a running sound (no audio) it waits 2.30 s of the scene's time; never more than a few seconds whatever happens.
+func _wait_for_machine(run: int) -> void:
+	var waited: float = 0.0
+	while _alive(run) and waited < TapePlayerSounds.LOOP_BEGIN + 2.0:
+		await get_tree().process_frame
+		if get_tree().paused:
+			continue
+		waited += get_process_delta_time() / maxf(Engine.time_scale, 0.01)
+		if _machine_player != null and _machine_player.playing:
+			if _machine_player.get_playback_position() >= TapePlayerSounds.LOOP_BEGIN - 0.008:
+				return
+		elif waited >= TapePlayerSounds.LOOP_BEGIN:
+			return
+
+
+## The machine starts: its first part and then its running sound looped (`with_intro`), or only the running sound (the second viewing: the tape is only played again).
+func _start_machine(with_intro: bool) -> void:
+	if _machine_player == null:
+		return
+
+	_machine_player.stream = TapePlayerSounds.start_stream()
+	_machine_player.volume_db = machine_volume_db
+	_machine_player.play(0.0 if with_intro else TapePlayerSounds.LOOP_BEGIN)
+
+
+## The machine stops: the running sound goes and its last part plays once.
+func _stop_machine() -> void:
+	if _machine_player == null:
+		return
+
+	_machine_player.stop()
+	_machine_player.stream = TapePlayerSounds.stop_stream()
+	_machine_player.volume_db = machine_volume_db
+	_machine_player.play()
 
 
 # ============================================================

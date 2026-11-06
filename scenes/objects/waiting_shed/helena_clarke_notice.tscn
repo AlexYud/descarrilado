@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/interactions/inspectable_interactable.gd" id="1_inspectable"]
+[ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_area"]
+size = Vector3(0.11, 0.145, 0.03)
+
+; A recent clipping about the search for Helena Clarke, pinned to a shelter post facing the bench: an optional document (a world readable, not an inventory item).
+[node name="HelenaClarkeNotice" type="Node3D"]
+script = ExtResource("1_inspectable")
+inspect_name = "ITEM_HELENA_NOTICE_NAME"
+inspect_description = "ITEM_HELENA_NOTICE_DESCRIPTION"
+prompt_text = "PROMPT_INSPECT"
+
+[node name="Visual" type="Node3D" parent="."]
+metadata/readable_text = "READABLE_HELENA_NOTICE"
+metadata/inspect_mode = "read"
+script = ExtResource("2_prop")
+kind = &"helena_clarke_notice"
+metadata/inspect_id = "helena_clarke_notice"
+
+[node name="InteractArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractArea"]
+shape = SubResource("BoxShape3D_area")

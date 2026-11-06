@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/newspaper_clipping.tscn" id="12_clipping"]
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/camcorder.tscn" id="13_camcorder"]
 [ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/marina_sister_note.tscn" id="14_sister_note"]
+[ext_resource type="PackedScene" path="res://scenes/objects/waiting_shed/helena_clarke_notice.tscn" id="16_helena_notice"]
 [ext_resource type="Script" path="res://scripts/levels/shot_marker.gd" id="14_shot"]
 [ext_resource type="Script" path="res://scripts/levels/shelter_footage.gd" id="15_footage"]
 [ext_resource type="ArrayMesh" uid="uid://bfoll4ywqfmm4" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="16_fern_medium"]
@@ -23,7 +24,7 @@ size = Vector3(4.6, 6, 44)
 ; The waiting shed: Sophia's investigation on the bench (see WaitingShedSequence). Positions are in the space of this scene's root;
 ; in the dream the root is at world (65, -12.452, -16). The bench holds, seen from its open front (+Z): the closed backpack on the
 ; left, the notebook with the clipping in the middle, the hinged box on the right (the tape on the token inside it).
-[node name="WaitingShed" type="Node3D" node_paths=PackedStringArray("container", "vhs", "ficha", "vhs_set_down", "effects_root", "archive_dressing", "archive_foreground", "footage", "camcorder", "shot_copy", "shot_recording", "shot_photo", "shot_talk", "platform", "track", "marker_group")]
+[node name="WaitingShed" type="Node3D" node_paths=PackedStringArray("container", "vhs", "ficha", "vhs_set_down", "effects_root", "archive_dressing", "archive_foreground", "footage", "camcorder", "shot_copy", "shot_recording", "shot_photo", "platform", "track", "marker_group")]
 script = ExtResource("1_sequence")
 container = NodePath("Platform/PersonalEffects/SwitchBox")
 vhs = NodePath("Platform/PersonalEffects/SwitchBox/Contents/VhsTape")
@@ -37,7 +38,6 @@ camcorder = NodePath("Camcorder")
 shot_copy = NodePath("Shots/ShotCopy")
 shot_recording = NodePath("Shots/ShotRecording")
 shot_photo = NodePath("Shots/ShotPhoto")
-shot_talk = NodePath("Shots/ShotTalk")
 platform = NodePath("Platform")
 track = NodePath("Track")
 marker_group = NodePath("MarkerGroup")
@@ -112,6 +112,12 @@ unique_name_in_owner = true
 position = Vector3(-4.70, 0.5025, -5.955)
 rotation_degrees = Vector3(-90, 6, 0)
 
+; The recent clipping about Helena Clarke, pinned to the shelter's west post (Pillar0, at -5.7, -7.0) at hand height, its face to the bench: an optional readable with its own hit area, over nothing.
+[node name="HelenaClarkeNotice" parent="Platform/PersonalEffects" instance=ExtResource("16_helena_notice")]
+unique_name_in_owner = true
+position = Vector3(-5.576, 1.38, -7.0)
+rotation_degrees = Vector3(0, 90, 2)
+
 [node name="NewspaperClipping" parent="Platform/PersonalEffects" instance=ExtResource("12_clipping")]
 unique_name_in_owner = true
 position = Vector3(-4.43, 0.5095, -5.72)
@@ -138,24 +144,24 @@ rotation_degrees = Vector3(-90, 0, 0)
 position = Vector3(-4.12, 0.5025, -5.72)
 rotation_degrees = Vector3(-90, 14, 0)
 
-; The performance of the recording (see ShelterFootage): two adults, built in code and hidden except inside the recording. Marina sits on the bench's
-; left half (the marker is the point on the seat under her pelvis, she faces the open front); the visitor comes in from the right on the near side of
-; the bench (the entry is out of the picture), stops by her and goes back the way they came.
-[node name="Footage" type="Node3D" parent="Platform" node_paths=PackedStringArray("marina_seat", "path_entry", "path_stop")]
+; The performance of the recording (see ShelterFootage): Emily, built in code and hidden except inside the recording, sits on the bench's left half (MarinaSeat is the point on the seat
+; under her pelvis, +Z the way she faces: her left is then +X); the strip of ground the carried camera walks along (WalkStart to WalkEnd along the front of the shelter, in the lamp's light; Walk2Start to Walk2End east of it); the three cameras
+; are markers under Shots (ShotRecording: the hidden camera, ShotRecordingC: the aftermath photograph's own viewpoint).
+[node name="Footage" type="Node3D" parent="Platform" node_paths=PackedStringArray("marina_seat", "shot_a", "walk_start", "walk_end", "walk2_start", "walk2_end", "shot_c", "creep_end", "blood_focus")]
 visible = false
 script = ExtResource("15_footage")
 marina_seat = NodePath("MarinaSeat")
-path_entry = NodePath("PathEntry")
-path_stop = NodePath("PathStop")
+shot_a = NodePath("../../Shots/ShotRecording")
+walk_start = NodePath("../../Shots/WalkStart")
+walk_end = NodePath("../../Shots/WalkEnd")
+walk2_start = NodePath("../../Shots/Walk2Start")
+walk2_end = NodePath("../../Shots/Walk2End")
+shot_c = NodePath("../../Shots/ShotRecordingC")
+creep_end = NodePath("../../Shots/CreepEnd")
+blood_focus = NodePath("../../Shots/BloodFocus")
 
 [node name="MarinaSeat" type="Marker3D" parent="Platform/Footage"]
-transform = Transform3D(0.990268, 0, 0.139173, 0, 1, 0, -0.139173, 0, 0.990268, -4.8, 0.49, -5.93)
-
-[node name="PathEntry" type="Marker3D" parent="Platform/Footage"]
-position = Vector3(0.4, 0.05, -4.7)
-
-[node name="PathStop" type="Marker3D" parent="Platform/Footage"]
-position = Vector3(-4.25, 0.05, -4.7)
+transform = Transform3D(0.898794, 0, -0.438371, 0, 1, 0, 0.438371, 0, 0.898794, -4.5, 0.49, -5.72)
 
 [node name="ShelterLamp" type="OmniLight3D" parent="Platform"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 2.55, -5.2)
@@ -205,39 +211,36 @@ spot_angle = 17.0
 unique_name_in_owner = true
 position = Vector3(-4.3, 0, 1.2)
 
-; The ferns close to the recording's lens (hidden except inside the recording): the hidden camera looks out from behind them. They frame the left and
-; lower edges and a small corner of the picture and leave a clear window onto the bench. Plain meshes of the forest's own plants, still, no collision.
+; The ferns close to angle A's lens (hidden except inside the recording): the hidden camera looks out from behind them. They frame the left and lower edges of the
+; picture and leave the pillar, the strip beside it and Emily clear. Plain meshes of the forest's own plants, still, no collision.
 [node name="ArchiveForeground" type="Node3D" parent="."]
 visible = false
 
 [node name="FernLeft" type="MeshInstance3D" parent="ArchiveForeground"]
-transform = Transform3D(0.75, 0, 0, 0, 0.75, 0, 0, 0, 0.75, -4.95, 0, -0.55)
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -2.1, 0, 0.33)
 mesh = ExtResource("16_fern_medium")
 
 [node name="FernEdge" type="MeshInstance3D" parent="ArchiveForeground"]
-transform = Transform3D(1.0, 0, 0.25, 0, 1.1, 0, -0.25, 0, 1.0, -5.2, 0, -0.2)
+transform = Transform3D(0.9, 0, -0.225, 0, 1.0, 0, 0.225, 0, 0.9, -2.4, 0, 0.5)
 mesh = ExtResource("16_fern_medium")
 
 [node name="FernCorner" type="MeshInstance3D" parent="ArchiveForeground"]
-transform = Transform3D(0.5, 0, 0.2, 0, 0.55, 0, -0.2, 0, 0.5, -3.7, 0, -0.45)
+transform = Transform3D(0.8, 0, -0.3, 0, 0.8, 0, 0.3, 0, 0.8, -4.1, 0, -0.9)
 mesh = ExtResource("16_fern_medium")
 
-; Where each shot of the recording scene stands (see ShotMarker). The targets are the points the shots look at. The recording's camera is fixed: it stands at
-; the camcorder's place (the audit's candidate A, a little lower) and looks down at the bench so that the top edge of the 4:3 picture (a ray 2.3 degrees above
-; the horizontal) passes under the chin of the person who walks past on the near side.
+; Where each shot of the recording scene stands (see ShotMarker). The targets are the points the shots look at. The recording has four shots: ShotRecording (A: the hidden camera, east-south-east
+; of the shelter, behind ferns, locked; on her left, so that she turns away from it), the strips of ground WalkStart to WalkEnd and Walk2Start to Walk2End (B: the carried camera walks them, pitched at the ground) and ShotRecordingC to CreepEnd (C: someone looking in on the bloody
+; shelter from the forest, west of it, creeping closer).
 [node name="Shots" type="Node3D" parent="."]
 
 [node name="CopyTarget" type="Marker3D" parent="Shots"]
 position = Vector3(-4.0, 0.5, -5.8)
 
 [node name="RecordingTarget" type="Marker3D" parent="Shots"]
-position = Vector3(-4.5, -0.12, -5.8)
+position = Vector3(-4.35, 0.85, -5.7)
 
 [node name="PhotoTarget" type="Marker3D" parent="Shots"]
 position = Vector3(-4.431, 0.5105, -5.724)
-
-[node name="TalkTarget" type="Marker3D" parent="Shots"]
-position = Vector3(-4.1, 0.54, -5.75)
 
 [node name="ShotCopy" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
 position = Vector3(-4.12, 1.14, -4.95)
@@ -245,11 +248,43 @@ script = ExtResource("14_shot")
 fov = 46.0
 target = NodePath("../CopyTarget")
 
+[node name="RecordingTargetC" type="Marker3D" parent="Shots"]
+position = Vector3(-4.9, 0.9, -5.2)
+
+; The pool of blood on the slab, which the operator of shot C ends up showing.
+[node name="BloodFocus" type="Marker3D" parent="Shots"]
+position = Vector3(-4.95, 0.1, -5.05)
+
+[node name="WalkStart" type="Marker3D" parent="Shots"]
+position = Vector3(-7.5, 0.0, -1.0)
+
+[node name="WalkEnd" type="Marker3D" parent="Shots"]
+position = Vector3(1.5, 0.0, -1.0)
+
+; The first walk is 9 m (12 s at a slow walking pace), east along the front of the shelter; the second is 12 m (16 s), 2 m south of it and walked the other way (west). Both strips were chosen by reading the dream terrain's own tree and bush instances: no
+; tree or large bush stands within 1.5 m of either (the first strip I had put the camera 0.4 m from a rock and close to the old tree line).
+[node name="Walk2Start" type="Marker3D" parent="Shots"]
+position = Vector3(2.0, 0.0, 1.0)
+
+[node name="Walk2End" type="Marker3D" parent="Shots"]
+position = Vector3(-10.0, 0.0, 1.0)
+
+; Angle A: the hidden camera, wide and oblique, east-south-east of the shelter and behind ferns, on Emily's left (she turns to her right, away from it); she is a third of the picture's height.
 [node name="ShotRecording" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
-position = Vector3(-4.3, 1.2, 1.2)
+position = Vector3(-1.6, 1.3, 1.7)
 script = ExtResource("14_shot")
 fov = 26.0
 target = NodePath("../RecordingTarget")
+
+; Shot C: NOT the aftermath photograph's viewpoint. Someone looking in from the dark of the forest, west of the shelter, at the eyes of a person of 1.70 m (the shelter's floor is at 0), then creeping in to CreepEnd.
+[node name="ShotRecordingC" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
+position = Vector3(-12.0, 1.62, -1.8)
+script = ExtResource("14_shot")
+fov = 60.0
+target = NodePath("../RecordingTargetC")
+
+[node name="CreepEnd" type="Marker3D" parent="Shots"]
+position = Vector3(-7.6, 1.62, -3.9)
 
 ; The close view of the print on Sophia's clipping, from above and a little in front.
 [node name="ShotPhoto" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
@@ -257,9 +292,3 @@ position = Vector3(-4.43, 0.7, -5.62)
 script = ExtResource("14_shot")
 fov = 30.0
 target = NodePath("../PhotoTarget")
-
-[node name="ShotTalk" type="Marker3D" parent="Shots" node_paths=PackedStringArray("target")]
-position = Vector3(-4.46, 0.95, -5.04)
-script = ExtResource("14_shot")
-fov = 42.0
-target = NodePath("../TalkTarget")

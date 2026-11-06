@@ -1129,6 +1129,15 @@ msgstr ""
 msgid "READABLE_MARINA_SISTER_NOTE"
 msgstr ""
 
+msgid "ITEM_HELENA_NOTICE_NAME"
+msgstr ""
+
+msgid "ITEM_HELENA_NOTICE_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_HELENA_NOTICE"
+msgstr ""
+
 msgid "CAPTION_SHED_MEM_01"
 msgstr ""
 
@@ -1136,9 +1145,6 @@ msgid "CAPTION_SHED_MEM_02"
 msgstr ""
 
 msgid "CAPTION_SHED_MEM_03"
-msgstr ""
-
-msgid "CAPTION_SHED_MEM_04"
 msgstr ""
 
 msgid "CAPTION_SHED_TALK_01"
@@ -1175,5 +1181,35 @@ msgid "CAPTION_SHED_TALK_11"
 msgstr ""
 
 msgid "CAPTION_SHED_TALK_12"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_13"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_14"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_15"
+msgstr ""
+
+msgid "CAPTION_SHED_TALK_16"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_01"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_02"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_03"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_04"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_05"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_06"
 msgstr ""
 

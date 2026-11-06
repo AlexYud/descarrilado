@@ -205,6 +205,9 @@ func _check_the_words() -> void:
 	GameSettings.set_text_locale("en", false)
 
 
+const BOARD_HALF_WIDTH: float = 0.46
+
+
 func _check_the_board(door: Node3D) -> void:
 	var board: Node3D = trail.board
 	var board_xz: Vector2 = Vector2(board.global_position.x, board.global_position.z)
@@ -239,6 +242,7 @@ func _check_the_board(door: Node3D) -> void:
 	_expect(trail.pins.size() == 4, "four pins hold the map")
 	_expect(trail.map != null and trail.map.get_parent() == trail, "the map is a child of the trailhead")
 	_expect(trail.map != null and trail.map.global_position.distance_to(board.to_global(TrailheadProps.MAP_MOUNT)) < 0.01, "and hangs in the window")
+	_expect(board.get_node_or_null("VillageLeaflet") == null and board.find_children("*", "Inspectable", true, false).is_empty(), "nothing else is pinned to the board: the old leaflet is gone")
 
 
 ## The painted faces: the window where the map hangs is darker than the paint round it (the paper kept the sun off it) and the four

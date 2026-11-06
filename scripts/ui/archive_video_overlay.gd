@@ -12,10 +12,14 @@ const SHADER: Shader = preload("res://assets/shaders/archive_video.gdshader")
 ## The tape's frame rate: what the recording shows is posed at this rate (see `WaitingShedSequence`), the picture's noise follows it.
 const TAPE_FPS: float = 12.0
 
+## True shows the full tape look whatever the player's own video filter setting is (a developer preview's switch; the game never sets it).
+var force_full_look: bool = false
+
 var _picture: ColorRect = null
 var _material: ShaderMaterial = null
 var _play_label: Label = null
 var _full_look: bool = true
+var _paused: bool = false
 var _black: ColorRect = null
 var _bars: Array[ColorRect] = []
 
@@ -30,12 +34,12 @@ func _init() -> void:
 func _ready() -> void:
 	_material = ShaderMaterial.new()
 	_material.shader = SHADER
-	_full_look = GameSettings.get_vhs_filter_enabled()
-	_material.set_shader_parameter(&"degrade", 1.0 if _full_look else 0.0)
+	_full_look = force_full_look or GameSettings.get_vhs_filter_enabled()
+	_material.set_shader_parameter(&"degrade", 0.85 if _full_look else 0.0)
 	_material.set_shader_parameter(&"fps", TAPE_FPS)
-	_material.set_shader_parameter(&"grain", 0.16 if _full_look else 0.0)
+	_material.set_shader_parameter(&"grain", 0.11 if _full_look else 0.0)
 	_material.set_shader_parameter(&"scanlines", 0.05 if _full_look else 0.0)
-	_material.set_shader_parameter(&"vignette", 0.85 if _full_look else 0.0)
+	_material.set_shader_parameter(&"vignette", 0.7 if _full_look else 0.0)
 
 	_picture = ColorRect.new()
 	_picture.name = "Picture"
@@ -88,16 +92,33 @@ func show_picture() -> void:
 func hide_overlay() -> void:
 	visible = false
 	set_burst(0.0)
+	set_paused(false)
 	if _black != null:
 		_black.visible = false
 
 
-## The end of the tape: 0 is the picture, 1 is nothing but static.
+## The end of the tape (or the machine before the picture comes): 0 is the picture, 1 is nothing but static.
 func set_burst(amount: float) -> void:
 	if _material != null:
 		_material.set_shader_parameter(&"burst", clampf(amount, 0.0, 1.0))
 	if _play_label != null:
 		_play_label.visible = amount < 0.5
+
+
+## The machine's word in the corner: PLAY while the tape runs, PAUSE once it is stopped (the picture is held by the sequence).
+func set_paused(paused: bool) -> void:
+	_paused = paused
+	if _play_label != null:
+		_play_label.text = "PAUSE" if paused else "PLAY"
+
+
+func is_paused() -> bool:
+	return _paused
+
+
+## The word on the picture right now (for tests).
+func get_label_text() -> String:
+	return _play_label.text if _play_label != null else ""
 
 
 func is_picture_shown() -> bool:

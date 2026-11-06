@@ -167,31 +167,39 @@ const TRACKS: Dictionary = {
 		# The line goes on hissing for a moment after she stops.
 		{"start": 36.8, "end": 38.2, "key": ""},
 	],
-	# Shot 1 (about 12.6 s): the tape on the bench, the notebook and the clipping; Juliana and Sophia as Juliana remembers them: the investigation in four lines. Held to the cut.
+	# Shot 1 (about 8.6 s): the tape on the bench, the notebook and the clipping; Sophia, Juliana and Sophia as Juliana remembers them: where the copy came from, and that it has no sound. Held to the cut.
 	SHED_REMEMBERED_COPY: [
-		{"start": 0.8, "end": 3.5, "key": "CAPTION_SHED_MEM_01", "speaker": SPEAKER_JULIANA},
-		{"start": 4.1, "end": 7.6, "key": "CAPTION_SHED_MEM_02", "speaker": SPEAKER_SOPHIA},
-		{"start": 8.2, "end": 9.5, "key": "CAPTION_SHED_MEM_03", "speaker": SPEAKER_JULIANA},
-		{"start": 10.1, "end": 11.6, "key": "CAPTION_SHED_MEM_04", "speaker": SPEAKER_SOPHIA},
-		{"start": 11.6, "end": 12.6, "key": ""},
+		{"start": 0.8, "end": 3.8, "key": "CAPTION_SHED_MEM_01", "speaker": SPEAKER_SOPHIA},
+		{"start": 4.4, "end": 5.6, "key": "CAPTION_SHED_MEM_02", "speaker": SPEAKER_JULIANA},
+		{"start": 6.2, "end": 7.8, "key": "CAPTION_SHED_MEM_03", "speaker": SPEAKER_SOPHIA},
+		{"start": 7.8, "end": 8.8, "key": ""},
 	],
-	# Shot 4 (about 37 s): the conversation, remembered, after the recording and the photograph: Juliana asks, Sophia answers, and neither settles anything. A sentence that
-	# would be a long line is two contiguous groups (the second begins where the first ends, so nothing blinks out between them), with the words in their order; the last
-	# two groups, Sophia's, are held about three seconds each. The shot is held a second after the last word. Retime here, nowhere else: the shot's length is this track's.
+	# Shot 4 (about 67 s): the conversation, remembered, on one clock that starts with the second viewing. The tape starts again at once, on the footage a few seconds before Emily turns, and runs a
+	# couple of silent seconds; Juliana asks Sophia to stop ("Não. Pode parar, por favor."), the picture is held with PAUSE on it (on Emily's greeting), and the talk goes on over the held picture
+	# (the warning, then "Sophia…"); a moment after that the picture cuts to the photograph, which stays to the end. The sequence finds its marks from the cues below (CAPTION_SHED_REPLAY_06
+	# and _02). BYPASSED for the three-shot recording, because they describe the discarded footage (a figure behind the pillar): CAPTION_SHED_REPLAY_01 ("Aqui. Atrás dela."), _03 ("Eu achei que
+	# fosse parte do pilar."), and the older _04 and _05 (about the woman's head). Their texts stay in the translation files. The photograph's talk (from "Eu queria saber quem estava desse lado
+	# da câmera.") is the same block as before, every pause kept, moved 7.5 s earlier to close the silence the bypassed lines leave. Held a second after the last word. Retime here, nowhere else.
 	SHED_REMEMBERED_TALK: [
-		{"start": 0.8, "end": 3.3, "key": "CAPTION_SHED_TALK_01", "speaker": SPEAKER_JULIANA},
-		{"start": 3.9, "end": 6.4, "key": "CAPTION_SHED_TALK_02", "speaker": SPEAKER_SOPHIA},
-		{"start": 6.4, "end": 9.0, "key": "CAPTION_SHED_TALK_03", "speaker": SPEAKER_SOPHIA},
-		{"start": 9.6, "end": 11.8, "key": "CAPTION_SHED_TALK_04", "speaker": SPEAKER_JULIANA},
-		{"start": 12.4, "end": 15.4, "key": "CAPTION_SHED_TALK_05", "speaker": SPEAKER_SOPHIA},
-		{"start": 16.0, "end": 17.7, "key": "CAPTION_SHED_TALK_06", "speaker": SPEAKER_JULIANA},
-		{"start": 18.3, "end": 21.0, "key": "CAPTION_SHED_TALK_07", "speaker": SPEAKER_SOPHIA},
-		{"start": 21.6, "end": 23.7, "key": "CAPTION_SHED_TALK_08", "speaker": SPEAKER_JULIANA},
-		{"start": 24.3, "end": 25.3, "key": "CAPTION_SHED_TALK_09", "speaker": SPEAKER_SOPHIA},
-		{"start": 25.9, "end": 28.8, "key": "CAPTION_SHED_TALK_10", "speaker": SPEAKER_JULIANA},
-		{"start": 29.4, "end": 32.8, "key": "CAPTION_SHED_TALK_11", "speaker": SPEAKER_SOPHIA},
-		{"start": 32.8, "end": 35.6, "key": "CAPTION_SHED_TALK_12", "speaker": SPEAKER_SOPHIA},
-		{"start": 35.6, "end": 36.6, "key": ""},
+		{"start": 2.5, "end": 5.2, "key": "CAPTION_SHED_REPLAY_06", "speaker": SPEAKER_JULIANA},
+		{"start": 6.5, "end": 9.7, "key": "CAPTION_SHED_TALK_01", "speaker": SPEAKER_JULIANA},
+		{"start": 11.0, "end": 12.7, "key": "CAPTION_SHED_REPLAY_02", "speaker": SPEAKER_JULIANA},
+		{"start": 16.0, "end": 19.0, "key": "CAPTION_SHED_TALK_02", "speaker": SPEAKER_SOPHIA},
+		{"start": 20.0, "end": 21.4, "key": "CAPTION_SHED_TALK_03", "speaker": SPEAKER_JULIANA},
+		{"start": 21.4, "end": 24.0, "key": "CAPTION_SHED_TALK_04", "speaker": SPEAKER_JULIANA},
+		{"start": 25.0, "end": 26.6, "key": "CAPTION_SHED_TALK_05", "speaker": SPEAKER_SOPHIA},
+		{"start": 26.6, "end": 29.4, "key": "CAPTION_SHED_TALK_06", "speaker": SPEAKER_SOPHIA},
+		{"start": 30.4, "end": 33.2, "key": "CAPTION_SHED_TALK_07", "speaker": SPEAKER_JULIANA},
+		{"start": 34.2, "end": 37.0, "key": "CAPTION_SHED_TALK_08", "speaker": SPEAKER_SOPHIA},
+		{"start": 39.2, "end": 41.2, "key": "CAPTION_SHED_TALK_09", "speaker": SPEAKER_JULIANA},
+		{"start": 42.2, "end": 45.2, "key": "CAPTION_SHED_TALK_10", "speaker": SPEAKER_SOPHIA},
+		{"start": 45.3, "end": 46.3, "key": "CAPTION_SHED_TALK_11", "speaker": SPEAKER_JULIANA},
+		{"start": 48.3, "end": 50.4, "key": "CAPTION_SHED_TALK_12", "speaker": SPEAKER_JULIANA},
+		{"start": 50.4, "end": 53.4, "key": "CAPTION_SHED_TALK_13", "speaker": SPEAKER_JULIANA},
+		{"start": 54.4, "end": 55.8, "key": "CAPTION_SHED_TALK_14", "speaker": SPEAKER_SOPHIA},
+		{"start": 59.3, "end": 62.1, "key": "CAPTION_SHED_TALK_15", "speaker": SPEAKER_JULIANA},
+		{"start": 63.1, "end": 66.2, "key": "CAPTION_SHED_TALK_16", "speaker": SPEAKER_SOPHIA},
+		{"start": 66.2, "end": 67.4, "key": ""},
 	],
 }
 

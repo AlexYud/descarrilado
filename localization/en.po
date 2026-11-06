@@ -632,10 +632,10 @@ msgid "BUS_TICKET_IF_YOU_WANT"
 msgstr "If you want."
 
 msgid "ITEM_SOPHIA_JOURNAL_NAME"
-msgstr "Sophia's Notebook"
+msgstr "Sophia Bennett's Notebook"
 
 msgid "ITEM_SOPHIA_JOURNAL_DESCRIPTION"
-msgstr "Clippings folded between pages of notes about the shelter."
+msgstr "Notes about Emily Miller, the tape's origin, and Helena Clarke's recent disappearance."
 
 msgid "ITEM_RAILWAY_LANTERN_NAME"
 msgstr "Rusted Railway Lantern"
@@ -674,10 +674,10 @@ msgid "PROMPT_LEVER_PUSH_UP"
 msgstr "Push lever %d up"
 
 msgid "JOURNAL_LEFT"
-msgstr "Marina, 34.\n\nHer sister lives out of town. The copy passed through at least three people before reaching her. One of them didn't know Marina's name.\n\nThe copy I was lent has no sound.\n\nThe newspaper says the body was on the ground. Her sister remembers being told in the first call that Marina was sitting down. Check with the railway employee who found her.\n\nHer sister thinks Marina knew the person in the recording. She asked me to look again."
+msgstr "Emily Miller\n\nThe copy has no sound. I don't know who was on the other side of the camera.\n\nFind who passed on the first tape, not another copy of the same excerpt."
 
 msgid "JOURNAL_RIGHT"
-msgstr "Marina wasn't the first case I looked into. Other families I've spoken to still don't know who did it either. Request the newspaper issues that followed the other clippings.\n\nWho was filming?\nWho passed on the copy?\nWho kept the original?\n\nCall Marina's sister again.\n\n— Sophia"
+msgstr "Helena Clarke — disappeared last week. Seen near the tracks. Check the location with Daniel.\n\nRequest the newspaper issues that followed the other clippings. Compare what was published with what the families remember.\n\n— Sophia Bennett"
 
 msgid "ITEM_RAILWAY_LANTERN_DESCRIPTION"
 msgstr "An old brass railway lantern used by night watchmen."
@@ -921,7 +921,7 @@ msgid "READABLE_FICHA_NOTE"
 msgstr "I knew you'd find it, Juli. You're the only one who actually pays attention.\n\nTake the token to the top of the hill — let's make that call."
 
 msgid "READABLE_JOURNAL"
-msgstr "Marina, 34.\n\nHer sister lives out of town. The copy passed through at least three people before reaching her. One of them didn't know Marina's name.\n\nThe copy I was lent has no sound.\n\nThe newspaper says the body was on the ground. Her sister remembers being told in the first call that Marina was sitting down. Check with the railway employee who found her.\n\nHer sister thinks Marina knew the person in the recording. She asked me to look again.\n\nMarina wasn't the first case I looked into. Other families I've spoken to still don't know who did it either. Request the newspaper issues that followed the other clippings.\n\nWho was filming?\nWho passed on the copy?\nWho kept the original?\n\nCall Marina's sister again.\n\n— Sophia\n\n[center]· · ·[/center]\n\n[i][b]BRANCH-LINE SHELTER — WORK COMPLETED[/b]\n\nFloor washed.\nOne bench plank replaced.\nNo damage to pillars.\n\nCleared for use.\n\nRailway Maintenance\n\nThe morning after the body was removed.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Request another copy of my school transcript.[/i]"
+msgstr "Emily Miller\n\nThe copy has no sound. I don't know who was on the other side of the camera.\n\nFind who passed on the first tape, not another copy of the same excerpt.\n\nHelena Clarke — disappeared last week. Seen near the tracks. Check the location with Daniel.\n\nRequest the newspaper issues that followed the other clippings. Compare what was published with what the families remember.\n\n— Sophia Bennett\n\n[center]· · ·[/center]\n\n[i][b]BRANCH-LINE SHELTER — WORK COMPLETED[/b]\n\nFloor washed.\nOne bench plank replaced.\nNo damage to pillars.\n\nCleared for use.\n\nRailway Maintenance\n\nThe morning after the body was removed.\n— Sophia[/i]\n\n[center]· · ·[/center]\n\n[i]Request another copy of my school transcript.[/i]"
 
 msgid "READABLE_HOUSE_AD"
 msgstr "[b]HOUSE FOR SALE[/b]\n\nLiving room, kitchen, two bedrooms, and pantry.\n\nFinishing work required.\n\n[b][i]OURS?\nLucas[/i][/b]\n\n[i]The blue windows are beautiful.\nSophia[/i]"
@@ -1288,10 +1288,10 @@ msgid "JOURNAL_MARGIN"
 msgstr "Request another copy of my school transcript."
 
 msgid "ITEM_VHS_NAME"
-msgstr "Videotape"
+msgstr "Videotape — Emily Miller"
 
 msgid "ITEM_VHS_DESCRIPTION"
-msgstr "A silent copy associated with the investigation into Marina's death. The label does not identify who made the recording."
+msgstr "A silent copy associated with the investigation into Emily Miller's death. The label does not identify who made the recording."
 
 msgid "PROMPT_EXAMINE_TAPE"
 msgstr "Examine tape"
@@ -1300,71 +1300,107 @@ msgid "READABLE_VHS_LABEL"
 msgstr "[b]ABRIGO / CÓPIA[/b]\n\nDevolver na sexta."
 
 msgid "ITEM_CLIPPING_NAME"
-msgstr "Clipping with Photograph"
+msgstr "Clipping with Photograph — Emily Miller"
 
 msgid "ITEM_CLIPPING_DESCRIPTION"
 msgstr "A photograph of the shelter is attached to the clipping. Blood covers part of the seat, runs between the planks, and darkens the floor around it. The body had already been removed when the picture was taken."
 
 msgid "READABLE_CLIPPING"
-msgstr "[b]WOMAN FOUND DEAD AT BRANCH-LINE SHELTER[/b]\n\nMarina, 34, was found dead yesterday morning at the shelter on the old railway branch line. A railway employee discovered the body on the ground between the bench and one of the pillars.\n\nAccording to information provided to the newspaper, her clothes were bloodstained, and there was blood on the bench and floor. The body was removed before the site was reopened.\n\nResidents interviewed said they had not witnessed the incident. Police are investigating the death as a homicide. The cause of death had not been released when this edition went to press. No suspects have been identified."
+msgstr "[b]EMILY MILLER FOUND DEAD AT BRANCH-LINE SHELTER[/b]\n\nEmily Miller, 34, was found dead yesterday morning by a railway employee. Her body was on the ground near the shelter bench.\n\nThere was blood on the seat, floor, and base of one of the pillars. Part of the bench was damaged. The site was reopened after the body was removed.\n\nPolice are investigating the death as a homicide. The cause of death had not been released when this edition went to press."
 
 msgid "PHOTO_CAPTION_SHELTER"
 msgstr "Branch-line shelter, after the body was removed."
 
 msgid "ITEM_MARINA_SISTER_NOTE_NAME"
-msgstr "Note from Marina's Sister"
+msgstr "Note from Emily's Sister"
 
 msgid "ITEM_MARINA_SISTER_NOTE_DESCRIPTION"
-msgstr "A folded sheet kept with Sophia's clippings. Marina's sister describes the first phone call about the discovery of the body."
+msgstr "A folded sheet kept among Sophia's papers. It refers to the copy of the recording."
 
 msgid "READABLE_MARINA_SISTER_NOTE"
-msgstr "He said he had found Marina sitting down. I remember because I asked if she was waiting for someone.\n\nThe newspaper says she was on the ground.\n\nThey might have moved her. I just wanted him to explain without telling me to forget about it. It's been years, and no one has come back to talk to us."
+msgstr "This is the copy I was given. They said it was only this part.\n\nLet me know if you find out who recorded it. Don't send another tape without speaking to me first."
+
+msgid "ITEM_HELENA_NOTICE_NAME"
+msgstr "Recent News — Helena Clarke"
+
+msgid "ITEM_HELENA_NOTICE_DESCRIPTION"
+msgstr "A recent clipping about the disappearance of Helena Clarke, a resident of the Fenda."
+
+msgid "READABLE_HELENA_NOTICE"
+msgstr "[b]SEARCH FOR HELENA CLARKE CONTINUES[/b]\n\nHelena Clarke, a resident of the Fenda, remains missing. According to information received by the search team, she was last seen near the railway line.\n\nHer family asks that any information about her whereabouts be reported to the local station."
 
 msgid "CAPTION_SHED_MEM_01"
-msgstr "You're still looking into those cases in the Fenda?"
+msgstr "This is the copy Emily's sister lent me."
 
 msgid "CAPTION_SHED_MEM_02"
-msgstr "I spoke to Marina's sister. She lent me this copy."
-
-msgid "CAPTION_SHED_MEM_03"
 msgstr "There's no sound?"
 
-msgid "CAPTION_SHED_MEM_04"
+msgid "CAPTION_SHED_MEM_03"
 msgstr "The copy came like this."
 
 msgid "CAPTION_SHED_TALK_01"
-msgstr "Did you talk to the man who found her?"
+msgstr "You shouldn't keep watching this kind of thing."
 
 msgid "CAPTION_SHED_TALK_02"
-msgstr "I tried. When I asked about the bench,"
+msgstr "I wanted to know who was on this side of the camera."
 
 msgid "CAPTION_SHED_TALK_03"
-msgstr "he wanted to know who had given me the tape."
+msgstr "Leave it alone."
 
 msgid "CAPTION_SHED_TALK_04"
-msgstr "Maybe he just didn't want to remember."
+msgstr "The guards must be investigating."
 
 msgid "CAPTION_SHED_TALK_05"
-msgstr "Maybe. I told him he didn't have to talk that day."
+msgstr "I asked Daniel."
 
 msgid "CAPTION_SHED_TALK_06"
-msgstr "Are you going back?"
+msgstr "They're looking for Helena Clarke now."
 
 msgid "CAPTION_SHED_TALK_07"
-msgstr "Her sister is waiting for me to call."
+msgstr "I read that name somewhere… But that was a while ago, wasn't it?"
 
 msgid "CAPTION_SHED_TALK_08"
-msgstr "You didn't even know Marina."
+msgstr "Last week. She was seen near the tracks."
 
 msgid "CAPTION_SHED_TALK_09"
-msgstr "No."
+msgstr "It isn't safe here."
 
 msgid "CAPTION_SHED_TALK_10"
-msgstr "Then why are you getting involved?"
+msgstr "It never was. I found some old news reports and…"
 
 msgid "CAPTION_SHED_TALK_11"
-msgstr "I asked her to call me if she remembered anything else."
+msgstr "No."
 
 msgid "CAPTION_SHED_TALK_12"
-msgstr "I'm not going to pretend she didn't call."
+msgstr "I have to work tomorrow."
+
+msgid "CAPTION_SHED_TALK_13"
+msgstr "I don't want to think about this every time I leave home."
+
+msgid "CAPTION_SHED_TALK_14"
+msgstr "I'm sorry."
+
+msgid "CAPTION_SHED_TALK_15"
+msgstr "Want to watch Dead Poets Society?"
+
+msgid "CAPTION_SHED_TALK_16"
+msgstr "Of course. But only if we make brigadeiro first?"
+
+msgid "CAPTION_SHED_REPLAY_01"
+msgstr "Here. Behind her."
+
+msgid "CAPTION_SHED_REPLAY_02"
+msgstr "Sophia…"
+
+msgid "CAPTION_SHED_REPLAY_03"
+msgstr "I thought it was part of the pillar."
+
+msgid "CAPTION_SHED_REPLAY_04"
+msgstr "She might have heard something."
+
+msgid "CAPTION_SHED_REPLAY_05"
+msgstr "She might have."
+
+msgid "CAPTION_SHED_REPLAY_06"
+msgstr "No. Can you stop, please?"
 

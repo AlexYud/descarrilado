@@ -2,12 +2,12 @@ extends Node
 
 ## Plays the waiting shed ("The Shelter Stayed Open") through the game's own APIs: the removed puzzle is gone, the bench cluster fits the bench, the box
 ## opens with a plain interaction and shows the tape over the token, the tape and the token are reached by the interaction ray as they should be, the first close of
-## the tape's view hands the player to the recording scene without a gap, the scene runs once (about 22 s of SILENT, fixed-camera footage: Marina on the bench, a
-## visitor whose head is never in the picture; then a still close view of the print on the clipping, then the remembered conversation; the cameras, the shelter's
-## three looks under the cuts, the camcorder, the held view and flashlight given back), the token is then free and taken normally, and old saves are mapped (never
-## replaying the scene, never bringing the token back). `_check_footage` and `_check_states_and_photo` check the rig, the walk, the crop of the visitor's head over
-## the whole timeline, the fixed picture, the ferns and the shipped photograph by their numbers. Run it as a scene; it quits by itself with a non-zero exit code on
-## failure. Game time runs faster so the waits are short. It cannot judge the picture, the acting or the pace: see the screenshots taken separately.
+## the tape's view hands the player to the recording scene without a gap, the scene runs once (about 24 s of silent footage in three shots and two hard cuts: Emily on the bench, who waits
+## six seconds, turns toward her left and greets someone out of the picture; a camera carried forward over the forest floor; the empty bloodstained shelter from the photograph's own viewpoint;
+## then the tape again, held on her greeting as Juliana asks to stop, the remembered conversation and the cut to the photograph; the cameras, the shelter's three looks under the cuts, the camcorder,
+## the held view and flashlight given back), the token is then free and taken normally, and old saves are mapped (never replaying the scene, never bringing the token back). `_check_footage` and
+## `_check_states_and_photo` check the rig, the six seconds, the left turn and the wave, shot A's framing, the walk's travel, bob and pitch, shot C's match with the photograph's viewpoint, the stains
+## and the shipped photograph by their numbers. Run it as a scene; it quits by itself with a non-zero exit code on failure. Game time runs faster so the waits are short. It cannot judge the picture, the acting or the pace: see the screenshots taken separately.
 
 const TEST_SAVE_DIRECTORY: String = "res://.godot/codex_waiting_shed_smoke"
 const TEST_SCENE_PATH: String = "res://scenes/levels/waiting_shed_playtest.tscn"
@@ -152,30 +152,60 @@ func _check_layout() -> void:
 	_expect(facing.dot(to_bench) > 0.99, "its lens faces the bench")
 
 
-## The note from Marina's sister: one more optional readable on the bench (a world Inspectable, never an inventory item), with the approved name, description and words
-## in both languages, saying "sitting" where the clipping says "on the ground", and nothing the two cannot support.
+## The note from Emily's sister: the same optional readable on the bench (a world Inspectable, never an inventory item, its scene and inspect id unchanged), now about where
+## the copy came from, with the approved name, description and words in both languages and nothing the fragment cannot support.
 func _check_sister_note(undecided: Array[String]) -> void:
 	var note: Inspectable = shed.get_node("%MarinaSisterNote")
 	var visual: Node3D = note.get_node("Visual") as Node3D
-	_expect(note.scene_file_path == "res://scenes/objects/waiting_shed/marina_sister_note.tscn" and note.get_script() != load("res://scripts/interactions/collectible_interactable.gd") and not note.get("item_id"), "the sister's note is a world readable, not something to pick up")
-	_expect(str(visual.get_meta("inspect_id")) == "marina_sister_note" and str(visual.get_meta("inspect_mode")) == "read" and str(visual.get_meta("readable_text")) == "READABLE_MARINA_SISTER_NOTE", "with its own inspect id, read as a document")
-	_expect(_translated("ITEM_MARINA_SISTER_NOTE_NAME", "en") == "Note from Marina's Sister" and _translated("ITEM_MARINA_SISTER_NOTE_NAME", "pt_BR") == "Bilhete da irmã de Marina", "its name is the approved one in both languages")
-	_expect(_translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "en") == "A folded sheet kept with Sophia's clippings. Marina's sister describes the first phone call about the discovery of the body." and _translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "pt_BR") == "Uma folha dobrada, guardada com os recortes de Sophia. A irmã de Marina comenta o primeiro telefonema sobre a descoberta do corpo.", "and so is its description")
-	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "en") == "He said he had found Marina sitting down. I remember because I asked if she was waiting for someone.\n\nThe newspaper says she was on the ground.\n\nThey might have moved her. I just wanted him to explain without telling me to forget about it. It's been years, and no one has come back to talk to us.", "its English words are the approved ones")
-	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "pt_BR") == "Ele disse que tinha encontrado a Marina sentada. Eu lembro porque perguntei se ela estava esperando alguém.\n\nNo jornal está escrito que ela estava no chão.\n\nPode ser que tenham tirado ela de lá. Eu só queria que ele me contasse sem mandar esquecer. Já faz anos e ninguém voltou para falar com a gente.", "and so are the Portuguese ones")
+	_expect(note.scene_file_path == "res://scenes/objects/waiting_shed/marina_sister_note.tscn" and note.get_script() != load("res://scripts/interactions/collectible_interactable.gd") and not note.get("item_id"), "the sister's note keeps its scene and is a world readable, not something to pick up")
+	_expect(str(visual.get_meta("inspect_id")) == "marina_sister_note" and str(visual.get_meta("inspect_mode")) == "read" and str(visual.get_meta("readable_text")) == "READABLE_MARINA_SISTER_NOTE", "with its inspect id, in read mode")
+	_expect(_translated("ITEM_MARINA_SISTER_NOTE_NAME", "en") == "Note from Emily's Sister" and _translated("ITEM_MARINA_SISTER_NOTE_NAME", "pt_BR") == "Bilhete da irmã de Emily", "its name is the approved one (Emily's sister)")
+	_expect(_translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "en") == "A folded sheet kept among Sophia's papers. It refers to the copy of the recording." and _translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "pt_BR") == "Uma folha dobrada guardada entre os papéis de Sophia. Faz referência à cópia da gravação.", "and its description")
+	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "en") == "This is the copy I was given. They said it was only this part.\n\nLet me know if you find out who recorded it. Don't send another tape without speaking to me first.", "its words, in English")
+	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "pt_BR") == "Essa é a cópia que me passaram. Disseram que era só esse pedaço.\n\nSe você descobrir quem gravou, me avisa. Não manda outra fita sem falar comigo antes.", "and in Portuguese")
 	for locale: String in ["en", "pt_BR"]:
 		var lowered: String = (_translated("READABLE_MARINA_SISTER_NOTE", locale) + " " + _translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", locale)).to_lower()
 		for word: String in undecided:
 			_expect(not lowered.contains(word), "the note says nothing of '%s' (%s)" % [word.strip_edges(), locale])
-		for proof: String in (["cover-up", "covered up", "proves", "murder", "killed", "police", "signed", "address"] if locale == "en" else ["encobr", "prova", "assassin", "matou", "polícia", "endereço"]):
-			_expect(not lowered.contains(proof), "and claims no proof, no name and no address ('%s', %s)" % [proof, locale])
-	_expect(_translated("READABLE_CLIPPING", "en").contains("on the ground between the bench") and _translated("READABLE_CLIPPING", "pt_BR").contains("no chão, entre o banco"), "the clipping still says the body was on the ground (the two accounts stay in conflict)")
-	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "en").contains("sitting down") and not _translated("READABLE_CLIPPING", "en").contains("sitting"), "while only the note says sitting down")
+		for banned: String in ["marina", "helena", "autopsy", "autópsia", "threat", "ameaç"]:
+			_expect(not lowered.contains(banned), "and nothing of '%s' (%s)" % [banned, locale])
+
+
+## The optional paper that is new: the recent clipping about Helena Clarke (pinned to a shelter post, facing the bench).
+func _check_new_papers() -> void:
+	var notice: Inspectable = shed.get_node("%HelenaClarkeNotice")
+	var visual: Node3D = notice.get_node("Visual") as Node3D
+	_expect(notice.get_script() == load("res://scripts/interactions/inspectable_interactable.gd") and not notice.get("item_id"), "the Helena Clarke notice is an ordinary world readable: no item, no inventory, no trigger")
+	_expect(str(visual.get_meta("inspect_id")) == "helena_clarke_notice" and str(visual.get_meta("inspect_mode")) == "read" and str(visual.get_meta("readable_text")) == "READABLE_HELENA_NOTICE", "with its inspect id, in read mode")
+	_expect(_translated("ITEM_HELENA_NOTICE_NAME", "en") == "Recent News — Helena Clarke" and _translated("ITEM_HELENA_NOTICE_NAME", "pt_BR") == "Notícia recente — Helena Clarke", "its name (both languages)")
+	_expect(_translated("ITEM_HELENA_NOTICE_DESCRIPTION", "en") == "A recent clipping about the disappearance of Helena Clarke, a resident of the Fenda." and _translated("ITEM_HELENA_NOTICE_DESCRIPTION", "pt_BR") == "Um recorte recente sobre o desaparecimento de Helena Clarke, moradora da Fenda.", "its description (both languages)")
+	_expect(_translated("READABLE_HELENA_NOTICE", "en") == "[b]SEARCH FOR HELENA CLARKE CONTINUES[/b]\n\nHelena Clarke, a resident of the Fenda, remains missing. According to information received by the search team, she was last seen near the railway line.\n\nHer family asks that any information about her whereabouts be reported to the local station.", "its words, in English")
+	_expect(_translated("READABLE_HELENA_NOTICE", "pt_BR") == "[b]CONTINUAM AS BUSCAS POR HELENA CLARKE[/b]\n\nHelena Clarke, moradora da Fenda, continua desaparecida. Segundo as informações recebidas pela equipe de busca, ela foi vista pela última vez nas proximidades da linha férrea.\n\nA família pede que qualquer informação sobre seu paradeiro seja comunicada ao posto local.", "and in Portuguese")
+	for locale: String in ["en", "pt_BR"]:
+		var lowered: String = (_translated("READABLE_HELENA_NOTICE", locale) + " " + _translated("ITEM_HELENA_NOTICE_DESCRIPTION", locale)).to_lower()
+		for banned: String in ["emily", "miller", "dead", "morta", "morto", "34", "neighbo", "vizinh", "killer", "assassin", "homicid"]:
+			_expect(not lowered.contains(banned), "the Helena notice has nothing of Emily's case or of a death ('%s', %s)" % [banned, locale])
+
+	# Where it is: on the west post, at hand height, facing the bench, clear of the notebook, the box, the tape and everything else's hit area.
+	var post: Vector3 = shed.to_global(Vector3(-5.7, 1.38, -7.0))
+	_expect(notice.global_position.distance_to(Vector3(post.x + 0.124, post.y, post.z)) < 0.03 and notice.global_basis.z.dot(Vector3.RIGHT) > 0.95, "it is pinned to the shelter's west post, its face towards the bench")
+	var notice_area: Area3D = notice.get_node("InteractArea") as Area3D
+	var notice_box: AABB = (notice_area.get_node("CollisionShape3D") as CollisionShape3D).shape.get_debug_mesh().get_aabb()
+	var notice_bounds: AABB = notice_area.global_transform * notice_box
+	for other: Node in [shed.get_node("%SophiaJournal"), shed.get_node("%NewspaperClipping"), shed.get_node("%MarinaSisterNote"), shed.get_node("%SwitchBox"), shed.vhs, shed.ficha]:
+		for area: Node in other.find_children("*", "Area3D", true, false):
+			var shape: CollisionShape3D = area.get_node_or_null("CollisionShape3D") as CollisionShape3D
+			if shape != null and shape.shape != null:
+				var other_bounds: AABB = shape.global_transform * shape.shape.get_debug_mesh().get_aabb()
+				_expect(not notice_bounds.intersects(other_bounds), "its hit area is clear of %s's" % other.name)
+
+
 
 func _check_text() -> void:
 	var journal: Inspectable = shed.get_node("%SophiaJournal")
-	_expect(tr(journal.get_inspect_data()["name"]) == "Sophia's Notebook", "the notebook is Sophia's Notebook")
-	_expect(tr(journal.get_inspect_data()["description"]) == "Clippings folded between pages of notes about the shelter.", "with its description")
+	_expect(tr(journal.get_inspect_data()["name"]) == "Sophia Bennett's Notebook", "the notebook is Sophia Bennett's Notebook")
+	_expect(tr(journal.get_inspect_data()["description"]) == "Notes about Emily Miller, the tape's origin, and Helena Clarke's recent disappearance.", "with its description")
+	_expect(_translated("ITEM_SOPHIA_JOURNAL_NAME", "pt_BR") == "Caderno de Sophia Bennett" and _translated("ITEM_SOPHIA_JOURNAL_DESCRIPTION", "pt_BR") == "Anotações sobre Emily Miller, a origem da fita e o desaparecimento recente de Helena Clarke.", "(and in Portuguese)")
 	var old_words: Array[String] = ["light the track", "punch the ticket", "blow the signal", "junction box", "wrench", "secret code", "lever"]
 	for key: String in ["READABLE_JOURNAL", "JOURNAL_LEFT", "JOURNAL_RIGHT", "JOURNAL_EXTRACT", "JOURNAL_MARGIN"]:
 		for locale: String in ["en", "pt_BR"]:
@@ -183,53 +213,39 @@ func _check_text() -> void:
 			_expect(not text.is_empty() and text != key.to_lower(), "%s has %s text" % [key, locale])
 			for word: String in old_words:
 				_expect(not text.contains(word), "%s (%s) has none of the old clue %s" % [key, locale, word])
+			_expect(not text.contains("marina"), "%s (%s) has no Marina: the old victim is Emily" % [key, locale])
 
-	# The notebook: the copy has no sound (once), the two accounts of how Marina was found (the newspaper: on the ground; her sister's first call: sitting down), who was
-	# filming; no help, no timestamp, no cause, and no explanation chosen.
-	var undecided: Array[String] = ["stabb", "knife", "firearm", "pistol", "bullet", "gunshot", "revólver", "arma de fogo", "strangl", "poison", "overdose", "beaten", "weapon", "wound", "autopsy", "faca", "tiro", "arma ", "estrangul", "veneno", "espancad", "ferimento", "autópsia", "facada"]
+	var undecided: Array[String] = ["stabb", "knife", "firearm", "pistol", "bullet", "gunshot", "revólver", "arma de fogo", "strangl", "poison", "overdose", "beaten", "weapon", "wound", "autopsy", "faca", "apunhal", "estrangul", "envenen", "espanc", "arma ", "ferida", "autópsia"]
+	var mains: Dictionary = {
+		"en": ["Emily Miller\n\nThe copy has no sound. I don't know who was on the other side of the camera.\n\nFind who passed on the first tape, not another copy of the same excerpt.", "Helena Clarke — disappeared last week. Seen near the tracks. Check the location with Daniel.\n\nRequest the newspaper issues that followed the other clippings. Compare what was published with what the families remember.\n\n— Sophia Bennett"],
+		"pt_BR": ["Emily Miller\n\nA cópia não tem som. Não sei quem estava do outro lado da câmera.\n\nProcurar quem passou a primeira fita, não outra cópia do mesmo trecho.", "Helena Clarke — desapareceu na semana passada. Vista perto dos trilhos. Confirmar com Daniel o local.\n\nPedir as edições seguintes aos outros recortes. Comparar o que foi publicado com o que as famílias lembram.\n\n— Sophia Bennett"],
+	}
 	for locale: String in ["en", "pt_BR"]:
 		var full: String = _translated("READABLE_JOURNAL", locale)
-		var needle: String = "Marina, 34" if locale == "en" else "Marina, 34 anos"
-		_expect(full.contains(needle), "the notebook's reading text starts with Marina (%s)" % locale)
+		var left: String = (mains[locale] as Array)[0]
+		var right: String = (mains[locale] as Array)[1]
+		_expect(_translated("JOURNAL_LEFT", locale) == left and _translated("JOURNAL_RIGHT", locale) == right, "the world pages carry the approved notes, as they are (%s)" % locale)
+		_expect(full.begins_with(left + "\n\n" + right), "and the reading text starts with the same words, whole (%s)" % locale)
 		var extract: String = "Cleared for use." if locale == "en" else "Liberado para uso."
-		_expect(full.contains(extract), "the maintenance extract is in the same reading text (%s)" % locale)
+		_expect(full.contains(extract) and _translated("JOURNAL_EXTRACT", locale).contains(extract), "the maintenance extract is kept, in the reading text and on its own page (%s)" % locale)
 		var margin: String = "school transcript" if locale == "en" else "histórico escolar"
 		_expect(full.contains(margin), "and the margin note (%s)" % locale)
-		_expect(_translated("JOURNAL_EXTRACT", locale).contains(extract), "the world page carries the extract too (%s)" % locale)
-		var no_sound: String = "The copy I was lent has no sound." if locale == "en" else "A cópia que me emprestaram está sem som."
-		_expect(full.count(no_sound) == 1 and _translated("JOURNAL_LEFT", locale).count(no_sound) == 1, "the notebook says the copy has no sound, once, in the reading text and on the page (%s)" % locale)
-		var ground: String = "The newspaper says the body was on the ground. Her sister remembers being told in the first call that Marina was sitting down. Check with the railway employee who found her." if locale == "en" else "O jornal diz que o corpo estava no chão. A irmã lembra que, no primeiro telefonema, disseram que Marina estava sentada. Confirmar com o funcionário que encontrou ela."
-		_expect(full.count(ground) == 1 and _translated("JOURNAL_LEFT", locale).count(ground) == 1, "the notebook sets the two accounts side by side, once, and goes no further than checking (%s)" % locale)
-		var other_cases: String = "Marina wasn't the first case I looked into. Other families I've spoken to still don't know who did it either. Request the newspaper issues that followed the other clippings." if locale == "en" else "Marina não foi o primeiro caso que procurei. Outras famílias com quem falei também continuam sem saber quem foi. Pedir as edições seguintes aos outros recortes."
-		_expect(full.count(other_cases) == 1 and _translated("JOURNAL_RIGHT", locale).count(other_cases) == 1, "Sophia has been looking into other cases, as her own report (%s)" % locale)
-		for questions: String in (["Who was filming?\nWho passed on the copy?\nWho kept the original?"] if locale == "en" else ["Quem estava filmando?\nQuem passou a cópia?\nQuem ficou com o original?"]):
-			_expect(full.contains(questions) and _translated("JOURNAL_RIGHT", locale).contains(questions), "the three questions are on the list (%s)" % locale)
-		for sentence: String in (["Call Marina's sister again."] if locale == "en" else ["Voltar a ligar para a irmã de Marina."]):
-			_expect(full.count(sentence) == 1 and _translated("JOURNAL_RIGHT", locale).count(sentence) == 1, "and the call to the sister (%s)" % locale)
-		var knew: String = "Her sister thinks Marina knew the person in the recording. She asked me to look again." if locale == "en" else "A irmã acha que Marina conhecia a pessoa da fita. Pediu para eu olhar de novo."
-		_expect(full.contains(knew) and _translated("JOURNAL_LEFT", locale).contains(knew), "the sister thinks Marina knew the person, in the reading text and on the page (%s)" % locale)
-		for old: String in (["tried to help", "someone was with her at the end"] if locale == "en" else ["tentou ajudá-la", "havia alguém com ela no fim"]):
-			_expect(not full.contains(old) and not _translated("JOURNAL_LEFT", locale).contains(old), "the old sentence '%s' is gone (%s)" % [old, locale])
-		var filming: String = "Who was filming?" if locale == "en" else "Quem estava filmando?"
-		_expect(full.count(filming) == 1 and _translated("JOURNAL_RIGHT", locale).count(filming) == 1, "'Who was filming?' is on the list, once (%s)" % locale)
-		for gone_sentence: String in (["The recording I was lent is only an excerpt", "Ask who passed on the copy", "No witnesses", "voice"] if locale == "en" else ["A gravação que me emprestaram é só um trecho", "Perguntar quem passou a cópia", "Sem testemunhas", "voz"]):
-			_expect(not full.contains(gone_sentence) and not _translated("JOURNAL_LEFT", locale).contains(gone_sentence) and not _translated("JOURNAL_RIGHT", locale).contains(gone_sentence), "the old note '%s' is gone (%s)" % [gone_sentence, locale])
-		_expect(full.contains("— Sophia"), "the notebook is signed (%s)" % locale)
-		for last_word: String in (["last person", "that night", "same night"] if locale == "en" else ["última pessoa", "naquela noite", "mesma noite"]):
-			_expect(not full.to_lower().contains(last_word), "the notebook does not say '%s' (%s)" % [last_word, locale])
+		for gone_sentence: String in (["sitting down", "on the ground", "Who was filming", "railway employee", "sister"] if locale == "en" else ["sentada", "no chão", "Quem estava filmando", "funcionário", "irmã"]):
+			_expect(not full.contains(gone_sentence), "the old note about '%s' is gone from the notebook (%s)" % [gone_sentence, locale])
+		_expect(full.contains("— Sophia Bennett") and not full.contains("— Sophia\n"), "the notebook is signed with her full name (%s)" % locale)
 
 	_check_sister_note(undecided)
 
 	# The clipping with its photograph: name, description, reading text and caption, in both languages; the cause of death left undisclosed.
 	var clipping: Inspectable = shed.get_node("%NewspaperClipping")
-	_expect(tr(clipping.get_inspect_data()["name"]) == "Clipping with Photograph", "the clipping is a Clipping with Photograph")
-	_expect(_translated("ITEM_CLIPPING_NAME", "pt_BR") == "Recorte com fotografia", "and its Portuguese name")
+	_expect(tr(clipping.get_inspect_data()["name"]) == "Clipping with Photograph — Emily Miller", "the clipping is a Clipping with Photograph — Emily Miller")
+	_expect(_translated("ITEM_CLIPPING_NAME", "pt_BR") == "Recorte com fotografia — Emily Miller", "and its Portuguese name")
 	_expect(_translated("ITEM_CLIPPING_DESCRIPTION", "en") == "A photograph of the shelter is attached to the clipping. Blood covers part of the seat, runs between the planks, and darkens the floor around it. The body had already been removed when the picture was taken.", "its description (en)")
-	_expect(_translated("ITEM_CLIPPING_DESCRIPTION", "pt_BR") == "Uma fotografia do abrigo foi presa ao recorte. O sangue cobre parte do assento, escorre entre as tábuas e escurece o piso ao redor. O corpo já havia sido retirado quando a imagem foi feita.", "its description (pt_BR)")
-	_expect(_translated("READABLE_CLIPPING", "en").contains("WOMAN FOUND DEAD AT BRANCH-LINE SHELTER") and _translated("READABLE_CLIPPING", "en").contains("on the ground between the bench and one of the pillars") and _translated("READABLE_CLIPPING", "en").contains("The cause of death had not been released when this edition went to press."), "the reading text: headline, where the body lay, the cause not released (en)")
-	_expect(_translated("READABLE_CLIPPING", "pt_BR").contains("MULHER ENCONTRADA MORTA NO ABRIGO DO RAMAL") and _translated("READABLE_CLIPPING", "pt_BR").contains("no chão, entre o banco e um dos pilares") and _translated("READABLE_CLIPPING", "pt_BR").contains("A causa da morte não havia sido divulgada até o fechamento desta edição."), "and in Portuguese")
-	_expect(_translated("READABLE_CLIPPING", "en").contains("her clothes were bloodstained, and there was blood on the bench and floor") and _translated("READABLE_CLIPPING", "pt_BR").contains("as roupas estavam ensanguentadas e havia sangue no banco e no piso"), "the paper reports the blood as reported information")
-	_expect(_translated("PHOTO_CAPTION_SHELTER", "en") == "Branch-line shelter, after the body was removed." and _translated("PHOTO_CAPTION_SHELTER", "pt_BR") == "Abrigo do ramal, após a retirada do corpo.", "the photograph's caption, in both languages")
+	_expect(_translated("ITEM_CLIPPING_DESCRIPTION", "pt_BR") == "Uma fotografia do abrigo foi presa ao recorte. O sangue cobre parte do assento, escorre entre as tábuas e escurece o piso ao redor. O corpo já havia sido retirado quando a imagem foi feita.", "and (pt_BR)")
+	_expect(_translated("READABLE_CLIPPING", "en") == "[b]EMILY MILLER FOUND DEAD AT BRANCH-LINE SHELTER[/b]\n\nEmily Miller, 34, was found dead yesterday morning by a railway employee. Her body was on the ground near the shelter bench.\n\nThere was blood on the seat, floor, and base of one of the pillars. Part of the bench was damaged. The site was reopened after the body was removed.\n\nPolice are investigating the death as a homicide. The cause of death had not been released when this edition went to press.", "the clipping's words (en)")
+	_expect(_translated("READABLE_CLIPPING", "pt_BR") == "[b]EMILY MILLER ENCONTRADA MORTA NO ABRIGO DO RAMAL[/b]\n\nEmily Miller, de 34 anos, foi encontrada morta ontem pela manhã por um funcionário da linha. O corpo estava no chão, próximo ao banco do abrigo.\n\nHavia sangue no assento, no piso e na base de um dos pilares. Parte do banco estava danificada. O local foi liberado após a retirada do corpo.\n\nA polícia investiga a morte como homicídio. A causa da morte não havia sido divulgada até o fechamento desta edição.", "and (pt_BR)")
+	_expect(_translated("PHOTO_CAPTION_SHELTER", "en") == "Branch-line shelter, after the body was removed." and _translated("PHOTO_CAPTION_SHELTER", "pt_BR") == "Abrigo do ramal, após a retirada do corpo.", "the photograph's caption is as it was")
+	_check_new_papers()
 	for key: String in ["READABLE_CLIPPING", "ITEM_CLIPPING_DESCRIPTION", "READABLE_JOURNAL", "JOURNAL_LEFT", "JOURNAL_RIGHT", "ITEM_VHS_DESCRIPTION", "PHOTO_CAPTION_SHELTER"]:
 		for locale: String in ["en", "pt_BR"]:
 			var lowered: String = _translated(key, locale).to_lower()
@@ -239,10 +255,11 @@ func _check_text() -> void:
 				_expect(not lowered.contains(claim), "%s (%s) does not say the cause is medically unexplained ('%s')" % [key, locale, claim])
 
 	_expect(vhs.prompt_text == "PROMPT_EXAMINE_TAPE" and tr(vhs.prompt_text) == "Examine tape", "the tape says Examine tape")
-	_expect(tr(vhs.get_inspect_data()["name"]) == "Videotape", "the tape is a Videotape")
-	_expect(_translated("ITEM_VHS_NAME", "pt_BR") == "Fita de vídeo", "(Fita de vídeo)")
-	_expect(_translated("ITEM_VHS_DESCRIPTION", "en") == "A silent copy associated with the investigation into Marina's death. The label does not identify who made the recording.", "the tape's description (en)")
-	_expect(_translated("ITEM_VHS_DESCRIPTION", "pt_BR") == "Uma cópia sem som, associada à investigação da morte de Marina. A etiqueta não identifica quem fez a gravação.", "and (pt_BR)")
+	_expect(tr(vhs.get_inspect_data()["name"]) == "Videotape — Emily Miller", "the tape is a Videotape — Emily Miller")
+	_expect(_translated("ITEM_VHS_NAME", "pt_BR") == "Fita de vídeo — Emily Miller", "(Fita de vídeo — Emily Miller)")
+	_expect(_translated("ITEM_VHS_DESCRIPTION", "en") == "A silent copy associated with the investigation into Emily Miller's death. The label does not identify who made the recording.", "the tape's description (en)")
+	_expect(_translated("ITEM_VHS_DESCRIPTION", "pt_BR") == "Uma cópia sem som, associada à investigação da morte de Emily Miller. A etiqueta não identifica quem fez a gravação.", "and (pt_BR)")
+	_expect(_translated("READABLE_VHS_LABEL", "pt_BR").contains("ABRIGO / CÓPIA") and not _translated("READABLE_VHS_LABEL", "pt_BR").to_lower().contains("marina"), "the label on the cassette names no victim")
 	_expect(vhs.get_node("Visual").get_meta("inspect_id") == "sophia_vhs", "its inspect id is sophia_vhs")
 	_expect(not ((vhs as Node) is Collectible), "the tape is examined, never collected")
 	_expect(tr("ITEM_SOPHIA_FICHA_NAME") == "Sophia's Telephone Token" and _translated("ITEM_SOPHIA_FICHA_NAME", "pt_BR") == "Ficha de Sophia", "the token's name")
@@ -269,47 +286,129 @@ func _check_text() -> void:
 			_expect(en_text.length() < 66 and pt_text.length() < 66, "%s is one short line (a longer sentence is split into contiguous groups)" % key)
 			for banned: String in ["help", "ajud", "lip", "lábio", "watch it again", "ver de novo", "bag", "bolsa", "turn it off", "desliga"]:
 				_expect(not en_text.to_lower().contains(banned) and not pt_text.to_lower().contains(banned), "%s has nothing of the old scene (%s)" % [key, banned])
-	_expect(cue_count == 16, "four lines of introduction and twelve groups of conversation (%d)" % cue_count)
+	_expect(cue_count == 21, "three lines of introduction, sixteen groups of conversation and two lines of the second viewing (%d)" % cue_count)
 	_expect(_translated("CAPTION_SPEAKER_SOPHIA", "en") == "Sophia" and _translated("CAPTION_SPEAKER_JULIANA", "en") == "Juliana", "the speakers are labelled with their names")
 	var intro: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY)
 	var talk: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK)
-	_expect(intro >= 10.0 and intro <= 13.0, "the introduction is about 10 to 13 s (%.1f)" % intro)
-	_expect(talk >= 32.0 and talk <= 38.0, "the conversation is about 32 to 38 s (%.1f)" % talk)
+	_expect(intro >= 7.0 and intro <= 10.0, "the introduction is about 8 to 9 s (%.1f)" % intro)
+	_expect(talk >= 65.0 and talk <= 70.0, "the conversation, the second viewing included, is about 67 s (%.1f)" % talk)
 	var talk_cues: Array = CaptionTracks.get_cues(CaptionTracks.SHED_REMEMBERED_TALK)
-	# Nothing flashes and nothing waits: every group is on screen long enough to read (about 14 characters a second at the most, never under a second), the groups
-	# of a split sentence meet exactly, and the gaps between speakers are short.
-	var widest_gap: float = 0.0
+	# Every group is on screen long enough to read (never under a second, at most about 20 characters a second); a split line's groups meet exactly; and the pauses are
+	# the ones asked for: a brief one before "Aqui não é seguro.", a short silence after Juliana's "Não." and 2 to 3 s after "Desculpa.".
 	for i: int in talk_cues.size() - 1:
 		var cue: Dictionary = talk_cues[i]
 		var shown: float = float(cue["end"]) - float(cue["start"])
-		var characters: int = _translated(str(cue["key"]), "en").length()
+		var characters: int = _translated(str(cue["key"]), "pt_BR").length()
 		_expect(shown >= 1.0 and float(characters) / shown <= 20.0, "%s stays %.1f s for %d characters" % [cue["key"], shown, characters])
-		if i > 0:
-			widest_gap = maxf(widest_gap, float(cue["start"]) - float(talk_cues[i - 1]["end"]))
-	_expect(widest_gap <= 0.8, "no long pause between the lines of the conversation (%.1f s at the most)" % widest_gap)
-	var last_two: float = float(talk_cues[10]["end"]) - float(talk_cues[10]["start"]) + float(talk_cues[11]["end"]) - float(talk_cues[11]["start"])
-	_expect(last_two >= 6.0 and float(talk_cues[11]["end"]) - float(talk_cues[11]["start"]) >= 2.7, "Sophia's last two sentences get time to be read (%.1f s together)" % last_two)
-	_expect(float(talk_cues[2]["start"]) == float(talk_cues[1]["end"]) and float(talk_cues[11]["start"]) == float(talk_cues[10]["end"]), "and the groups of a split sentence meet exactly")
-	_expect(_translated("CAPTION_SHED_TALK_02", "en") + " " + _translated("CAPTION_SHED_TALK_03", "en") == "I tried. When I asked about the bench, he wanted to know who had given me the tape." and _translated("CAPTION_SHED_TALK_11", "en") + " " + _translated("CAPTION_SHED_TALK_12", "en") == "I asked her to call me if she remembered anything else. I'm not going to pretend she didn't call.", "the split sentences read as one in English")
-	_expect(_translated("CAPTION_SHED_TALK_02", "pt_BR") + " " + _translated("CAPTION_SHED_TALK_03", "pt_BR") == "Tentei. Quando perguntei sobre o banco, ele quis saber quem tinha me dado a fita." and _translated("CAPTION_SHED_TALK_11", "pt_BR") + " " + _translated("CAPTION_SHED_TALK_12", "pt_BR") == "Eu pedi para ela me ligar se lembrasse de mais alguma coisa. Agora não vou fingir que ela não ligou.", "and in Portuguese")
+	for pair: Array in [[3, 4], [5, 6], [12, 13]]:
+		var first_cue: Dictionary = _talk_cue("CAPTION_SHED_TALK_%02d" % pair[0])
+		var second_cue: Dictionary = _talk_cue("CAPTION_SHED_TALK_%02d" % pair[1])
+		_expect(float(second_cue["start"]) == float(first_cue["end"]) and first_cue["speaker"] == second_cue["speaker"], "the groups %d and %d of a split line meet exactly" % [pair[0], pair[1]])
+	var before_unsafe: float = float(_talk_cue("CAPTION_SHED_TALK_09")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_08")["end"])
+	var after_no: float = float(_talk_cue("CAPTION_SHED_TALK_12")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_11")["end"])
+	var after_sorry: float = float(_talk_cue("CAPTION_SHED_TALK_15")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_14")["end"])
+	var no_cuts_in: float = float(_talk_cue("CAPTION_SHED_TALK_11")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_10")["end"])
+	_expect(before_unsafe >= 2.0 and before_unsafe <= 3.0, "a pause before 'Aqui não é seguro.' (%.1f s)" % before_unsafe)
+	_expect(no_cuts_in <= 0.3 and after_no >= 1.5 and after_no <= 2.5, "Juliana's 'Não.' cuts in on the unfinished thought (%.1f s) and a silence follows (%.1f s)" % [no_cuts_in, after_no])
+	_expect(after_sorry >= 3.0 and after_sorry <= 4.5, "a long silence after 'Desculpa.' (%.1f s)" % after_sorry)
+	_check_second_viewing_text(talk_cues)
 	var expected_lines: Dictionary = {
-		"CAPTION_SHED_MEM_01": ["You're still looking into those cases in the Fenda?", "Você ainda tá atrás desses casos da Fenda?"],
-		"CAPTION_SHED_MEM_02": ["I spoke to Marina's sister. She lent me this copy.", "Falei com a irmã da Marina. Ela me emprestou essa cópia."],
-		"CAPTION_SHED_MEM_03": ["There's no sound?", "Tá sem som?"],
-		"CAPTION_SHED_MEM_04": ["The copy came like this.", "A cópia veio assim."],
-		"CAPTION_SHED_TALK_01": ["Did you talk to the man who found her?", "Você falou com o homem que encontrou ela?"],
-		"CAPTION_SHED_TALK_04": ["Maybe he just didn't want to remember.", "Ele podia só não querer lembrar."],
-		"CAPTION_SHED_TALK_05": ["Maybe. I told him he didn't have to talk that day.", "Podia. Eu disse que não precisava falar naquele dia."],
-		"CAPTION_SHED_TALK_06": ["Are you going back?", "E você vai voltar?"],
-		"CAPTION_SHED_TALK_07": ["Her sister is waiting for me to call.", "A irmã dela está esperando uma ligação minha."],
-		"CAPTION_SHED_TALK_08": ["You didn't even know Marina.", "Você nem conhecia a Marina."],
-		"CAPTION_SHED_TALK_09": ["No.", "Não."],
-		"CAPTION_SHED_TALK_10": ["Then why are you getting involved?", "Então por que você está se metendo nisso?"],
+		"CAPTION_SHED_MEM_01": ["This is the copy Emily's sister lent me.", "Essa é a cópia que a irmã da Emily me emprestou."],
+		"CAPTION_SHED_MEM_02": ["There's no sound?", "Tá sem som?"],
+		"CAPTION_SHED_MEM_03": ["The copy came like this.", "A cópia veio assim."],
+		"CAPTION_SHED_TALK_01": ["You shouldn't keep watching this kind of thing.", "Você não devia ficar vendo esse tipo de coisa."],
+		"CAPTION_SHED_TALK_02": ["I wanted to know who was on this side of the camera.", "Eu queria saber quem estava desse lado da câmera."],
+		"CAPTION_SHED_TALK_07": ["I read that name somewhere… But that was a while ago, wasn't it?", "Eu li esse nome… Mas faz tempo, não faz?"],
+		"CAPTION_SHED_TALK_08": ["Last week. She was seen near the tracks.", "Semana passada. Viram ela perto dos trilhos."],
+		"CAPTION_SHED_TALK_09": ["It isn't safe here.", "Aqui não é seguro."],
+		"CAPTION_SHED_TALK_10": ["It never was. I found some old news reports and…", "Nunca foi. Eu achei umas notícias antigas e…"],
+		"CAPTION_SHED_TALK_11": ["No.", "Não."],
+		"CAPTION_SHED_TALK_14": ["I'm sorry.", "Desculpa."],
+		"CAPTION_SHED_TALK_15": ["Want to watch Dead Poets Society?", "Quer ver Sociedade dos Poetas Mortos?"],
+		"CAPTION_SHED_TALK_16": ["Of course. But only if we make brigadeiro first?", "Claro. Só se fizermos um brigadeiro antes?"],
 	}
 	for key: String in expected_lines:
 		_expect(_translated(key, "en") == (expected_lines[key] as Array)[0] and _translated(key, "pt_BR") == (expected_lines[key] as Array)[1], "%s reads as written (both languages)" % key)
-	for gone: String in ["CAPTION_SPEAKER_MARINA", "CAPTION_SPEAKER_RECORDED_VOICE", "CAPTION_SHED_REC_01", "CAPTION_SHED_REC_07", "CAPTION_SHED_OFF", "CAPTION_SHED_REVIEW_01", "CAPTION_SHED_REVIEW_03", "CAPTION_SHED_TALK_13", "CAPTION_SHED_TALK_13"]:
+	var split_lines: Array = [
+		[3, 4, "Leave it alone. The guards must be investigating.", "Esquece isso. Os guardas devem estar investigando."],
+		[5, 6, "I asked Daniel. They're looking for Helena Clarke now.", "Perguntei pro Daniel. Eles estão atrás da Helena Clarke agora."],
+		[12, 13, "I have to work tomorrow. I don't want to think about this every time I leave home.", "Eu tenho que trabalhar amanhã. Não quero sair de casa pensando nisso."],
+	]
+	for line: Array in split_lines:
+		var key_a: String = "CAPTION_SHED_TALK_%02d" % line[0]
+		var key_b: String = "CAPTION_SHED_TALK_%02d" % line[1]
+		_expect(_translated(key_a, "en") + " " + _translated(key_b, "en") == line[2] and _translated(key_a, "pt_BR") + " " + _translated(key_b, "pt_BR") == line[3], "%s and %s read as one line, in both languages" % [key_a, key_b])
+	_expect(_translated("CAPTION_SHED_TALK_16", "pt_BR") == "Claro. Só se fizermos um brigadeiro antes?" and not _translated("CAPTION_SHED_TALK_16", "pt_BR").contains("Quero."), "the last line is exactly the director's, with its question mark")
+	for locale: String in ["en", "pt_BR"]:
+		for number: int in range(1, 17):
+			var spoken: String = _translated("CAPTION_SHED_TALK_%02d" % number, locale).to_lower()
+			for banned: String in ["marina", "head", "cabeça", "stop", "parar", "replay", "employee", "funcionário", "ground", "bench", "banco", "sitting", "sentada"]:
+				_expect(not spoken.contains(banned), "the conversation has nothing of the old scene or of the postponed one ('%s', line %d, %s)" % [banned, number, locale])
+	for gone: String in ["CAPTION_SPEAKER_MARINA", "CAPTION_SPEAKER_RECORDED_VOICE", "CAPTION_SHED_REC_01", "CAPTION_SHED_REC_07", "CAPTION_SHED_OFF", "CAPTION_SHED_REVIEW_01", "CAPTION_SHED_REVIEW_03", "CAPTION_SHED_MEM_04", "CAPTION_SHED_TALK_17"]:
 		_expect(_translated(gone, "en").is_empty() and _translated(gone, "pt_BR").is_empty(), "%s no longer exists" % gone)
+
+
+## The cue of the conversation's track with this key.
+func _talk_cue(key: String) -> Dictionary:
+	for cue: Dictionary in CaptionTracks.get_cues(CaptionTracks.SHED_REMEMBERED_TALK):
+		if str(cue["key"]) == key:
+			return cue
+	return {}
+
+
+## The second viewing (brief section 7C): its two remaining lines in both languages, in their place in the conversation (Juliana's request to stop first, then her warning, then "Sophia…"), the
+## lines that described the discarded footage bypassed (kept in the translation files); the machine's sounds cut from the mp3 as asked (2.30 and 6.20); and the marks the sequence derives.
+func _check_second_viewing_text(talk_cues: Array) -> void:
+	var lines: Array = [
+		["CAPTION_SHED_REPLAY_02", "Sophia…", "Sophia…", CaptionTracks.SPEAKER_JULIANA],
+		["CAPTION_SHED_REPLAY_06", "No. Can you stop, please?", "Não. Pode parar, por favor.", CaptionTracks.SPEAKER_JULIANA],
+	]
+	var order: Array[String] = []
+	for cue: Dictionary in talk_cues:
+		order.append(str(cue["key"]))
+	for line: Array in lines:
+		_expect(_translated(line[0], "en") == line[1] and _translated(line[0], "pt_BR") == line[2], "%s reads as written (both languages)" % line[0])
+		_expect(str(_talk_cue(line[0]).get("speaker", "")) == str(line[3]), "%s is spoken by the right one" % line[0])
+	# Bypassed for the three-shot recording (they describe a figure behind the pillar and the woman's head); their texts are still in the translation files.
+	var bypassed: Dictionary = {"CAPTION_SHED_REPLAY_01": ["Here. Behind her.", "Aqui. Atrás dela."], "CAPTION_SHED_REPLAY_03": ["I thought it was part of the pillar.", "Eu achei que fosse parte do pilar."], "CAPTION_SHED_REPLAY_04": ["She might have heard something.", "Ela pode ter ouvido alguma coisa."], "CAPTION_SHED_REPLAY_05": ["She might have.", "Pode."]}
+	for key: String in bypassed:
+		_expect(_talk_cue(key).is_empty() and not order.has(key), "%s is bypassed: it is not in the active track" % key)
+		_expect(_translated(key, "en") == (bypassed[key] as Array)[0] and _translated(key, "pt_BR") == (bypassed[key] as Array)[1], "but its text is still in the translation files, unchanged")
+	_expect(order.find("CAPTION_SHED_REPLAY_06") < order.find("CAPTION_SHED_TALK_01") and order.find("CAPTION_SHED_TALK_01") < order.find("CAPTION_SHED_REPLAY_02") and order.find("CAPTION_SHED_REPLAY_02") < order.find("CAPTION_SHED_TALK_02"), "Juliana asks to stop first, then the warning, then \"Sophia…\", and only then the rest of the conversation")
+
+	# The marks of the viewing: the tape starts again at once (track time 0), a few seconds before Emily turns; the picture is held just as Juliana begins to ask to stop, on her greeting, and
+	# stays held through the warning and the silence; the photograph cuts in a moment after "Sophia…".
+	var first_line: float = float(_talk_cue("CAPTION_SHED_REPLAY_06")["start"])
+	var stop_at: float = first_line + shed.replay_stop_after_start_seconds
+	var photo_at: float = float(_talk_cue("CAPTION_SHED_REPLAY_02")["end"]) + shed.photo_after_replay_seconds
+	_expect(first_line >= 1.5 and first_line <= 4.0, "a couple of seconds of the tape play before Juliana asks to stop (%.1f s)" % first_line)
+	_expect(stop_at > first_line and stop_at < first_line + 0.6, "the picture is held just as she begins to ask (%.1f s into the viewing)" % stop_at)
+	_expect(float(_talk_cue("CAPTION_SHED_TALK_01")["start"]) - stop_at >= 1.0, "with a silence before the warning (%.1f s)" % (float(_talk_cue("CAPTION_SHED_TALK_01")["start"]) - stop_at))
+	_expect(float(_talk_cue("CAPTION_SHED_REPLAY_02")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_01")["end"]) >= 0.8, "and another before \"Sophia…\" (%.1f s)" % (float(_talk_cue("CAPTION_SHED_REPLAY_02")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_01")["end"])))
+	_expect(photo_at < float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) and float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) - photo_at >= 1.0, "the photograph comes after \"Sophia…\" and holds a moment before Sophia speaks again (%.1f s)" % (float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) - photo_at))
+	var footage: ShelterFootage = shed.footage
+	var held_at: float = shed.replay_from() + stop_at
+	_expect(footage.passage_at(shed.replay_from()) == &"A" and footage.passage_at(held_at) == &"A" and held_at > footage.hand_up_start_seconds and held_at < footage.hand_down_end_seconds, "it replays from %.1f s and is held at %.1f s of the footage: on her raised hand, before the first cut, never past the new end" % [shed.replay_from(), held_at])
+	_expect(absf(float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) - 16.0) < 0.001, "(the photograph's talk is the earlier block moved 7.5 s earlier, every pause kept: its first line at %.1f s)" % float(_talk_cue("CAPTION_SHED_TALK_02")["start"]))
+	_expect(not _talk_cue("CAPTION_SHED_TALK_16").is_empty() and absf(float(_talk_cue("CAPTION_SHED_TALK_16")["end"]) - 66.2) < 0.001 and absf(float(_talk_cue("CAPTION_SHED_TALK_16")["end"]) - float(_talk_cue("CAPTION_SHED_TALK_16")["start"]) - 3.1) < 0.001, "and it ends with the same last line, 3.1 s long as before")
+
+	# The machine's sounds: the first 2.30 s, the loop from 2.30 s to 6.20 s as one seamless stream, and the stop (6.20 s to the end) played once.
+	var start_stream: AudioStreamWAV = TapePlayerSounds.start_stream()
+	var stop_stream: AudioStreamWAV = TapePlayerSounds.stop_stream()
+	var rate: float = float(start_stream.mix_rate)
+	_expect(start_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD and absf(float(start_stream.loop_begin) / rate - 2.30) < 0.001 and absf(float(start_stream.loop_end) / rate - 6.20) < 0.001, "the machine's start stream loops from 2.30 s to 6.20 s (%.3f to %.3f)" % [float(start_stream.loop_begin) / rate, float(start_stream.loop_end) / rate])
+	_expect(absf(start_stream.get_length() - 6.20) < 0.001 and stop_stream.loop_mode == AudioStreamWAV.LOOP_DISABLED and absf(stop_stream.get_length() - (TapePlayerSounds.length() - 6.20)) < 0.001 and stop_stream.get_length() > 0.6 and stop_stream.get_length() < 0.8, "and its stop stream is the last part, 6.20 s to the end (%.2f s), played once" % stop_stream.get_length())
+	_expect(TapePlayerSounds.LOOP_BEGIN == 2.30 and TapePlayerSounds.LOOP_END == 6.20, "(the cut points are the director's)")
+
+
+## Waits until the picture of the recording is running (the machine's first part is over: its clock is the audio's, which the test's time scale does not speed up) and then
+## this many seconds of the scene's time.
+func _footage_plays_for(seconds: float) -> void:
+	var guard: float = 0.0
+	while not bool(shed.get("_footage_playing")) and guard < 40.0:
+		await get_tree().process_frame
+		guard += get_process_delta_time()
+	await _wait(seconds)
 
 
 func _check_bench_fit() -> void:
@@ -426,7 +525,7 @@ func _check_scene_plays_once() -> void:
 	_expect(not player.inspect_controller.is_open(), "the tape's view is gone before the first shot")
 
 	var waited: float = 0.0
-	while shed.is_recording_running() and waited < 160.0:
+	while shed.is_recording_running() and waited < 320.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
 	_stop_watch()
@@ -434,7 +533,7 @@ func _check_scene_plays_once() -> void:
 	await get_tree().process_frame
 
 	_expect(not shed.is_recording_running() and shed.is_recording_done(), "the scene ends by itself")
-	_expect(waited > 92.0 and waited < 125.0, "it lasts under two minutes: the introduction, the 50 s recording, the photograph, the conversation (%.0f s)" % waited)
+	_expect(waited > 125.0 and waited < 200.0, "it lasts about two and a half minutes: the introduction, the machine's 2.3 s and the 62 s recording, the tape again with the conversation and the photograph (%.0f s)" % waited)
 	_expect(completed_count == 1, "it is announced once")
 	_expect(player.global_position.distance_to(start_position) < 0.05, "the player was never moved")
 	_expect(not player.view_locked and not player.manual_save_blocked and player.scripted_flashlight == scripted_before, "the view, saving and the flashlight scripting are given back")
@@ -452,19 +551,33 @@ func _check_scene_plays_once() -> void:
 	_expect(int(_seen.get("cast_in_player_view", 0)) == 0 and int(_seen.get("cast_without_recording", 0)) == 0, "and only there: never in the player's view, never without the recording's own dressing")
 	_expect(int(_seen.get("cast_in_talk", 0)) == 0, "and not in the present shots (%d frames)" % int(_seen.get("cast_in_talk", 0)))
 	_expect(int(_seen.get("foreground_outside", 0)) == 0 and bool(_seen.get("foreground_seen", false)), "the ferns are in the recording and nowhere else (%d frames outside)" % int(_seen.get("foreground_outside", 0)))
-	_expect(int(_seen.get("caption_in_recording", 0)) == 0 and int(_seen.get("caption_in_photo", 0)) == 0, "no caption while the silent footage plays, nor over the photograph (%d, %d frames)" % [int(_seen.get("caption_in_recording", 0)), int(_seen.get("caption_in_photo", 0))])
+	_expect(int(_seen.get("caption_in_recording", 0)) == 0, "no caption while the first viewing plays (%d frames)" % int(_seen.get("caption_in_recording", 0)))
+	_expect(int(_seen.get("caption_in_photo", 0)) > 100, "and the rest of the conversation is spoken over the photograph (%d frames with a caption)" % int(_seen.get("caption_in_photo", 0)))
 	_expect(int(_seen.get("source_sounds", 0)) == 0, "no sound but the tape's own noise while the recording's picture is up (%d frames)" % int(_seen.get("source_sounds", 0)))
 	_expect(int(_seen.get("tape_frames", 0)) > 100 and int(_seen.get("tape_silent_frames", 0)) <= 2, "and that noise plays the whole time (%d frames with it, %d without)" % [int(_seen.get("tape_frames", 0)), int(_seen.get("tape_silent_frames", 0))])
 	_expect(bool(_seen.get("tape_loops", false)) and str(_seen.get("tape_path", "")).ends_with("placeholder_video_tape.mp3") and int(_seen.get("tape_outside", 0)) == 0, "it is placeholder_video_tape, looped, and nowhere else (%d frames outside the recording)" % int(_seen.get("tape_outside", 0)))
 	_expect(int(_seen.get("silenced_frames", 0)) > 100 and int(_seen.get("not_silenced_in_cinema", 0)) == 0, "the wind and the night chorus are silent through the whole memory (%d frames not silent in a shot)" % int(_seen.get("not_silenced_in_cinema", 0)))
-	_expect(int(_seen.get("stale_frames", 0)) > 20 and int(_seen.get("moving_frames", 0)) > 20, "the tape's picture holds still between its own frames and stalls, and does move (%d held, %d moved)" % [int(_seen.get("stale_frames", 0)), int(_seen.get("moving_frames", 0))])
+	_expect(int(_seen.get("preroll_frames", 0)) > 5 and bool(_seen.get("preroll_static", false)), "the machine's first part plays on static, with no PLAY on it yet (%d frames)" % int(_seen.get("preroll_frames", 0)))
+	_expect(bool(_seen.get("picture_began", false)) and bool(_seen.get("picture_stream_ok", false)) and float(_seen.get("picture_machine_at", 0.0)) >= 2.28 and float(_seen.get("picture_machine_at", 0.0)) <= 2.40 and str(_seen.get("picture_label", "")) == "PLAY", "the picture begins at the machine's 2.30 s, with PLAY on it (%.3f s)" % float(_seen.get("picture_machine_at", 0.0)))
+	_expect(int(_seen.get("first_loop_frames", 0)) > 100 and float(_seen.get("first_loop_min", 0.0)) >= 2.2, "and the running sound plays, looping, all through the first viewing (%d frames)" % int(_seen.get("first_loop_frames", 0)))
+	_expect(bool(_seen.get("end_stop_sound", false)), "and when the tape ends its last part (6.20 s to the end) plays")
+	_expect(bool(_seen.get("replayed", false)) and absf(float(_seen.get("replay_from", 0.0)) - shed.replay_from()) < 0.5, "the second viewing replays the footage from where it was meant to (%.1f s)" % float(_seen.get("replay_from", 0.0)))
+	_expect(int(_seen.get("replay_frames", 0)) > 25 and bool(_seen.get("replay_label_play", false)) and int(_seen.get("replay_machine_wrong", 0)) == 0 and int(_seen.get("replay_noise_missing", 0)) == 0, "it runs with PLAY on it, the machine's running sound and the tape's own noise throughout (%d frames, %d wrong, %d without noise)" % [int(_seen.get("replay_frames", 0)), int(_seen.get("replay_machine_wrong", 0)), int(_seen.get("replay_noise_missing", 0))])
+	_expect(int(_seen.get("paused_frames", 0)) > 20 and str(_seen.get("paused_label", "")) == "PAUSE" and bool(_seen.get("paused_stop_sound", false)) and bool(_seen.get("paused_noise_off", false)), "when Juliana asks to stop, PAUSE replaces PLAY and only the machine's last part plays (%d frames held)" % int(_seen.get("paused_frames", 0)))
+	_expect(not bool(_seen.get("paused_moved", false)) and bool(_seen.get("paused_cast_shown", false)), "and the picture is held where it was, the cast still in it")
+	_expect(bool(_seen.get("paused_on_greeting", false)) and int(_seen.get("paused_off_greeting", 0)) == 0, "held on her greeting (at %.1f s of the footage), shot A's camera and lens unchanged, Emily in it and no blood" % float(_seen.get("paused_time", 99.0)))
+	_expect(int(_seen.get("replay_other_shot", 0)) == 0 and int(_seen.get("replay_shot_a_frames", 0)) > 20, "the second viewing never reaches the first cut (%d frames of shot A, %d of another)" % [int(_seen.get("replay_shot_a_frames", 0)), int(_seen.get("replay_other_shot", 0))])
+	_expect(int(_seen.get("stale_frames", 0)) > 20 and int(_seen.get("moving_frames", 0)) > 20, "the tape's picture holds still between its own frames, and does move (%d held, %d moved)" % [int(_seen.get("stale_frames", 0)), int(_seen.get("moving_frames", 0))])
 	_expect(shed.get_node_or_null("RecordedVoices") == null and shed.get_node_or_null("ArchiveTexture") == null and shed.get_node_or_null("ArchiveMotif") == null and shed.get_node_or_null("RewindFoley") == null, "the old recorded-voice, texture, motif and rewind players are gone: nothing is replayed")
 	_expect(float(_seen.get("max_footage_time", 0.0)) >= shed.footage.length_seconds - 0.2, "the footage ran to its end, once (%.1f s)" % float(_seen.get("max_footage_time", 0.0)))
 	_expect(int(_seen.get("footage_restarts", 0)) == 0, "and never went back (%d restarts)" % int(_seen.get("footage_restarts", 0)))
-	_expect(float(_seen.get("recording_camera_move", 1.0)) < 0.0001 and float(_seen.get("recording_fov_change", 1.0)) < 0.01, "the recording's camera is fixed: it did not move or zoom (%.5f m, %.3f degrees)" % [float(_seen.get("recording_camera_move", 1.0)), float(_seen.get("recording_fov_change", 1.0))])
-	_expect(bool(_seen.get("recording_at_marker", false)), "and it stood where the marker puts it, with the lens matched to the picture")
-	_expect(int(_seen.get("photo_frames", 0)) > 25 and int(_seen.get("photo_present_frames", 0)) == int(_seen.get("photo_frames", 0)), "the photograph's close view was held, with the present's dressing whole and nobody in it (%d frames)" % int(_seen.get("photo_frames", 0)))
-	_expect(float(_seen.get("talk_camera_move", 1.0)) < 0.0001 and int(_seen.get("talk_frames", 0)) > 80, "the conversation is one still shot (%.5f m over %d frames)" % [float(_seen.get("talk_camera_move", 1.0)), int(_seen.get("talk_frames", 0))])
+	_expect(int(_seen.get("camera_wrong", 0)) == 0 and int(_seen.get("frames_A", 0)) > 100 and int(_seen.get("frames_walk", 0)) > 40 and int(_seen.get("frames_aftermath", 0)) > 60 and int(_seen.get("frames_walk2", 0)) > 60, "the recording's camera is always the one the footage's own time asks for, with the lens matched to the picture (%d frames of shot A, %d walking, %d of the aftermath, %d walking again, %d wrong)" % [int(_seen.get("frames_A", 0)), int(_seen.get("frames_walk", 0)), int(_seen.get("frames_aftermath", 0)), int(_seen.get("frames_walk2", 0)), int(_seen.get("camera_wrong", 0))])
+	_expect(str(_seen.get("cuts", "")) == "A>walk,walk>aftermath,aftermath>walk2", "the first viewing has exactly three cuts, A to the walk, the walk to the aftermath, the aftermath to the second walk, and never goes back (%s)" % str(_seen.get("cuts", "")))
+	_expect(float(_seen.get("cut_one_at", 0.0)) >= 20.0 and float(_seen.get("cut_one_at", 0.0)) <= 20.2 and float(_seen.get("cut_two_at", 0.0)) >= 32.0 and float(_seen.get("cut_two_at", 0.0)) <= 32.2 and float(_seen.get("cut_three_at", 0.0)) >= 46.0 and float(_seen.get("cut_three_at", 0.0)) <= 46.2, "each cut is immediate, at the source's 20, 32 and 46 s (%.2f, %.2f, %.2f)" % [float(_seen.get("cut_one_at", 0.0)), float(_seen.get("cut_two_at", 0.0)), float(_seen.get("cut_three_at", 0.0))])
+	_expect(int(_seen.get("dressing_wrong", 0)) == 0 and int(_seen.get("dressing_checked", 0)) > 200, "in every frame of the recording the shelter was the shot's: Emily, the whole bench and the ferns in the first; each strip's litter in its walk; the broken bench and the blood, nobody, in the aftermath (%d frames, %d wrong)" % [int(_seen.get("dressing_checked", 0)), int(_seen.get("dressing_wrong", 0))])
+	_expect(int(_seen.get("light_wrong", 0)) == 0, "the camera's own faint light is off in shot A and on in the other three (%d frames wrong)" % int(_seen.get("light_wrong", 0)))
+	_expect(int(_seen.get("photo_frames", 0)) > 300 and int(_seen.get("photo_present_frames", 0)) == int(_seen.get("photo_frames", 0)), "the photograph's close view was held, with the present's dressing whole and nobody in it (%d frames)" % int(_seen.get("photo_frames", 0)))
+	_expect(float(_seen.get("photo_camera_move", 1.0)) < 0.0001, "and the photograph is one still shot to the end of the conversation (%.5f m)" % float(_seen.get("photo_camera_move", 1.0)))
 	_expect(int(_seen.get("black_frames", 0)) == 0, "no black or dissolve frame between the recording, the photograph and the conversation (%d frames of a black picture)" % int(_seen.get("black_frames", 0)))
 	_expect(not bool(_seen.get("led_on", false)), "the camcorder's light never came on: it is only there")
 	_expect(is_equal_approx(float(_seen.get("head_turn", 0.0)), 0.0), "and it never turned (%.1f degrees)" % float(_seen.get("head_turn", 0.0)))
@@ -473,7 +586,7 @@ func _check_scene_plays_once() -> void:
 	_expect(_seen.has("last_line_ms") and _seen.has("ended_ms") and after_last >= 0.0 and after_last < 9000.0 / maxf(TIME_SCALE, 0.1), "the controls come back when the conversation is over, with nothing played after it (%.1f s after the last line, real time)" % (after_last / 1000.0))
 	_expect(int(_seen.get("eyes_frames_with_scene", 0)) == 0, "nothing of the scene's own camera or recording shows once her eyes are back (%d frames)" % int(_seen.get("eyes_frames_with_scene", 0)))
 	_expect(not bool(_seen.get("saw_marina", false)) and not bool(_seen.get("saw_recorded", false)), "no subtitle ever spoke for Marina or a recorded voice")
-	_expect(bool(_seen.get("saw_last", false)), "the subtitles reached the last line, 'I'm not going to pretend she didn't call.'")
+	_expect(bool(_seen.get("saw_last", false)), "the subtitles reached the last line, 'Of course. But only if we make brigadeiro first?'")
 	_expect(str(_seen.get("order_ok", "")) == "yes", "the subtitles came in order and none was left behind across a cut (%s)" % str(_seen.get("order_ok", "")))
 	var led: MeshInstance3D = shed.camcorder.find_child("Led", true, false)
 	_expect((led.material_override as StandardMaterial3D).emission_energy_multiplier == 0.0 and shed.camcorder.visible, "its light is out and it is still there")
@@ -576,18 +689,19 @@ func _check_cancel() -> void:
 	await _wait(1.0)
 	player.flashlight_controller.flashlight_on = true
 	await _read_and_close_tape()
-	# In the footage while the visitor walks (the footage begins after the introduction's track and a short beat).
-	await _wait(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY) + 0.8 + 9.3)
-	_expect(shed.is_recording_running() and not shed.effects_root.visible and shed.footage.visible and shed.archive_foreground.visible, "(in the recording: the cast and the ferns on screen)")
-	_expect(shed.footage.current_time > shed.footage.visitor_start_seconds and shed.footage.current_time < shed.footage.arrive_time, "(the visitor is walking in: %.1f s)" % shed.footage.current_time)
+	# In the walking shot (the footage begins after the machine's first part): 11 s of the footage in.
+	await _footage_plays_for(26.0)
+	_expect(shed.is_recording_running() and not shed.effects_root.visible and shed.footage.visible and shed.footage.litter.visible and not shed.footage.marina.visible and not shed.archive_foreground.visible, "(in the recording, in the walking shot: the litter on screen, no Emily, no ferns)")
+	_expect(shed.footage.passage_at(shed.footage.current_time) == &"walk", "(the footage is at %.1f s: the walking shot)" % shed.footage.current_time)
+	_expect(shed.get_node_or_null("CinemaCamera") != null and (shed.get_node("CinemaCamera").global_transform.origin - (shed.footage.camera_at(shed.footage.current_time)["transform"] as Transform3D).origin).length() < 0.5, "(and the camera is the carried one)")
 	shed.cancel_recording()
 	await _wait(0.3)
 	_expect(not shed.is_recording_running() and not shed.is_recording_done(), "cutting the scene short leaves it to be played")
 	_expect(not player.view_locked and not player.manual_save_blocked and get_viewport().get_camera_3d() == player.movement_controller.camera, "the player has their view, saving and camera back")
 	_expect(player.flashlight_controller.flashlight_on and is_zero_approx(player.movement_controller.scripted_fov), "the flashlight and the lens are as they were")
 	_expect(shed.effects_root.visible and shed.camcorder.visible and not shed.archive_dressing.visible, "the present is whole")
-	_expect(not shed.footage.visible and is_zero_approx(shed.footage.current_time) and not shed.archive_foreground.visible and not shed.archive_dressing.visible, "the cast and the ferns are put away, the cast at its first frame, the old plank hidden")
-	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT and shed.footage.visitor.global_position.is_equal_approx(shed.footage.visitor_transform_at(0.0).origin), "and the shelter is in its present look, the visitor back at the entry")
+	_expect(not shed.footage.visible and is_zero_approx(shed.footage.current_time) and not shed.archive_foreground.visible and not shed.archive_dressing.visible and shed.footage.marina.visible and not shed.footage.aftermath.visible and not shed.footage.litter.visible, "the cast and the ferns are put away, the cast at its first frame (Emily back in it, no blood, no litter), the old plank hidden")
+	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT and not shed.footage.aftermath.is_visible_in_tree() and not shed.footage.litter.is_visible_in_tree(), "and the shelter is in its present look: the blood and the litter are not in the tree's view")
 	_expect(shed.vhs.get_parent() == container.get_node("Contents") and not shed.ficha.pickup_enabled and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)), "the tape lies on the token again and the token is still held")
 	await _wait(2.0)
 	_expect(CaptionManager.panel.visible == false, "no subtitle is left on the screen")
@@ -605,23 +719,23 @@ func _check_pause() -> void:
 	container.interact(player)
 	await _wait(1.0)
 	await _read_and_close_tape()
-	# While the visitor walks (the footage begins after the introduction): the picture stands still, the cast with it, and the visitor does not keep walking.
-	await _wait(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY) + 0.8 + 9.3)
+	# In the walking shot (the footage begins after the machine's first part): the picture stands still, the camera with it, and nothing keeps moving.
+	await _footage_plays_for(26.0)
 	var cinema: Camera3D = shed.get_node_or_null("CinemaCamera")
-	_expect(shed.is_recording_running() and cinema != null and shed.footage.visible, "(in the footage, the visitor walking)")
+	_expect(shed.is_recording_running() and cinema != null and shed.footage.visible, "(in the footage, the walking shot)")
 	var time_before: float = shed.footage.current_time
-	var root_before: Vector3 = shed.footage.visitor.global_position
-	var foot_before: Vector3 = shed.footage.visitor.to_global(shed.footage.visitor.bone_point("LeftFoot"))
+	var snapshot_before: Dictionary = _footage_snapshot(shed.footage)
+	var camera_before: Transform3D = cinema.global_transform
 	get_tree().paused = true
 	await get_tree().create_timer(1.5, true, false, true).timeout
-	_expect(is_equal_approx(shed.footage.current_time, time_before) and shed.footage.visitor.global_position.is_equal_approx(root_before) and shed.footage.visitor.to_global(shed.footage.visitor.bone_point("LeftFoot")).is_equal_approx(foot_before), "paused while walking: the clock, the root and the feet stand still (nobody walks in place)")
+	_expect(is_equal_approx(shed.footage.current_time, time_before) and _snapshots_equal(snapshot_before, _footage_snapshot(shed.footage)) and cinema.global_transform.is_equal_approx(camera_before), "paused in the walking shot: the clock, the poses, the places and the camera stand still")
 	get_tree().paused = false
 	await _wait(0.5)
-	_expect(shed.footage.current_time > time_before + 0.3 and shed.footage.visitor.global_position.distance_to(root_before) > 0.1 or shed.footage.current_time > shed.footage.arrive_time, "resumed: the footage goes on from where it was (%.2f -> %.2f)" % [time_before, shed.footage.current_time])
+	_expect(shed.footage.current_time > time_before + 0.3, "resumed: the footage goes on from where it was (%.2f -> %.2f)" % [time_before, shed.footage.current_time])
 
 	# Through the exchange, the exit and the photograph's close view.
 	var guard: float = 0.0
-	while shed.footage.visible and guard < 90.0:
+	while shed.footage.visible and guard < 320.0:
 		await get_tree().process_frame
 		guard += get_process_delta_time()
 	await _wait(1.0)
@@ -659,7 +773,7 @@ func _check_pause() -> void:
 
 
 # ============================================================
-# THE FOOTAGE (the two archival actors, their walk, the fixed camera, the ferns): numbers, not acting. Whether it reads is for the eye.
+# THE FOOTAGE (Emily, the three cameras, the ferns, the litter, the stains): numbers, not acting. Whether it reads is for the eye.
 # ============================================================
 
 func _check_footage() -> void:
@@ -670,302 +784,417 @@ func _check_footage() -> void:
 	_expect(footage != null and footage.is_prepared(), "the cast is built before the scene is watched")
 	_expect(not footage.visible, "and hidden in the present")
 	var marina: ArchiveActor = footage.marina
-	var visitor: ArchiveActor = footage.visitor
-	var floor_y: float = footage.path_stop.global_position.y
 	var seat_y: float = footage.marina_seat.global_position.y
+	var floor_y: float = seat_y - footage.bench_seat_height
 
-	# The rig: the project's rigged basic model, a local copy, one pose owner, no bag, nobody else.
-	_expect(marina.skeleton != null and visitor.skeleton != null and marina.skeleton != visitor.skeleton, "each actor has a skeleton of their own")
-	_expect(marina.skeleton.get_bone_count() == 25 and visitor.skeleton.get_bone_count() == 25, "of the model's 25 bones")
-	_expect(footage.find_children("*", "ArchiveActor", false, false).size() == 2, "there are two actors in the footage and no third")
-	_expect(footage.get_node_or_null("ArchiveBag") == null and footage.get("bag") == null, "and no bag: nothing is carried or handed over")
-	for actor: ArchiveActor in [marina, visitor]:
-		_expect(actor.find_children("*", "Skeleton3D", true, false).size() == 1, "%s has exactly one skeleton" % actor.name)
-		_expect(actor.find_children("*", "AnimationPlayer", true, false).is_empty() and actor.find_children("*", "AnimationTree", true, false).is_empty(), "%s has no AnimationPlayer or AnimationTree writing to it: the one pose owner is sample()" % actor.name)
-		_expect(actor.find_children("*", "CollisionObject3D", true, false).is_empty() and actor.find_children("*", "Camera3D", true, false).is_empty(), "%s has no collision, no interaction and no camera: archive picture only" % actor.name)
-		_expect(actor.find_children("*", "Light3D", true, false).is_empty() and actor.find_children("*", "Interactable", true, false).is_empty(), "%s casts no light and is not interactable" % actor.name)
-		var mouth: bool = false
-		for bone: int in actor.skeleton.get_bone_count():
-			var lowered: String = actor.skeleton.get_bone_name(bone).to_lower()
-			mouth = mouth or lowered.contains("jaw") or lowered.contains("mouth") or lowered.contains("lip") or lowered.contains("teeth")
-		_expect(not mouth and (actor.body.mesh as ArrayMesh).get_blend_shape_count() == 0, "%s has no jaw bone or face blend shape: no speech is animated or claimed" % actor.name)
+	# The rig: the project's rigged basic model, a local copy, one pose owner, one actor and nobody else.
+	_expect(marina.skeleton != null and marina.skeleton.get_bone_count() == 25, "Emily has a skeleton of the model's 25 bones")
+	_expect(footage.find_children("*", "ArchiveActor", false, false).size() == 1, "she is the only actor in the footage: no visitor, no operator, no second figure")
+	for gone: String in ["adult", "restraint", "forearm", "adult_behind", "adult_by_lens", "shot_b", "shot_final", "passage_b_seconds", "passage_final_seconds", "lean_start_seconds", "visitor", "gait"]:
+		_expect(footage.get(gone) == null, "nothing of the discarded footage is left on the node (%s)" % gone)
+	_expect(footage.find_children("*", "RestrainedForearm", true, false).is_empty() and footage.find_children("Restraint*", "", true, false).is_empty(), "the hand insert and the band are not in the active footage")
+	_expect(marina.find_children("*", "Skeleton3D", true, false).size() == 1 and marina.find_children("*", "AnimationPlayer", true, false).is_empty() and marina.find_children("*", "AnimationTree", true, false).is_empty(), "one skeleton, and no AnimationPlayer or AnimationTree writing to it: the one pose owner is sample()")
+	_expect(marina.find_children("*", "CollisionObject3D", true, false).is_empty() and marina.find_children("*", "Camera3D", true, false).is_empty() and marina.find_children("*", "Light3D", true, false).is_empty() and marina.find_children("*", "Interactable", true, false).is_empty(), "she has no collision, camera, light or interaction: archive picture only")
+	var mouth: bool = false
+	for bone: int in marina.skeleton.get_bone_count():
+		var lowered: String = marina.skeleton.get_bone_name(bone).to_lower()
+		mouth = mouth or lowered.contains("jaw") or lowered.contains("mouth") or lowered.contains("lip") or lowered.contains("teeth")
+	_expect(not mouth and (marina.body.mesh as ArrayMesh).get_blend_shape_count() == 0 and marina.hidden_bones.is_empty(), "no face rig is animated or claimed, and none of her bones is hidden")
 	var shared_scene: Node = (load(ArchiveActor.MODEL) as PackedScene).instantiate()
 	var shared_body: MeshInstance3D = shared_scene.get_node("Skeleton3D/Body") as MeshInstance3D
-	_expect(shared_body.mesh != marina.body.mesh and shared_body.mesh != visitor.body.mesh and marina.body.mesh != visitor.body.mesh, "each actor's body mesh is a painted copy of its own")
-	_expect((shared_body.mesh as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_COLOR] == null, "the shared model's mesh is untouched (no vertex colours were written to it)")
+	_expect(shared_body.mesh != marina.body.mesh and (shared_body.mesh as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_COLOR] == null, "her body mesh is a painted copy of her own; the shared model's mesh has no vertex colours written to it")
 	var rest_untouched: bool = true
 	for bone: int in shared_scene.get_node("Skeleton3D").get_bone_count():
-		rest_untouched = rest_untouched and (shared_scene.get_node("Skeleton3D") as Skeleton3D).get_bone_pose_rotation(bone).is_equal_approx(Quaternion.IDENTITY)
+		var shared_skeleton: Skeleton3D = shared_scene.get_node("Skeleton3D") as Skeleton3D
+		rest_untouched = rest_untouched and shared_skeleton.get_bone_pose_rotation(bone).is_equal_approx(Quaternion.IDENTITY) and shared_skeleton.get_bone_pose_scale(bone).is_equal_approx(Vector3.ONE)
 	_expect(rest_untouched, "and a fresh instance of it is still in its own rest pose")
 	shared_scene.free()
-	_expect(not marina.palette[&"top"].is_equal_approx(visitor.palette[&"top"]) and not is_equal_approx(marina.actor_scale, visitor.actor_scale), "the two are dressed differently and are two different heights")
 
-	# The timing: about 22 s, the visitor at an ordinary pace with short ramps, in the right order.
-	_expect(footage.length_seconds >= 45.0 and footage.length_seconds <= 55.0, "the tape is long, about 50 s (%.1f)" % footage.length_seconds)
-	_expect(footage.walk_speed >= 1.0 and footage.walk_speed <= 1.3, "the visitor walks at an ordinary pace (%.2f m/s)" % footage.walk_speed)
-	_expect(footage.accel_seconds <= 0.6 and footage.decel_seconds <= 0.7, "with short ramps, not a multi-second float (%.1f s, %.1f s)" % [footage.accel_seconds, footage.decel_seconds])
-	_expect(footage.visitor_start_seconds < footage.arrive_time and footage.arrive_time < footage.depart_time and footage.depart_time < footage.walk_out_time and footage.walk_out_time < footage.length_seconds, "they walk in, stop, speak, turn and walk out, in that order")
-	_expect(footage.arrive_time >= 10.0 and footage.arrive_time <= 13.5 and footage.depart_time >= 26.0 and footage.depart_time <= 30.0, "they stop about 11.5 s in, stay a long while and turn away about 27.5 s in (%.1f, %.1f)" % [footage.arrive_time, footage.depart_time])
-	_expect(footage.depart_time - footage.arrive_time >= 14.0 and footage.length_seconds - footage.walk_out_time >= 18.0, "they stay at least fourteen seconds, and she is alone for the last eighteen or more")
+	# The source timeline: about 24 s, two hard cuts, six seconds of watching before she reacts.
+	_expect(absf(footage.length_seconds - 62.0) < 0.01 and absf(footage.cut_walk_seconds - 20.0) < 0.01 and absf(footage.cut_aftermath_seconds - 32.0) < 0.01 and absf(footage.cut_walk2_seconds - 46.0) < 0.01, "the source is 62 s: the hidden camera to 20 s, the carried camera to 32 s, the aftermath to 46 s, the carried camera again to 62 s (%.1f, %.1f, %.1f, %.1f)" % [footage.length_seconds, footage.cut_walk_seconds, footage.cut_aftermath_seconds, footage.cut_walk2_seconds])
+	_expect(footage.cut_aftermath_seconds - footage.cut_walk_seconds == 12.0 and footage.cut_walk2_seconds - footage.cut_aftermath_seconds == 14.0 and footage.length_seconds - footage.cut_walk2_seconds == 16.0, "twelve seconds of walking, fourteen of the aftermath, sixteen of the second walk")
+	_expect(footage.greet_on_right and footage.turn_start_seconds == 10.0 and footage.turn_end_seconds == 12.0 and footage.hand_up_start_seconds >= 12.0 and footage.hand_up_end_seconds <= 14.0 and footage.hand_down_end_seconds >= 15.0 and footage.hand_down_end_seconds < footage.cut_walk_seconds - 2.0, "she waits ten seconds, turns toward her right until 12 s, greets from 12 s, and her hand settles by %.1f s (%.1f, %.1f, %.1f)" % [footage.hand_down_end_seconds, footage.turn_start_seconds, footage.turn_end_seconds, footage.hand_up_start_seconds])
+	_expect(footage.passage_at(0.0) == &"A" and footage.passage_at(19.99) == &"A" and footage.passage_at(20.0) == &"walk" and footage.passage_at(31.99) == &"walk" and footage.passage_at(32.0) == &"aftermath" and footage.passage_at(45.99) == &"aftermath" and footage.passage_at(46.0) == &"walk2" and footage.passage_at(62.0) == &"walk2", "the shot at each moment: the cuts are exactly at 20, 32 and 46 s")
 
-	# Marina sits ON the bench: pelvis on the seat, thighs on it, feet on the floor, hands on her thighs, the legs not mirrored.
+	# Emily sits ON the bench: pelvis on the seat, thighs on it, feet on the floor, both hands on her thighs.
 	footage.seek(0.0)
-	var marina_vertices: PackedVector3Array = marina.skinned_vertices()
-	var pelvis: PackedInt32Array = marina.vertices_of(["Hips"])
-	var thighs: PackedInt32Array = marina.vertices_of(["*UpLeg"])
-	var feet: PackedInt32Array = marina.vertices_of(["*Foot", "*ToeBase"])
+	var vertices: PackedVector3Array = marina.skinned_vertices()
 	var pelvis_low: float = 1.0e9
 	var thigh_low: float = 1.0e9
 	var feet_low: float = 1.0e9
 	var lowest: float = 1.0e9
 	var bench: Node3D = shed.get_node("%Bench")
 	var seat_front: float = bench.global_position.z + 0.23
-	for v: Vector3 in marina_vertices:
+	for v: Vector3 in vertices:
 		lowest = minf(lowest, marina.to_global(v).y)
-	for index: int in pelvis:
-		pelvis_low = minf(pelvis_low, marina.to_global(marina_vertices[index]).y)
-	for index: int in thighs:
-		var world: Vector3 = marina.to_global(marina_vertices[index])
+	for index: int in marina.vertices_of(["Hips"]):
+		pelvis_low = minf(pelvis_low, marina.to_global(vertices[index]).y)
+	for index: int in marina.vertices_of(["*UpLeg"]):
+		var world: Vector3 = marina.to_global(vertices[index])
 		if world.z < seat_front - 0.04:
 			thigh_low = minf(thigh_low, world.y)
-	for index: int in feet:
-		feet_low = minf(feet_low, marina.to_global(marina_vertices[index]).y)
-	_expect(absf(pelvis_low - seat_y) < 0.015, "Marina's pelvis rests on the seat (%.3f m off)" % (pelvis_low - seat_y))
-	_expect(thigh_low > seat_y - 0.025, "and her thighs are on it, not through it (%.3f m)" % (thigh_low - seat_y))
+	for index: int in marina.vertices_of(["*Foot", "*ToeBase"]):
+		feet_low = minf(feet_low, marina.to_global(vertices[index]).y)
+	_expect(pelvis_low > seat_y - 0.01 and pelvis_low - seat_y < 0.05 and thigh_low > seat_y - 0.01, "Emily's pelvis rests on the seat and her thighs are on it, not through it (%.3f, %.3f m)" % [pelvis_low - seat_y, thigh_low - seat_y])
 	_expect(absf(feet_low - floor_y) < 0.015 and lowest > floor_y - 0.02, "her feet are on the floor and nothing of her is under it (%.3f, %.3f m)" % [feet_low - floor_y, lowest - floor_y])
-	var seat_origin: Vector3 = footage.marina_seat.global_position
 	_expect(marina.global_position.x > bench.global_position.x - 0.85 and marina.global_position.x < bench.global_position.x - 0.1 and absf(marina.global_position.z - bench.global_position.z) < 0.2, "she sits on the bench's left half, over the seat")
-	_expect(seat_origin.distance_to(Vector3(seat_origin.x, seat_y, seat_origin.z)) < 0.001 and marina.global_basis.z.dot(Vector3.BACK) > 0.95, "facing the open front")
-	var foot_gap: float = absf(marina.bone_point("LeftFoot").z - marina.bone_point("RightFoot").z)
-	var angles: Array[float] = []
 	for side: String in ["Left", "Right"]:
-		var hip: Vector3 = marina.bone_point(side + "UpLeg")
-		var knee: Vector3 = marina.bone_point(side + "Leg")
-		angles.append(rad_to_deg((hip - knee).angle_to(marina.bone_point(side + "Foot") - knee)))
-	_expect(foot_gap > 0.05 and absf(angles[0] - angles[1]) > 8.0 and minf(angles[0], angles[1]) > 60.0, "her legs are not mirrored (feet %.2f m apart, knees %.0f and %.0f degrees)" % [foot_gap, angles[0], angles[1]])
-	for side: String in ["Left", "Right"]:
-		var hand_vertices: PackedInt32Array = marina.vertices_of([side + "Hand"])
-		var thigh_vertices: PackedInt32Array = marina.vertices_of([side + "UpLeg"])
 		var nearest: float = 1.0e9
-		for h: int in hand_vertices:
-			for t: int in thigh_vertices:
-				nearest = minf(nearest, marina_vertices[h].distance_to(marina_vertices[t]))
-		_expect(nearest < 0.035, "her %s hand rests on her thigh (%.3f m)" % [side.to_lower(), nearest])
+		for h: int in marina.vertices_of([side + "Hand"]):
+			for tv: int in marina.vertices_of([side + "UpLeg"]):
+				nearest = minf(nearest, vertices[h].distance_to(vertices[tv]))
+		_expect(nearest < 0.05, "her %s hand rests on her thigh at the start (%.3f m)" % [side.to_lower(), nearest])
+	# Nothing of her goes into the bench: no vertex of her legs, hips, arms or hands is inside any of its boxes (its legs, its planks, the old front plank of the recording), at any moment of the greeting.
+	var bench_boxes: Array[MeshInstance3D] = []
+	for item: Node in bench.find_children("*", "MeshInstance3D", true, false):
+		var bench_piece: MeshInstance3D = item as MeshInstance3D
+		if bench_piece.mesh is BoxMesh and not shed.get_node("%Bench/ReplacedPlank").is_ancestor_of(bench_piece):
+			bench_boxes.append(bench_piece)
+	for item: Node in shed.archive_dressing.get_node("Intact").find_children("*", "MeshInstance3D", true, false):
+		if (item as MeshInstance3D).mesh is BoxMesh:
+			bench_boxes.append(item as MeshInstance3D)
+	var clipped: PackedStringArray = PackedStringArray()
+	var clip_worst: float = 0.0
+	for clip_time: float in [0.0, 11.0, 12.5, 14.0, 16.0, 17.5, 19.5]:
+		footage.seek(clip_time)
+		var skin_now: PackedVector3Array = marina.skinned_vertices()
+		for index: int in marina.vertices_of(["Hips", "*Leg", "*Foot", "*ToeBase", "*Hand", "*ForeArm", "*Arm"]):
+			var world_vertex: Vector3 = marina.to_global(skin_now[index])
+			for box_node: MeshInstance3D in bench_boxes:
+				var half: Vector3 = (box_node.mesh as BoxMesh).size * 0.5
+				var local_vertex: Vector3 = box_node.global_transform.affine_inverse() * world_vertex
+				var depth: float = minf(minf(half.x - absf(local_vertex.x), half.y - absf(local_vertex.y)), half.z - absf(local_vertex.z))
+				if depth > 0.006:
+					clip_worst = maxf(clip_worst, depth)
+					if not clipped.has(str(box_node.name)):
+						clipped.append(str(box_node.name))
+	footage.seek(0.0)
+	_expect(clipped.is_empty(), "no part of her is inside the bench at any moment (worst %.3f m; into: %s)" % [clip_worst, ", ".join(clipped)])
+	var shins_free: bool = true
+	var seat_front_now: float = bench.global_position.z + 0.215
+	for index: int in marina.vertices_of(["*Foot", "*ToeBase"]):
+		shins_free = shins_free and marina.to_global(vertices[index]).z > seat_front_now + 0.02
+	_expect(shins_free, "and her feet are on the floor in front of the seat, not under it")
+	var rest_snapshot: Dictionary = _footage_snapshot(footage)
+	var rest_right_hand: Vector3 = marina.to_global(marina.bone_point("RightHand"))
+	var rest_left_hand: Vector3 = marina.to_global(marina.bone_point("LeftHand"))
 
-	# The picture: one fixed camera. The matte is 4:3; the lens is matched to it at any window size.
-	var marker: ShotMarker = shed.shot_recording
-	var camera_xf: Transform3D = marker.aimed_transform()
-	var fov: float = marker.fov
-	var top_ray: float = rad_to_deg(asin(-camera_xf.basis.z.y)) + fov * 0.5
-	_expect(shed.shot_recording != null and shed.get("shot_recording_reframe") == null and shed.get("shot_talk_to") == null, "the recording has one camera marker, no reframe")
-	_expect(top_ray > 0.5 and top_ray < 4.5, "its top edge looks very slightly above the horizon (%.1f degrees): under the chins of the standing, above a seated head" % top_ray)
-	_expect(absf(camera_xf.origin.x - shed.camcorder.global_position.x) < 0.3 and absf(camera_xf.origin.z - shed.camcorder.global_position.z) < 0.3 and absf(camera_xf.origin.y - (shed.camcorder.global_position.y + 1.33)) < 0.25, "from the camcorder's place: the reveal keeps its association")
-	for size: Vector2 in [Vector2(1920, 1080), Vector2(1280, 720), Vector2(2560, 1440), Vector2(1024, 768), Vector2(1280, 1024), Vector2(800, 800), Vector2(1600, 900), Vector2(1280, 800)]:
-		var matched: float = ArchiveVideoOverlay.matched_fov(fov, size)
-		var picture_height: float = minf(size.y, size.x / ArchiveVideoOverlay.ASPECT)
-		# The matte's top edge as a ray: the camera's own vertical half-angle scaled by the matte's share of the height.
-		var matte_top: float = rad_to_deg(atan(tan(deg_to_rad(matched) * 0.5) * picture_height / size.y))
-		_expect(absf(matte_top - fov * 0.5) < 0.001 and matched >= fov - 0.001, "in a %dx%d window the matte shows the designed frame (lens %.1f, designed %.1f)" % [int(size.x), int(size.y), matched, fov])
-
-	# The whole timeline, every 1/30 s: the visitor's head, their legs, the feet, the pelvis, Marina's face.
-	var step: float = 1.0 / 30.0
-	var head_group: PackedInt32Array = visitor.vertices_of(["Head"])
-	var marina_head_group: PackedInt32Array = marina.vertices_of(["Head"])
-	var worst_chin: float = -1.0e9
-	var head_inside: int = 0
-	var first_seen: float = -1.0
-	var last_seen: float = -1.0
-	var worst_reach: float = 0.0
-	var worst_floor: float = 0.0
-	var marina_face_worst: float = 1.0e9
-	var marina_face_inside: bool = true
-	var overlap_frames: int = 0
-	var max_speed: float = 0.0
-	var steady_low: float = 1.0e9
-	var steady_high: float = 0.0
-	var hips_lateral: float = 0.0
-	var lowest_hips: float = 1.0e9
-	var heading_error: float = 0.0
-	var turning_error: float = 0.0
-	var planted_slip: float = 0.0
-	var previous_feet: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
-	var planted_frames: Array[int] = [0, 0]
-	var previous_root: Vector3 = Vector3.ZERO
-	var time: float = 0.0
-	var first: bool = true
-	while time <= footage.length_seconds + 0.001:
-		footage.seek(time)
-		for actor: ArchiveActor in [marina, visitor]:
-			for channel: StringName in [&"hand_l", &"hand_r", &"foot_l", &"foot_r"]:
-				worst_reach = maxf(worst_reach, float(actor.reach_error[channel]))
-		var visitor_vertices: PackedVector3Array = visitor.skinned_vertices()
-		var any_inside: bool = false
-		var visitor_min_x: float = 1.0e9
-		for index: int in visitor_vertices.size():
-			var world: Vector3 = visitor.to_global(visitor_vertices[index])
-			worst_floor = minf(worst_floor, world.y - floor_y)
-			var at: Vector2 = _picture_point(camera_xf, fov, world)
-			if at.x > 0.0 and at.x < 1.0 and at.y > 0.0 and at.y < 1.0:
-				any_inside = true
-				visitor_min_x = minf(visitor_min_x, at.x)
-		for index: int in head_group:
-			var at_head: Vector2 = _picture_point(camera_xf, fov, visitor.to_global(visitor_vertices[index]))
-			if at_head.x > -0.05 and at_head.x < 1.05:
-				worst_chin = maxf(worst_chin, at_head.y)
-			if at_head.x > 0.0 and at_head.x < 1.0 and at_head.y > 0.0 and at_head.y < 1.0:
-				head_inside += 1
-		if any_inside:
-			if first_seen < 0.0:
-				first_seen = time
-			last_seen = time
-		# Marina's face stays inside the picture, clear of its edges, all the way through.
-		var mv: PackedVector3Array = marina.skinned_vertices()
-		var face_left: float = 1.0e9
-		var face_right: float = -1.0e9
-		for index: int in marina_head_group:
-			var at_face: Vector2 = _picture_point(camera_xf, fov, marina.to_global(mv[index]))
-			marina_face_worst = minf(marina_face_worst, minf(minf(at_face.x, 1.0 - at_face.x), minf(at_face.y, 1.0 - at_face.y)))
-			face_left = minf(face_left, at_face.x)
-			face_right = maxf(face_right, at_face.x)
-		# The visitor's body does not cover her face: while they are in the picture, the nearest part of them is to the right of her head.
-		if any_inside and visitor_min_x < face_right + 0.012:
-			overlap_frames += 1
-		var root_now: Vector3 = visitor.global_position
-		if not first:
-			var speed: float = root_now.distance_to(previous_root) / step
-			max_speed = maxf(max_speed, speed)
-			if time > footage.visitor_start_seconds + footage.accel_seconds + 0.2 and time < footage.arrive_time - footage.decel_seconds - 0.2:
-				steady_low = minf(steady_low, speed)
-				steady_high = maxf(steady_high, speed)
-			if speed > 0.6:
-				var travelled: Vector3 = (root_now - previous_root).normalized()
-				var facing: Vector3 = visitor.global_basis.z
-				var off: float = rad_to_deg(absf(Vector2(facing.x, facing.z).angle_to(Vector2(travelled.x, travelled.z))))
-				turning_error = maxf(turning_error, off)
-				if speed > 1.1:
-					heading_error = maxf(heading_error, off)
-		previous_root = root_now
-		var hips_channel: Vector3 = visitor.value_at(&"hips_at", time)
-		hips_lateral = maxf(hips_lateral, absf(hips_channel.x))
-		if time > footage.arrive_time + 1.0 and time < footage.depart_time:
-			lowest_hips = minf(lowest_hips, visitor.bone_point("Hips").y)
-		# A foot on the ground does not move: the ankle's world place over three frames on the ground.
-		var feet_now: Array[Vector3] = [visitor.to_global(visitor.bone_point("LeftFoot")), visitor.to_global(visitor.bone_point("RightFoot"))]
-		for f: int in 2:
-			var on_ground: bool = footage.gait.foot_up[f][int(round(time / ArchiveGait.DT))] < 0.0005
-			planted_frames[f] = planted_frames[f] + 1 if on_ground else 0
-			if planted_frames[f] >= 3 and not first:
-				planted_slip = maxf(planted_slip, feet_now[f].distance_to(previous_feet[f]))
-		previous_feet = feet_now
-		first = false
-		time += step
-	_expect(head_inside == 0 and worst_chin < -0.02, "the visitor's head never enters the picture: through the whole excerpt the lowest head vertex is %.3f of the picture's height above its top edge" % -worst_chin)
-	_expect(first_seen >= 8.0 and first_seen <= 10.5, "nobody is in the picture for the first eight seconds; the visitor appears at %.1f s" % first_seen)
-	_expect(last_seen >= 29.0 and last_seen <= 34.0, "and has left it by %.1f s, with Marina alone for the rest" % last_seen)
-	_expect(marina_face_worst > 0.03 and overlap_frames == 0, "Marina's face stays in the picture (%.2f of it from the nearest edge) and is never covered by the visitor (%d frames overlap)" % [marina_face_worst, overlap_frames])
-	_expect(worst_reach < 0.01, "every hand and foot reaches where it is asked, all through the footage (worst %.4f m)" % worst_reach)
-	_expect(worst_floor > -0.02, "the visitor is never under the floor (%.3f m)" % worst_floor)
-	_expect(max_speed > footage.walk_speed - 0.05 and max_speed < footage.walk_speed + 0.1, "the root never goes faster than the walk speed (%.2f m/s)" % max_speed)
-	_expect(steady_high - steady_low < 0.06, "most of the way in is at one steady speed (%.2f to %.2f m/s)" % [steady_low, steady_high])
-	_expect(hips_lateral < 0.05, "the walk is in place on the skeleton (no root translation inside the rig: the pelvis channel stays within %.3f m of centre)" % hips_lateral)
-	_expect(heading_error < 35.0 and turning_error < 65.0, "they face the way they travel, in and out (%.0f degrees off at speed, %.0f while turning to or from her)" % [heading_error, turning_error])
-	_expect(planted_slip < 0.004, "a foot on the ground does not move: the worst ankle drift over a frame on the ground is %.4f m" % planted_slip)
-	_expect(lowest_hips > 0.8 * visitor.actor_scale, "standing and speaking, the pelvis is back at an ordinary height (%.2f m)" % lowest_hips)
-
-	# The planned feet: both feet step, at a cadence that matches the travel, and each foot is stationary while it is down.
-	var gait: ArchiveGait = footage.gait
-	_expect(gait.steps_taken[0] >= 6 and gait.steps_taken[1] >= 6, "both feet take real steps (%d and %d)" % [gait.steps_taken[0], gait.steps_taken[1]])
-	var lifts: int = 0
-	var window_start: int = int(round((footage.visitor_start_seconds + 1.0) / ArchiveGait.DT))
-	var window_end: int = int(round((footage.visitor_start_seconds + 3.0) / ArchiveGait.DT))
-	for f: int in 2:
-		for i: int in range(window_start + 1, window_end):
-			if gait.foot_up[f][i] > 0.0005 and gait.foot_up[f][i - 1] <= 0.0005:
-				lifts += 1
-	var cadence: float = float(lifts) / 2.0
-	_expect(cadence >= 1.5 and cadence <= 3.0, "at steady walking they take %.1f steps a second, with a stride of %.2f m" % [cadence, footage.walk_speed / maxf(cadence, 0.1)])
-	var drift: float = 0.0
-	for f: int in 2:
-		for i: int in range(1, gait.frame_count()):
-			if gait.foot_up[f][i] == 0.0 and gait.foot_up[f][i - 1] == 0.0:
-				drift = maxf(drift, gait.foot_xz[f][i].distance_to(gait.foot_xz[f][i - 1]))
-	_expect(drift < 0.0001, "in the plan a foot on the ground stays exactly where it was put (%.5f m)" % drift)
-	var settle_index: int = int(round((footage.arrive_time + 1.2) / ArchiveGait.DT))
-	var apart: float = gait.foot_xz[0][settle_index].distance_to(gait.foot_xz[1][settle_index])
-	_expect(gait.foot_up[0][settle_index] == 0.0 and gait.foot_up[1][settle_index] == 0.0 and apart < 0.4 * visitor.actor_scale, "when the root has stopped the feet settle beside each other, both down (%.2f m apart)" % apart)
-	var after_stop: int = int(round((footage.arrive_time + 2.0) / ArchiveGait.DT))
-	var after_stop_end: int = int(round((footage.depart_time - 0.3) / ArchiveGait.DT))
-	var restless: float = 0.0
-	for i: int in range(after_stop, after_stop_end):
-		restless = maxf(restless, gait.foot_xz[0][i].distance_to(gait.foot_xz[0][after_stop]) + gait.foot_xz[1][i].distance_to(gait.foot_xz[1][after_stop]))
-	_expect(restless < 0.001, "while they stand and speak neither foot keeps walking in place (%.4f m)" % restless)
-
-	# Where each of them looks: attention leads the action. Marina waits (not at the stop mark), then looks at the visitor while they speak.
-	footage.seek(1.0)
-	var stop_head: Vector3 = footage.path_stop.global_position + Vector3(0.0, 1.5 * visitor.actor_scale, 0.0)
-	var waiting_gaze: float = _gaze_angle(marina, "Head", stop_head)
-	footage.seek(footage.arrive_time + 1.5)
-	var speaking_gaze: float = _gaze_angle(marina, "Head", visitor.to_global(visitor.bone_point("Head")))
-	_expect(speaking_gaze < 45.0 and waiting_gaze > speaking_gaze + 15.0, "Marina waits looking aside (%.0f degrees from where they will stand) and then looks at the visitor (%.0f degrees off)" % [waiting_gaze, speaking_gaze])
-	footage.seek(footage.walk_out_time + footage.marina_follow_after_walk_out + footage.marina_settle_seconds + 1.0)
-	var settled_gaze: float = _gaze_angle(marina, "Head", stop_head)
-	_expect(settled_gaze > speaking_gaze + 15.0, "after they have gone she is waiting again (%.0f degrees from where they stood)" % settled_gaze)
-	footage.seek(footage.length_seconds - 0.5)
-	var lens_gaze: float = _gaze_angle(marina, "Head", footage.lens_point)
-	_expect(footage.lens_point.is_finite() and lens_gaze < 14.0, "and at the end of the tape, alone, her face is turned to the camera's lens (%.0f degrees off it)" % lens_gaze)
-	var turn_start: float = footage.walk_out_time + footage.marina_follow_after_walk_out + footage.marina_settle_seconds + footage.marina_lens_after_settle_seconds
-	footage.seek(turn_start + footage.marina_lens_blend_seconds * 0.3)
-	var turning_gaze: float = _gaze_angle(marina, "Head", footage.lens_point)
-	_expect(turning_gaze > lens_gaze + 8.0 and turn_start + footage.marina_lens_blend_seconds < footage.length_seconds - 8.0, "she turns to it slowly (%.0f degrees off it a third of the way round) and then stays, looking at it, for the last eight seconds or more" % turning_gaze)
-
-	# The footage is a pure function of the time: any order, any number of times, the same picture. No other animation can run on it.
-	var probe_times: Array[float] = [0.5, 8.0, 10.2, 12.0, 20.0, 27.9, 30.0, 36.0, 49.5]
-	var reference: Dictionary = {}
-	for t: float in probe_times:
-		footage.seek(0.0)
+	# Ten seconds pass, and she does not move but for a breath; then she turns toward HER right (the model's -X), greets with her right hand and listens.
+	footage.seek(footage.turn_start_seconds - 0.1)
+	_expect(_snapshots_close(rest_snapshot, _footage_snapshot(footage)), "ten seconds pass before she reacts: at 9.9 s she is as she was at 0 (but for her breathing)")
+	var left_axis: Vector3 = marina.global_basis.x.normalized()
+	var forward_axis: Vector3 = marina.global_basis.z.normalized()
+	var flat_before: Vector3 = (marina.global_basis * marina.bone_forward("Head")).slide(Vector3.UP).normalized()
+	footage.seek(footage.turn_end_seconds + 0.3)
+	var flat_after: Vector3 = (marina.global_basis * marina.bone_forward("Head")).slide(Vector3.UP).normalized()
+	footage.seek(footage.turn_start_seconds + 0.5)
+	var flat_mid: Vector3 = (marina.global_basis * marina.bone_forward("Head")).slide(Vector3.UP).normalized()
+	# A turn about the vertical is positive toward the model's +X (her left) and negative toward her right.
+	var turned: float = rad_to_deg(flat_before.signed_angle_to(flat_after, Vector3.UP))
+	var turned_mid: float = rad_to_deg(flat_before.signed_angle_to(flat_mid, Vector3.UP))
+	_expect(turned < -25.0 and turned > -90.0, "the head turns toward HER right (%.0f degrees about the vertical, negative is her right)" % turned)
+	_expect(turned_mid < -3.0 and turned_mid > turned + 3.0, "and it turns smoothly through the second of the turn, not in one jump (%.0f degrees at its middle)" % turned_mid)
+	footage.seek(footage.hand_up_end_seconds + 0.1)
+	var raised: Vector3 = marina.to_global(marina.bone_point("RightHand"))
+	var hips: Vector3 = marina.to_global(marina.bone_point("Hips"))
+	_expect(raised.y > rest_right_hand.y + 0.3 and (raised - hips).dot(-left_axis) > 0.2 and (raised - hips).dot(forward_axis) > 0.15, "the right hand is raised toward the person on her right, in front and to the side (%.2f m above its rest)" % (raised.y - rest_right_hand.y))
+	_expect(float(marina.reach_error.get(&"hand_r", 1.0)) < 0.03 and marina.to_global(marina.bone_point("LeftHand")).distance_to(rest_left_hand) < 0.03, "within the arm's reach (%.3f m off), while the left hand stays where it was" % float(marina.reach_error.get(&"hand_r", 1.0)))
+	var xs: Array[float] = []
+	var t: float = footage.hand_up_end_seconds
+	while t <= footage.hand_up_end_seconds + footage.wave_seconds + 0.001:
 		footage.seek(t)
-		reference[t] = _footage_snapshot(footage)
+		xs.append((marina.to_global(marina.bone_point("RightHand")) - hips).dot(left_axis))
+		t += 0.05
+	var reversals: int = 0
+	var low_x: float = 1.0e9
+	var high_x: float = -1.0e9
+	for i: int in range(2, xs.size()):
+		if (xs[i] - xs[i - 1]) * (xs[i - 1] - xs[i - 2]) < -1.0e-9:
+			reversals += 1
+	for x_value: float in xs:
+		low_x = minf(low_x, x_value)
+		high_x = maxf(high_x, x_value)
+	_expect(reversals >= 2 and high_x - low_x > 0.05 and high_x - low_x < 0.25, "the greeting is a short wave: the hand swings from side to side twice or so (%d reversals, %.2f m across)" % [reversals, high_x - low_x])
+	footage.seek(footage.hand_down_end_seconds + 0.2)
+	_expect(marina.to_global(marina.bone_point("RightHand")).distance_to(rest_right_hand) < 0.06, "then it goes back down to rest on her thigh (%.3f m from where it began)" % marina.to_global(marina.bone_point("RightHand")).distance_to(rest_right_hand))
+	var listening_low: float = 1.0e9
+	var listening_high: float = -1.0e9
+	t = footage.hand_down_end_seconds + 0.3
+	while t <= footage.cut_walk_seconds - 0.05:
+		footage.seek(t)
+		var pitch_value: float = (marina.global_basis * marina.bone_forward("Head")).normalized().y
+		listening_low = minf(listening_low, pitch_value)
+		listening_high = maxf(listening_high, pitch_value)
+		t += 0.05
+	_expect(listening_high - listening_low > 0.02 and listening_high - listening_low < 0.3, "while she listens her head moves a little, a nod or two and nothing more (%.2f of its height range)" % (listening_high - listening_low))
+
+	# Where the cast is and is not, shot by shot, and the same whatever order the times come in.
+	footage.seek(3.0)
+	_expect(marina.visible and not footage.aftermath.visible and footage.litter != null and not footage.litter.visible, "in shot A: Emily is in the picture; no blood, no litter")
+	footage.seek(26.0)
+	_expect(not marina.visible and not footage.aftermath.visible and footage.litter.visible and not footage.litter2.visible, "in the first walking shot: Emily is out (her shadow with her), no blood, the forest floor's litter of its strip is there")
+	footage.seek(38.0)
+	_expect(not marina.visible and footage.aftermath.visible and not footage.litter.visible and not footage.litter2.visible, "in the aftermath: no Emily, no litter, the blood is there")
+	footage.seek(54.0)
+	_expect(not marina.visible and not footage.aftermath.visible and not footage.litter.visible and footage.litter2.visible, "in the second walking shot: no Emily, no blood, the litter of the second strip")
+	footage.seek(2.0)
+	_expect(marina.visible and not footage.aftermath.visible and not footage.litter.visible and not footage.litter2.visible and _snapshots_equal(_footage_snapshot(footage), _snapshot_at(footage, 2.0)), "seeking back to the start restores Emily and hides the blood and the litter again")
+	var probe_times: Array[float] = [0.5, 9.9, 11.0, 12.4, 13.6, 15.2, 17.6, 19.2, 24.0, 35.0, 44.0, 48.0, 54.0, 62.0]
+	var reference: Dictionary = {}
+	for tt: float in probe_times:
+		footage.seek(0.0)
+		footage.seek(tt)
+		reference[tt] = _footage_snapshot(footage)
 	var identical: bool = true
 	var bad_time: float = -1.0
 	for round_index: int in 3:
 		var shuffled: Array[float] = probe_times.duplicate()
 		shuffled.shuffle()
-		for t: float in shuffled:
-			footage.seek(t + 5.7)
-			footage.seek(t)
-			if not _snapshots_equal(reference[t] as Dictionary, _footage_snapshot(footage)):
+		for tt: float in shuffled:
+			footage.seek(tt + 5.7)
+			footage.seek(tt)
+			if not _snapshots_equal(reference[tt] as Dictionary, _footage_snapshot(footage)):
 				identical = false
-				bad_time = t
-	_expect(identical, "seeking in any order gives exactly the same poses and places at the same time (bad at %.1f)" % bad_time)
+				bad_time = tt
+	_expect(identical, "seeking in any order gives exactly the same pose, visibility and place at the same time (bad at %.1f)" % bad_time)
+	var camera_same: bool = true
+	for tt: float in probe_times:
+		var first: Dictionary = footage.camera_at(tt)
+		footage.camera_at(tt + 3.3)
+		var second: Dictionary = footage.camera_at(tt)
+		camera_same = camera_same and (first["transform"] as Transform3D).is_equal_approx(second["transform"] as Transform3D) and is_equal_approx(float(first["fov"]), float(second["fov"]))
+	_expect(camera_same, "and the camera at a time never depends on the times asked before it (no hidden state, no random noise)")
 	footage.seek(0.0)
 
-	# The foreground: a few ferns of the forest's own, still, framing the left and lower edges and leaving a clear window onto the bench.
+	# Shot A: the hidden camera, locked, oblique, Emily a third of the picture's height, the greeting arm clear of the pillars and of the ferns.
+	var shot_a: ShotMarker = footage.shot_a
+	var a_xf: Transform3D = shot_a.aimed_transform()
+	_expect(shot_a == shed.shot_recording, "shot A's camera is the scene's recording marker")
+	var locked: bool = true
+	t = 0.0
+	while t < footage.cut_walk_seconds:
+		var state: Dictionary = footage.camera_at(t)
+		locked = locked and (state["transform"] as Transform3D).is_equal_approx(a_xf) and is_equal_approx(float(state["fov"]), shot_a.fov)
+		t += 0.1
+	_expect(locked, "it does not move, zoom or shake for the first 11 seconds")
+	var heading: Vector3 = (-a_xf.basis.z).slide(Vector3.UP).normalized()
+	_expect(heading.dot(forward_axis) < -0.3 and heading.dot(left_axis) < -0.3 and heading.dot(left_axis) > -0.9, "from outside the shelter, oblique to her: the camera is on her left and in front, so her right (where she turns) is away from it (%.2f, %.2f)" % [heading.dot(forward_axis), heading.dot(left_axis)])
+	footage.seek(footage.hand_up_end_seconds + 0.2)
+	var skin: PackedVector3Array = marina.skinned_vertices()
+	var low: Vector2 = Vector2(1.0e9, 1.0e9)
+	var high: Vector2 = Vector2(-1.0e9, -1.0e9)
+	var arm_low: Vector2 = Vector2(1.0e9, 1.0e9)
+	var arm_high: Vector2 = Vector2(-1.0e9, -1.0e9)
+	var arm_group: PackedInt32Array = marina.vertices_of(["RightHand", "RightForeArm"])
+	var head_group: PackedInt32Array = marina.vertices_of(["Head"])
+	for v: Vector3 in skin:
+		var at_v: Vector2 = _picture_point(a_xf, shot_a.fov, marina.to_global(v))
+		low = low.min(at_v)
+		high = high.max(at_v)
+	for index: int in arm_group:
+		var at_arm: Vector2 = _picture_point(a_xf, shot_a.fov, marina.to_global(skin[index]))
+		arm_low = arm_low.min(at_arm)
+		arm_high = arm_high.max(at_arm)
+	var figure_height: float = high.y - low.y
+	_expect(figure_height > 0.25 and figure_height < 0.5 and low.x > 0.1 and high.x < 0.9 and low.y > 0.05 and high.y < 0.95, "Emily is about a third of the picture's height, well inside it (%.0f%%)" % (100.0 * figure_height))
+	_expect(arm_low.x > 0.05 and arm_high.x < 0.95 and arm_low.y > 0.05 and arm_high.y < 0.95, "and the greeting arm is in the picture, not at its edge (%.2f-%.2f across)" % [arm_low.x, arm_high.x])
+	var pillar_hits: int = 0
+	var head_hits: int = 0
+	for pillar_name: String in ["Pillar0", "Pillar1", "Pillar2", "Pillar3"]:
+		var pillar: MeshInstance3D = shed.get_node("%Shelter/" + pillar_name) as MeshInstance3D
+		var box: AABB = pillar.global_transform * pillar.mesh.get_aabb()
+		for index: int in arm_group:
+			if box.intersects_segment(a_xf.origin, marina.to_global(skin[index])) != null:
+				pillar_hits += 1
+		for index: int in head_group:
+			if box.intersects_segment(a_xf.origin, marina.to_global(skin[index])) != null:
+				head_hits += 1
+	_expect(pillar_hits == 0 and head_hits < head_group.size() / 5, "no pillar hides the raised arm (%d of %d vertices) and little of her head (%d of %d)" % [pillar_hits, arm_group.size(), head_hits, head_group.size()])
+	var head_rect: Rect2 = Rect2()
+	var head_rect_first: bool = true
+	for index: int in head_group:
+		var at_head: Vector2 = _picture_point(a_xf, shot_a.fov, marina.to_global(skin[index]))
+		head_rect = Rect2(at_head, Vector2.ZERO) if head_rect_first else head_rect.expand(at_head)
+		head_rect_first = false
+	var arm_rect: Rect2 = Rect2(arm_low, arm_high - arm_low)
+	var covered: int = 0
+	var counted: int = 0
 	var foreground: Node3D = shed.archive_foreground
 	_expect(foreground != null and not foreground.visible and foreground.get_child_count() >= 2 and foreground.get_child_count() <= 5, "a few ferns stand near the lens, hidden in the present")
 	_expect(foreground.find_children("*", "CollisionObject3D", true, false).is_empty() and foreground.find_children("*", "AnimationPlayer", true, false).is_empty() and foreground.find_children("*", "Light3D", true, false).is_empty(), "plain meshes: no collision, no wind animation, no light")
-	var in_picture: int = 0
-	var window_hits: PackedStringArray = PackedStringArray()
+	var fern_names: PackedStringArray = PackedStringArray()
 	for fern: Node in foreground.get_children():
 		var instance: MeshInstance3D = fern as MeshInstance3D
-		var box: AABB = instance.get_aabb()
-		var low: Vector2 = Vector2(1.0e9, 1.0e9)
-		var high: Vector2 = Vector2(-1.0e9, -1.0e9)
-		var visible_corners: int = 0
-		for corner: int in 8:
-			var local: Vector3 = box.position + Vector3(box.size.x * (corner & 1), box.size.y * ((corner >> 1) & 1), box.size.z * ((corner >> 2) & 1))
-			var at_corner: Vector2 = _picture_point(camera_xf, fov, instance.global_transform * local)
-			low = low.min(at_corner)
-			high = high.max(at_corner)
-		# The part of the fern that is in the picture, against the clear window (the right of the left strip, above the bottom strip).
-		var shown_low: Vector2 = low.max(Vector2.ZERO)
-		var shown_high: Vector2 = high.min(Vector2.ONE)
-		if shown_low.x < shown_high.x and shown_low.y < shown_high.y:
-			in_picture += 1
-			var window: Rect2 = Rect2(Vector2(0.38, 0.0), Vector2(0.58, 0.52))
-			if Rect2(shown_low, shown_high - shown_low).intersects(window):
-				window_hits.append("%s (%.2f-%.2f, %.2f-%.2f)" % [fern.name, shown_low.x, shown_high.x, shown_low.y, shown_high.y])
-	_expect(in_picture >= 2, "at least two ferns are in the picture (%d)" % in_picture)
-	_expect(window_hits.is_empty(), "and none of them is over the window onto the bench and the way the visitor walks (%s)" % ", ".join(window_hits))
+		var inside_picture: int = 0
+		for surface: int in instance.mesh.get_surface_count():
+			var arrays: Array = instance.mesh.surface_get_arrays(surface)
+			var corners: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX] if arrays[Mesh.ARRAY_INDEX] != null else PackedInt32Array()
+			if indices.is_empty():
+				for i: int in corners.size():
+					indices.append(i)
+			for tri: int in range(0, indices.size() - 2, 3):
+				for gu: int in 6:
+					for gv: int in 6 - gu:
+						var sample: Vector3 = corners[indices[tri]] * (1.0 - float(gu) / 5.0 - float(gv) / 5.0) + corners[indices[tri + 1]] * (float(gu) / 5.0) + corners[indices[tri + 2]] * (float(gv) / 5.0)
+						var world_sample: Vector3 = instance.global_transform * sample
+						if (a_xf.affine_inverse() * world_sample).z > -0.3:
+							continue
+						var at_sample: Vector2 = _picture_point(a_xf, shot_a.fov, world_sample)
+						if at_sample.x >= 0.0 and at_sample.x <= 1.0 and at_sample.y >= 0.0 and at_sample.y <= 1.0:
+							inside_picture += 1
+							counted += 1
+							if head_rect.grow(0.01).has_point(at_sample) or arm_rect.grow(0.01).has_point(at_sample):
+								covered += 1
+		fern_names.append("%s %d" % [fern.name, inside_picture])
+	_expect(counted > 60, "ferns frame the picture's edges (%s samples in it)" % ", ".join(fern_names))
+	_expect(covered == 0, "and none of them is over her head or the greeting arm (%d samples)" % covered)
+
+	# Shots B: the carried camera, genuinely moving forward along its strip, pitched down at the ground, a slow walker's bob and roll, clear of the ground and the shelter; twice, on two strips.
+	var path_one: Array[Vector3] = _check_walk(footage, "first", footage.cut_walk_seconds, footage.cut_aftermath_seconds, footage.walk_start, footage.walk_end, footage.litter, 8.5, 9.5, false)
+	var path_two: Array[Vector3] = _check_walk(footage, "second", footage.cut_walk2_seconds, footage.length_seconds, footage.walk2_start, footage.walk2_end, footage.litter2, 11.5, 12.5, true)
+	var stride_one: float = (footage.walk_end.global_position - footage.walk_start.global_position).slide(Vector3.UP).length() / (footage.cut_aftermath_seconds - footage.cut_walk_seconds) / footage.steps_per_second
+	var stride_two: float = (footage.walk2_end.global_position - footage.walk2_start.global_position).slide(Vector3.UP).length() / (footage.length_seconds - footage.cut_walk2_seconds) / footage.drag_steps_per_second
+	_expect(footage.drag_steps_per_second < footage.steps_per_second * 0.75 and stride_two > stride_one * 1.4 and footage.drag_surge > footage.walk_surge * 2.0 and footage.drag_bob_metres > footage.walk_bob_metres * 1.4, "the second walk drags something: slower steps (%.2f against %.2f a second), longer ones (%.2f m against %.2f m) and heavier ones (a bigger surge and a deeper dip)" % [footage.drag_steps_per_second, footage.steps_per_second, stride_two, stride_one])
+	var strips_apart: float = 1.0e9
+	for p1: Vector3 in path_one:
+		for p2: Vector3 in path_two:
+			strips_apart = minf(strips_apart, Vector2(p1.x - p2.x, p1.z - p2.z).length())
+	var heading_one: Vector3 = (footage.walk_end.global_position - footage.walk_start.global_position).slide(Vector3.UP).normalized()
+	var heading_two: Vector3 = (footage.walk2_end.global_position - footage.walk2_start.global_position).slide(Vector3.UP).normalized()
+	_expect(strips_apart > 1.5 and heading_one.dot(heading_two) < 0.0, "the second walk is a different path: at least %.1f m from the first everywhere, and walked the other way (%.2f)" % [strips_apart, heading_one.dot(heading_two)])
+	var terrain_free: bool = true
+	for marker: Marker3D in [footage.walk_start, footage.walk_end, footage.walk2_start, footage.walk2_end]:
+		terrain_free = terrain_free and shed.to_local(marker.global_position).y == 0.0
+	_expect(terrain_free, "both strips lie on the shelter's own ground level, and the strips were chosen clear of every tree (see the scene's comment); nothing of the terrain was moved")
+
+	# Shot C: seen from OUTSIDE, from the dark of the forest and not from the aftermath photograph's viewpoint; a person of 1.70 m with a camera at their eyes stands, then creeps in step by step at a steady
+	# pace while the aim slides to the blood and the lens closes in.
+	var capture_constants: Dictionary = (load("res://scripts/tools/capture_shelter_aftermath.gd") as Script).get_script_constant_map()
+	var capture_at: Vector3 = capture_constants["CAMERA_AT"] as Vector3
+	var shot_c: ShotMarker = footage.shot_c
+	var shelter_floor: float = shed.to_global(Vector3.ZERO).y
+	var first_c: Transform3D = shot_c.aimed_transform()
+	var shelter_box: AABB = _mesh_bounds_world(shed.get_node("%Shelter"))
+	_expect(shed.to_local(shot_c.global_position).distance_to(capture_at) > 5.0, "shot C does NOT begin at the newspaper photograph's viewpoint (%.1f m from it): it is a different, outside angle" % shed.to_local(shot_c.global_position).distance_to(capture_at))
+	_expect(shot_c.global_position.x < shelter_box.position.x - 2.0 and not shelter_box.grow(1.0).has_point(shot_c.global_position), "it begins out in the forest, west of the shelter and well clear of it")
+	var fov_low: float = 1.0e9
+	var fov_high: float = -1.0e9
+	var step_move: float = 0.0
+	var step_turn: float = 0.0
+	var roll_c: float = 0.0
+	var eye_low: float = 1.0e9
+	var eye_high: float = -1.0e9
+	var clear_of_shelter: bool = true
+	var from_photo: float = 1.0e9
+	var blood_in_view: bool = true
+	var shelter_in_view: bool = true
+	var previous: Transform3D = first_c
+	var duration_c: float = footage.cut_walk2_seconds - footage.cut_aftermath_seconds
+	var walk_from: float = footage.creep_start_seconds + footage.creep_ramp_seconds
+	var walk_to: float = footage.creep_stop_seconds - footage.creep_ramp_seconds
+	var cruise_points: Array[Vector3] = []
+	var cruise_heights: Array[float] = []
+	var first_second_heights: Array[float] = []
+	var first_second_origin: Array[Vector3] = []
+	var last_second_origin: Array[Vector3] = []
+	var cruise_speeds: Array[float] = []
+	var all_points: Array[Vector3] = []
+	t = footage.cut_aftermath_seconds
+	while t < footage.cut_walk2_seconds - 0.001:
+		var local_t: float = t - footage.cut_aftermath_seconds
+		var state_c: Dictionary = footage.camera_at(t)
+		var cxf: Transform3D = state_c["transform"] as Transform3D
+		fov_low = minf(fov_low, float(state_c["fov"]))
+		fov_high = maxf(fov_high, float(state_c["fov"]))
+		if t > footage.cut_aftermath_seconds:
+			step_move = maxf(step_move, cxf.origin.distance_to(previous.origin))
+			step_turn = maxf(step_turn, rad_to_deg((-cxf.basis.z).angle_to(-previous.basis.z)))
+			if local_t >= walk_from and local_t <= walk_to:
+				cruise_speeds.append(Vector2(cxf.origin.x - previous.origin.x, cxf.origin.z - previous.origin.z).length() / 0.05)
+		previous = cxf
+		all_points.append(cxf.origin)
+		roll_c = maxf(roll_c, rad_to_deg(absf(asin(clampf(cxf.basis.x.y, -1.0, 1.0)))))
+		eye_low = minf(eye_low, cxf.origin.y - shelter_floor)
+		eye_high = maxf(eye_high, cxf.origin.y - shelter_floor)
+		clear_of_shelter = clear_of_shelter and not shelter_box.grow(0.5).has_point(cxf.origin)
+		from_photo = minf(from_photo, shed.to_local(cxf.origin).distance_to(capture_at))
+		var blood_at: Vector2 = _picture_point(cxf, float(state_c["fov"]), footage.blood_focus.global_position)
+		if local_t > duration_c * 0.7:
+			blood_in_view = blood_in_view and blood_at.x > 0.2 and blood_at.x < 0.8 and blood_at.y > 0.15 and blood_at.y < 0.9
+		if local_t < 3.0:
+			var shelter_at: Vector2 = _picture_point(cxf, float(state_c["fov"]), shelter_box.get_center())
+			shelter_in_view = shelter_in_view and shelter_at.x > 0.15 and shelter_at.x < 0.85 and shelter_at.y > 0.1 and shelter_at.y < 0.9
+		if local_t >= walk_from and local_t <= walk_to:
+			cruise_points.append(cxf.origin)
+			cruise_heights.append(cxf.origin.y)
+		if local_t < 1.2:
+			first_second_heights.append(cxf.origin.y)
+			first_second_origin.append(cxf.origin)
+		if local_t > duration_c - 1.2:
+			last_second_origin.append(cxf.origin)
+		t += 0.05
+	_expect(eye_low > shelter_floor + 1.5 and eye_high < shelter_floor + 1.76, "at the eyes of a person of 1.70 m: the camera stays between %.2f and %.2f m over the ground" % [eye_low - shelter_floor, eye_high - shelter_floor])
+	var way: float = Vector2(all_points[all_points.size() - 1].x - first_c.origin.x, all_points[all_points.size() - 1].z - first_c.origin.z).length()
+	_expect(way > 4.0 and way < 6.0 and first_c.origin.distance_to(all_points[all_points.size() - 1]) > 4.0, "it creeps in from the forest to the shelter: %.1f m of travel in the shot" % way)
+	var mean_speed: float = 0.0
+	var slowest: float = 1.0e9
+	var fastest: float = 0.0
+	for speed: float in cruise_speeds:
+		mean_speed += speed / float(cruise_speeds.size())
+		slowest = minf(slowest, speed)
+		fastest = maxf(fastest, speed)
+	_expect(mean_speed > 0.3 and mean_speed < 0.6 and slowest > 0.15 and fastest < 0.9, "at a steady creeping pace between the ramps (%.2f m/s on average, %.2f to %.2f inside the steps)" % [mean_speed, slowest, fastest])
+	# Steps: one dip of the head at each footfall; the count follows the cadence, the dips are real, and the bump is a few centimetres.
+	var footfalls: int = 0
+	for i: int in range(5, cruise_heights.size() - 5):
+		var is_dip: bool = true
+		for j: int in range(i - 5, i + 6):
+			is_dip = is_dip and cruise_heights[i] <= cruise_heights[j]
+		if is_dip:
+			footfalls += 1
+	var expected_steps: float = footage.creep_steps_per_second * (walk_to - walk_from)
+	_expect(absf(float(footfalls) - expected_steps) <= 2.0, "its height dips at every footfall: %d dips over %.1f s (a cadence of %.2f steps a second makes %.1f)" % [footfalls, walk_to - walk_from, footage.creep_steps_per_second, expected_steps])
+	var cruise_low: float = 1.0e9
+	var cruise_high: float = -1.0e9
+	for h: float in cruise_heights:
+		cruise_low = minf(cruise_low, h)
+		cruise_high = maxf(cruise_high, h)
+	_expect(cruise_high - cruise_low > 0.04 and cruise_high - cruise_low < 0.12, "and the bump of each step is a few centimetres (%.1f cm from the lowest to the highest of the head)" % (100.0 * (cruise_high - cruise_low)))
+	var still_low: float = 1.0e9
+	var still_high: float = -1.0e9
+	for h: float in first_second_heights:
+		still_low = minf(still_low, h)
+		still_high = maxf(still_high, h)
+	_expect(still_high - still_low < 0.02 and first_second_origin[0].distance_to(first_second_origin[first_second_origin.size() - 1]) < 0.05 and last_second_origin[0].distance_to(last_second_origin[last_second_origin.size() - 1]) < 0.06, "and it stands still, without the bump of a step, before the creeping starts and after it stops")
+	_expect(fov_high - fov_low > 10.0 and absf(fov_high - shot_c.fov) < 0.01 and absf(fov_low - footage.creep_closest_fov) < 0.5, "the lens closes in on the blood (from %.0f to %.0f degrees)" % [fov_high, fov_low])
+	_expect(step_move < 0.04 and step_turn < 0.8, "it moves smoothly from frame to frame, with no snap or jitter (at most %.1f cm and %.2f degrees in 1/20 s)" % [100.0 * step_move, step_turn])
+	_expect(roll_c < 2.5, "the roll is a degree or two at most (%.2f)" % roll_c)
+	_expect(shelter_in_view, "at first the shelter is what it looks at, in the middle of the picture")
+	_expect(blood_in_view, "and at the end the pool of blood is what the camera is on: well inside the middle of the picture")
+	_expect(clear_of_shelter, "it never passes through the shelter")
+	_expect(from_photo > 3.0, "and it is never near the photograph's viewpoint (%.1f m at the nearest)" % from_photo)
+	var seam: float = (footage.camera_at(footage.cut_aftermath_seconds)["transform"] as Transform3D).origin.distance_to(first_c.origin)
+	_expect(seam < 0.05, "and it begins where its marker is (%.3f m)" % seam)
+	var matte_ok: bool = true
+	for shot_fov: float in [shot_a.fov, footage.walk_fov, shot_c.fov]:
+		for size: Vector2 in [Vector2(1920, 1080), Vector2(1280, 720), Vector2(1024, 768), Vector2(1280, 1024), Vector2(800, 800)]:
+			var matched: float = ArchiveVideoOverlay.matched_fov(shot_fov, size)
+			var picture_height: float = minf(size.y, size.x / ArchiveVideoOverlay.ASPECT)
+			var matte_top: float = rad_to_deg(atan(tan(deg_to_rad(matched) * 0.5) * picture_height / size.y))
+			matte_ok = matte_ok and absf(matte_top - shot_fov * 0.5) < 0.001 and matched >= shot_fov - 0.001
+	_expect(matte_ok, "in any window size the lens is matched to the picture's 4:3 frame for the recording's lenses (the widest of each shot)")
+
+	# The blood: the capture tool's dressing, plain textured quads on the real geometry, a place and no body.
+	var stains: Node3D = footage.aftermath
+	_expect(stains != null and stains.get_parent() == footage and stains.get_child_count() >= 8 and stains.find_children("*", "CollisionObject3D", true, false).is_empty() and stains.find_children("*", "Light3D", true, false).is_empty(), "the stains are the capture tool's own quads, plain, without collision or light, under the footage (%d)" % stains.get_child_count())
+	_expect(footage.find_children("*", "Skeleton3D", true, false).size() == 1, "and there is no body, nobody, no second skeleton, in the footage")
+
+
+## Everything the picture is made of at the time the cast was last posed, after seeking to `time`.
+func _snapshot_at(footage: ShelterFootage, time: float) -> Dictionary:
+	footage.seek(time)
+	return _footage_snapshot(footage)
 
 
 ## The states of the shelter and the aftermath photograph: three looks that never mix, and the shipped image itself.
@@ -978,18 +1207,16 @@ func _check_states_and_photo() -> void:
 	# The present.
 	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT, "the shed starts in the present")
 	_expect(shed.effects_root.visible and shed.camcorder.visible and shed.replaced_plank.visible and not dressing.visible and not footage.visible and not foreground.visible, "present: Sophia's things, the camcorder and the repaired plank are shown; nothing of the recording or the aftermath")
-	_expect(shed.find_child("AftermathBlood", true, false) == null, "and there is no blood node in the shed at all (the capture tool alone dresses it)")
-	var blood_named: Array[Node] = shed.find_children("*lood*", "", true, false)
-	_expect(blood_named.is_empty(), "nothing in the shed is called blood")
+	_expect(footage.aftermath != null and not footage.aftermath.is_visible_in_tree() and footage.litter != null and not footage.litter.is_visible_in_tree(), "and the stains and the litter, which belong to the recording's last two shots, are hidden")
 	# The recording.
 	shed.set_world_state(WaitingShedSequence.WorldState.RECORDING)
-	_expect(not shed.effects_root.visible and not shed.camcorder.visible and not shed.replaced_plank.visible and dressing.visible and intact.visible and not damaged.visible and foreground.visible and footage.visible, "recording: no belongings, the old plank whole, the ferns and the two people shown; no damaged plank")
+	_expect(not shed.effects_root.visible and not shed.camcorder.visible and not shed.replaced_plank.visible and dressing.visible and intact.visible and not damaged.visible and foreground.visible and footage.visible and footage.marina.is_visible_in_tree() and not footage.aftermath.is_visible_in_tree(), "recording (its first shot): no belongings, the old plank whole, the ferns and Emily shown; no damaged plank, no blood")
 	# The aftermath (capture only).
 	shed.set_world_state(WaitingShedSequence.WorldState.PHOTO_CAPTURE)
-	_expect(not shed.effects_root.visible and not shed.camcorder.visible and not shed.replaced_plank.visible and dressing.visible and damaged.visible and not intact.visible and not foreground.visible and not footage.visible, "aftermath: the plank broken, no belongings, no camcorder, no ferns, nobody")
+	_expect(not shed.effects_root.visible and not shed.camcorder.visible and not shed.replaced_plank.visible and dressing.visible and damaged.visible and not intact.visible and not foreground.visible and not footage.visible and not footage.aftermath.is_visible_in_tree(), "aftermath (the capture tool's look): the plank broken, no belongings, no camcorder, no ferns, nobody, and not the footage's own stains (the tool dresses its own)")
 	shed.set_world_state(WaitingShedSequence.WorldState.PRESENT)
 	_expect(shed.effects_root.visible and shed.camcorder.visible and shed.replaced_plank.visible and not dressing.visible and not footage.visible and not foreground.visible, "and back to the present, whole")
-	_expect(is_zero_approx(footage.current_time) and footage.visitor.global_position.is_equal_approx(footage.visitor_transform_at(0.0).origin), "with the cast put back at its first frame")
+	_expect(is_zero_approx(footage.current_time) and footage.marina.visible and not footage.aftermath.visible and not footage.litter.visible, "with the cast put back at its first frame: Emily in it, the blood and the litter away")
 	var bench_wood: Node = shed.get_node("%Bench")
 	_expect(bench_wood.find_children("*", "MeshInstance3D", true, false).size() > 5 and intact.get_child_count() == 1 and damaged.get_child_count() >= 8, "the old plank: one whole length for the recording, pieces for the aftermath")
 
@@ -1064,11 +1291,78 @@ func _check_states_and_photo() -> void:
 	_expect(paper_low < low.x - 0.02 and paper_high > high.x + 0.02 and paper_low > -0.1 and paper_high < 1.1, "with the paper's own edge round it, so that it reads as a photograph on a clipping (%.2f to %.2f)" % [paper_low, paper_high])
 
 
-## The angle (degrees) between where a bone of the actor faces and the direction to a world point.
-func _gaze_angle(actor: ArchiveActor, bone_name: String, world_point: Vector3) -> float:
-	var origin: Vector3 = actor.to_global(actor.bone_point(bone_name))
-	var facing: Vector3 = (actor.global_basis * actor.bone_forward(bone_name)).normalized()
-	return rad_to_deg(facing.angle_to((world_point - origin).normalized()))
+## One carried camera shot (from `from_time` to `to_time` of the footage, along the strip `start` to `end`): its travel, pace, heading, pitch, height, bob and roll; the camera clear of the ground and of the
+## shelter; the strip's litter. Returns the camera's path.
+func _check_walk(footage: ShelterFootage, label: String, from_time: float, to_time: float, start: Marker3D, end: Marker3D, litter_node: Node3D, min_length: float, max_length: float, dragging: bool) -> Array[Vector3]:
+	var strip: Vector3 = end.global_position - start.global_position
+	strip.y = 0.0
+	var seconds: float = to_time - from_time
+	_expect(strip.length() > min_length and strip.length() < max_length, "the %s strip of ground is %.2f m for %.0f seconds of walking" % [label, strip.length(), seconds])
+	var path: Array[Vector3] = []
+	var forwards: Array[Vector3] = []
+	var rolls: Array[float] = []
+	var pitches: Array[float] = []
+	var heights: Array[float] = []
+	var fov_walk_ok: bool = true
+	var step_time: float = from_time
+	while step_time < to_time - 0.001:
+		var state_b: Dictionary = footage.camera_at(step_time)
+		var xf: Transform3D = state_b["transform"] as Transform3D
+		path.append(xf.origin)
+		forwards.append(-xf.basis.z)
+		rolls.append(rad_to_deg(asin(clampf(xf.basis.x.y, -1.0, 1.0))))
+		pitches.append(rad_to_deg(asin(clampf(xf.basis.z.y, -1.0, 1.0))))
+		heights.append(xf.origin.y - start.global_position.y)
+		fov_walk_ok = fov_walk_ok and is_equal_approx(float(state_b["fov"]), footage.walk_fov)
+		step_time += 0.05
+	var covered_distance: float = Vector2(path[path.size() - 1].x - path[0].x, path[path.size() - 1].z - path[0].z).length()
+	_expect(fov_walk_ok, "(%s walk) the lens does not change while walking" % label)
+	_expect(covered_distance > min_length - 0.3 and covered_distance < max_length, "(%s walk) it really travels: %.2f m forward in %.0f seconds (a slow walk of %.2f m/s), over the ground" % [label, covered_distance, seconds, covered_distance / seconds])
+	var always_moving: bool = true
+	var steady: bool = true
+	var speeds: Array[float] = []
+	for i: int in range(1, path.size()):
+		var flat: Vector2 = Vector2(path[i].x - path[i - 1].x, path[i].z - path[i - 1].z)
+		speeds.append(flat.length() / 0.05)
+		always_moving = always_moving and flat.length() / 0.05 > (0.25 if dragging else 0.4)
+	for i: int in range(1, speeds.size()):
+		steady = steady and absf(speeds[i] - speeds[i - 1]) < (0.5 if dragging else 0.35)
+	_expect(always_moving and steady, "(%s walk) it never stops, never snaps and never goes back (no stationary shake): its pace only breathes with the steps" % label)
+	var along_strip: float = 0.0
+	for f: Vector3 in forwards:
+		along_strip += f.slide(Vector3.UP).normalized().dot(strip.normalized())
+	_expect(along_strip / float(forwards.size()) > 0.98, "(%s walk) pointed the way it goes (%.3f)" % [label, along_strip / float(forwards.size())])
+	var pitch_low: float = 1.0e9
+	var pitch_high: float = -1.0e9
+	var roll_peak: float = 0.0
+	var height_low: float = 1.0e9
+	var height_high: float = -1.0e9
+	for i: int in pitches.size():
+		pitch_low = minf(pitch_low, pitches[i])
+		pitch_high = maxf(pitch_high, pitches[i])
+		roll_peak = maxf(roll_peak, absf(rolls[i]))
+		height_low = minf(height_low, heights[i])
+		height_high = maxf(height_high, heights[i])
+	_expect(pitch_low > 50.0 and pitch_high < 75.0 and pitch_low - footage.walk_fov * 0.5 > 22.0, "(%s walk) the lens looks down at the ground (%.1f to %.1f degrees below the horizon), its top edge well below it: no faces, no sky, no operator" % [label, pitch_low, pitch_high])
+	_expect(height_low > 1.5 and height_high < 1.76 and height_high - height_low > (0.07 if dragging else 0.04) and height_high - height_low < (0.18 if dragging else 0.1), "(%s walk) at the eyes of a person of 1.70 m, with the bump of the steps (%.2f to %.2f m over the ground)" % [label, height_low, height_high])
+	_expect(roll_peak > 0.2 and roll_peak < (2.5 if dragging else 1.2), "(%s walk) and a roll of a degree or two at most (%.2f degrees)" % [label, roll_peak])
+	# The steps: a dip of the head at every footfall; the count follows the gait's cadence (and the stride, in metres a step, follows from the pace).
+	var cadence: float = footage.drag_steps_per_second if dragging else footage.steps_per_second
+	var footfalls: int = 0
+	for i: int in range(5, heights.size() - 5):
+		var lowest: bool = true
+		for j: int in range(i - 5, i + 6):
+			lowest = lowest and heights[i] <= heights[j]
+		if lowest:
+			footfalls += 1
+	_expect(absf(float(footfalls) - cadence * seconds) <= 2.5, "(%s walk) a dip of the head at every footfall: %d steps in %.0f s (a cadence of %.2f a second makes %.1f), each %.2f m long" % [label, footfalls, seconds, cadence, cadence * seconds, covered_distance / maxf(float(footfalls), 1.0)])
+	var inside_slab: bool = false
+	var slab: AABB = _mesh_bounds_world(shed.get_node("%Shelter"))
+	for p: Vector3 in path:
+		inside_slab = inside_slab or slab.has_point(p)
+	_expect(not inside_slab, "(%s walk) the camera never passes through the shelter" % label)
+	_expect(litter_node != null and litter_node.get_child_count() >= 15 and litter_node.find_children("*", "CollisionObject3D", true, false).is_empty(), "(%s walk) the forest floor of the strip has leaf litter and stones to pass through the picture, plain meshes without collision" % label)
+	return path
 
 
 ## The picture is 4:3, the camera's vertical lens `fov` (degrees): where a world point falls in it, from 0 to 1 across and down (outside means not in the picture).
@@ -1082,13 +1376,24 @@ func _picture_point(camera_xf: Transform3D, fov: float, world: Vector3) -> Vecto
 	return Vector2(0.5 + tx * 0.5, 0.5 - ty * 0.5)
 
 
-## Everything the picture is made of at the time the cast was last posed: every bone of both actors, and where the visitor stands.
+## Everything the picture is made of at the time the cast was last posed: every bone of Emily, and whether she, the stains and the litter are in the picture.
 func _footage_snapshot(footage: ShelterFootage) -> Dictionary:
 	var poses: Array[Quaternion] = []
-	for actor: ArchiveActor in [footage.marina, footage.visitor]:
-		for bone: int in actor.skeleton.get_bone_count():
-			poses.append(actor.skeleton.get_bone_pose_rotation(bone))
-	return {"poses": poses, "visitor": footage.visitor.global_transform, "hips": [footage.marina.skeleton.get_bone_pose_position(0), footage.visitor.skeleton.get_bone_pose_position(0)]}
+	for bone: int in footage.marina.skeleton.get_bone_count():
+		poses.append(footage.marina.skeleton.get_bone_pose_rotation(bone))
+	return {"poses": poses, "hips": footage.marina.skeleton.get_bone_pose_position(0), "visible": [footage.marina.visible, footage.aftermath.visible, footage.litter.visible, footage.litter2.visible]}
+
+
+## The same staging within her breathing: every bone within a few degrees, her pelvis within 2 cm, the same things in the picture.
+func _snapshots_close(a: Dictionary, b: Dictionary) -> bool:
+	var pa: Array = a["poses"]
+	var pb: Array = b["poses"]
+	if pa.size() != pb.size():
+		return false
+	for i: int in pa.size():
+		if (pa[i] as Quaternion).angle_to(pb[i] as Quaternion) > 0.06:
+			return false
+	return (a["hips"] as Vector3).distance_to(b["hips"] as Vector3) <= 0.02 and a["visible"] == b["visible"]
 
 
 func _snapshots_equal(a: Dictionary, b: Dictionary) -> bool:
@@ -1099,12 +1404,7 @@ func _snapshots_equal(a: Dictionary, b: Dictionary) -> bool:
 	for i: int in pa.size():
 		if not (pa[i] as Quaternion).is_equal_approx(pb[i] as Quaternion):
 			return false
-	var ha: Array = a["hips"]
-	var hb: Array = b["hips"]
-	for i: int in ha.size():
-		if not (ha[i] as Vector3).is_equal_approx(hb[i] as Vector3):
-			return false
-	return (a["visitor"] as Transform3D).is_equal_approx(b["visitor"] as Transform3D)
+	return (a["hips"] as Vector3).is_equal_approx(b["hips"] as Vector3) and a["visible"] == b["visible"]
 
 
 # ============================================================
@@ -1134,11 +1434,27 @@ func _watch() -> void:
 	var shots_seen: int = 0
 	var captions: Array[String] = []
 	var expected: Array[String] = [
-		"Juliana: You're still looking into those cases in the Fenda?", "Sophia: I spoke to Marina's sister. She lent me this copy.", "Juliana: There's no sound?", "Sophia: The copy came like this.",
-		"Juliana: Did you talk to the man who found her?", "Sophia: I tried. When I asked about the bench,", "Sophia: he wanted to know who had given me the tape.",
-		"Juliana: Maybe he just didn't want to remember.", "Sophia: Maybe. I told him he didn't have to talk that day.", "Juliana: Are you going back?",
-		"Sophia: Her sister is waiting for me to call.", "Juliana: You didn't even know Marina.", "Sophia: No.", "Juliana: Then why are you getting involved?",
-		"Sophia: I asked her to call me if she remembered anything else.", "Sophia: I'm not going to pretend she didn't call.",
+		"Sophia: This is the copy Emily's sister lent me.",
+		"Juliana: There's no sound?",
+		"Sophia: The copy came like this.",
+		"Juliana: No. Can you stop, please?",
+		"Juliana: You shouldn't keep watching this kind of thing.",
+		"Juliana: Sophia…",
+		"Sophia: I wanted to know who was on this side of the camera.",
+		"Juliana: Leave it alone.",
+		"Juliana: The guards must be investigating.",
+		"Sophia: I asked Daniel.",
+		"Sophia: They're looking for Helena Clarke now.",
+		"Juliana: I read that name somewhere… But that was a while ago, wasn't it?",
+		"Sophia: Last week. She was seen near the tracks.",
+		"Juliana: It isn't safe here.",
+		"Sophia: It never was. I found some old news reports and…",
+		"Juliana: No.",
+		"Juliana: I have to work tomorrow.",
+		"Juliana: I don't want to think about this every time I leave home.",
+		"Sophia: I'm sorry.",
+		"Juliana: Want to watch Dead Poets Society?",
+		"Sophia: Of course. But only if we make brigadeiro first?",
 	]
 	while _watching and is_instance_valid(shed):
 		await get_tree().process_frame
@@ -1164,41 +1480,64 @@ func _watch() -> void:
 				_seen["cast_without_recording"] = int(_seen.get("cast_without_recording", 0)) + 1
 			if in_cinema and (overlay == null or not overlay.visible):
 				_seen["cast_in_talk"] = int(_seen.get("cast_in_talk", 0)) + 1
+		if in_cinema and shed.get_world_state() == WaitingShedSequence.WorldState.RECORDING and shed.footage.visible and (overlay != null and overlay.visible):
+			var shot_now: StringName = shed.footage.passage_at(shed.footage.current_time)
+			var intact_node: Node3D = shed.archive_dressing.get_node("Intact") as Node3D
+			var damaged_node: Node3D = shed.archive_dressing.get_node("Damaged") as Node3D
+			var right: bool = shed.footage.marina.visible == (shot_now == &"A") and shed.footage.aftermath.visible == (shot_now == &"aftermath") and shed.footage.litter.visible == (shot_now == &"walk") and shed.footage.litter2.visible == (shot_now == &"walk2")
+			right = right and intact_node.visible == (shot_now == &"A" or shot_now == &"walk") and damaged_node.visible == (shot_now == &"aftermath" or shot_now == &"walk2") and shed.archive_foreground.visible == (shot_now == &"A")
+			_seen["dressing_checked"] = int(_seen.get("dressing_checked", 0)) + 1
+			if not right:
+				_seen["dressing_wrong"] = int(_seen.get("dressing_wrong", 0)) + 1
 		if shed.archive_foreground.visible:
 			_seen["foreground_seen"] = true
 			if not shed.footage.visible:
 				_seen["foreground_outside"] = int(_seen.get("foreground_outside", 0)) + 1
 		if playing:
 			var footage_time: float = shed.footage.current_time
-			if footage_time + 0.001 < float(_seen.get("max_footage_time", 0.0)):
+			if footage_time + 0.001 < float(_seen.get("max_footage_time", 0.0)) and not bool(_seen.get("replayed", false)) and bool(shed.get("replay_running")):
+				_seen["replayed"] = true
+				_seen["replay_from"] = footage_time
+			elif footage_time + 0.001 < float(_seen.get("max_footage_time", 0.0)) and not bool(shed.get("replay_running")):
 				_seen["footage_restarts"] = int(_seen.get("footage_restarts", 0)) + 1
 			_seen["max_footage_time"] = maxf(float(_seen.get("max_footage_time", 0.0)), footage_time)
-			if CaptionManager.panel.visible:
+			if CaptionManager.panel.visible and not bool(shed.get("replay_running")):
 				_seen["caption_in_recording"] = int(_seen.get("caption_in_recording", 0)) + 1
-			# The recording's camera: fixed, at its marker, with the lens matched to the picture.
-			var expected_fov: float = ArchiveVideoOverlay.matched_fov(shed.shot_recording.fov, get_viewport().get_visible_rect().size)
+			# The recording's camera: always the one the footage's own time asks for (locked, walking, drifting), with the lens matched to the picture.
 			if in_cinema:
-				if not _seen.has("recording_origin"):
-					_seen["recording_origin"] = current.global_position
-					_seen["recording_basis"] = current.global_basis
-					_seen["recording_fov"] = current.fov
-					_seen["recording_at_marker"] = current.global_transform.is_equal_approx(shed.shot_recording.aimed_transform()) and absf(current.fov - expected_fov) < 0.01
-				_seen["recording_camera_move"] = maxf(float(_seen.get("recording_camera_move", 0.0)), maxf(current.global_position.distance_to(_seen["recording_origin"] as Vector3), (current.global_basis.z - (_seen["recording_basis"] as Basis).z).length()))
-				_seen["recording_fov_change"] = maxf(float(_seen.get("recording_fov_change", 0.0)), absf(current.fov - float(_seen["recording_fov"])))
+				var state: Dictionary = shed.footage.camera_at(footage_time)
+				var passage: StringName = shed.footage.passage_at(footage_time)
+				var fov_ok: bool = absf(current.fov - ArchiveVideoOverlay.matched_fov(float(state["fov"]), get_viewport().get_visible_rect().size)) < 0.01
+				if not current.global_transform.is_equal_approx(state["transform"] as Transform3D) or not fov_ok:
+					_seen["camera_wrong"] = int(_seen.get("camera_wrong", 0)) + 1
+				if not bool(shed.get("replay_running")):
+					_seen["frames_" + str(passage)] = int(_seen.get("frames_" + str(passage), 0)) + 1
+					if _seen.has("last_passage") and StringName(str(_seen["last_passage"])) != passage:
+						var cut_name: String = "%s>%s" % [str(_seen["last_passage"]), str(passage)]
+						_seen["cuts"] = (str(_seen["cuts"]) + "," if _seen.has("cuts") else "") + cut_name
+						_seen["cut_one_at" if not _seen.has("cut_one_at") else ("cut_two_at" if not _seen.has("cut_two_at") else "cut_three_at")] = footage_time
+					_seen["last_passage"] = str(passage)
+				else:
+					if passage == &"A":
+						_seen["replay_shot_a_frames"] = int(_seen.get("replay_shot_a_frames", 0)) + 1
+					else:
+						_seen["replay_other_shot"] = int(_seen.get("replay_other_shot", 0)) + 1
+				# The camcorder's own faint light on the ground: in the walking shot only (the aftermath has its fill: it is a light too, but not the walk's).
+				var light: SpotLight3D = shed.get_node("CinemaCamera/ShotLight") as SpotLight3D
+				var expected_light: bool = passage != &"A"
+				if light.visible != expected_light:
+					_seen["light_wrong"] = int(_seen.get("light_wrong", 0)) + 1
 		# The photograph's close view: the present's dressing whole, nobody in it, no words.
 		if in_cinema and current.global_transform.origin.distance_to(shed.shot_photo.global_position) < 0.001:
 			_seen["photo_frames"] = int(_seen.get("photo_frames", 0)) + 1
+			if not _seen.has("photo_origin"):
+				_seen["photo_origin"] = current.global_position
+			_seen["photo_camera_move"] = maxf(float(_seen.get("photo_camera_move", 0.0)), current.global_position.distance_to(_seen["photo_origin"] as Vector3))
 			if shed.effects_root.visible and shed.replaced_plank.visible and not shed.footage.visible and not shed.archive_foreground.visible and not shed.archive_dressing.visible and (overlay == null or not overlay.visible):
 				_seen["photo_present_frames"] = int(_seen.get("photo_present_frames", 0)) + 1
 			if CaptionManager.panel.visible:
 				_seen["caption_in_photo"] = int(_seen.get("caption_in_photo", 0)) + 1
 			_seen["photo_seen_at"] = float(Time.get_ticks_msec())
-		# The still conversation shot.
-		if in_cinema and current.global_transform.origin.distance_to(shed.shot_talk.global_position) < 0.001:
-			_seen["talk_frames"] = int(_seen.get("talk_frames", 0)) + 1
-			if not _seen.has("talk_origin"):
-				_seen["talk_origin"] = current.global_position
-			_seen["talk_camera_move"] = maxf(float(_seen.get("talk_camera_move", 0.0)), current.global_position.distance_to(_seen["talk_origin"] as Vector3))
 		# No blank frame between the cuts: the overlay is never black when the camera is not in the recording or already left it.
 		if overlay != null and overlay.visible:
 			_seen["overlay_seen"] = true
@@ -1208,12 +1547,12 @@ func _watch() -> void:
 				_seen["black_frames"] = int(_seen.get("black_frames", 0)) + 1
 		if overlay != null and overlay.visible and overlay.is_picture_shown():
 			for child: Node in shed.get_children():
-				if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing and child.name != "TapeSound":
+				if child is AudioStreamPlayer and (child as AudioStreamPlayer).playing and child.name != "TapeSound" and child.name != "TapeMachine":
 					_seen["source_sounds"] = int(_seen.get("source_sounds", 0)) + 1
 		# The tape's own noise: playing all through the recording's picture, looped, and at no other time.
 		var tape: AudioStreamPlayer = shed.get_node_or_null("TapeSound") as AudioStreamPlayer
 		if tape != null:
-			if overlay != null and overlay.visible and overlay.is_picture_shown():
+			if overlay != null and overlay.visible and overlay.is_picture_shown() and bool(shed.get("_footage_playing")):
 				if tape.playing:
 					_seen["tape_frames"] = int(_seen.get("tape_frames", 0)) + 1
 					_seen["tape_loops"] = tape.stream is AudioStreamMP3 and (tape.stream as AudioStreamMP3).loop
@@ -1222,6 +1561,53 @@ func _watch() -> void:
 					_seen["tape_silent_frames"] = int(_seen.get("tape_silent_frames", 0)) + 1
 			elif tape.playing:
 				_seen["tape_outside"] = int(_seen.get("tape_outside", 0)) + 1
+		# The machine: its first part before the picture (static, no label), the picture at 2.30 s of it with PLAY and the running loop, the stop at the end, and in the
+		# second viewing the running loop only, then PAUSE, the held picture and the stop once.
+		var machine: AudioStreamPlayer = shed.get_node_or_null("TapeMachine") as AudioStreamPlayer
+		if machine != null and overlay != null and overlay.visible:
+			var machine_stream: AudioStreamWAV = machine.stream as AudioStreamWAV
+			var machine_at: float = machine.get_playback_position()
+			var running: bool = bool(shed.get("_footage_playing"))
+			var replaying: bool = bool(shed.get("replay_running"))
+			if not running and not replaying and not _seen.has("picture_began") and machine.playing and machine_stream == TapePlayerSounds.start_stream():
+				_seen["preroll_frames"] = int(_seen.get("preroll_frames", 0)) + 1
+				_seen["preroll_static"] = _seen.get("preroll_static", true) and not overlay.get_node("Play").visible
+			if running and not replaying and not _seen.has("picture_began"):
+				_seen["picture_began"] = true
+				_seen["picture_machine_at"] = machine_at
+				_seen["picture_label"] = overlay.get_label_text()
+				_seen["picture_stream_ok"] = machine.playing and machine_stream == TapePlayerSounds.start_stream()
+			if running and not replaying and machine.playing and machine_stream == TapePlayerSounds.start_stream():
+				_seen["first_loop_frames"] = int(_seen.get("first_loop_frames", 0)) + 1
+				_seen["first_loop_min"] = minf(float(_seen.get("first_loop_min", 99.0)), machine_at)
+			if replaying and running:
+				_seen["replay_frames"] = int(_seen.get("replay_frames", 0)) + 1
+				_seen["replay_label_play"] = overlay.get_label_text() == "PLAY" and not overlay.is_paused()
+				if not machine.playing or machine_stream != TapePlayerSounds.start_stream() or machine_at < 2.2:
+					_seen["replay_machine_wrong"] = int(_seen.get("replay_machine_wrong", 0)) + 1
+				if tape.playing != true:
+					_seen["replay_noise_missing"] = int(_seen.get("replay_noise_missing", 0)) + 1
+			if replaying and not running and overlay.is_paused():
+				_seen["paused_frames"] = int(_seen.get("paused_frames", 0)) + 1
+				_seen["paused_label"] = overlay.get_label_text()
+				_seen["paused_stop_sound"] = bool(_seen.get("paused_stop_sound", false)) or (machine.playing and machine_stream == TapePlayerSounds.stop_stream())
+				_seen["paused_noise_off"] = not tape.playing
+				var held_time: float = shed.footage.current_time
+				if _seen.has("paused_time") and not is_equal_approx(held_time, float(_seen["paused_time"])):
+					_seen["paused_moved"] = true
+				_seen["paused_time"] = held_time
+				var centre_cast: bool = shed.footage.visible
+				_seen["paused_cast_shown"] = centre_cast
+				# Held on the greeting: shot A's own camera and lens, Emily in the picture, the hand raised (the footage between the hand's rise and its fall), no blood.
+				var shot_a: ShotMarker = shed.footage.shot_a
+				var held_on_greeting: bool = in_cinema and current.global_transform.is_equal_approx(shot_a.aimed_transform()) and absf(current.fov - ArchiveVideoOverlay.matched_fov(shot_a.fov, get_viewport().get_visible_rect().size)) < 0.01
+				held_on_greeting = held_on_greeting and shed.footage.marina.visible and not shed.footage.aftermath.visible and shed.archive_foreground.visible and held_time > shed.footage.hand_up_start_seconds and held_time < shed.footage.hand_down_end_seconds
+				if held_on_greeting:
+					_seen["paused_on_greeting"] = true
+				else:
+					_seen["paused_off_greeting"] = int(_seen.get("paused_off_greeting", 0)) + 1
+		if not bool(_seen.get("replayed", false)) and not bool(shed.get("replay_running")) and machine != null and machine.stream == TapePlayerSounds.stop_stream() and machine.playing and _seen.has("picture_began"):
+			_seen["end_stop_sound"] = true
 		# The picture of the tape holds between its own frames (12 a second) and in its stalls.
 		if playing:
 			var shown_time: float = shed.footage.current_time
@@ -1257,8 +1643,8 @@ func _watch() -> void:
 				captions.append(text)
 				_seen["saw_marina"] = bool(_seen.get("saw_marina", false)) or text.begins_with("Marina:")
 				_seen["saw_recorded"] = bool(_seen.get("saw_recorded", false)) or text.begins_with("Recorded voice:")
-				_seen["saw_last"] = bool(_seen.get("saw_last", false)) or text == "Sophia: I'm not going to pretend she didn't call."
-				if text == "Sophia: I'm not going to pretend she didn't call." and not _seen.has("last_line_ms"):
+				_seen["saw_last"] = bool(_seen.get("saw_last", false)) or text == "Sophia: Of course. But only if we make brigadeiro first?"
+				if text == "Sophia: Of course. But only if we make brigadeiro first?" and not _seen.has("last_line_ms"):
 					_seen["last_line_ms"] = float(Time.get_ticks_msec())
 				# A subtitle of the girls never lingers over her own eyes except by their own track (none exists then).
 				if in_cinema == false:
