@@ -18,6 +18,7 @@ var force_full_look: bool = false
 var _picture: ColorRect = null
 var _material: ShaderMaterial = null
 var _play_label: Label = null
+var _counter_label: Label = null
 var _full_look: bool = true
 var _paused: bool = false
 var _black: ColorRect = null
@@ -72,6 +73,16 @@ func _ready() -> void:
 	_play_label.add_theme_constant_override(&"outline_size", 4)
 	add_child(_play_label)
 
+	# The tape's own counter (voluntary review only): the full tape's time, as a machine would show it.
+	_counter_label = Label.new()
+	_counter_label.name = "Counter"
+	_counter_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_counter_label.visible = false
+	_counter_label.add_theme_color_override(&"font_color", Color(0.86, 0.9, 0.8, 0.82))
+	_counter_label.add_theme_color_override(&"font_outline_color", Color(0.0, 0.0, 0.0, 0.9))
+	_counter_label.add_theme_constant_override(&"outline_size", 4)
+	add_child(_counter_label)
+
 	_layout()
 
 
@@ -93,6 +104,7 @@ func hide_overlay() -> void:
 	visible = false
 	set_burst(0.0)
 	set_paused(false)
+	set_counter_text("")
 	if _black != null:
 		_black.visible = false
 
@@ -110,6 +122,26 @@ func set_paused(paused: bool) -> void:
 	_paused = paused
 	if _play_label != null:
 		_play_label.text = "PAUSE" if paused else "PLAY"
+
+
+## The machine's word in the corner for a use that is not a tape playing (the camcorder's own viewfinder): any text; empty hides it.
+func set_label_text(text: String) -> void:
+	if _play_label != null:
+		_play_label.text = text
+		_play_label.visible = not text.is_empty()
+
+
+## The tape's counter (the review): any text, empty hides it.
+func set_counter_text(text: String) -> void:
+	if _counter_label != null:
+		_counter_label.text = text
+		_counter_label.visible = not text.is_empty()
+
+
+## STOP: no picture at all (black inside the 4:3 frame), the word and the counter still on; the playhead is kept by the sequence.
+func set_no_picture(on: bool) -> void:
+	if _black != null:
+		_black.visible = on
 
 
 func is_paused() -> bool:
@@ -154,6 +186,9 @@ func _layout() -> void:
 		var font_size: int = maxi(int(rect.size.y * 0.055), 12)
 		_play_label.add_theme_font_size_override(&"font_size", font_size)
 		_play_label.position = rect.position + Vector2(rect.size.x * 0.05, rect.size.y * 0.06)
+	if _counter_label != null:
+		_counter_label.add_theme_font_size_override(&"font_size", maxi(int(rect.size.y * 0.045), 11))
+		_counter_label.position = Vector2(rect.end.x - rect.size.x * 0.05 - _counter_label.size.x, rect.position.y + rect.size.y * 0.07)
 	_black.position = rect.position
 	_black.size = rect.size
 	# Left, right, top, bottom; each a little over-size so no seam shows.

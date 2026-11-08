@@ -1,5 +1,7 @@
 extends Node
 
+const ShedExpectedTexts = preload("res://tests/shed_expected_texts.gd")
+
 ## Plays the waiting shed ("The Shelter Stayed Open") through the game's own APIs: the removed puzzle is gone, the bench cluster fits the bench, the box
 ## opens with a plain interaction and shows the tape over the token, the tape and the token are reached by the interaction ray as they should be, the first close of
 ## the tape's view hands the player to the recording scene without a gap, the scene runs once (about 24 s of silent footage in three shots and two hard cuts: Emily on the bench, who waits
@@ -19,9 +21,11 @@ var completed_count: int = 0
 var level: Node = null
 var shed: WaitingShedSequence = null
 var player: CharacterBody3D = null
-var container: OpenableContainer = null
-var vhs: Inspectable = null
+var vhs: GatedInspectable = null
 var ficha: Collectible = null
+var view_before: Vector2 = Vector2.ZERO
+var cue_heard_at: float = -1.0
+var scene_ended_at_msec: int = 0
 
 var _watching: bool = false
 var _seen: Dictionary = {}
@@ -50,7 +54,7 @@ func _run() -> void:
 	await _check_footage()
 	await _check_states_and_photo()
 	await _check_bench_fit()
-	await _check_box_and_rays()
+	await _check_evidence_and_rays()
 	await _check_scene_plays_once()
 	await _check_after_scene()
 	await _check_saves()
@@ -83,10 +87,12 @@ func _load_level() -> void:
 	player = level.get_node("Player")
 	# The playtest scene has no forest sound of its own: this one is the real thing, to hear whether the memory silences it.
 	level.add_child(OutdoorAmbience.new())
-	container = shed.get_node("%SwitchBox")
 	vhs = shed.vhs
 	ficha = shed.ficha
-	shed.recording_finished.connect(func() -> void: completed_count += 1)
+	shed.recording_finished.connect(func() -> void:
+		completed_count += 1
+		cue_heard_at = -1.0
+		_watch_cue())
 	Engine.time_scale = TIME_SCALE
 
 
@@ -122,7 +128,7 @@ func _check_layout() -> void:
 	_expect(shed.find_children("*", "LeverBox", true, false).is_empty(), "no lever box is left in the shed")
 	_expect(shed.get_node_or_null("%SignalBox") == null, "the signal box is gone")
 	_expect(shed.find_child("FichaNote", true, false) == null, "the old note about the call is gone")
-	_expect(shed.find_child("TicketPuncher", true, false) == null and container.get_node_or_null("Contents/TicketPuncher") == null, "the ticket puncher is not in the box")
+	_expect(shed.find_child("TicketPuncher", true, false) == null, "the ticket puncher is not in the box")
 	_expect(shed.find_child("Lever*", true, false) == null, "nothing in the shed is called a lever")
 
 	# The bin: scenery with nothing to use.
@@ -134,22 +140,22 @@ func _check_layout() -> void:
 	# The recording's dressing is hidden, the camcorder is there from the start with its light off.
 	_expect(not shed.archive_dressing.visible, "the recording's dressing is hidden in the present")
 	_expect(shed.replaced_plank != null and shed.replaced_plank.visible, "the replaced plank is shown in the present")
-	var camcorder: Node3D = shed.camcorder
-	_expect(camcorder != null and camcorder.visible and not (camcorder is Inspectable), "the camcorder stands in the level from the start, only to be looked at")
-	_expect(camcorder.find_children("*", "Area3D", true, false).is_empty() and camcorder.find_children("*", "Interactable", true, false).is_empty(), "it cannot be examined: nothing in it is interactive")
+	var camcorder: ShedCamcorder = shed.camcorder
+	_expect(camcorder != null and camcorder.visible and not ((camcorder as Node) is Inspectable) and not ((camcorder as Node) is Collectible), "the camcorder stands in the level from the start, a fixed device: it is not an item")
+	_expect(camcorder.can_interact(player) and camcorder.get_prompt_text() == "PROMPT_VIEWFINDER", "its one interaction is to look through its viewfinder")
 	var led: MeshInstance3D = camcorder.find_child("Led", true, false) as MeshInstance3D
 	_expect(led != null and (led.material_override as StandardMaterial3D).emission_energy_multiplier == 0.0, "its recording light is off")
-	var head: Node3D = camcorder.find_child("Head", true, false) as Node3D
-	_expect(head != null and absf(head.rotation_degrees.y - shed.camcorder_start_yaw_degrees) < 0.01, "its head is turned a little off the bench's middle")
-	var lens: Vector3 = head.to_global(Vector3(0.0, 0.1, -0.2))
+	var head: Node3D = camcorder.get_head()
+	var view: Dictionary = shed.get_camcorder_view()
+	var shot_a_xf: Transform3D = shed.shot_recording.aimed_transform()
+	var lens_world: Vector3 = camcorder.get_lens_marker().global_position
+	_expect(not view.is_empty() and lens_world.distance_to(shot_a_xf.origin) < 0.005, "its lens is exactly at the recording's first viewpoint (%.4f m apart)" % lens_world.distance_to(shot_a_xf.origin))
+	_expect((-head.global_basis.z).angle_to(-shot_a_xf.basis.z) < deg_to_rad(0.05), "and looks along that shot's axis (%.3f degrees apart)" % rad_to_deg((-head.global_basis.z).angle_to(-shot_a_xf.basis.z)))
+	_expect(is_equal_approx(head.scale.x, 1.2) and camcorder.get_eye_marker() != null, "the head keeps its scale and has an eyecup marker")
+	var eye_back: Vector3 = (camcorder.get_eye_marker().global_position - lens_world)
+	_expect(eye_back.dot(-head.global_basis.z) < -0.35 and eye_back.length() < 0.7, "the eyecup is behind the lens along its axis (%.2f m back)" % -eye_back.dot(-head.global_basis.z))
+	_expect(camcorder.global_position.y > shed.global_position.y - 0.06 and camcorder.global_position.y < shed.global_position.y + 0.06, "the tripod stands on the ground (its root %.3f m from the slab's level)" % (camcorder.global_position.y - shed.global_position.y))
 	var bench: Node3D = shed.get_node("%Bench")
-	_expect(absf(lens.y - 1.33) < 0.06, "its lens is about 1.3 m up (%.2f)" % lens.y)
-	_expect(lens.z - bench.global_position.z > 6.0 and lens.z - bench.global_position.z < 8.5, "about 7 m from the bench (%.1f m)" % (lens.z - bench.global_position.z))
-	_expect(absf(lens.x - bench.global_position.x) < 0.2, "straight across the clearing from the bench")
-	# It faces the bench.
-	var facing: Vector3 = -head.global_basis.z
-	var to_bench: Vector3 = (bench.global_position - lens).normalized()
-	_expect(facing.dot(to_bench) > 0.99, "its lens faces the bench")
 
 
 ## The note from Emily's sister: the same optional readable on the bench (a world Inspectable, never an inventory item, its scene and inspect id unchanged), now about where
@@ -159,10 +165,6 @@ func _check_sister_note(undecided: Array[String]) -> void:
 	var visual: Node3D = note.get_node("Visual") as Node3D
 	_expect(note.scene_file_path == "res://scenes/objects/waiting_shed/marina_sister_note.tscn" and note.get_script() != load("res://scripts/interactions/collectible_interactable.gd") and not note.get("item_id"), "the sister's note keeps its scene and is a world readable, not something to pick up")
 	_expect(str(visual.get_meta("inspect_id")) == "marina_sister_note" and str(visual.get_meta("inspect_mode")) == "read" and str(visual.get_meta("readable_text")) == "READABLE_MARINA_SISTER_NOTE", "with its inspect id, in read mode")
-	_expect(_translated("ITEM_MARINA_SISTER_NOTE_NAME", "en") == "Note from Emily's Sister" and _translated("ITEM_MARINA_SISTER_NOTE_NAME", "pt_BR") == "Bilhete da irmã de Emily", "its name is the approved one (Emily's sister)")
-	_expect(_translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "en") == "A folded sheet kept among Sophia's papers. It refers to the copy of the recording." and _translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", "pt_BR") == "Uma folha dobrada guardada entre os papéis de Sophia. Faz referência à cópia da gravação.", "and its description")
-	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "en") == "This is the copy I was given. They said it was only this part.\n\nLet me know if you find out who recorded it. Don't send another tape without speaking to me first.", "its words, in English")
-	_expect(_translated("READABLE_MARINA_SISTER_NOTE", "pt_BR") == "Essa é a cópia que me passaram. Disseram que era só esse pedaço.\n\nSe você descobrir quem gravou, me avisa. Não manda outra fita sem falar comigo antes.", "and in Portuguese")
 	for locale: String in ["en", "pt_BR"]:
 		var lowered: String = (_translated("READABLE_MARINA_SISTER_NOTE", locale) + " " + _translated("ITEM_MARINA_SISTER_NOTE_DESCRIPTION", locale)).to_lower()
 		for word: String in undecided:
@@ -178,21 +180,18 @@ func _check_new_papers() -> void:
 	_expect(notice.get_script() == load("res://scripts/interactions/inspectable_interactable.gd") and not notice.get("item_id"), "the Helena Clarke notice is an ordinary world readable: no item, no inventory, no trigger")
 	_expect(str(visual.get_meta("inspect_id")) == "helena_clarke_notice" and str(visual.get_meta("inspect_mode")) == "read" and str(visual.get_meta("readable_text")) == "READABLE_HELENA_NOTICE", "with its inspect id, in read mode")
 	_expect(_translated("ITEM_HELENA_NOTICE_NAME", "en") == "Recent News — Helena Clarke" and _translated("ITEM_HELENA_NOTICE_NAME", "pt_BR") == "Notícia recente — Helena Clarke", "its name (both languages)")
-	_expect(_translated("ITEM_HELENA_NOTICE_DESCRIPTION", "en") == "A recent clipping about the disappearance of Helena Clarke, a resident of the Fenda." and _translated("ITEM_HELENA_NOTICE_DESCRIPTION", "pt_BR") == "Um recorte recente sobre o desaparecimento de Helena Clarke, moradora da Fenda.", "its description (both languages)")
-	_expect(_translated("READABLE_HELENA_NOTICE", "en") == "[b]SEARCH FOR HELENA CLARKE CONTINUES[/b]\n\nHelena Clarke, a resident of the Fenda, remains missing. According to information received by the search team, she was last seen near the railway line.\n\nHer family asks that any information about her whereabouts be reported to the local station.", "its words, in English")
-	_expect(_translated("READABLE_HELENA_NOTICE", "pt_BR") == "[b]CONTINUAM AS BUSCAS POR HELENA CLARKE[/b]\n\nHelena Clarke, moradora da Fenda, continua desaparecida. Segundo as informações recebidas pela equipe de busca, ela foi vista pela última vez nas proximidades da linha férrea.\n\nA família pede que qualquer informação sobre seu paradeiro seja comunicada ao posto local.", "and in Portuguese")
 	for locale: String in ["en", "pt_BR"]:
 		var lowered: String = (_translated("READABLE_HELENA_NOTICE", locale) + " " + _translated("ITEM_HELENA_NOTICE_DESCRIPTION", locale)).to_lower()
 		for banned: String in ["emily", "miller", "dead", "morta", "morto", "34", "neighbo", "vizinh", "killer", "assassin", "homicid"]:
 			_expect(not lowered.contains(banned), "the Helena notice has nothing of Emily's case or of a death ('%s', %s)" % [banned, locale])
 
-	# Where it is: on the west post, at hand height, facing the bench, clear of the notebook, the box, the tape and everything else's hit area.
-	var post: Vector3 = shed.to_global(Vector3(-5.7, 1.38, -7.0))
-	_expect(notice.global_position.distance_to(Vector3(post.x + 0.124, post.y, post.z)) < 0.03 and notice.global_basis.z.dot(Vector3.RIGHT) > 0.95, "it is pinned to the shelter's west post, its face towards the bench")
+	# Where it is: on the WEST face of the front-west post (Pillar1), at hand height, its face toward the incoming trail, clear of everything else's hit area.
+	var post: Vector3 = shed.to_global(Vector3(-5.7, 1.4, -4.0))
+	_expect(notice.global_position.distance_to(Vector3(post.x - 0.126, post.y, post.z)) < 0.03 and notice.global_basis.z.dot(Vector3.LEFT) > 0.95, "it is pinned to the west face of the front-west post, its face toward the incoming trail")
 	var notice_area: Area3D = notice.get_node("InteractArea") as Area3D
 	var notice_box: AABB = (notice_area.get_node("CollisionShape3D") as CollisionShape3D).shape.get_debug_mesh().get_aabb()
 	var notice_bounds: AABB = notice_area.global_transform * notice_box
-	for other: Node in [shed.get_node("%SophiaJournal"), shed.get_node("%NewspaperClipping"), shed.get_node("%MarinaSisterNote"), shed.get_node("%SwitchBox"), shed.vhs, shed.ficha]:
+	for other: Node in [shed.get_node("%SophiaJournal"), shed.get_node("%NewspaperClipping"), shed.get_node("%MarinaSisterNote"), shed.vhs, shed.letter, shed.ficha, shed.camcorder]:
 		for area: Node in other.find_children("*", "Area3D", true, false):
 			var shape: CollisionShape3D = area.get_node_or_null("CollisionShape3D") as CollisionShape3D
 			if shape != null and shape.shape != null:
@@ -202,10 +201,9 @@ func _check_new_papers() -> void:
 
 
 func _check_text() -> void:
+	_check_pinned_texts()
 	var journal: Inspectable = shed.get_node("%SophiaJournal")
 	_expect(tr(journal.get_inspect_data()["name"]) == "Sophia Bennett's Notebook", "the notebook is Sophia Bennett's Notebook")
-	_expect(tr(journal.get_inspect_data()["description"]) == "Notes about Emily Miller, the tape's origin, and Helena Clarke's recent disappearance.", "with its description")
-	_expect(_translated("ITEM_SOPHIA_JOURNAL_NAME", "pt_BR") == "Caderno de Sophia Bennett" and _translated("ITEM_SOPHIA_JOURNAL_DESCRIPTION", "pt_BR") == "Anotações sobre Emily Miller, a origem da fita e o desaparecimento recente de Helena Clarke.", "(and in Portuguese)")
 	var old_words: Array[String] = ["light the track", "punch the ticket", "blow the signal", "junction box", "wrench", "secret code", "lever"]
 	for key: String in ["READABLE_JOURNAL", "JOURNAL_LEFT", "JOURNAL_RIGHT", "JOURNAL_EXTRACT", "JOURNAL_MARGIN"]:
 		for locale: String in ["en", "pt_BR"]:
@@ -216,23 +214,6 @@ func _check_text() -> void:
 			_expect(not text.contains("marina"), "%s (%s) has no Marina: the old victim is Emily" % [key, locale])
 
 	var undecided: Array[String] = ["stabb", "knife", "firearm", "pistol", "bullet", "gunshot", "revólver", "arma de fogo", "strangl", "poison", "overdose", "beaten", "weapon", "wound", "autopsy", "faca", "apunhal", "estrangul", "envenen", "espanc", "arma ", "ferida", "autópsia"]
-	var mains: Dictionary = {
-		"en": ["Emily Miller\n\nThe copy has no sound. I don't know who was on the other side of the camera.\n\nFind who passed on the first tape, not another copy of the same excerpt.", "Helena Clarke — disappeared last week. Seen near the tracks. Check the location with Daniel.\n\nRequest the newspaper issues that followed the other clippings. Compare what was published with what the families remember.\n\n— Sophia Bennett"],
-		"pt_BR": ["Emily Miller\n\nA cópia não tem som. Não sei quem estava do outro lado da câmera.\n\nProcurar quem passou a primeira fita, não outra cópia do mesmo trecho.", "Helena Clarke — desapareceu na semana passada. Vista perto dos trilhos. Confirmar com Daniel o local.\n\nPedir as edições seguintes aos outros recortes. Comparar o que foi publicado com o que as famílias lembram.\n\n— Sophia Bennett"],
-	}
-	for locale: String in ["en", "pt_BR"]:
-		var full: String = _translated("READABLE_JOURNAL", locale)
-		var left: String = (mains[locale] as Array)[0]
-		var right: String = (mains[locale] as Array)[1]
-		_expect(_translated("JOURNAL_LEFT", locale) == left and _translated("JOURNAL_RIGHT", locale) == right, "the world pages carry the approved notes, as they are (%s)" % locale)
-		_expect(full.begins_with(left + "\n\n" + right), "and the reading text starts with the same words, whole (%s)" % locale)
-		var extract: String = "Cleared for use." if locale == "en" else "Liberado para uso."
-		_expect(full.contains(extract) and _translated("JOURNAL_EXTRACT", locale).contains(extract), "the maintenance extract is kept, in the reading text and on its own page (%s)" % locale)
-		var margin: String = "school transcript" if locale == "en" else "histórico escolar"
-		_expect(full.contains(margin), "and the margin note (%s)" % locale)
-		for gone_sentence: String in (["sitting down", "on the ground", "Who was filming", "railway employee", "sister"] if locale == "en" else ["sentada", "no chão", "Quem estava filmando", "funcionário", "irmã"]):
-			_expect(not full.contains(gone_sentence), "the old note about '%s' is gone from the notebook (%s)" % [gone_sentence, locale])
-		_expect(full.contains("— Sophia Bennett") and not full.contains("— Sophia\n"), "the notebook is signed with her full name (%s)" % locale)
 
 	_check_sister_note(undecided)
 
@@ -240,11 +221,6 @@ func _check_text() -> void:
 	var clipping: Inspectable = shed.get_node("%NewspaperClipping")
 	_expect(tr(clipping.get_inspect_data()["name"]) == "Clipping with Photograph — Emily Miller", "the clipping is a Clipping with Photograph — Emily Miller")
 	_expect(_translated("ITEM_CLIPPING_NAME", "pt_BR") == "Recorte com fotografia — Emily Miller", "and its Portuguese name")
-	_expect(_translated("ITEM_CLIPPING_DESCRIPTION", "en") == "A photograph of the shelter is attached to the clipping. Blood covers part of the seat, runs between the planks, and darkens the floor around it. The body had already been removed when the picture was taken.", "its description (en)")
-	_expect(_translated("ITEM_CLIPPING_DESCRIPTION", "pt_BR") == "Uma fotografia do abrigo foi presa ao recorte. O sangue cobre parte do assento, escorre entre as tábuas e escurece o piso ao redor. O corpo já havia sido retirado quando a imagem foi feita.", "and (pt_BR)")
-	_expect(_translated("READABLE_CLIPPING", "en") == "[b]EMILY MILLER FOUND DEAD AT BRANCH-LINE SHELTER[/b]\n\nEmily Miller, 34, was found dead yesterday morning by a railway employee. Her body was on the ground near the shelter bench.\n\nThere was blood on the seat, floor, and base of one of the pillars. Part of the bench was damaged. The site was reopened after the body was removed.\n\nPolice are investigating the death as a homicide. The cause of death had not been released when this edition went to press.", "the clipping's words (en)")
-	_expect(_translated("READABLE_CLIPPING", "pt_BR") == "[b]EMILY MILLER ENCONTRADA MORTA NO ABRIGO DO RAMAL[/b]\n\nEmily Miller, de 34 anos, foi encontrada morta ontem pela manhã por um funcionário da linha. O corpo estava no chão, próximo ao banco do abrigo.\n\nHavia sangue no assento, no piso e na base de um dos pilares. Parte do banco estava danificada. O local foi liberado após a retirada do corpo.\n\nA polícia investiga a morte como homicídio. A causa da morte não havia sido divulgada até o fechamento desta edição.", "and (pt_BR)")
-	_expect(_translated("PHOTO_CAPTION_SHELTER", "en") == "Branch-line shelter, after the body was removed." and _translated("PHOTO_CAPTION_SHELTER", "pt_BR") == "Abrigo do ramal, após a retirada do corpo.", "the photograph's caption is as it was")
 	_check_new_papers()
 	for key: String in ["READABLE_CLIPPING", "ITEM_CLIPPING_DESCRIPTION", "READABLE_JOURNAL", "JOURNAL_LEFT", "JOURNAL_RIGHT", "ITEM_VHS_DESCRIPTION", "PHOTO_CAPTION_SHELTER"]:
 		for locale: String in ["en", "pt_BR"]:
@@ -257,17 +233,14 @@ func _check_text() -> void:
 	_expect(vhs.prompt_text == "PROMPT_EXAMINE_TAPE" and tr(vhs.prompt_text) == "Examine tape", "the tape says Examine tape")
 	_expect(tr(vhs.get_inspect_data()["name"]) == "Videotape — Emily Miller", "the tape is a Videotape — Emily Miller")
 	_expect(_translated("ITEM_VHS_NAME", "pt_BR") == "Fita de vídeo — Emily Miller", "(Fita de vídeo — Emily Miller)")
-	_expect(_translated("ITEM_VHS_DESCRIPTION", "en") == "A silent copy associated with the investigation into Emily Miller's death. The label does not identify who made the recording.", "the tape's description (en)")
-	_expect(_translated("ITEM_VHS_DESCRIPTION", "pt_BR") == "Uma cópia sem som, associada à investigação da morte de Emily Miller. A etiqueta não identifica quem fez a gravação.", "and (pt_BR)")
 	_expect(_translated("READABLE_VHS_LABEL", "pt_BR").contains("ABRIGO / CÓPIA") and not _translated("READABLE_VHS_LABEL", "pt_BR").to_lower().contains("marina"), "the label on the cassette names no victim")
 	_expect(vhs.get_node("Visual").get_meta("inspect_id") == "sophia_vhs", "its inspect id is sophia_vhs")
 	_expect(not ((vhs as Node) is Collectible), "the tape is examined, never collected")
 	_expect(tr("ITEM_SOPHIA_FICHA_NAME") == "Sophia's Telephone Token" and _translated("ITEM_SOPHIA_FICHA_NAME", "pt_BR") == "Ficha de Sophia", "the token's name")
-	_expect(_translated("ITEM_SOPHIA_FICHA_DESCRIPTION", "pt_BR") == "Uma ficha de telefone de latão, guardada entre os papéis de Sophia.", "and description (pt_BR)")
 	_expect(ficha.item_id == "sophia_ficha" and ficha.scene_file_path == "res://scenes/objects/waiting_shed/sophia_ficha.tscn", "the token keeps its id and its scene")
 
-	# The captions: Portuguese and English, one speaker's line each, full speaker names, nothing for the recording, nothing of the old scene.
-	_expect(CaptionTracks.get_cues(&"shed_recording").is_empty() and CaptionTracks.get_cues(&"shed_recording_again").is_empty() and CaptionTracks.get_cues(&"shed_review").is_empty(), "the silent recording has no caption track, and there is no review")
+	# The captions: Portuguese and English, one speaker's line each, full speaker names, nothing for the silent recording, nothing of the old scene.
+	_expect(CaptionTracks.get_cues(&"shed_recording").is_empty() and CaptionTracks.get_cues(&"shed_recording_again").is_empty() and CaptionTracks.get_cues(&"shed_review").is_empty(), "the silent recording has no caption track, and the review has none either")
 	var cue_count: int = 0
 	for track: StringName in [CaptionTracks.SHED_REMEMBERED_COPY, CaptionTracks.SHED_REMEMBERED_TALK]:
 		var last_end: float = 0.0
@@ -278,23 +251,22 @@ func _check_text() -> void:
 			if key.is_empty():
 				continue
 			cue_count += 1
-			var en_text: String = _translated(key, "en")
-			var pt_text: String = _translated(key, "pt_BR")
-			_expect(not en_text.is_empty() and en_text != key and not pt_text.is_empty() and pt_text != key, "%s is written in both languages" % key)
-			var speaker: String = str(cue.get("speaker", ""))
-			_expect(speaker == CaptionTracks.SPEAKER_SOPHIA or speaker == CaptionTracks.SPEAKER_JULIANA, "%s is spoken by Sophia or Juliana, never by anyone in the recording" % key)
-			_expect(en_text.length() < 66 and pt_text.length() < 66, "%s is one short line (a longer sentence is split into contiguous groups)" % key)
-			for banned: String in ["help", "ajud", "lip", "lábio", "watch it again", "ver de novo", "bag", "bolsa", "turn it off", "desliga"]:
-				_expect(not en_text.to_lower().contains(banned) and not pt_text.to_lower().contains(banned), "%s has nothing of the old scene (%s)" % [key, banned])
-	_expect(cue_count == 21, "three lines of introduction, sixteen groups of conversation and two lines of the second viewing (%d)" % cue_count)
+			var pinned: Array = ShedExpectedTexts.CAPTIONS.get(key, [])
+			_expect(pinned.size() == 3, "%s is a line of the approved conversation" % key)
+			if pinned.size() == 3:
+				_expect(_translated(key, "en") == pinned[0] and _translated(key, "pt_BR") == pinned[1], "%s reads as approved (both languages)" % key)
+				_expect(str(cue.get("speaker", "")) == "CAPTION_SPEAKER_" + str(pinned[2]), "%s is said by %s" % [key, pinned[2]])
+			_expect(_translated(key, "en").length() < 66 and _translated(key, "pt_BR").length() < 66, "%s is one short line (a longer sentence is split into contiguous groups)" % key)
+			for banned: String in ["help", "ajud", "lip", "lábio", "watch it again", "ver de novo", "bag", "bolsa", "turn it off", "desliga", "marina", "head", "cabeça", "replay", "employee", "funcionário", "ground", "bench", "banco", "sitting", "sentada"]:
+				_expect(not _translated(key, "en").to_lower().contains(banned) and not _translated(key, "pt_BR").to_lower().contains(banned), "%s has nothing of the old scene (%s)" % [key, banned])
+	_expect(cue_count == ShedExpectedTexts.CAPTIONS.size() and cue_count == 25, "three lines of introduction and twenty-two of conversation, and no other (%d)" % cue_count)
 	_expect(_translated("CAPTION_SPEAKER_SOPHIA", "en") == "Sophia" and _translated("CAPTION_SPEAKER_JULIANA", "en") == "Juliana", "the speakers are labelled with their names")
 	var intro: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY)
 	var talk: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK)
 	_expect(intro >= 7.0 and intro <= 10.0, "the introduction is about 8 to 9 s (%.1f)" % intro)
-	_expect(talk >= 65.0 and talk <= 70.0, "the conversation, the second viewing included, is about 67 s (%.1f)" % talk)
+	_expect(talk >= 74.0 and talk <= 82.0, "the conversation, the second viewing included, is about 78 s (%.1f)" % talk)
 	var talk_cues: Array = CaptionTracks.get_cues(CaptionTracks.SHED_REMEMBERED_TALK)
-	# Every group is on screen long enough to read (never under a second, at most about 20 characters a second); a split line's groups meet exactly; and the pauses are
-	# the ones asked for: a brief one before "Aqui não é seguro.", a short silence after Juliana's "Não." and 2 to 3 s after "Desculpa.".
+	# Every group is on screen long enough to read (never under a second, at most about 20 characters a second); a split line's groups meet exactly.
 	for i: int in talk_cues.size() - 1:
 		var cue: Dictionary = talk_cues[i]
 		var shown: float = float(cue["end"]) - float(cue["start"])
@@ -304,46 +276,21 @@ func _check_text() -> void:
 		var first_cue: Dictionary = _talk_cue("CAPTION_SHED_TALK_%02d" % pair[0])
 		var second_cue: Dictionary = _talk_cue("CAPTION_SHED_TALK_%02d" % pair[1])
 		_expect(float(second_cue["start"]) == float(first_cue["end"]) and first_cue["speaker"] == second_cue["speaker"], "the groups %d and %d of a split line meet exactly" % [pair[0], pair[1]])
-	var before_unsafe: float = float(_talk_cue("CAPTION_SHED_TALK_09")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_08")["end"])
-	var after_no: float = float(_talk_cue("CAPTION_SHED_TALK_12")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_11")["end"])
-	var after_sorry: float = float(_talk_cue("CAPTION_SHED_TALK_15")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_14")["end"])
-	var no_cuts_in: float = float(_talk_cue("CAPTION_SHED_TALK_11")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_10")["end"])
-	_expect(before_unsafe >= 2.0 and before_unsafe <= 3.0, "a pause before 'Aqui não é seguro.' (%.1f s)" % before_unsafe)
-	_expect(no_cuts_in <= 0.3 and after_no >= 1.5 and after_no <= 2.5, "Juliana's 'Não.' cuts in on the unfinished thought (%.1f s) and a silence follows (%.1f s)" % [no_cuts_in, after_no])
-	_expect(after_sorry >= 3.0 and after_sorry <= 4.5, "a long silence after 'Desculpa.' (%.1f s)" % after_sorry)
-	_check_second_viewing_text(talk_cues)
-	var expected_lines: Dictionary = {
-		"CAPTION_SHED_MEM_01": ["This is the copy Emily's sister lent me.", "Essa é a cópia que a irmã da Emily me emprestou."],
-		"CAPTION_SHED_MEM_02": ["There's no sound?", "Tá sem som?"],
-		"CAPTION_SHED_MEM_03": ["The copy came like this.", "A cópia veio assim."],
-		"CAPTION_SHED_TALK_01": ["You shouldn't keep watching this kind of thing.", "Você não devia ficar vendo esse tipo de coisa."],
-		"CAPTION_SHED_TALK_02": ["I wanted to know who was on this side of the camera.", "Eu queria saber quem estava desse lado da câmera."],
-		"CAPTION_SHED_TALK_07": ["I read that name somewhere… But that was a while ago, wasn't it?", "Eu li esse nome… Mas faz tempo, não faz?"],
-		"CAPTION_SHED_TALK_08": ["Last week. She was seen near the tracks.", "Semana passada. Viram ela perto dos trilhos."],
-		"CAPTION_SHED_TALK_09": ["It isn't safe here.", "Aqui não é seguro."],
-		"CAPTION_SHED_TALK_10": ["It never was. I found some old news reports and…", "Nunca foi. Eu achei umas notícias antigas e…"],
-		"CAPTION_SHED_TALK_11": ["No.", "Não."],
-		"CAPTION_SHED_TALK_14": ["I'm sorry.", "Desculpa."],
-		"CAPTION_SHED_TALK_15": ["Want to watch Dead Poets Society?", "Quer ver Sociedade dos Poetas Mortos?"],
-		"CAPTION_SHED_TALK_16": ["Of course. But only if we make brigadeiro first?", "Claro. Só se fizermos um brigadeiro antes?"],
-	}
-	for key: String in expected_lines:
-		_expect(_translated(key, "en") == (expected_lines[key] as Array)[0] and _translated(key, "pt_BR") == (expected_lines[key] as Array)[1], "%s reads as written (both languages)" % key)
-	var split_lines: Array = [
-		[3, 4, "Leave it alone. The guards must be investigating.", "Esquece isso. Os guardas devem estar investigando."],
-		[5, 6, "I asked Daniel. They're looking for Helena Clarke now.", "Perguntei pro Daniel. Eles estão atrás da Helena Clarke agora."],
-		[12, 13, "I have to work tomorrow. I don't want to think about this every time I leave home.", "Eu tenho que trabalhar amanhã. Não quero sair de casa pensando nisso."],
+	# The director's pauses, between the end of one line and the start of the next.
+	var gaps: Array = [
+		["CAPTION_SHED_REPLAY_08", "CAPTION_SHED_REPLAY_09", 0.4, 1.0, "hesitation after the first 'Não.' before 'Pode parar, por favor?'"],
+		["CAPTION_SHED_REPLAY_09", "CAPTION_SHED_TALK_01", 0.8, 2.0, "silence before the warning"],
+		["CAPTION_SHED_TALK_01", "CAPTION_SHED_REPLAY_10", 1.0, 2.5, "the photograph holds before Sophia goes on"],
+		["CAPTION_SHED_REPLAY_12", "CAPTION_SHED_TALK_02", 1.5, 3.0, "a silence after 'Nunca encontraram.'"],
+		["CAPTION_SHED_TALK_08", "CAPTION_SHED_TALK_09", 1.5, 3.0, "a pause before 'Aqui não é seguro.'"],
+		["CAPTION_SHED_TALK_10", "CAPTION_SHED_TALK_11", 0.0, 0.3, "Juliana's 'Não.' cuts in on the unfinished thought"],
+		["CAPTION_SHED_TALK_11", "CAPTION_SHED_TALK_12", 1.0, 2.5, "a silence after it"],
+		["CAPTION_SHED_TALK_14", "CAPTION_SHED_TALK_15", 2.0, 4.0, "a long silence after 'Desculpa.'"],
 	]
-	for line: Array in split_lines:
-		var key_a: String = "CAPTION_SHED_TALK_%02d" % line[0]
-		var key_b: String = "CAPTION_SHED_TALK_%02d" % line[1]
-		_expect(_translated(key_a, "en") + " " + _translated(key_b, "en") == line[2] and _translated(key_a, "pt_BR") + " " + _translated(key_b, "pt_BR") == line[3], "%s and %s read as one line, in both languages" % [key_a, key_b])
-	_expect(_translated("CAPTION_SHED_TALK_16", "pt_BR") == "Claro. Só se fizermos um brigadeiro antes?" and not _translated("CAPTION_SHED_TALK_16", "pt_BR").contains("Quero."), "the last line is exactly the director's, with its question mark")
-	for locale: String in ["en", "pt_BR"]:
-		for number: int in range(1, 17):
-			var spoken: String = _translated("CAPTION_SHED_TALK_%02d" % number, locale).to_lower()
-			for banned: String in ["marina", "head", "cabeça", "stop", "parar", "replay", "employee", "funcionário", "ground", "bench", "banco", "sitting", "sentada"]:
-				_expect(not spoken.contains(banned), "the conversation has nothing of the old scene or of the postponed one ('%s', line %d, %s)" % [banned, number, locale])
+	for gap: Array in gaps:
+		var between: float = float(_talk_cue(gap[1])["start"]) - float(_talk_cue(gap[0])["end"])
+		_expect(between >= float(gap[2]) - 0.0001 and between <= float(gap[3]) + 0.0001, "%s (%.2f s)" % [gap[4], between])
+	_check_second_viewing_text(talk_cues)
 	for gone: String in ["CAPTION_SPEAKER_MARINA", "CAPTION_SPEAKER_RECORDED_VOICE", "CAPTION_SHED_REC_01", "CAPTION_SHED_REC_07", "CAPTION_SHED_OFF", "CAPTION_SHED_REVIEW_01", "CAPTION_SHED_REVIEW_03", "CAPTION_SHED_MEM_04", "CAPTION_SHED_TALK_17"]:
 		_expect(_translated(gone, "en").is_empty() and _translated(gone, "pt_BR").is_empty(), "%s no longer exists" % gone)
 
@@ -356,41 +303,22 @@ func _talk_cue(key: String) -> Dictionary:
 	return {}
 
 
-## The second viewing (brief section 7C): its two remaining lines in both languages, in their place in the conversation (Juliana's request to stop first, then her warning, then "Sophia…"), the
-## lines that described the discarded footage bypassed (kept in the translation files); the machine's sounds cut from the mp3 as asked (2.30 and 6.20); and the marks the sequence derives.
+## The second viewing: the marks the sequence derives from the cues (the picture is held a quarter of a second after Juliana's first "Não." begins, and the photograph cuts in a second after "Você não devia
+## ficar vendo esse tipo de coisa." ends), where the footage is at those marks, and the machine's sounds cut from the mp3 as asked (2.30 and 6.20).
 func _check_second_viewing_text(talk_cues: Array) -> void:
-	var lines: Array = [
-		["CAPTION_SHED_REPLAY_02", "Sophia…", "Sophia…", CaptionTracks.SPEAKER_JULIANA],
-		["CAPTION_SHED_REPLAY_06", "No. Can you stop, please?", "Não. Pode parar, por favor.", CaptionTracks.SPEAKER_JULIANA],
-	]
 	var order: Array[String] = []
 	for cue: Dictionary in talk_cues:
 		order.append(str(cue["key"]))
-	for line: Array in lines:
-		_expect(_translated(line[0], "en") == line[1] and _translated(line[0], "pt_BR") == line[2], "%s reads as written (both languages)" % line[0])
-		_expect(str(_talk_cue(line[0]).get("speaker", "")) == str(line[3]), "%s is spoken by the right one" % line[0])
-	# Bypassed for the three-shot recording (they describe a figure behind the pillar and the woman's head); their texts are still in the translation files.
-	var bypassed: Dictionary = {"CAPTION_SHED_REPLAY_01": ["Here. Behind her.", "Aqui. Atrás dela."], "CAPTION_SHED_REPLAY_03": ["I thought it was part of the pillar.", "Eu achei que fosse parte do pilar."], "CAPTION_SHED_REPLAY_04": ["She might have heard something.", "Ela pode ter ouvido alguma coisa."], "CAPTION_SHED_REPLAY_05": ["She might have.", "Pode."]}
-	for key: String in bypassed:
-		_expect(_talk_cue(key).is_empty() and not order.has(key), "%s is bypassed: it is not in the active track" % key)
-		_expect(_translated(key, "en") == (bypassed[key] as Array)[0] and _translated(key, "pt_BR") == (bypassed[key] as Array)[1], "but its text is still in the translation files, unchanged")
-	_expect(order.find("CAPTION_SHED_REPLAY_06") < order.find("CAPTION_SHED_TALK_01") and order.find("CAPTION_SHED_TALK_01") < order.find("CAPTION_SHED_REPLAY_02") and order.find("CAPTION_SHED_REPLAY_02") < order.find("CAPTION_SHED_TALK_02"), "Juliana asks to stop first, then the warning, then \"Sophia…\", and only then the rest of the conversation")
-
-	# The marks of the viewing: the tape starts again at once (track time 0), a few seconds before Emily turns; the picture is held just as Juliana begins to ask to stop, on her greeting, and
-	# stays held through the warning and the silence; the photograph cuts in a moment after "Sophia…".
-	var first_line: float = float(_talk_cue("CAPTION_SHED_REPLAY_06")["start"])
-	var stop_at: float = first_line + shed.replay_stop_after_start_seconds
-	var photo_at: float = float(_talk_cue("CAPTION_SHED_REPLAY_02")["end"]) + shed.photo_after_replay_seconds
-	_expect(first_line >= 1.5 and first_line <= 4.0, "a couple of seconds of the tape play before Juliana asks to stop (%.1f s)" % first_line)
-	_expect(stop_at > first_line and stop_at < first_line + 0.6, "the picture is held just as she begins to ask (%.1f s into the viewing)" % stop_at)
-	_expect(float(_talk_cue("CAPTION_SHED_TALK_01")["start"]) - stop_at >= 1.0, "with a silence before the warning (%.1f s)" % (float(_talk_cue("CAPTION_SHED_TALK_01")["start"]) - stop_at))
-	_expect(float(_talk_cue("CAPTION_SHED_REPLAY_02")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_01")["end"]) >= 0.8, "and another before \"Sophia…\" (%.1f s)" % (float(_talk_cue("CAPTION_SHED_REPLAY_02")["start"]) - float(_talk_cue("CAPTION_SHED_TALK_01")["end"])))
-	_expect(photo_at < float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) and float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) - photo_at >= 1.0, "the photograph comes after \"Sophia…\" and holds a moment before Sophia speaks again (%.1f s)" % (float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) - photo_at))
+	_expect(order.find("CAPTION_SHED_REPLAY_08") < order.find("CAPTION_SHED_REPLAY_09") and order.find("CAPTION_SHED_REPLAY_09") < order.find("CAPTION_SHED_TALK_01") and order.find("CAPTION_SHED_TALK_01") < order.find("CAPTION_SHED_REPLAY_10") and order.find("CAPTION_SHED_REPLAY_10") < order.find("CAPTION_SHED_TALK_02"), "Juliana's first 'Não.' and her request to stop come first, then the warning, then Sophia goes on, and only then the rest of the conversation")
+	var first_no: float = float(_talk_cue("CAPTION_SHED_REPLAY_08")["start"])
+	var stop_at: float = shed.replay_stop_seconds()
+	var photo_at: float = shed.photo_cut_seconds()
+	_expect(is_equal_approx(stop_at, first_no + shed.replay_stop_after_start_seconds) and absf(shed.replay_stop_after_start_seconds - 0.25) < 0.0001, "the picture is held 0.25 s after Juliana's first 'Não.' begins (%.2f s into the viewing)" % stop_at)
+	_expect(is_equal_approx(photo_at, float(_talk_cue("CAPTION_SHED_TALK_01")["end"]) + shed.photo_after_replay_seconds) and absf(shed.photo_after_replay_seconds - 1.0) < 0.0001, "and the photograph cuts in 1.0 s after 'Você não devia ficar vendo esse tipo de coisa.' ends (%.2f s)" % photo_at)
+	_expect(stop_at < float(_talk_cue("CAPTION_SHED_REPLAY_09")["start"]) and photo_at < float(_talk_cue("CAPTION_SHED_REPLAY_10")["start"]), "(both marks fall before the next line)")
 	var footage: ShelterFootage = shed.footage
 	var held_at: float = shed.replay_from() + stop_at
-	_expect(footage.passage_at(shed.replay_from()) == &"A" and footage.passage_at(held_at) == &"A" and held_at > footage.hand_up_start_seconds and held_at < footage.hand_down_end_seconds, "it replays from %.1f s and is held at %.1f s of the footage: on her raised hand, before the first cut, never past the new end" % [shed.replay_from(), held_at])
-	_expect(absf(float(_talk_cue("CAPTION_SHED_TALK_02")["start"]) - 16.0) < 0.001, "(the photograph's talk is the earlier block moved 7.5 s earlier, every pause kept: its first line at %.1f s)" % float(_talk_cue("CAPTION_SHED_TALK_02")["start"]))
-	_expect(not _talk_cue("CAPTION_SHED_TALK_16").is_empty() and absf(float(_talk_cue("CAPTION_SHED_TALK_16")["end"]) - 66.2) < 0.001 and absf(float(_talk_cue("CAPTION_SHED_TALK_16")["end"]) - float(_talk_cue("CAPTION_SHED_TALK_16")["start"]) - 3.1) < 0.001, "and it ends with the same last line, 3.1 s long as before")
+	_expect(footage.passage_at(shed.replay_from()) == &"A" and footage.passage_at(held_at) == &"A" and held_at > footage.hand_up_start_seconds and held_at < footage.hand_down_end_seconds, "the viewing replays from %.1f s and is held at %.1f s of the excerpt: on her raised hand, inside the first shot" % [shed.replay_from(), held_at])
 
 	# The machine's sounds: the first 2.30 s, the loop from 2.30 s to 6.20 s as one seamless stream, and the stop (6.20 s to the end) played once.
 	var start_stream: AudioStreamWAV = TapePlayerSounds.start_stream()
@@ -414,47 +342,73 @@ func _footage_plays_for(seconds: float) -> void:
 func _check_bench_fit() -> void:
 	var bench: Node3D = shed.get_node("%Bench")
 	var seat: AABB = _bench_seat_world()
+	var clipping: Inspectable = shed.clipping
 	var items: Dictionary = {
-		"backpack": shed.get_node("Platform/PersonalEffects/Backpack"),
 		"notebook": shed.get_node("%SophiaJournal"),
-		"clipping": shed.get_node("%NewspaperClipping"),
+		"clipping": clipping,
 		"sister's note": shed.get_node("%MarinaSisterNote"),
-		"box": shed.get_node("%SwitchBox"),
-		"tape set down": shed.vhs_set_down,
+		"tape": shed.vhs_set_down,
 	}
 	var boxes: Dictionary = {}
 	for label: String in items.keys():
 		var item: Node3D = items[label]
-		var bounds: AABB = _visual_bounds(item) if label != "tape set down" else _tape_bounds_at(shed.vhs_set_down)
+		var bounds: AABB = _visual_bounds(item) if label != "tape" else _tape_bounds_at(shed.vhs_set_down)
 		boxes[label] = bounds
-		# Each sits on the seat with a margin to its ends (0.1 m) and does not hang off the front or back.
+		# Each sits on the seat with a margin to its ends (0.05 m) and does not hang off the front or back.
 		_expect(bounds.position.x >= seat.position.x + 0.05 and bounds.end.x <= seat.end.x - 0.05, "%s is on the seat with a margin at the ends" % label)
 		_expect(bounds.position.z >= seat.position.z - 0.02 and bounds.end.z <= seat.end.z + 0.04, "%s does not overhang the seat" % label)
 		_expect(bounds.position.y >= seat.end.y - 0.03 and bounds.position.y <= seat.end.y + 0.07, "%s rests on the seat (%.3f over it)" % [label, bounds.position.y - seat.end.y])
 
-	# The three groups do not overlap in plan (only the clipping lies over the notebook, on purpose).
-	for a: String in ["backpack", "notebook", "sister's note", "box", "tape set down"]:
-		for b: String in ["backpack", "notebook", "sister's note", "box", "tape set down"]:
-			if a < b:
+	# The notebook is at the west end, the sister's note at the east end, the clipping central: none overlaps another in plan, but the clipping that lies over the tape.
+	for a: String in ["notebook", "sister's note", "tape", "clipping"]:
+		for b: String in ["notebook", "sister's note", "tape", "clipping"]:
+			if a < b and not (a == "clipping" and b == "tape"):
 				_expect(not _overlap_plan(boxes[a], boxes[b]), "%s and %s do not overlap on the seat" % [a, b])
-	_expect(not _overlap_plan(boxes["clipping"], boxes["box"]) and not _overlap_plan(boxes["clipping"], boxes["tape set down"]) and not _overlap_plan(boxes["clipping"], boxes["sister's note"]), "the clipping touches neither the box, the tape's place nor the sister's note")
-	_expect(_overlap_plan(boxes["clipping"], boxes["notebook"]), "the clipping lies over the notebook's page")
+	_expect(boxes["notebook"].get_center().x < boxes["clipping"].get_center().x and boxes["clipping"].get_center().x < boxes["sister's note"].get_center().x, "the notebook is at the bench's west end, the clipping in the middle, the sister's note at the east end")
 
-	# The open lid stays clear of the notebook, the backpack and anything behind the bench.
-	var lid: Node3D = container.get_node("Model/LidPivot")
-	lid.rotation_degrees.x = -container.lid_open_degrees
-	var lid_bounds: AABB = _mesh_bounds_world(lid)
-	lid.rotation_degrees.x = 0.0
-	_expect(lid_bounds.position.z > seat.position.z - 0.12, "the open lid does not reach back into the wall (%.2f behind the seat)" % (seat.position.z - lid_bounds.position.z))
-	_expect(not _overlap_plan(lid_bounds, boxes["notebook"]) and not _overlap_plan(lid_bounds, boxes["backpack"]), "the open lid cuts through neither the notebook nor the backpack")
+	# The clipping covers the whole tape: every corner of the tape lies inside the paper's own rectangle.
+	var paper: MeshInstance3D = clipping.find_child("Paper", true, false) as MeshInstance3D
+	var paper_box: AABB = paper.mesh.get_aabb()
+	var tape_box: AABB = AABB(Vector3(-0.0935, -0.0515, -0.0125), Vector3(0.187, 0.103, 0.025))
+	var covered: bool = true
+	for corner: int in 8:
+		var local_corner: Vector3 = tape_box.position + Vector3(tape_box.size.x * (corner & 1), tape_box.size.y * ((corner >> 1) & 1), tape_box.size.z * ((corner >> 2) & 1))
+		var in_paper: Vector3 = paper.global_transform.affine_inverse() * (shed.vhs_set_down.global_transform * local_corner)
+		covered = covered and in_paper.x > paper_box.position.x and in_paper.x < paper_box.end.x and in_paper.y > paper_box.position.y and in_paper.y < paper_box.end.y
+		_expect(in_paper.z < 0.001, "(the tape's corner %d is under the paper: %.4f m)" % [corner, in_paper.z])
+	_expect(covered, "the main clipping physically covers the whole tape")
 
-	# The tape inside the box fits its floor.
-	var inner: AABB = _box_inner_world()
-	_expect(inner.size.x > 0.25 and inner.size.z > 0.15, "the box has room inside")
-	var tape_in_box: AABB = _tape_bounds_world_from(vhs.get_parent(), vhs.transform)
-	_expect(tape_in_box.position.x > inner.position.x and tape_in_box.end.x < inner.end.x and tape_in_box.position.z > inner.position.z and tape_in_box.end.z < inner.end.z, "the tape fits inside the box")
-	var token_flat: Vector3 = container.to_global((vhs.get_parent() as Node3D).transform * ficha.transform * Vector3.ZERO)
-	_expect(token_flat.x - 0.026 > inner.position.x and token_flat.x + 0.026 < inner.end.x and token_flat.z - 0.026 > inner.position.z and token_flat.z + 0.026 < inner.end.z, "and the token lies on its floor, under the tape")
+	# Where the clipping lies once read: clear of the tape, the notebook and the sister's note, and still on the seat.
+	var home: Transform3D = clipping.transform
+	clipping.transform = shed.clipping_aside.transform
+	var aside: AABB = _visual_bounds(clipping)
+	clipping.transform = home
+	_expect(aside.position.x >= seat.position.x + 0.05 and aside.end.x <= seat.end.x - 0.05 and aside.position.z >= seat.position.z - 0.02 and aside.end.z <= seat.end.z + 0.04, "the clipping, aside, is still on the seat")
+	_expect(not _overlap_plan(aside, boxes["tape"]) and not _overlap_plan(aside, boxes["notebook"]) and not _overlap_plan(aside, boxes["sister's note"]), "and clear of the tape, the notebook and the sister's note")
+
+	# The backpack stands on the ground beside the bench, dressing only.
+	var backpack: AABB = _visual_bounds(shed.get_node("Platform/PersonalEffects/Backpack"))
+	var slab_top: float = shed.global_position.y + 0.05
+	_expect(absf(backpack.position.y - slab_top) < 0.03, "the backpack stands on the slab (%.3f m over it)" % (backpack.position.y - slab_top))
+	_expect(not _overlap_plan(backpack, seat) and backpack.position.x >= seat.end.x - 0.05, "beside the bench, not on it")
+
+	# Every hit area: the notebook, the clipping over the tape, the sister's note, the tape, the letter, the Helena notice and the camcorder; only the clipping and the tape (on purpose) share space.
+	var areas: Dictionary = {
+		"notebook": _area_bounds(shed.get_node("%SophiaJournal")),
+		"clipping": _area_bounds(clipping),
+		"sister's note": _area_bounds(shed.get_node("%MarinaSisterNote")),
+		"tape": _area_bounds(shed.vhs),
+		"letter": _area_bounds(shed.letter),
+		"notice": _area_bounds(shed.get_node("%HelenaClarkeNotice")),
+	}
+	for a: String in areas.keys():
+		for b: String in areas.keys():
+			if a < b and not ((a == "clipping" and b == "tape") or (a == "tape" and b == "clipping")):
+				_expect(not (areas[a] as AABB).intersects(areas[b]), "the hit areas of the %s and the %s do not overlap" % [a, b])
+	clipping.transform = shed.clipping_aside.transform
+	_expect(not _area_bounds(clipping).intersects(areas["tape"]) and not _area_bounds(clipping).intersects(areas["notebook"]) and not _area_bounds(clipping).intersects(areas["sister's note"]), "and once the clipping lies aside its hit area is clear of the tape's, the notebook's and the note's")
+	clipping.transform = home
+
 	# The standing patch in front of the bench is clear: no solid within a metre and a half but the bench.
 	var patch_clear: bool = true
 	var space: PhysicsDirectSpaceState3D = level.get_viewport().world_3d.direct_space_state
@@ -468,39 +422,44 @@ func _check_bench_fit() -> void:
 				patch_clear = false
 	_expect(patch_clear, "the ground in front of the bench is clear to stand on")
 	# The player can stand 0.7 m from the bench's front (no obstacle) with the capsule.
-	_expect(await _player_can_stand(bench.global_position + Vector3(-0.3, 0.0, 0.85)), "the player's capsule fits in front of the notebook")
-	_expect(await _player_can_stand(bench.global_position + Vector3(0.6, 0.0, 0.85)), "and in front of the box")
+	_expect(await _player_can_stand(bench.global_position + Vector3(-0.5, 0.0, 0.85)), "the player's capsule fits in front of the notebook")
+	_expect(await _player_can_stand(bench.global_position + Vector3(0.6, 0.0, 0.85)), "and in front of the sister's note")
 
 
-func _check_box_and_rays() -> void:
-	_expect(container.can_interact(player), "the closed box can be opened")
-	_expect(container.get_prompt_text() == "PROMPT_OPEN", "it says open")
-	_expect(vhs.get_parent() != null and not vhs.is_inside_tree() and not ficha.is_inside_tree(), "the tape and the token are out of reach and out of sight while the box is shut")
-	_expect(not ficha.pickup_enabled, "the token cannot be taken yet")
-	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)) == false, "the scene is not done")
-
-	await _ray_finds(container, _stand_for(Vector3(-3.8, 0.0, 0.0)), container.global_position + Vector3(0.0, 0.03, 0.0), "the closed box")
-	container.interact(player)
-	_expect(container.is_open, "the box opens with a plain interaction (no levers, no key, no reading)")
-	_expect(bool(SaveManager.get_state_value(&"puzzles", &"junction_switch_box_open", false)), "the open box is remembered")
-	await _wait(1.2)
-	_expect(vhs.is_inside_tree() and ficha.is_inside_tree(), "the tape and the token are in the open box")
-	_expect(vhs.global_position.y > ficha.global_position.y + 0.01, "the tape lies over the token")
-	_expect(container.get_node("Model/LidPivot").rotation_degrees.x < -90.0, "the lid is open")
-
-	# The tape's label faces up; the token lies flat under it.
-	_expect(vhs.get_node("Visual").global_basis.z.dot(Vector3.UP) > 0.95, "the tape lies label up")
-	_expect(not ficha.can_interact(player), "the token offers nothing while the tape lies on it")
-
-	var stand: Vector3 = _stand_for(Vector3(-3.78, 0.0, 0.0))
-	await _ray_finds(vhs, stand, vhs.global_position, "the tape in the open box")
-	await _ray_finds(vhs, stand, ficha.global_position + Vector3(0.0, 0.015, 0.0), "the tape (not the token) where the token lies under it")
+## The evidence: the tape is under the clipping and offers nothing (no prompt, no mark, no ray target) until the clipping has been read; reading it once (closing it at once is enough) moves it aside and
+## exposes the tape. Nothing else has to be read.
+func _check_evidence_and_rays() -> void:
+	_expect(not shed.vhs.can_interact(player) and not shed.vhs.interaction_enabled, "the tape offers nothing while the clipping lies over it")
+	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_clipping_read", false)), "(nothing has been read)")
+	_expect(not shed.letter.can_interact(player) and not shed.letter.visible and shed.ficha.visible and shed.ficha.pickup_enabled, "the letter is not in the world; the token lies in its recess behind the shelter, an ordinary pickup")
+	_expect(shed.vhs.is_inside_tree() and shed.clipping.is_inside_tree(), "the tape is in the scene, under the paper")
+	var clipping: Inspectable = shed.clipping
 	var notebook: Inspectable = shed.get_node("%SophiaJournal")
-	await _ray_finds(notebook, _stand_for(Vector3(-4.7, 0.0, 0.0)), notebook.global_position + Vector3(-0.07, 0.01, 0.0), "the notebook")
-	var clipping: Inspectable = shed.get_node("%NewspaperClipping")
-	await _ray_finds(clipping, _stand_for(Vector3(-4.43, 0.0, 0.0)), clipping.global_position + Vector3(0.0, 0.012, 0.0), "the clipping, over the notebook")
 	var sister_note: Inspectable = shed.get_node("%MarinaSisterNote")
-	await _ray_finds(sister_note, _stand_for(Vector3(-4.70, 0.0, 0.0)), sister_note.global_position + Vector3(0.0, 0.012, 0.0), "the sister's note, on its own beside the notebook")
+
+	var stand: Vector3 = _stand_for(Vector3(-4.3, 0.0, 0.0))
+	# Aimed at the tape through the paper, the ray ends on the clipping; the tape is never the target.
+	await _ray_finds(clipping, stand, clipping.global_position + Vector3(0.0, 0.012, 0.0), "the clipping, over the tape")
+	await _ray_finds(clipping, stand, shed.vhs.global_position + Vector3(0.0, 0.02, 0.0), "the clipping where the tape lies under it (the tape is not a target)")
+	var marks: Array = player.interaction_controller.reticle.call("_scan", false)
+	_expect(not marks.has(shed.vhs), "and the tape has no interaction mark through the paper")
+	await _ray_finds(notebook, _stand_for(Vector3(-4.86, 0.0, 0.0)), notebook.global_position + Vector3(-0.07, 0.01, 0.0), "the notebook")
+	await _ray_finds(sister_note, _stand_for(Vector3(-3.72, 0.0, 0.0)), sister_note.global_position + Vector3(0.0, 0.012, 0.0), "the sister's note, at the other end")
+
+	# Reading the clipping once exposes the tape; no timer, and closing it at once is enough.
+	await _read_and_close_clipping()
+	await _wait(1.0)
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_clipping_read", false)), "reading the clipping is remembered")
+	_expect(clipping.global_transform.is_equal_approx(shed.clipping_aside.global_transform), "the clipping lies aside, where the marker is")
+	_expect(shed.vhs.can_interact(player) and shed.vhs.interaction_enabled, "the tape offers its inspection now")
+	_expect(shed.vhs.get_node("Visual").global_basis.z.dot(Vector3.UP) > 0.95, "the tape lies label up")
+	_expect(shed.vhs.global_transform.is_equal_approx(shed.vhs_set_down.global_transform), "and where it lay, not moved")
+	await _ray_finds(shed.vhs, stand, shed.vhs.global_position, "the tape, exposed")
+	var marks_after: Array = player.interaction_controller.reticle.call("_scan", false)
+	_expect(marks_after.has(shed.vhs), "and it has its interaction mark")
+	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)), "(the cinematic has not started)")
+	_expect(not shed.is_recording_running() and not player.view_locked, "reading the clipping starts nothing and holds nobody")
+	_expect(not shed.letter.visible, "and it does not bring the letter")
 
 
 func _check_scene_plays_once() -> void:
@@ -509,6 +468,7 @@ func _check_scene_plays_once() -> void:
 	player.movement_controller.look_yaw = 0.0
 	await _wait(0.8)
 	var start_position: Vector3 = player.global_position
+	view_before = Vector2(player.movement_controller.look_yaw, player.movement_controller.look_pitch)
 	var scripted_before: bool = player.scripted_flashlight
 	await _read_and_close_tape()
 	# The very call that closed the view took the player: no frame of walking or opening the inventory in between.
@@ -532,6 +492,7 @@ func _check_scene_plays_once() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
+	scene_ended_at_msec = Time.get_ticks_msec()
 	_expect(not shed.is_recording_running() and shed.is_recording_done(), "the scene ends by itself")
 	_expect(waited > 125.0 and waited < 200.0, "it lasts about two and a half minutes: the introduction, the machine's 2.3 s and the 62 s recording, the tape again with the conversation and the photograph (%.0f s)" % waited)
 	_expect(completed_count == 1, "it is announced once")
@@ -586,7 +547,7 @@ func _check_scene_plays_once() -> void:
 	_expect(_seen.has("last_line_ms") and _seen.has("ended_ms") and after_last >= 0.0 and after_last < 9000.0 / maxf(TIME_SCALE, 0.1), "the controls come back when the conversation is over, with nothing played after it (%.1f s after the last line, real time)" % (after_last / 1000.0))
 	_expect(int(_seen.get("eyes_frames_with_scene", 0)) == 0, "nothing of the scene's own camera or recording shows once her eyes are back (%d frames)" % int(_seen.get("eyes_frames_with_scene", 0)))
 	_expect(not bool(_seen.get("saw_marina", false)) and not bool(_seen.get("saw_recorded", false)), "no subtitle ever spoke for Marina or a recorded voice")
-	_expect(bool(_seen.get("saw_last", false)), "the subtitles reached the last line, 'Of course. But only if we make brigadeiro first?'")
+	_expect(bool(_seen.get("saw_last", false)), "the subtitles reached the last line of the conversation")
 	_expect(str(_seen.get("order_ok", "")) == "yes", "the subtitles came in order and none was left behind across a cut (%s)" % str(_seen.get("order_ok", "")))
 	var led: MeshInstance3D = shed.camcorder.find_child("Led", true, false)
 	_expect((led.material_override as StandardMaterial3D).emission_energy_multiplier == 0.0 and shed.camcorder.visible, "its light is out and it is still there")
@@ -598,24 +559,44 @@ func _check_scene_plays_once() -> void:
 
 
 func _check_after_scene() -> void:
-	# The tape lies beside the open box; the token is there to take.
+	# The tape lies on the bench where it lay; the first cinematic frees nothing and moves nothing of the token, which lies in its recess behind the shelter all along.
 	_expect(vhs.get_parent() == shed.effects_root, "the tape stays on the bench")
-	var tape: AABB = _tape_bounds_world_from(vhs.get_parent(), vhs.transform)
-	var inner: AABB = _box_inner_world()
-	_expect(not _overlap_plan(tape, _visual_bounds(container)), "the tape lies beside the box, not over it")
-	_expect(ficha.is_inside_tree() and ficha.pickup_enabled and ficha.can_interact(player), "the token is free to take")
-	_expect(ficha.global_position.x > inner.position.x and ficha.global_position.x < inner.end.x and ficha.global_position.z > inner.position.z and ficha.global_position.z < inner.end.z, "the token lies inside the open box")
-	_expect(ficha.global_position.y > inner.position.y - 0.02, "on its floor")
-	await _ray_finds(ficha, _stand_for(Vector3(-3.78, 0.0, 0.0)), ficha.global_position, "the token inside the open box")
-	await _ray_finds(vhs, _stand_for(Vector3(-4.1, 0.0, 0.0)), vhs.global_position, "the tape beside it")
+	_expect(vhs.global_transform.is_equal_approx(shed.vhs_set_down.global_transform), "where it lay")
+	_expect(ficha.is_inside_tree() and ficha.visible and ficha.pickup_enabled and shed.rear_annex.is_ancestor_of(ficha), "the first cinematic does not touch the token: it lies where it always lay, behind the shelter")
+	_expect(not ("token_landing" in shed) and not shed.has_method("_turn_toward_camcorder"), "(nothing of the token's fall or of the forced turn is left)")
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)) and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_letter_read", false)) and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "only the first cinematic is saved: the leaves are still over the end of the trail, the letter is unread")
+	_expect(shed.camcorder.viewfinder_enabled and shed.camcorder.can_interact(player), "the camcorder can be used")
+	# The control comes back in the view the player had when the scene began: no turn toward the camcorder, no snap.
+	var camera: Camera3D = player.movement_controller.camera
+	_expect(absf(wrapf(player.movement_controller.look_yaw - view_before.x, -180.0, 180.0)) < 0.5 and absf(player.movement_controller.look_pitch - view_before.y) < 0.5, "the player's view is the one they had before the scene (%.1f, %.1f against %.1f, %.1f)" % [player.movement_controller.look_yaw, player.movement_controller.look_pitch, view_before.x, view_before.y])
+	var yaw_after: float = player.movement_controller.look_yaw
+	# 1.2 to 1.8 s after the control, a small mechanical sound comes from the physical camcorder, behind her; nothing is forced (timed by `_watch_cue`, from the moment the scene ended).
+	var guard_cue: float = 0.0
+	while cue_heard_at < 0.0 and guard_cue < 4.0:
+		await get_tree().process_frame
+		guard_cue += get_process_delta_time()
+	var heard_at: float = cue_heard_at
+	var cue: AudioStreamPlayer3D = shed.camcorder.get_head().get_node_or_null("CueSound") as AudioStreamPlayer3D
+	_expect(heard_at >= 1.2 and heard_at <= 1.9, "the camcorder's own sound begins 1.2 to 1.8 s after the control (%.2f s)" % heard_at)
+	_expect(cue != null and shed.camcorder.get_head().is_ancestor_of(cue) and cue.stream != null, "from the device itself, a 3D source (not a UI sound)")
+	_expect(not player.view_locked and get_viewport().get_camera_3d() == camera and absf(player.movement_controller.look_yaw - yaw_after) < 0.05, "and it forces no look: the player is free and their view has not moved")
+	await _wait(1.8)
+	_expect(cue != null and not cue.playing, "and it stops by itself, once")
 
-	# A later examination is only an examination.
-	await _read_and_close_tape()
-	await _wait(0.5)
-	_expect(not shed.is_recording_running() and not player.view_locked, "examining the tape again does not replay the scene")
+	# The tape, now, is the voluntary review; examining it again never replays the scene.
+	_expect(vhs.review_mode and vhs.get_prompt_text() == "PROMPT_REVIEW_TAPE", "the tape offers a review now")
+	vhs.interact(player)
+	await _wait(0.6)
+	_expect(not shed.is_recording_running() and int(shed.get("_aux_mode")) == 2, "using the tape again opens the review, not the scene")
+	shed.call("_abort_aux")
+	await get_tree().process_frame
+	_expect(not shed.is_recording_running() and not player.view_locked, "and leaving it gives everything back")
 	_expect(completed_count == 1, "(nothing announced again)")
 
-	# The token is taken with the ordinary pickup.
+	# The rest of the investigation is tested in shed_investigation_smoke_test. Here the dev shortcut resolves it, and the token is taken with the ordinary pickup.
+	shed.force_resolve()
+	await _wait(0.4)
+	_expect(ficha.visible and ficha.pickup_enabled and ficha.can_interact(player), "once the investigation is resolved the token is still a plain pickup")
 	ficha.interact(player)
 	_expect(player.has_inventory_item("sophia_ficha"), "the token goes in the inventory with the ordinary pickup")
 	_expect(bool(SaveManager.get_state_value(&"collectibles", &"sophia_ficha", false)), "and is remembered as collected")
@@ -627,39 +608,41 @@ func _check_after_scene() -> void:
 
 
 func _check_saves() -> void:
-	# Collected: the box is open, the tape beside it, no second token, no replay.
+	# Collected: the scene is over, the tape on the bench, no second token, no replay.
 	await _fresh_level(false)
-	_expect(shed.is_recording_done() and container.is_open, "reloaded after the token was taken: the scene is over and the box open")
-	_expect(shed.vhs.get_parent() == shed.effects_root, "the tape is beside the box")
+	_expect(shed.is_recording_done() and bool(SaveManager.get_state_value(&"puzzles", &"shelter_letter_read", false)), "reloaded after the token was taken: the scene is over and the letter was read")
+	_expect(shed.vhs.get_parent() == shed.effects_root and shed.clipping.global_transform.is_equal_approx(shed.clipping_aside.global_transform), "the tape is on the bench and the clipping lies aside")
 	await _wait(0.3)
-	_expect(not is_instance_valid(shed.ficha) or not shed.ficha.is_inside_tree() or shed.ficha.is_queued_for_deletion(), "the token does not come back once it is collected")
+	_expect(not is_instance_valid(shed.ficha) or shed.ficha.is_queued_for_deletion() or not shed.ficha.is_inside_tree(), "the token does not come back once it is collected")
+	_expect(shed.letter.visible and shed.letter.can_interact(player), "the letter lies where it was left, to be read again")
 	await _free_level()
 
-	# Done, token left: it is there, free, and nothing replays.
+	# The first cinematic done only: the camcorder stage. The token is NOT in the world, the letter is hidden, the leaves are over it.
 	SaveManager.delete_slot(1)
 	SaveManager.create_new_game(1, TEST_SCENE_PATH, "shed_test_start", "SAVE_LOCATION_DREAM_INTRO")
 	SaveManager.set_state_value(&"puzzles", &"shelter_recording_done", true)
-	SaveManager.set_state_value(&"puzzles", &"junction_switch_box_open", true)
 	await _load_level()
-	_expect(shed.is_recording_done() and container.is_open and shed.ficha.is_inside_tree() and shed.ficha.pickup_enabled, "scene done, token left: the open box shows the token, free")
-	_expect(shed.vhs.get_parent() == shed.effects_root, "the tape is beside the box after a load")
-	await _read_and_close_tape()
+	_expect(shed.is_recording_done() and shed.vhs.can_interact(player), "the first cinematic done: the tape is exposed")
+	_expect(shed.ficha.visible and shed.ficha.pickup_enabled and not shed.letter.visible and not shed.letter.can_interact(player), "the token lies in its recess, the letter is hidden")
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_clipping_read", false)) and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "the clipping counts as read, the leaves are still over the end of the trail")
+	shed.vhs.interact(player)
 	await _wait(0.4)
-	_expect(not shed.is_recording_running(), "and the tape does not replay the scene")
+	_expect(not shed.is_recording_running() and int(shed.get("_aux_mode")) == 2, "and the tape opens the review, it does not replay the scene")
+	shed.call("_abort_aux")
 	await _free_level()
 
-	# Old saves. A solved lever box with its token left behind.
-	await _legacy_case("a solved lever box", [[&"puzzles", &"junction_signal_box_open", true]], true, true)
-	# The token taken the old way.
-	await _legacy_case("a token taken from the lever box", [[&"puzzles", &"junction_ficha_taken", true], [&"collectibles", &"sophia_ficha", true]], true, false)
+	# Old saves. A solved lever box: the cinematic counts as done, the investigation is not.
+	await _legacy_case("a solved lever box", [[&"puzzles", &"junction_signal_box_open", true]], true, false)
+	# The token taken the old way: everything resolved, nothing respawns.
+	await _legacy_case("a token taken from the lever box", [[&"puzzles", &"junction_ficha_taken", true], [&"collectibles", &"sophia_ficha", true]], true, true)
 	# The token already in the payphone.
-	await _legacy_case("a token already in the payphone", [[&"puzzles", &"orelhao_fichas", ["sophia_ficha"]], [&"collectibles", &"sophia_ficha", true]], true, false)
-	# The old switch box opened (with the puncher) and nothing more: the scene is still to come.
-	await _legacy_case("only the old switch box opened", [[&"puzzles", &"junction_switch_box_open", true], [&"puzzles", &"junction_signal_box_levers", [true, true, false]]], false, true)
+	await _legacy_case("a token already in the payphone", [[&"puzzles", &"orelhao_fichas", ["sophia_ficha"]], [&"collectibles", &"sophia_ficha", true]], true, true)
+	# The old hinged box opened (with the old levers) and nothing more: the scene is still to come.
+	await _legacy_case("only the old switch box opened", [[&"puzzles", &"junction_switch_box_open", true], [&"puzzles", &"junction_signal_box_levers", [true, true, false]]], false, false)
 
 
-## A saved state prepared, the shed loaded: whether the recording counts as over, and whether the token is there.
-func _legacy_case(label: String, values: Array, expect_done: bool, expect_token: bool) -> void:
+## A saved state prepared, the shed loaded: whether the first cinematic counts as over, and whether the token is gone for good (every stage resolved, nothing respawns).
+func _legacy_case(label: String, values: Array, expect_done: bool, expect_resolved: bool) -> void:
 	SaveManager.delete_slot(1)
 	SaveManager.create_new_game(1, TEST_SCENE_PATH, "shed_test_start", "SAVE_LOCATION_DREAM_INTRO")
 	for entry: Array in values:
@@ -667,25 +650,26 @@ func _legacy_case(label: String, values: Array, expect_done: bool, expect_token:
 	await _load_level()
 	await _wait(0.3)
 	_expect(shed.is_recording_done() == expect_done, "%s: the scene is %s" % [label, "over" if expect_done else "still to come"])
-	var token_in_tree: bool = is_instance_valid(shed.ficha) and shed.ficha.is_inside_tree() and not shed.ficha.is_queued_for_deletion()
-	_expect(token_in_tree == expect_token, "%s: the token is %s" % [label, "there" if expect_token else "not there (never twice)"])
+	var token_in_world: bool = is_instance_valid(shed.ficha) and shed.ficha.is_inside_tree() and not shed.ficha.is_queued_for_deletion() and shed.ficha.visible
+	_expect(token_in_world == not expect_resolved, "%s: the token %s (one token, never twice)" % [label, "is gone with the one collected" if expect_resolved else "lies in its recess behind the shelter"])
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_letter_read", false)) == expect_resolved, "%s: the investigation is %s" % [label, "resolved" if expect_resolved else "still to be done"])
+	_expect(shed.letter.visible == expect_resolved and (not expect_resolved or shed.letter.can_interact(player)), "%s: the letter is %s" % [label, "exposed to be read again" if expect_resolved else "hidden"])
 	if expect_done:
-		_expect(container.is_open and shed.vhs.get_parent() == shed.effects_root, "%s: the box is open with the tape beside it" % label)
-		if expect_token:
-			_expect(shed.ficha.pickup_enabled, "%s: the token is free to take" % label)
-		await _read_and_close_tape()
+		_expect(shed.vhs.can_interact(player) and shed.vhs.get_parent() == shed.effects_root, "%s: the tape is exposed on the bench" % label)
+		shed.vhs.interact(player)
 		await _wait(0.4)
-		_expect(not shed.is_recording_running(), "%s: no scene is forced" % label)
+		_expect(not shed.is_recording_running() and int(shed.get("_aux_mode")) == 2, "%s: no scene is forced (the tape opens the review)" % label)
+		shed.call("_abort_aux")
 	else:
-		_expect(container.is_open and shed.vhs.is_inside_tree() and not shed.ficha.pickup_enabled, "%s: the open box shows the tape on a token that cannot be taken yet" % label)
+		_expect(not shed.vhs.can_interact(player) and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_clipping_read", false)), "%s: the tape is still under the clipping (the old box proves nothing)" % label)
 	await _free_level()
 
 
 func _check_cancel() -> void:
 	SaveManager.delete_slot(1)
 	SaveManager.create_new_game(1, TEST_SCENE_PATH, "shed_test_start", "SAVE_LOCATION_DREAM_INTRO")
+	SaveManager.set_state_value(&"puzzles", &"shelter_clipping_read", true)
 	await _load_level()
-	container.interact(player)
 	await _wait(1.0)
 	player.flashlight_controller.flashlight_on = true
 	await _read_and_close_tape()
@@ -702,7 +686,7 @@ func _check_cancel() -> void:
 	_expect(shed.effects_root.visible and shed.camcorder.visible and not shed.archive_dressing.visible, "the present is whole")
 	_expect(not shed.footage.visible and is_zero_approx(shed.footage.current_time) and not shed.archive_foreground.visible and not shed.archive_dressing.visible and shed.footage.marina.visible and not shed.footage.aftermath.visible and not shed.footage.litter.visible, "the cast and the ferns are put away, the cast at its first frame (Emily back in it, no blood, no litter), the old plank hidden")
 	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT and not shed.footage.aftermath.is_visible_in_tree() and not shed.footage.litter.is_visible_in_tree(), "and the shelter is in its present look: the blood and the litter are not in the tree's view")
-	_expect(shed.vhs.get_parent() == container.get_node("Contents") and not shed.ficha.pickup_enabled and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)), "the tape lies on the token again and the token is still held")
+	_expect(shed.vhs.get_parent() == shed.effects_root and shed.vhs.can_interact(player) and shed.ficha.pickup_enabled and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)), "the tape lies where it lay, exposed, and the token is still not in the world")
 	await _wait(2.0)
 	_expect(CaptionManager.panel.visible == false, "no subtitle is left on the screen")
 	# It can be played again.
@@ -715,8 +699,8 @@ func _check_cancel() -> void:
 func _check_pause() -> void:
 	SaveManager.delete_slot(1)
 	SaveManager.create_new_game(1, TEST_SCENE_PATH, "shed_test_start", "SAVE_LOCATION_DREAM_INTRO")
+	SaveManager.set_state_value(&"puzzles", &"shelter_clipping_read", true)
 	await _load_level()
-	container.interact(player)
 	await _wait(1.0)
 	await _read_and_close_tape()
 	# In the walking shot (the footage begins after the machine's first part): the picture stands still, the camera with it, and nothing keeps moving.
@@ -744,7 +728,7 @@ func _check_pause() -> void:
 	var photo_before: Transform3D = cinema.global_transform
 	get_tree().paused = true
 	await get_tree().create_timer(1.5, true, false, true).timeout
-	_expect(cinema.global_transform.is_equal_approx(photo_before) and not CaptionManager.panel.visible, "paused over the photograph: the view stands still, no words")
+	_expect(cinema.global_transform.is_equal_approx(photo_before), "paused over the photograph: the view stands still (a line may be up: it stands with the clock, checked below)")
 	get_tree().paused = false
 	await _wait(0.3)
 
@@ -1254,6 +1238,9 @@ func _check_states_and_photo() -> void:
 		_expect(blood_share > 0.02 and blood_share < 0.3, "with a substantial, bounded amount of blood in it (%.1f%% of the picture is dark red) and plenty of bare surface" % (100.0 * blood_share))
 	# The print on the clipping.
 	var clipping: Inspectable = shed.get_node("%NewspaperClipping")
+	# The photograph is looked at where the clipping lies once it has been read (it covers the tape before that).
+	var clipping_home: Transform3D = clipping.transform
+	clipping.transform = shed.clipping_aside.transform
 	var visual: Node3D = clipping.get_node("Visual") as Node3D
 	var photo: MeshInstance3D = visual.find_child("Photo", true, false) as MeshInstance3D
 	var border: MeshInstance3D = visual.find_child("PhotoBorder", true, false) as MeshInstance3D
@@ -1289,6 +1276,7 @@ func _check_states_and_photo() -> void:
 		paper_low = minf(paper_low, px)
 		paper_high = maxf(paper_high, px)
 	_expect(paper_low < low.x - 0.02 and paper_high > high.x + 0.02 and paper_low > -0.1 and paper_high < 1.1, "with the paper's own edge round it, so that it reads as a photograph on a clipping (%.2f to %.2f)" % [paper_low, paper_high])
+	clipping.transform = clipping_home
 
 
 ## One carried camera shot (from `from_time` to `to_time` of the footage, along the strip `start` to `end`): its travel, pace, heading, pitch, height, bob and roll; the camera clear of the ground and of the
@@ -1433,29 +1421,15 @@ func _watch() -> void:
 	var last_cinema_origin: Vector3 = Vector3.ZERO
 	var shots_seen: int = 0
 	var captions: Array[String] = []
-	var expected: Array[String] = [
-		"Sophia: This is the copy Emily's sister lent me.",
-		"Juliana: There's no sound?",
-		"Sophia: The copy came like this.",
-		"Juliana: No. Can you stop, please?",
-		"Juliana: You shouldn't keep watching this kind of thing.",
-		"Juliana: Sophia…",
-		"Sophia: I wanted to know who was on this side of the camera.",
-		"Juliana: Leave it alone.",
-		"Juliana: The guards must be investigating.",
-		"Sophia: I asked Daniel.",
-		"Sophia: They're looking for Helena Clarke now.",
-		"Juliana: I read that name somewhere… But that was a while ago, wasn't it?",
-		"Sophia: Last week. She was seen near the tracks.",
-		"Juliana: It isn't safe here.",
-		"Sophia: It never was. I found some old news reports and…",
-		"Juliana: No.",
-		"Juliana: I have to work tomorrow.",
-		"Juliana: I don't want to think about this every time I leave home.",
-		"Sophia: I'm sorry.",
-		"Juliana: Want to watch Dead Poets Society?",
-		"Sophia: Of course. But only if we make brigadeiro first?",
-	]
+	# The subtitles that must appear, in this order: the introduction and then the conversation (from the approved texts, each with its speaker's name).
+	var expected: Array[String] = []
+	for track: StringName in [CaptionTracks.SHED_REMEMBERED_COPY, CaptionTracks.SHED_REMEMBERED_TALK]:
+		for cue: Dictionary in CaptionTracks.get_cues(track):
+			if str(cue["key"]).is_empty():
+				continue
+			var pinned: Array = ShedExpectedTexts.CAPTIONS[str(cue["key"])]
+			expected.append("%s: %s" % [str(pinned[2]).capitalize(), pinned[0]])
+	var last_expected: String = expected[expected.size() - 1]
 	while _watching and is_instance_valid(shed):
 		await get_tree().process_frame
 		if not _watching:
@@ -1643,8 +1617,8 @@ func _watch() -> void:
 				captions.append(text)
 				_seen["saw_marina"] = bool(_seen.get("saw_marina", false)) or text.begins_with("Marina:")
 				_seen["saw_recorded"] = bool(_seen.get("saw_recorded", false)) or text.begins_with("Recorded voice:")
-				_seen["saw_last"] = bool(_seen.get("saw_last", false)) or text == "Sophia: Of course. But only if we make brigadeiro first?"
-				if text == "Sophia: Of course. But only if we make brigadeiro first?" and not _seen.has("last_line_ms"):
+				_seen["saw_last"] = bool(_seen.get("saw_last", false)) or text == last_expected
+				if text == last_expected and not _seen.has("last_line_ms"):
 					_seen["last_line_ms"] = float(Time.get_ticks_msec())
 				# A subtitle of the girls never lingers over her own eyes except by their own track (none exists then).
 				if in_cinema == false:
@@ -1660,6 +1634,24 @@ func _watch() -> void:
 # ============================================================
 # HELPERS
 # ============================================================
+
+## Reads the main clipping and shuts it at once: the first reading exposes the tape.
+func _read_and_close_clipping() -> void:
+	shed.clipping.interact(player)
+	var waited: float = 0.0
+	while player.inspect_controller.state != PlayerInspectController.InspectState.VIEWING and waited < 4.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	_expect(player.inspect_controller.is_open(), "the clipping opens the inspect view")
+	await _wait(0.4)
+	player.inspect_controller.close(false)
+	player.inventory_ui_controller.close()
+	# The first reading of the clipping is followed by a short scene (the paper is moved aside by hand): it is waited out.
+	var scene_wait: float = 0.0
+	while int(shed.get("_aux_mode")) != 0 and scene_wait < 14.0:
+		await get_tree().process_frame
+		scene_wait += get_process_delta_time()
+
 
 func _read_and_close_tape() -> void:
 	vhs.interact(player)
@@ -1767,21 +1759,50 @@ func _visual_bounds(item: Node) -> AABB:
 	return result
 
 
-## The world box of the tape if its node had `local` transform inside `parent`.
-func _tape_bounds_world_from(parent: Node, local: Transform3D) -> AABB:
-	var parent_transform: Transform3D = (parent as Node3D).global_transform if parent.is_inside_tree() else container.global_transform * (parent as Node3D).transform
-	return (parent_transform * local) * AABB(Vector3(-0.0935, -0.0515, -0.0125), Vector3(0.187, 0.103, 0.025))
-
-
 func _tape_bounds_at(marker: Node3D) -> AABB:
 	return marker.global_transform * AABB(Vector3(-0.0935, -0.0515, -0.0125), Vector3(0.187, 0.103, 0.025))
 
 
-## The inside of the box's floor in the world.
-func _box_inner_world() -> AABB:
-	var inside: MeshInstance3D = container.get_node("Model/Inside") as MeshInstance3D
-	return inside.global_transform * inside.mesh.get_aabb()
-
-
 func _overlap_plan(a: AABB, b: AABB) -> bool:
 	return a.position.x < b.end.x and a.end.x > b.position.x and a.position.z < b.end.z and a.end.z > b.position.z
+
+
+## The world box of an item's hit area (its shape's box, in the world).
+func _area_bounds(item: Node) -> AABB:
+	var shape: CollisionShape3D = item.get_node("InteractArea/CollisionShape3D") as CollisionShape3D
+	return shape.global_transform * shape.shape.get_debug_mesh().get_aabb()
+
+
+## Every approved evidence text, exactly as written, in both languages (tests/shed_expected_texts.gd), and what the brief asks of them as a whole: Emily is missing (no body, no death, no weapon, no
+## cause), the smell is a witness's, the leaflet is a fictional English-founded village's, Daniel Nogueira is named, and the sister's note is unsigned.
+func _check_pinned_texts() -> void:
+	for key: String in ShedExpectedTexts.EVIDENCE:
+		var pair: Array = ShedExpectedTexts.EVIDENCE[key]
+		_expect(_translated(key, "en") == pair[0] and _translated(key, "pt_BR") == pair[1], "%s reads as approved (both languages)" % key)
+		for locale: String in ["en", "pt_BR"]:
+			var lowered: String = _translated(key, locale).to_lower()
+			for banned: String in ["body", "corpo", "found dead", "encontrada morta", "death", "morte", "killed", "matou", "autopsy", "autópsia", "weapon", "arma ", "marina", "wound", "ferida"]:
+				_expect(not lowered.contains(banned), "%s (%s) has nothing of a body, a death or a weapon ('%s')" % [key, locale, banned])
+	var journal_en: String = _translated("READABLE_JOURNAL", "en")
+	var journal_pt: String = _translated("READABLE_JOURNAL", "pt_BR")
+	_expect(journal_en.contains("smell of iron and soaked wood") and journal_pt.contains("cheiro de ferro e madeira encharcada"), "the smell is a witness's, in the maintenance record's margin note")
+	_expect(journal_en.contains("founded by the English") and journal_pt.contains("fundada por ingleses"), "the leaflet gives the village an English founding")
+	_expect(journal_en.contains("Daniel Nogueira") and journal_pt.contains("Daniel Nogueira"), "Daniel Nogueira is named")
+	_expect(_translated("READABLE_HELENA_NOTICE", "en").contains("born and raised in the Fenda") and _translated("READABLE_HELENA_NOTICE", "pt_BR").contains("nascida e criada na Fenda"), "Helena was born and raised in the Fenda")
+	_expect(not _translated("READABLE_MARINA_SISTER_NOTE", "en").to_lower().contains("sister") and not _translated("ITEM_MARINA_SISTER_NOTE_NAME", "en").to_lower().contains("sister"), "the note that came with the tape does not call its writer a sister (the family's reply says Emily has none)")
+	_expect(_translated("READABLE_CLIPPING", "en").contains("remains missing") and _translated("READABLE_CLIPPING", "pt_BR").contains("não foi localizada"), "the clipping says Emily is missing")
+	_expect(_translated("READABLE_FAMILY_LETTER", "en").ends_with("Emily doesn't have a sister.") and _translated("READABLE_FAMILY_LETTER", "pt_BR").ends_with("A Emily não tem irmã."), "the family's reply says she has no sister")
+
+
+## From the moment the first cinematic ends (the control is back), counts game time until the physical camcorder's own sound begins.
+func _watch_cue() -> void:
+	var elapsed: float = 0.0
+	while elapsed < 6.0 and is_instance_valid(shed):
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+		if not is_instance_valid(shed) or shed.camcorder == null:
+			return
+		var cue: AudioStreamPlayer3D = shed.camcorder.get_head().get_node_or_null("CueSound") as AudioStreamPlayer3D
+		if cue != null and cue.playing:
+			cue_heard_at = elapsed
+			return

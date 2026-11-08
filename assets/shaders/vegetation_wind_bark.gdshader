@@ -15,6 +15,7 @@ uniform float normal_scale : hint_range(-16.0, 16.0) = 1.0;
 
 void vertex() {
 	VERTEX += wind_local_offset(VERTEX, MODEL_MATRIX, CAMERA_POSITION_WORLD, TIME);
+	VERTEX = clearing_apply(VERTEX, MODEL_MATRIX);
 }
 
 void fragment() {

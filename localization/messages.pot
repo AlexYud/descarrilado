@@ -1138,6 +1138,66 @@ msgstr ""
 msgid "READABLE_HELENA_NOTICE"
 msgstr ""
 
+msgid "PROMPT_VIEWFINDER"
+msgstr ""
+
+msgid "PROMPT_VIEWFINDER_EXIT"
+msgstr ""
+
+msgid "ITEM_FAMILY_LETTER_NAME"
+msgstr ""
+
+msgid "ITEM_FAMILY_LETTER_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_FAMILY_LETTER"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_07"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_08"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_09"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_10"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_11"
+msgstr ""
+
+msgid "CAPTION_SHED_REPLAY_12"
+msgstr ""
+
+msgid "RECORDING_BLOOD_WORDS"
+msgstr ""
+
+msgid "PROMPT_REVIEW_TAPE"
+msgstr ""
+
+msgid "VHS_PLAY"
+msgstr ""
+
+msgid "VHS_PAUSE"
+msgstr ""
+
+msgid "VHS_STOP"
+msgstr ""
+
+msgid "VHS_REWIND"
+msgstr ""
+
+msgid "VHS_FORWARD"
+msgstr ""
+
+msgid "VHS_CLOSE"
+msgstr ""
+
+msgid "VHS_REVIEW_HINT"
+msgstr ""
+
 msgid "CAPTION_SHED_MEM_01"
 msgstr ""
 

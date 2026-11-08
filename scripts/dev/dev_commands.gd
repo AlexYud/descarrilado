@@ -74,9 +74,10 @@ func _build() -> void:
 	_add("state_set", "state_set <section> <key> <value>", "Writes a value of the save state (true, false, a number or text).", _state_set)
 	_add("house_unstick", "house_unstick", "If the unfinished house is stuck: ends the bedroom scene at once (the cameras and the player are given back, the capsule key lies on the nightstand) and unlocks the pantry and the bedroom.", _house_unstick)
 	_add("house_postcard", "house_postcard", "Plays the bedroom's postcard scene again from where the player stands (best beside the nightstand). Nothing else is reset.", _house_postcard)
-	_add("shed_replay", "shed_replay", "Puts the waiting shed back as before its recording scene (the tape on the token, the token held); examining the tape plays it again. Only while the token is still in the box.", _shed_replay)
-	_add("shed_preview", "shed_preview <seconds|off>", "Shows the waiting shed's silent recording at one moment of the footage (0 to 62 s: the hidden camera to 20 s, the carried camera to 32 s, the aftermath seen from outside to 46 s, the carried camera dragging something after; no sound, no captions), through its own camera and picture, without taking the player or touching any save; 'off' puts the view back. Works on a finished save too.", _shed_preview)
-	_add("shed_unstick", "shed_unstick", "Ends the waiting shed's recording scene at once (the player is given back, the tape lies beside the box, the token is free).", _shed_unstick)
+	_add("shed_replay", "shed_replay", "Puts the waiting shed back as before its recording scene (the tape exposed, the viewfinder showing the ordinary shelter, the leaves over the letter); examining the tape plays it again. Only while the token is not taken.", _shed_replay)
+	_add("shed_preview", "shed_preview <seconds|tape <seconds>|off>", "Shows the waiting shed's silent recording at one moment of the footage (EXCERPT seconds, 0 to 62 s, the rear segment at -8 to 0; or `tape <seconds>` on the whole tape's clock, 0 to 70 s: the hidden camera to 20 s, the carried camera to 32 s, the aftermath seen from outside to 46 s, the carried camera dragging something after; no sound, no captions), through its own camera and picture, without taking the player or touching any save; 'off' puts the view back. Works on a finished save too.", _shed_preview)
+	_add("shed_skip", "shed_skip", "Resolves every stage of the waiting shed's investigation at once (the cinematic is over, the leaves are aside, the letter is read). The token is not touched: it lies in its recess behind the shelter, to be found.", _shed_skip)
+	_add("shed_unstick", "shed_unstick", "Ends the waiting shed's recording scene at once (the player is given back and the camcorder's viewfinder shows the blood trail; the tape becomes reviewable). The rest of the investigation is NOT done by it: see shed_skip.", _shed_unstick)
 	_add("scene", "scene <res://path.tscn>", "Changes to a scene.", _scene)
 	_add("reload", "reload", "Reloads the current scene.", func(_a: PackedStringArray) -> String:
 		_console.call("close")
@@ -329,7 +330,7 @@ func _shed_replay(_args: PackedStringArray) -> String:
 	if not (found[0] as WaitingShedSequence).reset_for_replay():
 		return "[color=%s]The recording is playing, or the token has already been taken.[/color]" % _bad_colour()
 
-	return "The shed is as it was before the recording (open the box if it is shut, then examine the tape)."
+	return "The shed is as it was before the recording (examine the tape)."
 
 
 func _shed_preview(args: PackedStringArray) -> String:
@@ -338,15 +339,24 @@ func _shed_preview(args: PackedStringArray) -> String:
 		return "[color=%s]There is no waiting shed in this scene.[/color]" % _bad_colour()
 
 	var shed: WaitingShedSequence = found[0] as WaitingShedSequence
-	var seconds: float = -1.0
 	if args.is_empty():
-		return "Usage: shed_preview <seconds|off>"
-	if args[0].to_lower() != "off":
-		seconds = clampf(args[0].to_float(), 0.0, 1000.0)
-	if not shed.preview_footage(seconds):
-		return "[color=%s]The recording is playing, or its cast could not be built.[/color]" % _bad_colour()
+		return "Usage: shed_preview <seconds|off>   or   shed_preview tape <seconds>"
+	if args[0].to_lower() == "off":
+		if not shed.end_preview():
+			return "[color=%s]The recording is playing, or something else holds the view.[/color]" % _bad_colour()
+		return "The view is back."
 
-	return "The recording at %.1f s (close the console to look; shed_preview off puts the view back)." % seconds if seconds >= 0.0 else "The view is back."
+	# `<seconds>` is the EXCERPT's clock (0 is the first frame of the Emily excerpt; the rear segment is at -8 to 0); `tape <seconds>` is the whole tape's (0 is the start of the tape, the excerpt starts at 8).
+	var as_tape: bool = args[0].to_lower() == "tape"
+	if as_tape and args.size() < 2:
+		return "Usage: shed_preview tape <seconds>"
+	var given: float = args[1].to_float() if as_tape else args[0].to_float()
+	var prefix: float = shed.footage.rear_prefix_seconds if shed.footage != null else 8.0
+	var seconds: float = clampf(given - prefix if as_tape else given, -prefix, 1000.0)
+	if not shed.preview_footage(seconds):
+		return "[color=%s]The recording is playing, something else holds the view, or its cast could not be built.[/color]" % _bad_colour()
+
+	return "The recording at excerpt %.1f s = tape %.1f s (close the console to look; shed_preview off puts the view back)." % [seconds, seconds + prefix]
 
 
 func _shed_unstick(_args: PackedStringArray) -> String:
@@ -356,6 +366,15 @@ func _shed_unstick(_args: PackedStringArray) -> String:
 
 	(found[0] as WaitingShedSequence).force_finish()
 	return "The shed's recording is over."
+
+
+func _shed_skip(_args: PackedStringArray) -> String:
+	var found: Array[Node] = _console.get_tree().root.find_children("*", "WaitingShedSequence", true, false)
+	if found.is_empty():
+		return "[color=%s]There is no waiting shed in this scene.[/color]" % _bad_colour()
+
+	(found[0] as WaitingShedSequence).force_resolve()
+	return "The shed's investigation is resolved: the token lies where it falls."
 
 
 func _state_get(args: PackedStringArray) -> String:

@@ -79,3 +79,17 @@ vec3 wind_local_offset(vec3 vertex, mat4 model, vec3 camera, float time) {
 	// Into the mesh's own space: the transpose of a turned, evenly scaled basis, undone by its scale twice.
 	return (transpose(basis) * world_push) / scale_squared;
 }
+
+// A clearing round a camera that is not the player's (the recorded tape's, which walks through the forest at head height): a plant whose root is nearer the camera than the inner
+// radius is shrunk to nothing, and one between the inner and the outer radius is shrunk part of the way, so that no leaf ever passes through the lens and nothing pops. xyz is the camera, w the inner
+// radius (0 is off). Only the ground plane counts. Not saved; the scene's own plants are untouched.
+uniform vec4 camera_clearing = vec4(0.0);
+uniform float camera_clearing_outer : hint_range(0.1, 10.0) = 2.0;
+
+vec3 clearing_apply(vec3 vertex, mat4 model) {
+	if (camera_clearing.w <= 0.0) {
+		return vertex;
+	}
+	float d = distance(model[3].xz, camera_clearing.xz);
+	return vertex * smoothstep(camera_clearing.w, max(camera_clearing_outer, camera_clearing.w + 0.01), d);
+}

@@ -162,3 +162,11 @@ func _push_parameters() -> void:
 		material.set_shader_parameter("wind_strength", strength)
 		material.set_shader_parameter("wind_direction", direction)
 		material.set_shader_parameter("wind_speed", speed)
+
+
+## A clearing of the plants round a camera that walks through the forest (the waiting shed's tape): roots nearer than `inner` metres (on the ground plane) shrink to nothing, roots up to `outer` shrink part of the way.
+## `inner` 0 puts everything back. Only in the running game; nothing of the terrain is touched.
+func set_camera_clearing(position: Vector3, inner: float, outer: float = 2.0) -> void:
+	for material: ShaderMaterial in materials:
+		material.set_shader_parameter("camera_clearing", Vector4(position.x, position.y, position.z, inner))
+		material.set_shader_parameter("camera_clearing_outer", outer)

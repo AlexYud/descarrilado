@@ -42,12 +42,154 @@ static func build(shed: Node3D) -> Node3D:
 	return root
 
 
+## The drag trail of the waiting shed's camcorder view (NOT part of the photograph, never captured by the tool): a smeared, uneven streak that runs along `points` (in the space of `parent`,
+## on the floor, each point's y is the height the streak lies at) and thins as it goes, with a little spatter at both ends. Plain textured quads like the rest of this dressing. Returns the node
+## `DragTrail` it makes under `parent`.
+static func build_trail(parent: Node3D, points: PackedVector3Array) -> Node3D:
+	var root: Node3D = Node3D.new()
+	root.name = "DragTrail"
+	parent.add_child(root)
+	var count: int = points.size()
+	for i: int in range(count - 1):
+		var from: Vector3 = points[i]
+		var to: Vector3 = points[i + 1]
+		var flat: Vector2 = Vector2(to.x - from.x, to.z - from.z)
+		var length: float = flat.length()
+		if length < 0.01:
+			continue
+
+		var along: float = float(i) / float(maxi(count - 2, 1))
+		var width: float = lerpf(0.6, 0.34, along)
+		var middle: Vector3 = (from + to) * 0.5 + Vector3(0.0, 0.0006 * float(i), 0.0)
+		# A little longer than the step so the pieces overlap and read as one smear.
+		_floor_quad(root, "Smear%d" % i, _smear(60 + i, along), middle, Vector2(length + 0.22, width), rad_to_deg(atan2(-flat.y, flat.x)))
+	_floor_quad(root, "StartSpatter", _droplets(71), points[0] + Vector3(0.0, 0.0012, 0.0), Vector2(0.9, 0.7), 20.0)
+	_floor_quad(root, "EndSpatter", _droplets(72), points[count - 1] + Vector3(0.0, 0.0012, 0.0), Vector2(0.5, 0.5), -35.0)
+	return root
+
+
+## A streak along the quad's x axis: broad and heavy at the start, thin and broken at the end, darker where it is older, with parallel drag marks inside it.
+static func _smear(seed_value: int, along_trail: float) -> ImageTexture:
+	var width: int = MASK_SIZE
+	var height: int = 96
+	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
+	var shape: FastNoiseLite = _noise(seed_value, 3.0)
+	var marks: FastNoiseLite = _noise(seed_value + 40, 5.0)
+	var tone: FastNoiseLite = _noise(seed_value + 90, 4.0)
+	for y: int in height:
+		for x: int in width:
+			var u: float = float(x) / float(width - 1)
+			var v: float = (float(y) / float(height - 1)) * 2.0 - 1.0
+			var body: float = lerpf(0.82, 0.55, clampf(along_trail + u * 0.2, 0.0, 1.0))
+			var wobble: float = 0.2 * shape.get_noise_2d(x * 0.6, y * 1.4)
+			var edge: float = body - absf(v + wobble) + 0.18 * shape.get_noise_2d(x * 1.5, y * 3.0)
+			var alpha: float = smoothstep(0.0, 0.2, edge)
+			# The streak thins out toward its ends and breaks up there.
+			alpha *= smoothstep(0.0, 0.07, u) * smoothstep(1.0, 0.86, u)
+			# Drag marks: lighter and darker stripes along the length.
+			alpha *= 0.75 + 0.25 * smoothstep(-0.2, 0.4, marks.get_noise_2d(x * 0.3, y * 4.0))
+			var dried: float = clampf(0.25 + 0.5 * tone.get_noise_2d(x, y) + along_trail * 0.4, 0.0, 1.0)
+			var colour: Color = WET.lerp(DRIED, dried)
+			image.set_pixel(x, y, Color(colour.r, colour.g, colour.b, clampf(alpha * 0.95, 0.0, 0.95)))
+	return ImageTexture.create_from_image(image)
+
+
+## Handwritten words in blood on a wall (the waiting shed's rear message), as a textured quad facing `facing_yaw` (degrees, 0 faces +Z, 180 faces -Z): uneven strokes made of a few letters' skeletons (a small
+## stroke alphabet: C A L M E I G), wobbling, thicker where the finger pressed, with a few runs under the heaviest strokes. Dark red-brown, never a clean decal. `text` is upper case.
+static func build_words(parent: Node3D, node_name: String, text: String, at: Vector3, size: Vector2, facing_yaw: float) -> MeshInstance3D:
+	var quad: QuadMesh = QuadMesh.new()
+	quad.size = size
+	var instance: MeshInstance3D = MeshInstance3D.new()
+	instance.name = node_name
+	instance.mesh = quad
+	instance.material_override = _material(words_texture(text, size.x / size.y))
+	instance.position = at
+	instance.rotation_degrees = Vector3(0.0, facing_yaw, 0.0)
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(instance)
+	return instance
+
+
+const GLYPHS: Dictionary = {
+	"M": [[Vector2(0, 1), Vector2(0, 0), Vector2(0.5, 0.55), Vector2(1, 0), Vector2(1, 1)]],
+	"E": [[Vector2(1, 0), Vector2(0, 0), Vector2(0, 1), Vector2(1, 1)], [Vector2(0, 0.5), Vector2(0.72, 0.5)]],
+	"L": [[Vector2(0, 0), Vector2(0, 1), Vector2(0.92, 1)]],
+	"I": [[Vector2(0.5, 0), Vector2(0.5, 1)]],
+	"G": [[Vector2(1, 0.14), Vector2(0.5, 0), Vector2(0, 0.3), Vector2(0, 0.7), Vector2(0.5, 1), Vector2(1, 0.86), Vector2(1, 0.56), Vector2(0.55, 0.56)]],
+	"A": [[Vector2(0, 1), Vector2(0.5, 0), Vector2(1, 1)], [Vector2(0.2, 0.66), Vector2(0.8, 0.66)]],
+	"C": [[Vector2(1, 0.16), Vector2(0.5, 0), Vector2(0, 0.3), Vector2(0, 0.7), Vector2(0.5, 1), Vector2(1, 0.84)]],
+}
+
+
+## The words' alpha mask and colour: strokes brushed along the glyphs with a wobbling width, a few runs below the heavy ones.
+static func words_texture(text: String, aspect: float) -> ImageTexture:
+	var height: int = 128
+	var width: int = int(round(float(height) * aspect))
+	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
+	image.fill(Color(WET.r, WET.g, WET.b, 0.0))
+	var wobble: FastNoiseLite = _noise(901, 6.0)
+	var weight: FastNoiseLite = _noise(902, 3.0)
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 4242
+	var letters: PackedStringArray = PackedStringArray()
+	for i: int in text.length():
+		letters.append(text.substr(i, 1))
+	var advance: float = float(width) * 0.94 / float(maxi(letters.size(), 1))
+	var glyph_w: float = advance * 0.66
+	var glyph_h: float = float(height) * 0.6
+	var left: float = float(width) * 0.03
+	var top: float = float(height) * 0.1
+	var heavy: Array[Vector2] = []
+	for i: int in letters.size():
+		var strokes: Array = GLYPHS.get(letters[i], [])
+		var ox: float = left + advance * float(i) + rng.randf_range(-3.0, 3.0)
+		var oy: float = top + rng.randf_range(-4.0, 4.0)
+		for stroke: Array in strokes:
+			for k: int in range(stroke.size() - 1):
+				var a: Vector2 = stroke[k]
+				var b: Vector2 = stroke[k + 1]
+				var steps: int = int(maxf(a.distance_to(b) * 40.0, 4.0))
+				for s: int in steps + 1:
+					var t: float = float(s) / float(steps)
+					var p: Vector2 = a.lerp(b, t)
+					var px: float = ox + p.x * glyph_w + wobble.get_noise_2d(p.x * 40.0 + float(i) * 13.0, p.y * 40.0) * 4.0
+					var py: float = oy + p.y * glyph_h + wobble.get_noise_2d(p.y * 40.0, p.x * 40.0 + float(i) * 7.0) * 4.0
+					var radius: float = 4.2 + 2.0 * weight.get_noise_2d(px, py) + 0.8 * sin(float(s) * 0.7)
+					_dab(image, px, py, radius)
+					if radius > 5.4 and rng.randf() < 0.12:
+						heavy.append(Vector2(px, py))
+	for spot: Vector2 in heavy:
+		var run_length: float = rng.randf_range(6.0, 22.0)
+		var y: float = spot.y
+		while y < spot.y + run_length and y < float(height) - 2.0:
+			_dab(image, spot.x + wobble.get_noise_2d(spot.x, y) * 1.2, y, 1.7 - 0.6 * (y - spot.y) / run_length)
+			y += 1.0
+	return ImageTexture.create_from_image(image)
+
+
+## One round touch of the brush: the paint is darker at its middle and the edge is a little ragged.
+static func _dab(image: Image, cx: float, cy: float, radius: float) -> void:
+	var x0: int = maxi(int(cx - radius - 1.0), 0)
+	var x1: int = mini(int(cx + radius + 1.0), image.get_width() - 1)
+	var y0: int = maxi(int(cy - radius - 1.0), 0)
+	var y1: int = mini(int(cy + radius + 1.0), image.get_height() - 1)
+	for y: int in range(y0, y1 + 1):
+		for x: int in range(x0, x1 + 1):
+			var d: float = Vector2(float(x) - cx, float(y) - cy).length() / maxf(radius, 0.5)
+			if d < 1.0:
+				var alpha: float = clampf((1.0 - d) * 2.4, 0.0, 0.96)
+				var old: Color = image.get_pixel(x, y)
+				if alpha > old.a:
+					var colour: Color = WET.lerp(DRIED, clampf(d * 0.9, 0.0, 1.0) * 0.5)
+					image.set_pixel(x, y, Color(colour.r, colour.g, colour.b, alpha))
+
+
 static func _material(texture: Texture2D) -> StandardMaterial3D:
 	var material: StandardMaterial3D = StandardMaterial3D.new()
 	material.albedo_texture = texture
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.roughness = 0.38
-	material.metallic_specular = 0.7
+	material.roughness = 0.85
+	material.metallic_specular = 0.12
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
 

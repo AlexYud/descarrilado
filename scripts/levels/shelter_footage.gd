@@ -1,7 +1,8 @@
 extends Node3D
 class_name ShelterFootage
 
-## The waiting shed's archival recording: about 62 seconds, silent, in four shots joined by three hard cuts. Everything is a pure function of one clock, `seek(t)` (the cast) and
+## The waiting shed's archival recording: the EXCERPT, about 62 seconds, silent, in four shots joined by three hard cuts, preceded on the full TAPE by a short REAR segment (see `rear_prefix_seconds`: the excerpt's
+## clock is 0 to `length_seconds`; the rear segment lives at excerpt times from `-rear_prefix_seconds` to 0, so the TAPE's own time is the excerpt's plus the prefix). Everything is a pure function of one clock, `seek(t)` (the cast) and
 ## `camera_at(t)` (the picture's camera): a pause, a replay from any time, a seek backwards or a cancel gives the same picture. Nothing here is a timer, a tween, a callback or a random number.
 ##
 ##   A (0 to `cut_walk_seconds`, 20 s): a hidden, locked camera outside the shelter, behind a few ferns, watches Emily sit on the bench. She waits (`turn_start_seconds`, 10 s of it), turns her head and
@@ -111,12 +112,38 @@ class_name ShelterFootage
 ## How much darker the stains are drawn than the capture tool's dressing (a multiplier on their colour), so that they read through the tape look.
 @export var stain_darkening: float = 0.3
 
+@export_category("The rear segment (earlier on the tape, voluntary review only)")
+## How long the rear segment is (seconds). The excerpt starts this long after the start of the tape. It is never part of the directed first viewing.
+@export var rear_prefix_seconds: float = 8.0
+## The low camera behind the shelter (a marker with a target and a lens) and the blood words on the rear face of the low wall (in the space of this node: the middle of the words, their size).
+@export var shot_rear: ShotMarker
+@export var rear_message_at: Vector3 = Vector3(-4.90, 0.40, -7.353)
+@export var rear_message_size: Vector2 = Vector2(0.52, 0.17)
+## A very small hand drift of the rear camera (metres), the only movement of the segment.
+@export var rear_drift_metres: float = 0.004
+## From this time into the rear segment (s) the camera's lamp comes up, narrow, on the token.
+@export var rear_lamp_from_seconds: float = 6.4
+## The rear segment's handheld walk (see `_rear_camera`), in the shed's space: when (s into the segment), where the lens is, what it looks at, and its lens (fov).
+@export var rear_key_times: PackedFloat32Array = PackedFloat32Array([0.0, 0.8, 2.6, 4.6, 6.2, 7.2, 8.0])
+@export var rear_key_positions: PackedVector3Array = PackedVector3Array([Vector3(-4.30, 1.32, -9.70), Vector3(-4.35, 1.32, -9.55), Vector3(-4.80, 1.22, -8.90), Vector3(-4.92, 1.18, -8.60), Vector3(-5.46, 1.00, -8.10), Vector3(-5.57, 0.90, -7.80), Vector3(-5.58, 0.74, -7.73)])
+@export var rear_key_aims: PackedVector3Array = PackedVector3Array([Vector3(-4.90, 0.50, -7.35), Vector3(-4.90, 0.50, -7.35), Vector3(-4.90, 0.40, -7.35), Vector3(-4.95, 0.38, -7.35), Vector3(-5.58, 0.12, -7.40), Vector3(-5.60, 0.06, -7.415), Vector3(-5.60, 0.06, -7.415)])
+@export var rear_key_fovs: PackedFloat32Array = PackedFloat32Array([52.0, 52.0, 48.0, 46.0, 40.0, 32.0, 30.0])
+## The drag trail seen through the camcorder's viewfinder (NOT in the recording): the path of the smear, in the space of this node (the shelter's), each point's y the height it lies at. It is only ever drawn by `set_blood_view`.
+@export var trail_points: PackedVector3Array = PackedVector3Array()
+## The stains of the aftermath that the viewfinder's view leaves out (they lead to the cracked pillar, a second destination); the recording's own shot shows all of them.
+@export var blood_view_hidden_stains: PackedStringArray = PackedStringArray(["Smear", "PillarEast"])
+
 var marina: ArchiveActor = null
 ## The forest floor of each carried camera's strip: leaf litter and stones laid along it (the existing leaf-litter and stone models), shown in that shot only.
 var litter: Node3D = null
 var litter2: Node3D = null
 ## The blood of the aftermath (the capture tool's dressing), shown only in shot C.
 var aftermath: Node3D = null
+## The drag trail of the camcorder's viewfinder: shown only by `set_blood_view`.
+var trail: Node3D = null
+## The words in blood of the rear segment: shown only in it.
+var rear_message: MeshInstance3D = null
+var _blood_view: bool = false
 ## The footage time the cast was last posed at (`seek`).
 var current_time: float = 0.0
 
@@ -164,7 +191,12 @@ func prepare() -> void:
 	aftermath = ShelterAftermathDressing.build(self)
 	aftermath.name = "AftermathStains"
 	aftermath.visible = false
-	_darken_stains()
+	_darken_stains(aftermath)
+	if trail_points.size() >= 2:
+		trail = ShelterAftermathDressing.build_trail(self, trail_points)
+		trail.visible = false
+		_darken_stains(trail, stain_darkening * 0.3)
+	_build_rear_message()
 	_walk_ground = _sample_ground(walk_start, walk_end)
 	_walk2_ground = _sample_ground(walk2_start, walk2_end)
 	litter = _build_litter("WalkLitter", walk_start, walk_end, _walk_ground, 4417)
@@ -175,11 +207,61 @@ func prepare() -> void:
 
 ## Shown (under a cut) or hidden. Hidden, nothing of the cast, the stains or their shadows is drawn.
 func show_cast(shown: bool) -> void:
+	# Whatever the blood view had put on is put back: the recording's own shots (and nothing at all) show the stains as the recording has them.
+	_clear_blood_view()
 	visible = shown and _prepared
+
+
+## The empty, bloodstained shelter for the camcorder's viewfinder, as a STATIC dressing (no clock, no camera, no actor): the stains of the aftermath (but for those that lead to the
+## cracked pillar) and the drag trail, and nothing else of the cast. `show_cast` (or `set_blood_view(false)`) puts everything back. Not for the recording, which never calls it.
+func set_blood_view(on: bool) -> void:
+	if not _prepared:
+		return
+
+	if not on:
+		_clear_blood_view()
+		visible = false
+		return
+
+	_blood_view = true
+	visible = true
+	marina.visible = false
+	if litter != null:
+		litter.visible = false
+	if litter2 != null:
+		litter2.visible = false
+	aftermath.visible = true
+	for stain: Node in aftermath.get_children():
+		var item: Node3D = stain as Node3D
+		if item != null:
+			item.visible = not (String(item.name) in blood_view_hidden_stains)
+	if trail != null:
+		trail.visible = true
+
+
+func is_blood_view() -> bool:
+	return _blood_view
+
+
+func _clear_blood_view() -> void:
+	if not _blood_view:
+		return
+
+	_blood_view = false
+	if aftermath != null:
+		aftermath.visible = false
+		for stain: Node in aftermath.get_children():
+			var item: Node3D = stain as Node3D
+			if item != null:
+				item.visible = true
+	if trail != null:
+		trail.visible = false
 
 
 ## "A", "walk", "aftermath" or "walk2": the shot the source is in at `time`.
 func passage_at(time: float) -> StringName:
+	if time < 0.0:
+		return &"rear"
 	if time >= cut_walk2_seconds:
 		return &"walk2"
 	if time >= cut_aftermath_seconds:
@@ -198,12 +280,14 @@ func seek(time: float) -> void:
 	var passage: StringName = passage_at(time)
 	# Emily is in the picture in shot A only (hidden, her shadow goes with her); the blood in shot C only; each strip's litter in its own shot.
 	marina.visible = passage == &"A"
+	if rear_message != null:
+		rear_message.visible = passage == &"rear"
 	aftermath.visible = passage == &"aftermath"
 	if litter != null:
 		litter.visible = passage == &"walk"
 	if litter2 != null:
 		litter2.visible = passage == &"walk2"
-	marina.sample(time)
+	marina.sample(maxf(time, 0.0))
 
 
 # ============================================================
@@ -217,6 +301,8 @@ func camera_at(time: float) -> Dictionary:
 			return _walk_camera(time - cut_walk_seconds, cut_aftermath_seconds - cut_walk_seconds, walk_start, walk_end, _walk_ground, false)
 		&"walk2":
 			return _walk_camera(time - cut_walk2_seconds, length_seconds - cut_walk2_seconds, walk2_start, walk2_end, _walk2_ground, true)
+		&"rear":
+			return _rear_camera(time + rear_prefix_seconds)
 		&"aftermath":
 			return _aftermath_camera(time - cut_aftermath_seconds)
 	return {"transform": shot_a.aimed_transform() if shot_a != null else Transform3D.IDENTITY, "fov": shot_a.fov if shot_a != null else 26.0}
@@ -335,6 +421,89 @@ func _smooth(x: float) -> float:
 	return x * x * (3.0 - 2.0 * x)
 
 
+## The rear segment's camera `seconds` into it: someone holding a camcorder walks up to the outside of the wall from the dark behind the shelter, shows the words in blood on it, then goes down on their haunches
+## and brings the lens over the lip to the recess where the telephone token lies, and holds there. Keys in the shed's space (`rear_key_times`, `rear_key_positions`, `rear_key_aims`, `rear_key_fovs`) joined by
+## smooth curves with slopes taken from the neighbours (no overshoot, a still hand at both ends); the walking is `_gait` in proportion to how fast the body moves, with the hand's slow drifts on top.
+func _rear_camera(seconds: float) -> Dictionary:
+	var space: Node3D = shot_rear.get_parent() as Node3D if shot_rear != null else null
+	var count: int = mini(mini(rear_key_times.size(), rear_key_positions.size()), mini(rear_key_aims.size(), rear_key_fovs.size()))
+	if space == null or count < 2:
+		var base: Transform3D = shot_rear.aimed_transform() if shot_rear != null else Transform3D.IDENTITY
+		return {"transform": base, "fov": shot_rear.fov if shot_rear != null else 45.0}
+
+	var t: float = clampf(seconds, rear_key_times[0], rear_key_times[count - 1])
+	var local_at: Vector3 = _keyed_vector(rear_key_times, rear_key_positions, count, t)
+	var local_aim: Vector3 = _keyed_vector(rear_key_times, rear_key_aims, count, t)
+	var fov_vector: Vector3 = _keyed_vector(rear_key_times, PackedVector3Array(Array(rear_key_fovs).map(func(f: float) -> Vector3: return Vector3(f, 0.0, 0.0))), count, t)
+	var before: Vector3 = _keyed_vector(rear_key_times, rear_key_positions, count, maxf(t - 0.1, rear_key_times[0]))
+	var after: Vector3 = _keyed_vector(rear_key_times, rear_key_positions, count, minf(t + 0.1, rear_key_times[count - 1]))
+	var speed: float = before.distance_to(after) / 0.2
+	var moving: float = clampf(speed / 0.22, 0.0, 1.0)
+	var gait: Dictionary = _gait(seconds, creep_steps_per_second, creep_bob_metres * 0.8, creep_sway_metres, creep_surge * 0.5, creep_roll_degrees, creep_yaw_degrees, creep_nod_degrees, speed)
+	var drift: Vector3 = Vector3(_drift(seconds, 11.0), _drift(seconds, 12.3) * 0.7, _drift(seconds, 13.1)) * hand_drift_metres
+	var origin: Vector3 = space.to_global(local_at) + Vector3.UP * (float(gait["up"]) * moving) + drift
+	var aim_point: Vector3 = space.to_global(local_aim)
+	var heading: Vector3 = (aim_point - origin).normalized()
+	var side: Vector3 = Vector3(-heading.z, 0.0, heading.x).normalized()
+	origin += side * (float(gait["side"]) * moving)
+	var aim: Basis = Basis.looking_at((aim_point - origin).normalized(), Vector3.UP)
+	var yaw: float = deg_to_rad(hand_drift_degrees) * (_drift(seconds, 14.7) + 0.25 * _drift(seconds * 2.3, 16.1)) + float(gait["yaw"]) * moving
+	var pitch: float = deg_to_rad(hand_drift_degrees) * 0.8 * (_drift(seconds, 15.9) + 0.2 * _drift(seconds * 2.1, 17.3)) + float(gait["nod"]) * moving
+	var roll: float = deg_to_rad(hand_roll_degrees) * _drift(seconds, 18.3) + float(gait["roll"]) * moving
+	var basis: Basis = aim * Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, pitch) * Basis(Vector3.BACK, roll)
+	return {"transform": Transform3D(basis, origin), "fov": fov_vector.x}
+
+
+## A smooth curve through keyed vectors (cubic Hermite, each slope the difference of the neighbours over their time apart, zero at the two ends), at time `t`.
+func _keyed_vector(times: PackedFloat32Array, values: PackedVector3Array, count: int, t: float) -> Vector3:
+	var i: int = 0
+	while i < count - 2 and t > times[i + 1]:
+		i += 1
+	var t0: float = times[i]
+	var t1: float = times[i + 1]
+	var span: float = maxf(t1 - t0, 0.0001)
+	var u: float = clampf((t - t0) / span, 0.0, 1.0)
+	var m0: Vector3 = Vector3.ZERO if i == 0 else (values[i + 1] - values[i - 1]) / maxf(times[i + 1] - times[i - 1], 0.0001)
+	var m1: Vector3 = Vector3.ZERO if i + 2 >= count else (values[i + 2] - values[i]) / maxf(times[i + 2] - times[i], 0.0001)
+	var u2: float = u * u
+	var u3: float = u2 * u
+	return values[i] * (2.0 * u3 - 3.0 * u2 + 1.0) + m0 * span * (u3 - 2.0 * u2 + u) + values[i + 1] * (-2.0 * u3 + 3.0 * u2) + m1 * span * (u3 - u2)
+
+
+## The whole tape's length in seconds: the rear segment and the excerpt.
+func tape_length() -> float:
+	return rear_prefix_seconds + length_seconds
+
+
+## The tape's own time (0 is the start of the tape) of an excerpt time, and the other way round. The directed first viewing and the replay of her greeting run on the excerpt's clock; the review's counter runs on the tape's.
+func tape_time_of(excerpt_time: float) -> float:
+	return excerpt_time + rear_prefix_seconds
+
+
+func excerpt_time_of(tape_time: float) -> float:
+	return tape_time - rear_prefix_seconds
+
+
+## The words in blood on the rear wall, as a quad on the wall's outside face (facing -Z), in the language of the text: `RECORDING_BLOOD_WORDS` ("ME LIGA" / "CALL ME"). Rebuilt when the language changes.
+func _build_rear_message() -> void:
+	if rear_message != null and is_instance_valid(rear_message):
+		rear_message.queue_free()
+	rear_message = ShelterAftermathDressing.build_words(self, "RearMessage", tr("RECORDING_BLOOD_WORDS").to_upper(), rear_message_at, rear_message_size, 180.0)
+	rear_message.visible = false
+	var copy: StandardMaterial3D = (rear_message.material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
+	copy.albedo_color = Color(minf(stain_darkening * 1.5, 1.0), minf(stain_darkening * 1.5, 1.0), minf(stain_darkening * 1.5, 1.0), 1.0)
+	rear_message.material_override = copy
+	if not GameSettings.text_language_changed.is_connected(_on_text_language_changed):
+		GameSettings.text_language_changed.connect(_on_text_language_changed)
+
+
+func _on_text_language_changed(_value: Variant) -> void:
+	if _prepared:
+		var was_visible: bool = rear_message != null and rear_message.visible
+		_build_rear_message()
+		rear_message.visible = was_visible
+
+
 ## A slow, irregular wave of the time between -1 and 1: three sines whose periods (10, 4.6 and 2.3 seconds) never line up, shifted by `seed_value`. Deterministic: no state, no random numbers.
 func _drift(seconds: float, seed_value: float) -> float:
 	return 0.55 * sin(seconds * 0.63 + seed_value) + 0.3 * sin(seconds * 1.37 + seed_value * 2.1 + 1.0) + 0.15 * sin(seconds * 2.71 + seed_value * 3.7 + 2.0)
@@ -374,14 +543,15 @@ func _sample_ground(start: Marker3D, end: Marker3D) -> PackedFloat32Array:
 
 ## The tape drains the colour, so a dark red stain on a pale slab survives only as a faint, low-contrast shade: the footage's own copies of the stains' materials are darkened so that their LUMINANCE
 ## contrast with the slab, the planks and the pillar survives it (the photograph's own dressing and the capture tool are never touched: only these copies, in this scene).
-func _darken_stains() -> void:
-	for item: Node in aftermath.get_children():
+func _darken_stains(holder: Node3D, factor: float = -1.0) -> void:
+	var level: float = stain_darkening if factor < 0.0 else factor
+	for item: Node in holder.get_children():
 		var instance: MeshInstance3D = item as MeshInstance3D
 		if instance == null or not (instance.material_override is StandardMaterial3D):
 			continue
 
 		var copy: StandardMaterial3D = (instance.material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
-		copy.albedo_color = Color(stain_darkening, stain_darkening, stain_darkening, 1.0)
+		copy.albedo_color = Color(level, level, level, 1.0)
 		instance.material_override = copy
 
 

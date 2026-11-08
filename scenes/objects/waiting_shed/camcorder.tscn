@@ -1,12 +1,17 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/environment/procedural_prop.gd" id="2_prop"]
+[ext_resource type="Script" path="res://scripts/environment/shed_camcorder.gd" id="3_camcorder"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_column"]
 size = Vector3(0.14, 1.2, 0.14)
 
-; The camcorder on its tripod across the clearing: only a thing standing there (it is not examined). Its lens faces -Z.
+; The camcorder on its tripod: a fixed physical camera, never carried. Its Head (with the explicit LensMarker and EyeMarker and the box the player aims at) is built in code by
+; ShedRecordingProps; the waiting shed's sequence turns it to the recording's first viewpoint (the lens at that viewpoint, its axis along that shot's) and offers the viewfinder through it.
 [node name="Camcorder" type="Node3D"]
+script = ExtResource("3_camcorder")
+prompt_text = "PROMPT_VIEWFINDER"
+mark_notice_distance = 2.6
 
 [node name="Visual" type="Node3D" parent="."]
 script = ExtResource("2_prop")

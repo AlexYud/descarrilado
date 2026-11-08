@@ -21,7 +21,7 @@ const PHOTO_ASPECT: float = 4.0 / 3.0
 
 
 static func has_kind(kind: StringName) -> bool:
-	return kind in [&"vhs_tape", &"camcorder", &"newspaper_clipping", &"marina_sister_note", &"helena_clarke_notice", &"shelter_archive", &"shelter_bin"]
+	return kind in [&"vhs_tape", &"camcorder", &"newspaper_clipping", &"marina_sister_note", &"family_reply_letter", &"helena_clarke_notice", &"shelter_archive", &"shelter_bin", &"shelter_rear"]
 
 
 static func build(kind: StringName, root: Node3D) -> void:
@@ -33,6 +33,11 @@ static func build(kind: StringName, root: Node3D) -> void:
 		&"newspaper_clipping":
 			_build_newspaper_clipping(root)
 		&"marina_sister_note":
+			_build_marina_sister_note(root)
+		&"shelter_rear":
+			_build_shelter_rear(root)
+		&"family_reply_letter":
+			# The final letter of the investigation: the same folded, ruled sheet as the other note, its words read in the inspect view.
 			_build_marina_sister_note(root)
 		&"helena_clarke_notice":
 			_build_helena_clarke_notice(root)
@@ -174,6 +179,34 @@ static func _build_camcorder(root: Node3D) -> void:
 	glow.visible = false
 	head.add_child(glow)
 
+	# The two explicit points of a camera: the FRONT FACE OF THE LENS GLASS (the viewpoint, looking down -Z) and the BACK FACE OF THE EYECUP (where an eye is).
+	# In the head's own space (the head is scaled 1.2): the glass is the cylinder at z -0.249 (height 0.004), the eyecup the one at (-0.03, 0.185, 0.155) (height 0.025).
+	var lens_marker: Marker3D = Marker3D.new()
+	lens_marker.name = "LensMarker"
+	lens_marker.position = Vector3(0.0, 0.105, -0.251)
+	head.add_child(lens_marker)
+	var eye_marker: Marker3D = Marker3D.new()
+	eye_marker.name = "EyeMarker"
+	eye_marker.position = Vector3(-0.03, 0.185, 0.1675)
+	head.add_child(eye_marker)
+	# Where the body stands to put its eye to the eyecup: 0.55 m behind it along the lens's axis (the head is scaled 1.2), on the ground's line.
+	var stand_marker: Marker3D = Marker3D.new()
+	stand_marker.name = "StandMarker"
+	stand_marker.position = Vector3(-0.03, 0.185, 0.1675 + 0.55 / 1.2)
+	head.add_child(stand_marker)
+
+	# What the player aims at to look through it: a box round the body and the viewfinder on the head (the tripod's own column is solid too, and is part of
+	# the same thing). First among the shapes of the device, so the interaction mark sits on the head.
+	var area: Area3D = Area3D.new()
+	area.name = "InteractArea"
+	var area_shape: CollisionShape3D = CollisionShape3D.new()
+	var area_box: BoxShape3D = BoxShape3D.new()
+	area_box.size = Vector3(0.3, 0.3, 0.52)
+	area_shape.shape = area_box
+	area_shape.position = Vector3(0.0, 0.12, 0.03)
+	area.add_child(area_shape)
+	head.add_child(area)
+
 
 ## The recording light of a camcorder built by `_build_camcorder`, on or off: the red lens lights and throws a little red on the body.
 static func camcorder_set_recording(model: Node, recording: bool) -> void:
@@ -184,6 +217,51 @@ static func camcorder_set_recording(model: Node, recording: bool) -> void:
 	if glow != null:
 		glow.visible = recording
 		glow.light_energy = 0.35 if recording else 0.0
+
+
+# ============================================================
+# THE REAR OF THE SHELTER (the blind corner behind the low wall)
+# ============================================================
+
+## The shelter's rear annex, in the shed's own space (put it at the shed's origin): a short masonry RETURN wall running back from the west end of the low wall `LowWall0` (whose outside face is at z -7.35),
+## the broad patch of MISMATCHED REPAIR BRICKS on that outside face, and at the foot of the wall a shallow RECESS (a lip in front, a side block to its east, the return wall to its west) where
+## the telephone token lies. Plain boxes, solid where a person could walk into them. The lip is what hides the recess from every distance but a deliberate, near, oblique look; the return wall is what hides it
+## from the way round the west end. The same structure is in the recorded rear segment, whose camera looks at this face from behind and low (the words in blood are only in the footage).
+static func _build_shelter_rear(root: Node3D) -> void:
+	var stone: StandardMaterial3D = JunctionProps.weathered(JunctionProps.CONCRETE, 1.4)
+	var dark: StandardMaterial3D = JunctionProps.weathered(JunctionProps.CONCRETE_DARK, 1.0)
+	var mortar: StandardMaterial3D = HouseProps.material(Color(0.6, 0.6, 0.57), 1.0)
+	# The return wall: 0.35 thick, 1.05 long, 1.2 high, touching the low wall's west end, with a broken top.
+	HouseProps.add_box(root, "ReturnWall", Vector3(0.35, 1.2, 1.05), Vector3(-6.025, 0.05 + 0.6, -7.875), stone)
+	HouseProps.add_solid(root, "ReturnSolid", Vector3(0.35, 1.2, 1.05), Vector3(-6.025, 0.05 + 0.6, -7.875))
+	HouseProps.add_box(root, "ReturnTop", Vector3(0.2, 0.16, 0.5), Vector3(-6.0, 0.05 + 1.2 + 0.05, -7.6), stone, Vector3(0.0, 0.0, 12.0))
+	HouseProps.add_box(root, "ReturnDamp", Vector3(0.012, 0.5, 0.9), Vector3(-5.846, 0.4, -7.85), dark)
+
+	# The patch of repair: a mortar plate on the wall's outside face and about forty bricks of different colour and size, uneven rows.
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.seed = 7311
+	var face_z: float = -7.35
+	HouseProps.add_box(root, "PatchMortar", Vector3(0.58, 0.5, 0.01), Vector3(-5.51, 0.35, face_z - 0.005), mortar)
+	var tones: Array[Color] = [Color(0.42, 0.2, 0.15), Color(0.5, 0.27, 0.19), Color(0.26, 0.22, 0.2), Color(0.55, 0.52, 0.47), Color(0.34, 0.16, 0.12), Color(0.62, 0.45, 0.32)]
+	var row_y: float = 0.115
+	var row: int = 0
+	while row_y < 0.57:
+		var x: float = -5.79 + (0.05 if row % 2 == 1 else 0.0) + rng.randf_range(0.0, 0.03)
+		while x < -5.25:
+			var w: float = rng.randf_range(0.09, 0.15)
+			var h: float = rng.randf_range(0.055, 0.075)
+			var tone: Color = tones[rng.randi() % tones.size()]
+			var brick: StandardMaterial3D = HouseProps.material(tone, 0.95)
+			HouseProps.add_box(root, "Brick%d_%d" % [row, int(x * 100.0)], Vector3(minf(w, -5.23 - x), h, 0.022), Vector3(x + minf(w, -5.23 - x) * 0.5, row_y + h * 0.5, face_z - 0.016), brick, Vector3(0.0, 0.0, rng.randf_range(-1.5, 1.5)))
+			x += w + 0.012
+		row_y += 0.072
+		row += 1
+
+	# The recess at the foot of the wall, in front of which the apron of the slab runs (z -7.6 to -7.35): a lip 0.14 high, a block on its east, the return wall on its west.
+	HouseProps.add_box(root, "RecessLip", Vector3(0.5, 0.14, 0.1), Vector3(-5.6, 0.05 + 0.07, -7.53), dark)
+	HouseProps.add_solid(root, "RecessLipSolid", Vector3(0.5, 0.14, 0.1), Vector3(-5.6, 0.05 + 0.07, -7.53))
+	HouseProps.add_box(root, "RecessSide", Vector3(0.1, 0.16, 0.26), Vector3(-5.3, 0.05 + 0.08, -7.48), dark)
+	HouseProps.add_solid(root, "RecessSideSolid", Vector3(0.1, 0.16, 0.26), Vector3(-5.3, 0.05 + 0.08, -7.48))
 
 
 # ============================================================
