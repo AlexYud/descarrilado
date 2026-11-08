@@ -412,7 +412,6 @@ static func _build_ficha_note(root: Node3D) -> void:
 static func _build_shelter(root: Node3D) -> void:
 	var concrete: StandardMaterial3D = weathered(CONCRETE, 1.4)
 	var worn: StandardMaterial3D = weathered(CONCRETE_DARK, 1.0)
-	var rebar: StandardMaterial3D = weathered(RUST, 3.0, 0.8, 0.6)
 	var half_x: float = 2.7
 	var half_z: float = 1.5
 
@@ -420,7 +419,7 @@ static func _build_shelter(root: Node3D) -> void:
 	HouseProps.add_box(root, "Floor", Vector3(6.6, 0.05, 4.2), Vector3(0.0, 0.025, 0.0), worn)
 	HouseProps.add_solid(root, "FloorSolid", Vector3(6.6, 0.05, 4.2), Vector3(0.0, 0.025, 0.0))
 
-	# Four slim pillars, cracked, one with its rebar showing.
+	# Four slim pillars (nothing hangs or shows from them: no crack lines, no iron).
 	var pillar_height: float = 2.75
 	for sx: float in [-1.0, 1.0]:
 		for sz: float in [-1.0, 1.0]:
@@ -437,10 +436,6 @@ static func _build_shelter(root: Node3D) -> void:
 				Vector3(pos.x + 0.06, pos.y + 0.3, pos.z), CONCRETE_DARK
 			)
 
-	# The cracked pillar, seen from the open side (+Z): a narrow zigzag crack and the lighter cement patch that mended its
-	# lower half. Pillar 1 is the one beside the bench; the same marks are in the news photograph and in the recording.
-	_build_pillar_crack(root, Vector3(-half_x, 0.05 + pillar_height * 0.5, half_z))
-
 	# Ordinary damp on the slab in front of the bench: dark, soft and uneven.
 	var damp: StandardMaterial3D = HouseProps.material(Color(0.1, 0.1, 0.1, 0.3), 1.0)
 	damp.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -448,15 +443,6 @@ static func _build_shelter(root: Node3D) -> void:
 		HouseProps.add_box(
 			root, "Damp%d" % i, Vector3(0.9 - i * 0.2, 0.002, 0.5 - i * 0.1),
 			Vector3(-1.9 + i * 0.35, 0.0512, 0.25 + i * 0.12), damp, Vector3(0.0, 18.0 * i - 10.0, 0.0)
-		)
-
-	# Spalled concrete on one pillar with the iron showing through.
-	var spall: Vector3 = Vector3(-half_x, 1.1, -half_z)
-	HouseProps.add_box(root, "Spall", Vector3(0.18, 0.5, 0.012), Vector3(spall.x, spall.y, spall.z - 0.122), HouseProps.material(Color(0.22, 0.22, 0.21), 1.0))
-	for i: int in 3:
-		HouseProps.add_cylinder(
-			root, "ExposedBar%d" % i, 0.008, 0.52,
-			Vector3(spall.x - 0.05 + i * 0.05, spall.y, spall.z - 0.13), rebar
 		)
 
 	# The lamp's fixture: a cord and a bare bulb under the roof (the light itself is the scene's `ShelterLamp`, at the same place), so that the shelter
@@ -511,16 +497,6 @@ static func _build_shelter(root: Node3D) -> void:
 			Vector3(0.0, 0.0, 14.0)
 		)
 
-	# Weeds through the cracks in the slab.
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 5150
-	var weed: StandardMaterial3D = HouseProps.material(Color(0.12, 0.2, 0.09), 1.0)
-	for i: int in 14:
-		var tuft: Vector3 = Vector3(rng.randf_range(-3.2, 3.2), 0.075, rng.randf_range(-2.0, 2.0))
-		HouseProps.add_box(
-			root, "Weed%d" % i, Vector3(0.012, rng.randf_range(0.06, 0.16), 0.012),
-			tuft, weed, Vector3(rng.randf_range(-20.0, 20.0), 0.0, rng.randf_range(-25.0, 25.0))
-		)
 
 
 ## The crack in the shelter's mended pillar: a zigzag of thin dark strips down the face toward +Z, the lighter patch of

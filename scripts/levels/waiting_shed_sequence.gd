@@ -2,8 +2,8 @@ extends Node3D
 class_name WaitingShedSequence
 
 ## THE INVESTIGATION (see "THE INVESTIGATION" below; Prompts 25 and 26): documents -> videotape (under the main clipping) -> the first cinematic -> the physical camcorder, hidden in planting, whose lens is
-## where the recording's first shot stands: through its viewfinder (reached by an assisted walk and a lean of the eye, masked by black), after the cinematic, the empty bloodstained shelter and a drag
-## trail that ends under a small cover of leaves by the front-west pillar -> the leaves slide aside -> the family's reply (only read: it starts and releases nothing) -> the telephone token, which lies
+## where the recording's first shot stands: through its viewfinder (reached by an assisted walk and a lean of the eye, masked by a round hole that wanders and finds the middle), after the cinematic, the empty bloodstained shelter and a drag
+## trail to the front-west pillar, along which, three seconds in, a human shadow crawls, dies and lies (seen through the lens only) -> the family's reply, which then lies in the real world where it died (only read: it starts and releases nothing) -> the telephone token, which lies
 ## all along in a real recess behind the shelter, around a blind corner. The tape, after the first cinematic, is also a voluntary review (Play/Pause/Stop/Rewind/Fast-forward, with a rear segment before the
 ## excerpt). SUPERSEDED and removed: the token falling from the letter, the forced turn toward the camcorder, the camcorder's fill light.
 ## The text below this header is older: where it says "the box", read "the bench"; where it says the token is freed or released, it lies in its recess from the start.
@@ -67,6 +67,23 @@ const KEY_FICHAS: StringName = &"orelhao_fichas"
 const TOKEN_ID: String = "sophia_ficha"
 const VHS_INSPECT_ID: StringName = &"sophia_vhs"
 ## The asker's name when the sequence silences the forest while the memory plays.
+## The eyecup's round hole (see `_set_iris`): the radius that is no hole at all, and the one the eye looks through (screen heights).
+const IRIS_OPEN: float = 1.7
+const IRIS_EYE: float = 0.31
+const IRIS_SHADER: String = """
+shader_type canvas_item;
+uniform vec2 center = vec2(0.5, 0.5);
+uniform float radius = 0.31;
+void fragment() {
+	float aspect = SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x;
+	vec2 p = (UV - center) * vec2(aspect, 1.0);
+	float d = length(p);
+	// A soft rim, as of a lens'"'"'s edge, over the last part of the circle.
+	float edge = smoothstep(radius - 0.05, radius + 0.004, d);
+	COLOR = vec4(0.0, 0.0, 0.0, clamp(edge * edge + step(radius, d), 0.0, 1.0));
+}
+"""
+
 const MUFFLE_SOURCE: StringName = &"shed_recording"
 const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 
@@ -112,6 +129,10 @@ const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 @export var archive_ambient_color: Color = Color(0.5, 0.56, 0.66)
 @export var archive_ambient_energy: float = 1.0
 @export var archive_brightness: float = 1.25
+## How far the tape's camera sees (metres: the player's own is 15 and a black cut-off) and where the depth fog that fades the distance into the dark begins and ends.
+@export var recording_far_distance: float = 110.0
+@export var recording_fog_begin: float = 30.0
+@export var recording_fog_end: float = 100.0
 
 @export_category("Shot 1: the copy (remembered)")
 ## Cross-fade into the first shot, hiding the tape being set down.
@@ -128,10 +149,22 @@ const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 @export var tape_end_seconds: float = 0.5
 ## The machine's sounds (`TapePlayerSounds`): their level. The first viewing's picture comes after the machine's first part (static meanwhile), 2.30 s.
 @export var machine_volume_db: float = -3.0
-## The second viewing (section 3): the picture is held (PAUSE, the machine stops) this long after Juliana's first "Não." begins (CAPTION_SHED_REPLAY_08),
+## The second viewing (section 3): the picture is held (PAUSE, the machine stops) this long after the end of Juliana's request to stop (CAPTION_SHED_REPLAY_09),
 ## and the photograph cuts in this long after the end of her "Você não devia ficar vendo esse tipo de coisa." (CAPTION_SHED_TALK_01).
-@export var replay_stop_after_start_seconds: float = 0.25
+@export var replay_stop_after_request_seconds: float = 0.9
 @export var photo_after_replay_seconds: float = 1.0
+## While Sophia speaks of Helena Clarke (CAPTION_SHED_TALK_06 to _08) the picture is on the notice pinned to the post: it cuts in this long before the first of them begins and back to the photograph this long after the last ends.
+## The camera starts at `notice_shot_from` and drifts to `notice_shot_to` (the shed's space), always looking at the notice, its lens closing from `notice_fov_from` to `notice_fov_to`.
+@export var notice_cut_in_before_seconds: float = 0.0
+@export var notice_cut_out_after_seconds: float = 0.6
+@export var notice_shot_from: Vector3 = Vector3(-6.95, 1.1, -3.25)
+@export var notice_shot_to: Vector3 = Vector3(-6.4, 1.32, -3.72)
+@export var notice_fov_from: float = 34.0
+@export var notice_fov_to: float = 25.0
+## The end of the conversation: this long after Juliana's "Tudo bem." (CAPTION_SHED_TALK_FORGIVEN) the picture cuts to the bench with the tape on it (the first shot's view, `shot_copy`) and drifts back, zooming out, to
+## Juliana's own eyes, arriving exactly as Sophia's last line (CAPTION_SHED_TALK_16) ends; the view is hers `return_hold_seconds` after that.
+@export var return_cut_after_seconds: float = 1.0
+@export var return_hold_seconds: float = 1.0
 ## The frame of the excerpt (seconds of the EXCERPT's clock) the second viewing is held on: while she waves. Where the replay begins is worked out from it (it is that much earlier than the hold, by the time the hold takes).
 @export var replay_hold_source_seconds: float = 13.6
 ## The faint light the carried camera (the recording's second shot) throws on the ground ahead of it.
@@ -150,36 +183,51 @@ const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 @export var clipping_aside: Marker3D
 ## The family's reply under the leaf cover at the foot of the cracked front pillar. Reading it is only reading it: nothing is released by it.
 @export var letter: GatedInspectable
-## The leaf cover over the letter: its children named `Leaves*` slide aside by `leaf_aside_offset` (metres, in the cover's space) when the cover is revealed; the other children (ferns) stay.
+## How far away (metres) the reply's interaction mark is seen: from where the camcorder stands, across the clearing.
+@export var letter_mark_distance: float = 14.0
+## The leaf cover is gone (the creature, not leaves, hides what the reply is); the export stays so that older scenes load.
 @export var leaf_cover: Node3D
-@export var leaf_aside_offset: Vector3 = Vector3(0.12, 0.0, -0.5)
 ## What exists only in some looks of the shelter. `investigation_root` (the leaves and the letter) is in the present and in the viewfinder, not in the recording; `camcorder_cover` (the plants round the
 ## camcorder) in the present only; `rear_annex` (the return wall, the repair patch, the token's recess and the token) in the present and in the viewfinder, and in the recording only in its rear segment.
 @export var investigation_root: Node3D
 @export var camcorder_cover: Node3D
+## The clearing's ground and plants (`ShedGroundDressing`): in the present and in the lens's picture, not in the recording.
+@export var ground_dressing: Node3D
 @export var rear_annex: Node3D
-## The viewfinder: after the first cinematic, this long (seconds) the picture is held for reading before the leaves start to slide, then this long (seconds) they take.
-@export var viewfinder_read_seconds: float = 2.5
-@export var leaf_slide_seconds: float = 1.0
+## The viewfinder: after the first cinematic, this long (seconds) the picture is held, empty, before the creature comes into it.
+@export var viewfinder_read_seconds: float = 3.0
+## The shadow in the lens's picture takes this long (seconds) from its first crawl to the end: the camera fails in the middle of it, the shadow strobes like a ghost and is gone under a burst of static (`ShadowCrawler`), and the picture settles with nothing in it.
+@export var creature_crawl_seconds: float = 4.6
+## The creature counts as seen (written down, and the reply put in the world) once it has been in the picture this long (seconds); a look that ends sooner shows it again next time.
+@export var creature_seen_after_seconds: float = 2.0
 ## Putting the eye to the eyecup: the walk (when she is not already at the rear of the device) is the project's guided walk; then the lean takes this long (seconds), and a short black occlusion (the eyecup)
 ## hides the cut to the lens. Stepping back takes `viewfinder_exit_seconds`. A fresh movement input is accepted this long (seconds) after the view has settled.
-@export var viewfinder_enter_seconds: float = 1.5
+@export var viewfinder_enter_seconds: float = 1.75
 @export var viewfinder_exit_seconds: float = 0.55
 @export var viewfinder_input_guard_seconds: float = 0.35
-@export var viewfinder_occlusion_seconds: float = 0.25
+@export var viewfinder_iris_open_seconds: float = 0.6
+## Her own view is never circled: as the eye meets the eyecup it goes to black over the last `viewfinder_black_in_seconds` of the lean, the cut to the lens happens in that black (the lens's picture is built and settled under it),
+## the black then lifts over `viewfinder_black_out_seconds` leaving only the small round window of the eyepiece with the lens's picture in it, which is peered through for `viewfinder_peer_seconds` before it opens (`viewfinder_iris_open_seconds`).
+@export var viewfinder_black_in_seconds: float = 0.3
+@export var viewfinder_black_out_seconds: float = 0.3
+@export var viewfinder_peer_seconds: float = 0.35
+@export var viewfinder_iris_close_seconds: float = 0.2
 ## How far the body stops behind the eyecup (metres): the eye goes the rest of the way.
 @export var viewfinder_stand_back_metres: float = 0.55
 ## The word on the viewfinder's picture (the machine's own, not a translated text).
 @export var viewfinder_label: String = "CAM"
-## The scene that uncovers the tape (shed-local): where the camera stands and what it looks at, the lens, how long the paper takes to slide aside and how long the tape is then held in view.
-@export var clipping_shot_position: Vector3 = Vector3(-4.12, 1.08, -4.95)
-@export var clipping_shot_target: Vector3 = Vector3(-4.2, 0.5, -5.78)
-@export var clipping_shot_fov: float = 40.0
-@export var clipping_slide_seconds: float = 1.4
-@export var clipping_hold_seconds: float = 2.0
+## The shadow of the lens: its size (1 is the 1.83 m model) and the way it crawls (the shed's space): from beside the pillar where the reply lies, toward the right of the picture and a little toward the camera, as far as the animation takes it.
+@export var creature_scale: float = 0.92
+@export var creature_path: PackedVector3Array = PackedVector3Array([Vector3(-5.9, 0.05, -3.55), Vector3(-5.11, 0.05, -3.42)])
+## The scene that uncovers the tape (seen from the player's own eyes): how long the paper takes to slide aside and how long the tape is then held in view.
+@export var clipping_slide_seconds: float = 0.8
+@export var clipping_hold_seconds: float = 0.25
+## The first shot of the recording zooms in on the tape: how far toward it the camera moves (a share of the way) and the lens it ends with (degrees).
+@export var copy_zoom_dolly: float = 0.22
+@export var copy_zoom_fov: float = 30.0
 ## The forest's plants within `vegetation_clear_inner` metres of the tape's camera shrink away, up to `vegetation_clear_outer` partly (no leaf passes through the lens).
-@export var vegetation_clear_inner: float = 1.0
-@export var vegetation_clear_outer: float = 2.4
+@export var vegetation_clear_inner: float = 1.3
+@export var vegetation_clear_band: float = 0.4
 ## The fill light of the viewfinder after the first cinematic (at the lens, over the slab), stronger than the recording's own so that the dark drag trail reads against the slab through the tape look.
 @export var viewfinder_light_energy: float = 7.0
 ## The pale ambient of the recording's environment is raised by this factor in the post-video viewfinder only (the camera's own environment: nothing global), again for the trail to read.
@@ -188,9 +236,9 @@ const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 @export var camcorder_cue_delay_seconds: float = 1.5
 @export var camcorder_cue_volume_db: float = 2.0
 @export var camcorder_cue_distance: float = 30.0
-## The voluntary tape review: the speed of a rewind or a fast-forward search (times the tape's own), the faint light of the rear segment's camera, and where the first review starts (seconds of the EXCERPT's clock: 0 is
-## the first frame of the Emily excerpt, which the tape reaches `rear_prefix_seconds` after its own start).
-@export var review_search_speed: float = 4.0
+## The voluntary tape review: the speed of a rewind or a fast-forward search (times the tape's own), the faint light of the rear segment's camera, and where the first review starts (seconds of the tape's clock: 0 is
+## the start of the tape, the first frame of the Emily excerpt; the rear segment is at the END of the tape).
+@export var review_search_speed: float = 10.0
 @export var review_start_excerpt_seconds: float = 0.0
 @export var rear_light_energy: float = 2.4
 @export var rear_light_range: float = 7.0
@@ -251,16 +299,21 @@ enum AuxMode { NONE, VIEWFINDER, REVIEW, TRANSITION }
 var _aux_mode: AuxMode = AuxMode.NONE
 var _aux_run: int = 0
 var _cue_run: int = 0
+## The recording light of the camcorder waits for the sound it makes after the first cinematic (it is the click of the machine starting that turns it on).
+var _led_wait: bool = false
+## The number of the camera drift that is running (a new shot or the end of the scene stops the one before).
+var _drift_id: int = 0
+## The "Hold [Space] to Skip" prompt of the recording (the project's `HoldToSkip`, as in the other cutscenes): armed while the recording runs.
+var _skip_ui: HoldToSkip = null
+## True while the camera is failing in the lens's picture (the shadow's scene); it is put right when that is over.
+var _glitching: bool = false
 var _cue_player: AudioStreamPlayer3D = null
 var _prompt_layer: CanvasLayer = null
-var _prompt_label: Label = null
-var _leaf_tween: Tween = null
-var _leaf_busy: bool = false
+var _prompt_hint: KeyHint = null
+var _creature: ShadowCrawler = null
 ## True while the paper over the tape is being moved aside (the saved flag is written at the end; until then the paper stays over the tape).
 var _clipping_busy: bool = false
 var _clipping_tween: Tween = null
-var _leaf_sheets: Array[Node3D] = []
-var _leaf_home: Array[Transform3D] = []
 var _clipping_home: Transform3D = Transform3D.IDENTITY
 # The viewfinder's entry and exit: where her view was, how far the eye goes, the black over the cut, when a fresh input is accepted.
 var _vf_phase: StringName = &""
@@ -268,8 +321,13 @@ var _vf_saved_yaw: float = 0.0
 var _vf_saved_pitch: float = 0.0
 var _vf_full_offset: Vector3 = Vector3.ZERO
 var _vf_ready_ms: int = 0
-var _occlusion_layer: CanvasLayer = null
-var _occlusion_rect: ColorRect = null
+var _iris_layer: CanvasLayer = null
+var _iris_rect: ColorRect = null
+var _iris_black: ColorRect = null
+var _iris_black_alpha: float = 0.0
+var _iris_material: ShaderMaterial = null
+var _iris_radius: float = 9.0
+var _iris_center: Vector2 = Vector2(0.5, 0.5)
 # The review: the playhead (seconds of the EXCERPT's clock, negative in the rear segment), the state (play, pause, stop, rew, ff), its UI and sound.
 var _review_time: float = 0.0
 var _review_state: StringName = &"pause"
@@ -285,6 +343,7 @@ var _footage_playing: bool = false
 ## The vegetation wind (frozen while a tape picture is held) and the strength it had.
 var _wind: Node = null
 var _token_tape_material: StandardMaterial3D = null
+var _cleared_passage: StringName = &""
 var _wind_tween: Tween = null
 var _wind_home: float = -1.0
 var _footage_time: float = 0.0
@@ -315,7 +374,8 @@ func _ready() -> void:
 	_build_audio()
 	TapePlayerSounds.prepare()
 	_set_recording_world(false)
-	_set_camcorder_light(false)
+	# On once the tape has been seen (it is the camcorder that was running); off before.
+	_set_camcorder_light(_flag(KEY_RECORDING_DONE) and not _led_wait)
 	_align_camcorder()
 	if vhs != null and not vhs.review_requested.is_connected(_on_review_requested):
 		vhs.review_requested.connect(_on_review_requested)
@@ -332,8 +392,6 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	_cancel_recording()
 	_abort_aux()
-	if _leaf_tween != null and _leaf_tween.is_valid():
-		_leaf_tween.kill()
 	if _overlay != null and is_instance_valid(_overlay):
 		_overlay.free()
 		_overlay = null
@@ -347,6 +405,9 @@ func _process(delta: float) -> void:
 			_connect_to_player()
 
 	_tick_footage(delta)
+	_drive_glitch()
+	if _creature != null and is_instance_valid(_creature) and _creature.playing and _creature.elapsed >= creature_seen_after_seconds and not _flag(KEY_LEAF_REVEALED):
+		_set_flag(KEY_LEAF_REVEALED)
 	if _aux_mode == AuxMode.REVIEW:
 		_review_process(delta)
 
@@ -515,6 +576,7 @@ func _on_inspect_closed(closed_id: String) -> void:
 		# Reading the family's reply is only reading it: it is remembered, and nothing starts, moves or is released.
 		if not _flag(KEY_LETTER_READ):
 			_set_flag(KEY_LETTER_READ)
+		_refresh_letter()
 	elif id == ficha_id:
 		if not bool(SaveManager.get_state_value(STATE_SECTION, KEY_FICHA_TAKEN, false)):
 			SaveManager.set_state_value(STATE_SECTION, KEY_FICHA_TAKEN, true)
@@ -529,6 +591,7 @@ func _begin_recording() -> void:
 	_stage = Stage.RUNNING
 	_run += 1
 	_hold_player(target)
+	_open_skip_window()
 	_set_camcorder_enabled()
 	# (Normally built long before, out of sight; this is only the fallback for a scene entered in the same frame.)
 	if footage != null:
@@ -563,6 +626,7 @@ func _play_recording(run: int) -> void:
 
 	# Shot 2: the recording (its tape noise only). Everything of the present that is not in it goes under the cut, and the cast is posed at its first
 	# frame before it is shown. The camera does not move from here to the end.
+	_drift_id += 1
 	_show_camera(shot_recording, true)
 	_apply_footage(0.0)
 	_set_recording_world(true)
@@ -572,13 +636,14 @@ func _play_recording(run: int) -> void:
 	if not _alive(run):
 		return
 
-	# Shot 3: the tape again, the talk over the held picture, and (after "Pode.") the photograph, which stays to the end of the conversation.
+	# Shot 3: the tape again, the talk over the held picture, the photograph, the notice about Helena Clarke, and at the end the bench with the tape on it, drifting back to her own eyes.
 	await _shot_conversation(run)
 	if not _alive(run):
 		return
 
 	# Then the view is hers: the scene's work done and the controls back, with a short dissolve from the last shot to her own eyes (the still it fades
 	# is the last frame drawn, so it is taken after the change is made, in the same frame).
+	_led_wait = true
 	_back_to_her_eyes()
 	_mark_done()
 	_finish_recording()
@@ -586,6 +651,37 @@ func _play_recording(run: int) -> void:
 	# Her own eyes, as they were when she looked at the bench: no turn, no instruction. A moment later the camcorder behind her makes a small sound (see `_start_camcorder_cue`).
 	_start_camcorder_cue()
 
+
+## From the start of the recording to its end the skip can be asked for (hold Space): the scene is cut to its end at once, the view and the control are given back as they are after the whole of it, and the
+## camcorder behind her makes its sound as ever.
+func _open_skip_window() -> void:
+	if _skip_ui == null:
+		_skip_ui = HoldToSkip.new()
+		_skip_ui.name = "HoldToSkip"
+		add_child(_skip_ui)
+		_skip_ui.skipped.connect(_skip_recording)
+	_skip_ui.arm()
+
+
+func _close_skip_window() -> void:
+	if _skip_ui != null:
+		_skip_ui.disarm()
+
+
+func _skip_recording() -> void:
+	if _stage != Stage.RUNNING or not is_inside_tree():
+		return
+
+	_close_skip_window()
+	# Whatever is waiting in the scene is over (it checks its run).
+	_run += 1
+	replay_running = false
+	_led_wait = true
+	_back_to_her_eyes()
+	_mark_done()
+	_finish_recording()
+	_dissolve(dissolve_into_scene_seconds)
+	_start_camcorder_cue()
 
 ## Waits until the examined tape has flown back and the inspect view is gone (it is shut by the player; it is not closed for them here).
 func _settle_inspect(run: int) -> void:
@@ -598,10 +694,25 @@ func _settle_inspect(run: int) -> void:
 		waited += get_process_delta_time()
 
 
+## The first shot (the tape on the bench, after it has been looked at) is not steady: a slow zoom in on the tape over the shot's length: the camera moves `copy_zoom_dolly` of the way toward what it looks at while its lens
+## closes from the shot's own to `copy_zoom_fov`.
+func _copy_zoom(seconds: float) -> void:
+	_drift_id += 1
+	var from_xf: Transform3D = shot_copy.aimed_transform()
+	var focus: Vector3 = shot_copy.target.global_position if shot_copy.target != null else from_xf.origin + (-from_xf.basis.z) * 1.0
+	var to_at: Vector3 = from_xf.origin.lerp(focus, copy_zoom_dolly)
+	var from_fov: float = shot_copy.fov
+	_drift_camera(_drift_id, seconds, func(u: float) -> Dictionary:
+		var s: float = smoothstep(0.0, 1.0, u)
+		var at: Vector3 = from_xf.origin.lerp(to_at, s)
+		return {"transform": Transform3D(Basis.looking_at((focus - at).normalized(), Vector3.UP), at), "fov": lerpf(from_fov, copy_zoom_fov, s), "light": shot_light_energy})
+
+
 func _shot_copy(run: int) -> void:
 	_play_voice(_remembered_player, _pick_voice(voice_copy, voice_copy_en))
 	CaptionManager.clear()
 	CaptionManager.play_scripted(CaptionTracks.SHED_REMEMBERED_COPY)
+	_copy_zoom(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY))
 	await _wait(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY))
 	if _alive(run):
 		_remembered_player.stop()
@@ -641,17 +752,16 @@ func _shot_footage(run: int) -> void:
 	await _wait(TapePlayerSounds.stop_stream().get_length())
 
 
-## The conversation, remembered, on the caption track's one clock, in two shots. The tape starts again at once (the same camera, the picture from replay_from, PLAY
-## on it, the machine's running sound): a few seconds later Juliana asks Sophia to stop, the picture is held with PAUSE on it and the machine's last part plays, and the talk
-## goes on over the held picture until "Você não devia ficar vendo esse tipo de coisa." and a pause; then a hard cut to the photograph (the present, with Sophia's things, whole again before it is seen; the cast put
-## away), which stays through the rest of the conversation to its last word. The marks come from the cues of the track.
+## The conversation, remembered, on the caption track's one clock. The tape starts again at once (the same camera, the picture from `replay_from`, PLAY on it, the machine's running sound): Juliana says "Não.", asks Sophia to stop,
+## and a short while after the request the picture is held with PAUSE on it and the machine's last part plays; Sophia and Juliana go on over the held picture until "Você não devia ficar vendo esse tipo de coisa." and a pause;
+## then a hard cut to the photograph (the present, with Sophia's things, whole again before it is seen; the cast put away). While Helena Clarke is spoken of the picture is on the notice pinned to the post (a camera that
+## drifts), and back on the photograph after. After "Tudo bem." and a long silence the picture goes to the bench with the tape on it and drifts back, zooming out, to Juliana's own eyes, arriving as Sophia's last line ends;
+## the control is hers a moment after (see `_play_recording`). Every mark comes from the cues of the track.
 func _shot_conversation(run: int) -> void:
 	_play_voice(_remembered_player, _pick_voice(voice_talk, voice_talk_en))
 	CaptionManager.clear()
 	CaptionManager.play_scripted(CaptionTracks.SHED_REMEMBERED_TALK)
 	var total: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK)
-	var stop_at: float = replay_stop_seconds()
-	var photo_at: float = photo_cut_seconds()
 
 	# The tape starts again.
 	replay_running = true
@@ -664,32 +774,120 @@ func _shot_conversation(run: int) -> void:
 	_footage_playing = true
 	_start_machine(false)
 	_start_tape_sound()
-	await _wait(stop_at)
-	if not _alive(run):
-		replay_running = false
-		return
 
-	# A quarter of a second into her first "Não.": the picture is held on the greeting (the cut to the walking shot never comes), the machine says PAUSE and stops; her request and the next line are said over the held frame.
-	_footage_playing = false
-	if _overlay != null and is_instance_valid(_overlay):
-		_overlay.set_paused(true)
-	_freeze_wind(true)
-	_stop_tape_sound()
-	_stop_machine()
-	await _wait(maxf(photo_at - stop_at, 0.0))
-	if not _alive(run):
-		replay_running = false
-		return
+	var marks: Array[Dictionary] = [
+		{"at": replay_stop_seconds(), "do": &"hold"},
+		{"at": photo_cut_seconds(), "do": &"photo"},
+		{"at": notice_cut_in_seconds(), "do": &"notice"},
+		{"at": notice_cut_out_seconds(), "do": &"photo_again"},
+		{"at": return_cut_seconds(), "do": &"return"},
+	]
+	var clock: float = 0.0
+	for mark: Dictionary in marks:
+		await _wait(maxf(float(mark["at"]) - clock, 0.0))
+		clock = maxf(clock, float(mark["at"]))
+		if not _alive(run):
+			replay_running = false
+			return
 
-	# The photograph, to the end.
-	_set_recording_world(false)
-	_show_overlay(false)
-	_show_camera(shot_photo)
-	_set_shot_light(true, photo_light_energy)
+		match StringName(mark["do"]):
+			&"hold":
+				# After her request to stop: the picture is held on the greeting (the cut to the walking shot never comes), the machine says PAUSE and stops; the rest is said over the held frame.
+				_footage_playing = false
+				if _overlay != null and is_instance_valid(_overlay):
+					_overlay.set_paused(true)
+				_freeze_wind(true)
+				_stop_tape_sound()
+				_stop_machine()
+			&"photo", &"photo_again":
+				# The photograph (the present), to the end of the talk or until the next shot.
+				_drift_id += 1
+				if StringName(mark["do"]) == &"photo":
+					_set_recording_world(false)
+					_show_overlay(false)
+					replay_running = false
+				_show_camera(shot_photo)
+				_set_shot_light(true, photo_light_energy)
+			&"notice":
+				_shot_notice(notice_cut_out_seconds() - notice_cut_in_seconds())
+			&"return":
+				var seconds: float = return_move_seconds()
+				_shot_return(seconds)
+				clock += seconds
+				await _wait(seconds)
+				if not _alive(run):
+					return
 	replay_running = false
-	await _wait(maxf(total - photo_at, 0.0))
+	await _wait(maxf(total - clock, 0.0))
 	if _alive(run):
 		_remembered_player.stop()
+
+
+## The notice about Helena Clarke pinned to the post, from the side, a camera that drifts toward it while its lens closes (`notice_shot_from` to `notice_shot_to`, `notice_fov_from` to `notice_fov_to`), for `seconds`.
+func _shot_notice(seconds: float) -> void:
+	_drift_id += 1
+	_set_recording_world(false)
+	_show_overlay(false)
+	var look: Vector3 = _notice_point()
+	var from_at: Vector3 = to_global(notice_shot_from)
+	var to_at: Vector3 = to_global(notice_shot_to)
+	_show_camera(shot_photo)
+	_set_shot_light(true, photo_light_energy)
+	_drift_camera(_drift_id, seconds, func(u: float) -> Dictionary:
+		var s: float = smoothstep(0.0, 1.0, u)
+		var at: Vector3 = from_at.lerp(to_at, s)
+		return {"transform": Transform3D(Basis.looking_at((look - at).normalized(), Vector3.UP), at), "fov": lerpf(notice_fov_from, notice_fov_to, s), "light": photo_light_energy})
+
+
+## The bench with the tape on it (the first shot's view), drifting back to the player's own eyes: the camera's place, its turn and its lens move together on one slow ease, so that the last frame IS what the player's own
+## camera shows (a lens that has zoomed out to theirs, a light that has faded away), and the view can be handed over without a cut.
+func _shot_return(seconds: float) -> void:
+	_drift_id += 1
+	_set_recording_world(false)
+	_show_overlay(false)
+	_set_tape_beside_box()
+	_show_camera(shot_copy)
+	_set_shot_light(true, shot_light_energy)
+	var from_xf: Transform3D = shot_copy.aimed_transform()
+	var from_fov: float = shot_copy.fov
+	_drift_camera(_drift_id, seconds, func(u: float) -> Dictionary:
+		var eyes: Camera3D = _get_camera()
+		var to_xf: Transform3D = eyes.global_transform if eyes != null else from_xf
+		var to_fov: float = eyes.fov if eyes != null else from_fov
+		# A slow start and a slow arrival (a smoother ease than a smoothstep).
+		var s: float = u * u * u * (u * (u * 6.0 - 15.0) + 10.0)
+		var turn: Quaternion = from_xf.basis.get_rotation_quaternion().slerp(to_xf.basis.get_rotation_quaternion(), s)
+		return {"transform": Transform3D(Basis(turn), from_xf.origin.lerp(to_xf.origin, s)), "fov": lerpf(from_fov, to_fov, s), "light": lerpf(shot_light_energy, 0.0, smoothstep(0.35, 1.0, s))})
+
+
+## Moves the scene's camera for `seconds` along `pose`, a function of progress (0 to 1) that gives {"transform", "fov", "light"}, one frame at a time; the end pose is set exactly. A new shot (`_drift_id` changed), the end of the
+## scene or a cancelled run stops it. Not awaited by the timeline: the conversation's clock goes on by itself.
+func _drift_camera(id: int, seconds: float, pose: Callable) -> void:
+	var elapsed: float = 0.0
+	_apply_drift(pose.call(0.0) as Dictionary)
+	while elapsed < seconds:
+		await get_tree().process_frame
+		if id != _drift_id or _stage != Stage.RUNNING or not is_inside_tree():
+			return
+		if get_tree().paused:
+			continue
+		elapsed += get_process_delta_time()
+		_apply_drift(pose.call(clampf(elapsed / maxf(seconds, 0.001), 0.0, 1.0)) as Dictionary)
+
+
+func _apply_drift(state: Dictionary) -> void:
+	if _cinema == null or not is_instance_valid(_cinema):
+		return
+
+	_cinema.global_transform = state["transform"] as Transform3D
+	_cinema.fov = float(state["fov"])
+	_set_shot_light(true, float(state["light"]))
+
+
+## What the notice shot looks at: the notice on the post (found in the scene, or where the scene puts it).
+func _notice_point() -> Vector3:
+	var node: Node3D = get_node_or_null(^"Platform/PersonalEffects/HelenaClarkeNotice") as Node3D
+	return node.global_position if node != null else to_global(Vector3(-5.826, 1.4, -4.0))
 
 
 ## Where in the footage (the excerpt's clock) the second viewing begins: early enough that, `replay_stop_seconds()` later, it is at `replay_hold_source_seconds` (held on her wave). Never before the start of the excerpt, never past the first cut.
@@ -697,14 +895,32 @@ func replay_from() -> float:
 	return clampf(replay_hold_source_seconds - replay_stop_seconds(), 0.0, footage.cut_walk_seconds - 0.5) if footage != null else 0.0
 
 
-## When the second viewing is held, in seconds of the conversation's track: a moment after her first "Não." begins (`CAPTION_SHED_REPLAY_08`). From the cue, not from a number kept here.
+## When the second viewing is held, in seconds of the conversation's track: `replay_stop_after_request_seconds` after the end of Juliana's request to stop (`CAPTION_SHED_REPLAY_09`). From the cue, not from a number kept here.
 func replay_stop_seconds() -> float:
-	return _cue_time(&"CAPTION_SHED_REPLAY_08", "start") + replay_stop_after_start_seconds
+	return _cue_time(&"CAPTION_SHED_REPLAY_09", "end") + replay_stop_after_request_seconds
 
 
 ## When the picture cuts to the printed photograph, in seconds of the track: `photo_after_replay_seconds` after the end of "Você não devia ficar vendo esse tipo de coisa." (`CAPTION_SHED_TALK_01`).
 func photo_cut_seconds() -> float:
 	return _cue_time(&"CAPTION_SHED_TALK_01", "end") + photo_after_replay_seconds
+
+
+## When the picture goes to the notice about Helena Clarke and when it returns to the photograph (the track's seconds): around Sophia's "They're looking for Helena Clarke now." to "Last week. She was seen near the tracks."
+func notice_cut_in_seconds() -> float:
+	return _cue_time(&"CAPTION_SHED_TALK_06", "start") - notice_cut_in_before_seconds
+
+
+func notice_cut_out_seconds() -> float:
+	return _cue_time(&"CAPTION_SHED_TALK_08", "end") + notice_cut_out_after_seconds
+
+
+## When the picture goes back to the bench (the track's seconds): `return_cut_after_seconds` after Juliana's "Tudo bem."; and how long the drift to her own eyes takes (to the end of Sophia's last line).
+func return_cut_seconds() -> float:
+	return _cue_time(&"CAPTION_SHED_TALK_FORGIVEN", "end") + return_cut_after_seconds
+
+
+func return_move_seconds() -> float:
+	return maxf(_cue_time(&"CAPTION_SHED_TALK_16", "end") - return_cut_seconds(), 0.5)
 
 
 ## When a cue of the conversation's track starts or ends ("start" or "end"), in seconds of the track; 0 if the track has no such cue.
@@ -771,6 +987,8 @@ func _cancel_recording() -> void:
 
 ## The recording's dressing, its overlay, its sounds, its cameras and the tweens, all put away. The present is shown whole.
 func _cleanup_scene() -> void:
+	_drift_id += 1
+	_close_skip_window()
 	for tween: Tween in _tweens:
 		if tween != null and tween.is_valid():
 			tween.kill()
@@ -793,6 +1011,28 @@ func _cleanup_scene() -> void:
 # THE FOOTAGE (one clock)
 # ============================================================
 
+## While the shadow crawls through the lens's picture the camera fails as the performance says (`ShadowCrawler.glitch_at`, `static_at`): the tape's picture tears, rolls and snows, in bursts, and the picture
+## settles as the shadow is gone. When it is over (or cut short) the picture is clean again.
+func _drive_glitch() -> void:
+	var overlay_ok: bool = _overlay != null and is_instance_valid(_overlay)
+	var active: bool = overlay_ok and _creature != null and is_instance_valid(_creature) and _creature.playing and _aux_mode == AuxMode.VIEWFINDER
+	if active:
+		var now: float = _creature.elapsed
+		var glitch: float = _creature.glitch_at(now)
+		var dim: float = _creature.dim_at(now)
+		var burst: float = _creature.static_at(now)
+		_overlay.set_glitch(glitch)
+		_overlay.set_dim(dim)
+		_overlay.set_burst(burst)
+		_glitching = true
+	elif _glitching:
+		_glitching = false
+		if overlay_ok:
+			_overlay.set_glitch(0.0)
+			_overlay.set_dim(0.0)
+			_overlay.set_burst(0.0)
+
+
 ## Advances the footage clock and shows the footage at it (frame by frame; the pause stops it). Nothing runs outside RUNNING.
 func _tick_footage(delta: float) -> void:
 	if _stage != Stage.RUNNING or footage == null or not _footage_playing:
@@ -808,7 +1048,8 @@ func _apply_footage(time: float) -> void:
 	if footage != null:
 		footage.seek(shown)
 	if _overlay != null and is_instance_valid(_overlay) and footage != null:
-		var left: float = footage.length_seconds - time
+		# The tape fades out at its own end: the excerpt's in the directed viewing, the whole tape's (after the rear segment) in a review or a preview.
+		var left: float = (footage.length_seconds if _stage == Stage.RUNNING else footage.tape_length()) - time
 		_overlay.set_burst(smoothstep(tape_end_seconds, 0.0, left) if left < tape_end_seconds else 0.0)
 	# Each shot has its own camera, a pure function of the source time (locked, walking, drifting), and its own shelter: the intact bench and the ferns at the lens in the first, the broken bench
 	# and the blood in the last. Only while the recording is on screen (the photograph's camera and the player's are never touched). The window may change: the lens follows it so that the
@@ -820,13 +1061,13 @@ func _apply_footage(time: float) -> void:
 			var state: Dictionary = footage.camera_at(shown)
 			_cinema.global_transform = state["transform"] as Transform3D
 			_cinema.fov = ArchiveVideoOverlay.matched_fov(float(state["fov"]), get_viewport().get_visible_rect().size)
-			_clear_vegetation_round(true, _cinema.global_position)
+			_clear_vegetation_for(passage)
 
 
 ## The shelter as the shot shows it: the bench whole and the ferns near the lens in the first, the bench broken (and the blood, which the footage shows with its last shot) in the last.
 func _set_shot_dressing(passage: StringName, shown_time: float = 0.0) -> void:
 	# The bench is whole in the first shot and broken in the last two (the second walk is later than the aftermath, by an unknown time).
-	var aftermath: bool = passage == &"aftermath" or passage == &"walk2"
+	var aftermath: bool = passage == &"aftermath" or passage == &"walk2" or passage == &"rear"
 	if archive_dressing != null:
 		var intact: Node3D = archive_dressing.get_node_or_null("Intact") as Node3D
 		var damaged: Node3D = archive_dressing.get_node_or_null("Damaged") as Node3D
@@ -845,7 +1086,7 @@ func _set_shot_dressing(passage: StringName, shown_time: float = 0.0) -> void:
 		_set_shot_light(true, aftermath_light_energy)
 	elif passage == &"rear":
 		# The lamp of the camera shows only when the lens comes down to the recess: a narrow beam, brought up over a second, on the token (a wide lamp close to a wall is a white hotspot).
-		_set_shot_light(true, rear_light_energy * smoothstep(footage.rear_lamp_from_seconds, footage.rear_lamp_from_seconds + 1.0, shown_time + footage.rear_prefix_seconds))
+		_set_shot_light(true, rear_light_energy * smoothstep(footage.rear_lamp_from_seconds, footage.rear_lamp_from_seconds + 1.0, shown_time - footage.length_seconds))
 	if _shot_light != null and is_instance_valid(_shot_light):
 		_shot_light.spot_range = aftermath_light_range if passage == &"aftermath" else (rear_light_range if passage == &"rear" else shot_light_range)
 		# The aftermath and the rear segment are lit mostly by the night itself (an even ambient) and only a little by the lamp, which is wide and soft: a lamp close to a wall or the ground makes a white
@@ -876,7 +1117,7 @@ func _stop_footage() -> void:
 
 
 ## For the developer console and for review: shows the recording at one moment of the footage, as it is in the scene (the recording's
-## camera, its exposure, its ferns and picture), without taking the player. `time` is the EXCERPT's clock (0 is the Emily excerpt's first frame); the rear segment is at negative times down to `-rear_prefix_seconds`.
+## camera, its exposure, its ferns and picture), without taking the player. `time` is the EXCERPT's clock (0 is the Emily excerpt's first frame); the rear segment is after the excerpt, up to `tape_length()`.
 ## `end_preview` puts the view back. Not while the scene runs.
 func preview_footage(time: float) -> bool:
 	if _stage == Stage.RUNNING or footage == null or _aux_mode != AuxMode.NONE:
@@ -889,7 +1130,7 @@ func preview_footage(time: float) -> bool:
 	_show_camera(shot_recording, true)
 	_set_recording_world(true)
 	_set_shot_light(false)
-	_apply_footage(maxf(time, -footage.rear_prefix_seconds))
+	_apply_footage(clampf(time, 0.0, footage.tape_length()))
 	_show_overlay(true)
 	return true
 
@@ -926,7 +1167,10 @@ func _set_recording_world(recording: bool) -> void:
 func set_world_state(state: WorldState) -> void:
 	_world_state = state
 	if state != WorldState.RECORDING:
-		_clear_vegetation_round(false)
+		_clear_vegetation_off()
+	if _creature != null and is_instance_valid(_creature) and state != WorldState.VIEWFINDER:
+		_creature.stop()
+	_refresh_letter()
 	_set_token_tape_look(state == WorldState.RECORDING)
 	var present: bool = state == WorldState.PRESENT
 	var recording: bool = state == WorldState.RECORDING
@@ -952,6 +1196,8 @@ func set_world_state(state: WorldState) -> void:
 	# (`_set_shot_dressing` shows it); the plants round the camcorder are the present's alone.
 	if investigation_root != null:
 		investigation_root.visible = present or viewfinder
+	if ground_dressing != null:
+		ground_dressing.visible = present or viewfinder
 	if camcorder_cover != null:
 		camcorder_cover.visible = present
 	if rear_annex != null:
@@ -977,6 +1223,8 @@ func _show_overlay(on: bool) -> void:
 
 	if _overlay == null or not is_instance_valid(_overlay):
 		_overlay = ArchiveVideoOverlay.new()
+		# The tape's worn look is the recording's own, not the game's video filter: it is there whatever the player's filter option says (that option is for the world's filter).
+		_overlay.force_full_look = true
 		add_child(_overlay)
 	_overlay.show_picture()
 
@@ -1101,7 +1349,17 @@ func _recording_environment() -> Environment:
 
 	var source: Environment = get_world_3d().environment if get_world_3d() != null else null
 	_archive_environment = (source.duplicate() as Environment) if source != null else Environment.new()
-	_archive_environment.fog_enabled = false
+	# Far plants must not pop in out of the black: the camera sees far (`recording_far_distance`) and the distance fades into the dark by a depth fog that begins well beyond the shelter.
+	_archive_environment.fog_enabled = true
+	_archive_environment.fog_mode = Environment.FOG_MODE_DEPTH
+	_archive_environment.fog_depth_begin = recording_fog_begin
+	_archive_environment.fog_depth_end = recording_fog_end
+	_archive_environment.fog_depth_curve = 1.0
+	_archive_environment.fog_density = 1.0
+	# (The level's ground fog layer and its aerial fade are the player's; the tape has only the depth fade.)
+	_archive_environment.fog_height_density = 0.0
+	_archive_environment.fog_aerial_perspective = 0.0
+	_archive_environment.fog_sky_affect = 0.0
 	_archive_environment.volumetric_fog_enabled = false
 	_archive_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_archive_environment.ambient_light_color = archive_ambient_color
@@ -1127,10 +1385,12 @@ func _cinema_camera() -> Camera3D:
 
 	_cinema = Camera3D.new()
 	_cinema.name = "CinemaCamera"
+	# The night environment sets the active camera's render distance to the forest's short one; this camera keeps its own (see `recording_far_distance`).
+	_cinema.set_meta(&"keep_far", true)
 	var eyes: Camera3D = _get_camera()
 	if eyes != null:
 		_cinema.cull_mask = eyes.cull_mask
-		_cinema.far = eyes.far
+		_cinema.far = maxf(eyes.far, recording_far_distance)
 		_cinema.keep_aspect = eyes.keep_aspect
 		_cinema.environment = eyes.environment
 		_cinema.compositor = eyes.compositor
@@ -1163,7 +1423,7 @@ func _free_cinema_camera() -> void:
 
 ## The matched dissolve: a still of the last frame shown over the live one and faded away over `seconds`. Whatever changes under it in
 ## the same frame is revealed through the dissolve, not seen happening. (Nothing to take a still of without a screen: a plain cut.)
-func _dissolve(seconds: float) -> void:
+func _dissolve(seconds: float, over_layer: int = 1) -> void:
 	_clear_freeze()
 	if seconds <= 0.0 or DisplayServer.get_name() == "headless" or not is_inside_tree():
 		return
@@ -1175,7 +1435,7 @@ func _dissolve(seconds: float) -> void:
 	_freeze_layer = CanvasLayer.new()
 	_freeze_layer.name = "DissolveStill"
 	# Over the world, its filters and the motion blur, under the subtitles and the menus.
-	_freeze_layer.layer = 1
+	_freeze_layer.layer = over_layer
 	var still: TextureRect = TextureRect.new()
 	still.texture = ImageTexture.create_from_image(image)
 	still.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -1308,21 +1568,13 @@ func _stop_machine() -> void:
 func _remember_investigation_poses() -> void:
 	if clipping != null:
 		_clipping_home = clipping.transform
-	_leaf_sheets.clear()
-	_leaf_home.clear()
-	if leaf_cover != null:
-		for child: Node in leaf_cover.get_children():
-			var sheet: Node3D = child as Node3D
-			if sheet != null and String(sheet.name).begins_with("Leaves"):
-				_leaf_sheets.append(sheet)
-				_leaf_home.append(sheet.transform)
 
 
-## The shed as the saved flags (and what is running) say: the clipping over the tape or aside, the tape examinable (or, after the first cinematic, reviewable) or not, the leaves over the reply or aside, the reply
-## hidden or exposed, and whether the camcorder may be used. The token is not here: it is a real object that nothing but its hiding place keeps from being found. Safe to call at any time.
+## The shed as the saved flags (and what is running) say: the clipping over the tape or aside, the tape examinable (or, after the first cinematic, reviewable) or not, the reply (`shelter_leaf_revealed`:
+## the creature was seen through the lens) in the world or not, and whether the camcorder may be used. The token is not here: it is a real object that nothing but its hiding place keeps from being found.
+## Safe to call at any time.
 func _apply_investigation_state() -> void:
 	var clipping_read: bool = _flag(KEY_CLIPPING_READ) or _is_done()
-	var leaf_done: bool = _flag(KEY_LEAF_REVEALED)
 	if clipping != null and not _clipping_busy:
 		clipping.transform = clipping_aside.transform if clipping_read and clipping_aside != null else _clipping_home
 	if vhs != null:
@@ -1330,27 +1582,23 @@ func _apply_investigation_state() -> void:
 		vhs.review_mode = _is_done()
 		if _is_done():
 			_set_tape_beside_box()
-	# A slide of the leaves in progress is left to finish (its end sets the same state).
-	if not _leaf_busy:
-		_place_leaves(leaf_done)
-	if letter != null:
-		letter.visible = leaf_done
-		letter.set_interaction_enabled(leaf_done and not _leaf_busy)
+	_refresh_letter()
 	_set_camcorder_enabled()
+	# The camcorder's red light: on from the moment the tape has been seen and the machine has clicked (see `_camcorder_cue`), off before and while the tape is running.
+	_set_camcorder_light(_flag(KEY_RECORDING_DONE) and _stage != Stage.RUNNING and not _led_wait)
 
 
-func _place_leaves(displaced: bool) -> void:
-	for i: int in _leaf_sheets.size():
-		if is_instance_valid(_leaf_sheets[i]):
-			_leaf_sheets[i].transform = _leaf_displaced(i) if displaced else _leaf_home[i]
+## The family's reply lies in the real world once the creature has been seen through the lens, and only there: through the lens (the viewfinder's look) the place is the creature's. Its mark is
+## visible from far (`letter_mark_distance`), so that it is seen from where the camcorder stands.
+func _refresh_letter() -> void:
+	if letter == null:
+		return
 
-
-## Where a leaf sheet lies once the cover has slid aside: pushed along `leaf_aside_offset` (a little further, and turned a little, for each sheet, so that it reads as a gust and not a rigid move).
-func _leaf_displaced(index: int) -> Transform3D:
-	var home: Transform3D = _leaf_home[index]
-	var spread: float = 1.0 + 0.18 * float(index)
-	var turned: Basis = Basis(Vector3.UP, deg_to_rad(14.0 * float(index + 1))) * home.basis
-	return Transform3D(turned, home.origin + leaf_aside_offset * spread)
+	var in_world: bool = _flag(KEY_LEAF_REVEALED) and _world_state == WorldState.PRESENT
+	letter.visible = in_world
+	# Its mark is seen from far until it has been read; then it is as every other interaction mark (the reticle's ordinary distance, 0 here).
+	letter.mark_notice_distance = 0.0 if _flag(KEY_LETTER_READ) else letter_mark_distance
+	letter.set_interaction_enabled(in_world)
 
 
 func _set_camcorder_enabled() -> void:
@@ -1397,8 +1645,16 @@ func _start_camcorder_cue() -> void:
 
 func _camcorder_cue(run: int) -> void:
 	await _wait(camcorder_cue_delay_seconds)
-	if run != _cue_run or not is_inside_tree() or camcorder == null or _aux_mode != AuxMode.NONE or _stage == Stage.RUNNING:
+	if run != _cue_run:
 		return
+
+	# The machine clicks on: its red light comes on with it (whether or not she is looking), and stays on.
+	_led_wait = false
+	if not is_inside_tree() or camcorder == null or _aux_mode != AuxMode.NONE or _stage == Stage.RUNNING:
+		_apply_investigation_state()
+		return
+
+	_apply_investigation_state()
 
 	var head: Node3D = camcorder.get_head()
 	if head == null:
@@ -1420,6 +1676,9 @@ func _camcorder_cue(run: int) -> void:
 
 func _stop_cue() -> void:
 	_cue_run += 1
+	if _led_wait:
+		_led_wait = false
+		_apply_investigation_state()
 	if _cue_player != null and is_instance_valid(_cue_player):
 		_cue_player.stop()
 
@@ -1525,7 +1784,8 @@ func _enter_viewfinder(run: int) -> void:
 		_abort_aux()
 		return
 
-	# She stands at the eyepiece: from here the view is held. The lean: the eye goes to the eyecup and the gaze onto the lens's axis, smoothly (no tremor), and the eyecup's black closes over the last part.
+	# She stands at the eyepiece: from here the view is held. The lean: the eye goes to the eyecup and the gaze onto the lens's axis, smoothly (no tremor). The world narrows to a round hole (the eyecup) that
+	# wanders about the screen for a moment, as a hand finds an eyepiece, and settles in the middle; under that circle the view is cut to the lens, and the circle then opens onto the picture.
 	_lock_player()
 	movement.gesture_direct = true
 	var local_axis: Vector3 = _held.global_transform.basis.inverse() * axis
@@ -1535,7 +1795,6 @@ func _enter_viewfinder(run: int) -> void:
 	var pitch_to: float = clampf(-rad_to_deg(asin(clampf(local_axis.y, -1.0, 1.0))), -35.0, 75.0)
 	var head_node: Node3D = movement.get("head") as Node3D
 	var duration: float = maxf(viewfinder_enter_seconds, 0.3)
-	var occlusion: float = minf(viewfinder_occlusion_seconds, duration * 0.4)
 	var elapsed: float = 0.0
 	while elapsed < duration:
 		await get_tree().process_frame
@@ -1544,35 +1803,59 @@ func _enter_viewfinder(run: int) -> void:
 		if get_tree().paused:
 			continue
 		elapsed += get_process_delta_time()
-		var u: float = smoothstep(0.0, 1.0, clampf(elapsed / duration, 0.0, 1.0))
+		var w: float = clampf(elapsed / duration, 0.0, 1.0)
+		var u: float = smoothstep(0.0, 1.0, w)
 		movement.look_yaw = -rad_to_deg(lerp_angle(yaw_from, yaw_to, u))
 		movement.look_pitch = lerpf(pitch_from, pitch_to, u)
 		_vf_full_offset = head_node.to_local(eye_world) - movement.original_camera_position
 		movement.gesture_offset = _vf_full_offset * u
-		_set_occlusion(smoothstep(duration - occlusion, duration, elapsed))
+		# The eye meets the eyecup: her own view goes to black over the last moments of the lean (a plain black, no circle on what she sees).
+		_set_eye_black(smoothstep(duration - viewfinder_black_in_seconds, duration, elapsed))
 
-	# Under the black: the cut from her eye to the lens.
-	_set_occlusion(1.0)
+	# In the black: the cut to the lens. Its picture (the bloodstained shelter, the tape's look) is built and given a few frames to settle under the black, so that nothing of it is ever seen being put together.
+	_set_eye_black(1.0)
+	_set_iris(IRIS_EYE, Vector2(0.5, 0.5))
+	_set_eye_black(1.0)
 	_show_viewfinder_picture()
 	_show_viewfinder_prompt(true)
-	var fade: float = 0.0
-	while fade < occlusion:
+	for settle: int in 4:
+		await get_tree().process_frame
+		if not _aux_alive(run):
+			return
+	# The black lifts and there is only the small round window of the eyepiece, the lens's picture in it (glimpsed as through an eyepiece), which wanders a little and settles.
+	var lifting: float = 0.0
+	var peering: float = 0.0
+	var peer_total: float = viewfinder_black_out_seconds + viewfinder_peer_seconds
+	while peering < peer_total:
 		await get_tree().process_frame
 		if not _aux_alive(run):
 			return
 		if get_tree().paused:
 			continue
-		fade += get_process_delta_time()
-		_set_occlusion(1.0 - smoothstep(0.0, occlusion, fade))
-	_set_occlusion(0.0)
+		peering += get_process_delta_time()
+		lifting = clampf(peering / maxf(viewfinder_black_out_seconds, 0.05), 0.0, 1.0)
+		_set_eye_black(1.0 - smoothstep(0.0, 1.0, lifting))
+		_set_iris(IRIS_EYE, Vector2(0.5, 0.5) + _iris_wander(peering, 0.4 * (1.0 - smoothstep(0.0, 1.0, peering / peer_total))))
+	_set_eye_black(0.0)
+	_set_iris(IRIS_EYE, Vector2(0.5, 0.5))
+	var opening: float = 0.0
+	while opening < viewfinder_iris_open_seconds:
+		await get_tree().process_frame
+		if not _aux_alive(run):
+			return
+		if get_tree().paused:
+			continue
+		opening += get_process_delta_time()
+		_set_iris(lerpf(IRIS_EYE, IRIS_OPEN, smoothstep(0.0, 1.0, opening / viewfinder_iris_open_seconds)), Vector2(0.5, 0.5))
+	_set_iris(IRIS_OPEN, Vector2(0.5, 0.5))
 	_aux_mode = AuxMode.VIEWFINDER
 	_vf_phase = &"settled"
 	_vf_ready_ms = Time.get_ticks_msec() + int(viewfinder_input_guard_seconds * 1000.0)
-	# After the first cinematic, with the leaves still over the reply: a short time to read the picture, then the cover slides.
+	# After the first cinematic, before the creature has been seen: the picture is held, empty, for a moment, and then something crawls into it.
 	if _flag(KEY_RECORDING_DONE) and not _flag(KEY_LEAF_REVEALED):
 		await _wait(viewfinder_read_seconds)
 		if _aux_alive(run) and _aux_mode == AuxMode.VIEWFINDER and not _flag(KEY_LEAF_REVEALED):
-			_begin_leaf_reveal()
+			_begin_creature_scene(run)
 
 
 ## The lens's own picture: the scene's camera at shot A with the 4:3 overlay; the ordinary shelter before the first cinematic, the bloodstained one after.
@@ -1629,16 +1912,18 @@ func _exit_viewfinder() -> void:
 
 func _leave_viewfinder(run: int) -> void:
 	_show_viewfinder_prompt(false)
+	# The picture closes to the round hole again, in the middle.
 	var close_in: float = 0.0
-	while close_in < 0.12:
+	while close_in < viewfinder_iris_close_seconds:
 		await get_tree().process_frame
 		if not _aux_alive(run):
 			return
 		if get_tree().paused:
 			continue
 		close_in += get_process_delta_time()
-		_set_occlusion(smoothstep(0.0, 0.12, close_in))
-	_set_occlusion(1.0)
+		_set_iris(lerpf(IRIS_OPEN, IRIS_EYE, smoothstep(0.0, 1.0, close_in / viewfinder_iris_close_seconds)), Vector2(0.5, 0.5))
+	_set_iris(IRIS_EYE, Vector2(0.5, 0.5))
+	# Under the circle: the ordinary world back before anything of it is seen.
 	set_world_state(WorldState.PRESENT)
 	_show_overlay(false)
 	_set_shot_light(false)
@@ -1650,9 +1935,8 @@ func _leave_viewfinder(run: int) -> void:
 	_free_cinema_camera()
 	var movement: PlayerMovementController = _get_movement()
 	if movement != null:
+		# The eye comes back from the eyecup and the hole slips away and opens: she keeps looking the way the lens looked (no turning about to where she stood before).
 		var duration: float = maxf(viewfinder_exit_seconds, 0.2)
-		var yaw_from: float = -deg_to_rad(movement.look_yaw)
-		var yaw_to: float = -deg_to_rad(_vf_saved_yaw)
 		var pitch_from: float = movement.look_pitch
 		var elapsed: float = 0.0
 		while elapsed < duration:
@@ -1662,11 +1946,11 @@ func _leave_viewfinder(run: int) -> void:
 			if get_tree().paused:
 				continue
 			elapsed += get_process_delta_time()
-			var u: float = smoothstep(0.0, 1.0, clampf(elapsed / duration, 0.0, 1.0))
+			var w: float = clampf(elapsed / duration, 0.0, 1.0)
+			var u: float = smoothstep(0.0, 1.0, w)
 			movement.gesture_offset = _vf_full_offset * (1.0 - u)
-			movement.look_yaw = -rad_to_deg(lerp_angle(yaw_from, yaw_to, u))
-			movement.look_pitch = lerpf(pitch_from, _vf_saved_pitch, u)
-			_set_occlusion(1.0 - smoothstep(0.0, duration * 0.6, elapsed))
+			movement.look_pitch = lerpf(pitch_from, clampf(_vf_saved_pitch, -20.0, 25.0), u)
+			_set_iris(lerpf(IRIS_EYE, IRIS_OPEN, smoothstep(0.1, 1.0, w)), Vector2(0.5, 0.5) + _iris_wander(elapsed, smoothstep(0.0, 0.6, w) * 0.6))
 	_finish_aux()
 
 
@@ -1680,29 +1964,109 @@ func _finish_aux() -> void:
 	_apply_investigation_state()
 
 
+## Kept for what gives the world back (`_finish_aux`, `_abort_aux`): any alpha at all means the round hole, none opens it.
 func _set_occlusion(alpha: float) -> void:
 	if alpha <= 0.001:
-		if _occlusion_layer != null and is_instance_valid(_occlusion_layer):
-			_occlusion_layer.visible = false
+		_set_iris(IRIS_OPEN, Vector2(0.5, 0.5))
+
+
+## The round hole of the eyecup: the screen is black outside a circle of `radius` (in screen heights) round `center` (0 to 1 on each axis), the world is seen inside it; a radius of `IRIS_OPEN` or more is no hole.
+func _set_iris(radius: float, center: Vector2) -> void:
+	_iris_radius = radius
+	_iris_center = center
+	if radius >= IRIS_OPEN - 0.001:
+		# No hole at all: the black over her view goes with it (this is also how an interrupted transition is put right).
+		_iris_black_alpha = 0.0
+		if _iris_black != null and is_instance_valid(_iris_black):
+			_iris_black.color.a = 0.0
+		if _iris_layer != null and is_instance_valid(_iris_layer):
+			_iris_layer.visible = false
 		return
 
-	if _occlusion_layer == null or not is_instance_valid(_occlusion_layer):
-		_occlusion_layer = CanvasLayer.new()
-		_occlusion_layer.name = "EyecupOcclusion"
-		# Over the viewfinder's picture and its hint, under the subtitles and the menus.
-		_occlusion_layer.layer = 14
-		add_child(_occlusion_layer)
-		_occlusion_rect = ColorRect.new()
-		_occlusion_rect.color = Color(0.0, 0.0, 0.0, 1.0)
-		_occlusion_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_occlusion_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_occlusion_layer.add_child(_occlusion_rect)
-	_occlusion_layer.visible = true
-	_occlusion_rect.color.a = clampf(alpha, 0.0, 1.0)
+	_ensure_iris_layer()
+	_iris_layer.visible = true
+	_iris_material.set_shader_parameter(&"center", center)
+	_iris_material.set_shader_parameter(&"radius", radius)
 
 
-## The first reading of the clipping: the view is hers no longer from the moment its reading is closed. The paper is set down over the tape where it lay (the inspect view flies it back to its source), then a still
-## shot from over the bench shows a hand move it aside, the way anyone would clear a paper off what lies under it (lifted a little, slid, turned a little, set down), and the tape is held in view before the view is
+## A plain black over the whole picture, `alpha` 0 to 1 (her eye against the eyecup): under the viewfinder's hole, over everything else of the scene.
+func _set_eye_black(alpha: float) -> void:
+	_iris_black_alpha = clampf(alpha, 0.0, 1.0)
+	if _iris_black_alpha <= 0.0 and (_iris_layer == null or not is_instance_valid(_iris_layer)):
+		return
+
+	_ensure_iris_layer()
+	_iris_black.color.a = _iris_black_alpha
+	if _iris_black_alpha > 0.0:
+		_iris_layer.visible = true
+	elif _iris_radius >= IRIS_OPEN - 0.001:
+		_iris_layer.visible = false
+
+
+func _ensure_iris_layer() -> void:
+	if _iris_layer != null and is_instance_valid(_iris_layer):
+		return
+
+	_iris_layer = CanvasLayer.new()
+	_iris_layer.name = "EyecupIris"
+	# Over the viewfinder's picture and its hint, under the subtitles and the menus.
+	_iris_layer.layer = 14
+	add_child(_iris_layer)
+	var shader: Shader = Shader.new()
+	shader.code = IRIS_SHADER
+	_iris_material = ShaderMaterial.new()
+	_iris_material.shader = shader
+	_iris_rect = ColorRect.new()
+	_iris_rect.material = _iris_material
+	_iris_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_iris_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_iris_layer.add_child(_iris_rect)
+	_iris_black = ColorRect.new()
+	_iris_black.name = "EyeBlack"
+	_iris_black.color = Color(0.0, 0.0, 0.0, 0.0)
+	_iris_black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_iris_black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_iris_layer.add_child(_iris_black)
+
+
+## How far the hole is from the middle of the screen `seconds` into its search (screen units): two slow, unrelated swings that die away with `amount` (1 is the first wide search, 0 is settled).
+func _iris_wander(seconds: float, amount: float) -> Vector2:
+	var swing: Vector2 = Vector2(sin(seconds * 6.3) * 0.65 + sin(seconds * 10.1 + 1.0) * 0.35, cos(seconds * 5.1 + 0.6) * 0.6 + sin(seconds * 8.7 + 2.0) * 0.4)
+	return (swing * 0.2 + Vector2(0.12, 0.08)) * amount * amount
+
+
+## Turns the held player's head, smoothly, toward a world point over `seconds` (only if it is more than a few degrees off where she looks: a gentle correction, never a snap). The look is driven the way the viewfinder's lean drives it.
+func _ease_look_to(point: Vector3, seconds: float, run: int) -> void:
+	var movement: PlayerMovementController = _get_movement()
+	var camera: Camera3D = _get_camera()
+	if movement == null or camera == null or _held == null or not is_instance_valid(_held):
+		return
+
+	var direction: Vector3 = (point - camera.global_position).normalized()
+	if rad_to_deg((-camera.global_basis.z).angle_to(direction)) < 6.0:
+		return
+
+	movement.gesture_direct = true
+	var local: Vector3 = _held.global_transform.basis.inverse() * direction
+	var yaw_from: float = -deg_to_rad(movement.look_yaw)
+	var pitch_from: float = movement.look_pitch
+	var yaw_to: float = atan2(-local.x, -local.z)
+	var pitch_to: float = clampf(-rad_to_deg(asin(clampf(local.y, -1.0, 1.0))), -35.0, 75.0)
+	var elapsed: float = 0.0
+	while elapsed < seconds:
+		await get_tree().process_frame
+		if not _aux_alive(run):
+			return
+		if get_tree().paused:
+			continue
+		elapsed += get_process_delta_time()
+		var u: float = smoothstep(0.0, 1.0, clampf(elapsed / maxf(seconds, 0.05), 0.0, 1.0))
+		movement.look_yaw = -rad_to_deg(lerp_angle(yaw_from, yaw_to, u))
+		movement.look_pitch = lerpf(pitch_from, pitch_to, u)
+
+
+## The first reading of the clipping: the view is hers no longer from the moment its reading is closed. The paper is set down over the tape where it lay (the inspect view flies it back to its source), then, from her own eyes (turned a little toward it if it is not in front of her), a
+## hand moves it aside, the way anyone would clear a paper off what lies under it (lifted a little, slid, turned a little, set down), and the tape is held in view before the view is
 ## hers again. The stage is written at the end (or at once if the scene is cut short), and `_apply_investigation_state` then puts the paper where it lies.
 func _begin_clipping_reveal() -> void:
 	var target: Node3D = _get_player()
@@ -1729,20 +2093,15 @@ func _clipping_reveal(run: int) -> void:
 		if not _aux_alive(run):
 			return
 		waited += get_process_delta_time()
-	await _wait(0.15)
+	await _wait(0.05)
 	if not _aux_alive(run):
 		return
 
-	_dissolve(0.4)
-	var camera: Camera3D = _cinema_camera()
-	var look_from: Vector3 = to_global(clipping_shot_position)
-	camera.global_transform = Transform3D(Basis.IDENTITY, look_from).looking_at(to_global(clipping_shot_target), Vector3.UP)
-	camera.fov = clipping_shot_fov
-	var eyes: Camera3D = _get_camera()
-	camera.environment = eyes.environment if eyes != null else null
-	camera.make_current()
-	_set_shot_light(true, photo_light_energy + 1.1)
-	await _wait(0.9)
+	# From her own eyes (no cut, no other camera): if the paper and the tape are not already in front of her she turns her head a little toward them, as anyone would, and a moment later the paper is moved.
+	await _ease_look_to(to_global(_clipping_home.origin), 0.5, run)
+	if not _aux_alive(run):
+		return
+	await _wait(0.1)
 	if not _aux_alive(run):
 		return
 
@@ -1771,38 +2130,25 @@ func _clipping_reveal(run: int) -> void:
 
 	_clipping_busy = false
 	_set_flag(KEY_CLIPPING_READ)
-	_dissolve(0.4)
-	_set_shot_light(false)
-	_back_to_her_eyes()
 	_finish_aux()
 
 
-## The leaves slide aside: a visible, physical move of the cover over the end of the trail (a short gust, no test, no hotspot). It is written at its START and finishes by itself whatever the player does
-## (they may step back from the viewfinder during it); the reply is exposed (and offers its reading) when it is over.
-func _begin_leaf_reveal() -> void:
-	if _flag(KEY_LEAF_REVEALED):
+## Three seconds into the picture (`viewfinder_read_seconds`) a human shadow, the one of the other places, is there beside the pillar and crawls (an animation), and in the middle of it the camera fails and the shadow strobes like a ghost,
+## and then is gone under a burst of static. It is seen through the lens only (`set_world_state` takes it out of every other look, the exit takes it out at once) and it is not replayed: a second look through the lens
+## shows the bloodstained shelter alone. It counts as SEEN only once it has been watched for `creature_seen_after_seconds` (or to its end): leaving sooner leaves it to come again at the next look. The reply lies by the pillar where it began, in the real world, once it has been seen.
+func _begin_creature_scene(run: int) -> void:
+	if _flag(KEY_LEAF_REVEALED) or _aux_mode != AuxMode.VIEWFINDER:
 		return
 
-	_set_flag(KEY_LEAF_REVEALED)
-	_leaf_busy = true
-	if letter != null:
-		letter.visible = true
-		letter.set_interaction_enabled(false)
-	if _leaf_tween != null and _leaf_tween.is_valid():
-		_leaf_tween.kill()
-	_leaf_tween = create_tween().set_parallel(true)
-	for i: int in _leaf_sheets.size():
-		var target: Transform3D = _leaf_displaced(i)
-		_leaf_tween.tween_property(_leaf_sheets[i], "transform", target, maxf(leaf_slide_seconds, 0.05)).set_delay(0.12 * float(i)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_leaf_tween.chain().tween_callback(_on_leaves_moved)
+	if _creature == null or not is_instance_valid(_creature):
+		_creature = ShadowCrawler.new()
+		_creature.name = "ShadowCrawler"
+		add_child(_creature)
+		_creature.build(creature_scale)
+	_creature.play(creature_path, creature_crawl_seconds)
 
 
-func _on_leaves_moved() -> void:
-	_leaf_busy = false
-	_apply_investigation_state()
-
-
-## The viewfinder's exit hint, with the keys really bound to the four movement actions (`[W/A/S/D] Step back` by default): a fresh movement input is what steps back.
+## The viewfinder's exit hint, as the payphone has its own: a key cap with the four movement keys and the words beside it ("Step away"), bottom right, in the inspect view's font (`KeyHint`).
 func _show_viewfinder_prompt(on: bool) -> void:
 	if on:
 		if _prompt_layer == null:
@@ -1810,28 +2156,36 @@ func _show_viewfinder_prompt(on: bool) -> void:
 			_prompt_layer.name = "ViewfinderPrompt"
 			_prompt_layer.layer = 12
 			add_child(_prompt_layer)
-			_prompt_label = Label.new()
-			_prompt_label.name = "Exit"
-			_prompt_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-			_prompt_label.offset_top = -86.0
-			_prompt_label.offset_bottom = -34.0
-			_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			_prompt_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			_prompt_label.add_theme_font_size_override(&"font_size", 26)
-			_prompt_label.add_theme_color_override(&"font_color", Color(0.9, 0.92, 0.86, 0.9))
-			_prompt_label.add_theme_color_override(&"font_outline_color", Color(0.0, 0.0, 0.0, 0.95))
-			_prompt_label.add_theme_constant_override(&"outline_size", 6)
-			_prompt_layer.add_child(_prompt_label)
-		_prompt_label.text = InputBindings.format_text("[{up}/{left}/{down}/{right}] " + tr("PROMPT_VIEWFINDER_EXIT"))
+			var root: Control = Control.new()
+			root.name = "Root"
+			root.set_anchors_preset(Control.PRESET_FULL_RECT)
+			root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_prompt_layer.add_child(root)
+			_prompt_hint = KeyHint.new()
+			_prompt_hint.name = "Exit"
+			_prompt_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			root.add_child(_prompt_hint)
+		var screen: Vector2 = get_viewport().get_visible_rect().size
+		var font_size: int = maxi(int(screen.y * 0.026), 15)
+		var font: Font = null
+		var inspect: PlayerInspectController = _get_inspect()
+		if inspect != null:
+			font = inspect.get_ui_font(false)
+		var keys: String = ""
+		for action: StringName in [&"up", &"left", &"down", &"right"]:
+			keys += InputBindings.get_binding_label(action, -1, true)
+		_prompt_hint.set_hint(keys, tr("OVERLOOK_PHONE_STEP_AWAY"), font_size, font)
+		_prompt_hint.position = Vector2(screen.x - _prompt_hint.size.x - screen.x * 0.04, screen.y * 0.93)
+		_prompt_hint.modulate.a = 1.0
 	if _prompt_layer != null:
 		_prompt_layer.visible = on
 
 
 # ---- The voluntary tape review ----
 
-## The tape, after the first cinematic: a dedicated mode with a transport row. The picture is the SAME deterministic rendering of the footage at a time the player chooses (the excerpt's clock runs from
-## `-rear_prefix_seconds`, the rear segment, to the excerpt's end): the camera, the cast and the dressing are pure functions of it, so reversing, pausing and searching are exact. No remembered dialogue, no captions.
-## The first visit is cued on the first frame of the Emily excerpt (the tape's counter says so: it is not at zero); later visits resume where it was left. Nothing physical happens because of a frame.
+## The tape, after the first cinematic: a dedicated mode with a transport row. The picture is the SAME deterministic rendering of the footage at a time the player chooses (the tape's clock runs from the excerpt's start to
+## the end of the rear segment, which is wound to): the camera, the cast and the dressing are pure functions of it, so reversing, pausing and searching are exact. No remembered dialogue, no captions.
+## The first visit starts at the beginning of the tape; later visits resume where it was left. Nothing physical happens because of a frame.
 func _on_review_requested() -> void:
 	if _stage == Stage.RUNNING or _aux_mode != AuxMode.NONE or not _is_done():
 		return
@@ -1855,7 +2209,7 @@ func _on_review_requested() -> void:
 	_footage_playing = false
 	_freeze_wind(true)
 	var saved: Variant = SaveManager.get_state_value(STATE_SECTION, KEY_REVIEW_PLAYHEAD, null)
-	_review_time = clampf(float(saved), -footage.rear_prefix_seconds, footage.length_seconds) if saved != null else review_start_excerpt_seconds
+	_review_time = clampf(float(saved), 0.0, footage.tape_length()) if saved != null else review_start_excerpt_seconds
 	_review_state = &"pause"
 	_review_machine_on = false
 	_review_held_actions.clear()
@@ -1893,7 +2247,7 @@ func _review_apply() -> void:
 		_overlay.set_no_picture(_review_state == &"stop")
 	if _review_ui != null and is_instance_valid(_review_ui):
 		_review_ui.set_state(_review_state)
-	if _review_time < 0.0 and not _flag(KEY_REAR_SEEN):
+	if _review_time > footage.length_seconds and not _flag(KEY_REAR_SEEN):
 		_set_flag(KEY_REAR_SEEN)
 
 
@@ -1908,7 +2262,7 @@ func _review_toggle_play() -> void:
 	if _review_state == &"play":
 		_review_set_state(&"pause")
 	else:
-		if _review_time >= footage.length_seconds - 0.01:
+		if _review_time >= footage.tape_length() - 0.01:
 			return
 		_review_set_state(&"play")
 
@@ -1959,14 +2313,14 @@ func _review_process(delta: float) -> void:
 	var step: float = delta * (1.0 if _review_state == &"play" else review_search_speed)
 	if _review_state == &"rew":
 		_review_time -= step
-		if _review_time <= -footage.rear_prefix_seconds:
-			_review_time = -footage.rear_prefix_seconds
+		if _review_time <= 0.0:
+			_review_time = 0.0
 			_review_set_state(&"pause")
 			return
 	else:
 		_review_time += step
-		if _review_time >= footage.length_seconds:
-			_review_time = footage.length_seconds
+		if _review_time >= footage.tape_length():
+			_review_time = footage.tape_length()
 			_review_set_state(&"pause")
 			return
 	_review_apply()
@@ -2166,11 +2520,47 @@ func _wind_node() -> Node:
 	return _wind
 
 
-## Keeps the forest's plants out of the lens of the tape's camera (`VegetationWind.set_camera_clearing`): none shrinks unless the camera of the recording is on screen and walks past it. `on` false puts them all back.
-func _clear_vegetation_round(on: bool, camera_position: Vector3 = Vector3.ZERO) -> void:
+## Keeps the forest's plants out of the way of the tape's camera (`VegetationWind.set_clearing_segment`): for each shot the plants within `vegetation_clear_inner` metres of the line it walks are gone, set
+## once when the shot begins (the cut hides it), so that none is ever seen to shrink and none passes through the lens. `passage` is the shot (`&""` or `&"A"` or a passage that has no walk: none cleared).
+func _clear_vegetation_for(passage: StringName) -> void:
+	if passage == _cleared_passage:
+		return
+
+	_cleared_passage = passage
 	var wind: Node = _wind_node()
-	if wind != null and wind.has_method("set_camera_clearing"):
-		wind.call("set_camera_clearing", camera_position, vegetation_clear_inner if on else 0.0, vegetation_clear_outer)
+	if wind == null or not wind.has_method("set_clearing_segment"):
+		return
+
+	var a: Vector3 = Vector3.ZERO
+	var b: Vector3 = Vector3.ZERO
+	match passage:
+		&"walk":
+			if footage.walk_start != null and footage.walk_end != null:
+				a = footage.walk_start.global_position
+				b = footage.walk_end.global_position
+		&"walk2":
+			if footage.walk2_start != null and footage.walk2_end != null:
+				a = footage.walk2_start.global_position
+				b = footage.walk2_end.global_position
+		&"aftermath":
+			if footage.shot_c != null and footage.creep_end != null:
+				a = footage.shot_c.global_position
+				b = footage.creep_end.global_position
+		&"rear":
+			if footage.rear_key_positions.size() >= 2:
+				a = to_global(footage.rear_key_positions[0])
+				b = to_global(footage.rear_key_positions[footage.rear_key_positions.size() - 1])
+		_:
+			wind.call("set_clearing_segment", Vector3.ZERO, Vector3.ZERO, 0.0, vegetation_clear_band)
+			return
+	wind.call("set_clearing_segment", a, b, vegetation_clear_inner, vegetation_clear_band)
+
+
+func _clear_vegetation_off() -> void:
+	_cleared_passage = &""
+	var wind: Node = _wind_node()
+	if wind != null and wind.has_method("set_clearing_segment"):
+		wind.call("set_clearing_segment", Vector3.ZERO, Vector3.ZERO, 0.0, vegetation_clear_band)
 
 
 ## In the recording the telephone token (polished brass, which looks black under the tape's flat light: a metal shows only what it reflects) is a bright, slightly glowing brass, so that it reads as a coin. Only on

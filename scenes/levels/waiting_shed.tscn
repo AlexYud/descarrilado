@@ -15,6 +15,7 @@
 [ext_resource type="Script" path="res://scripts/levels/shelter_footage.gd" id="15_footage"]
 [ext_resource type="ArrayMesh" uid="uid://bfoll4ywqfmm4" path="res://assets/models/foliage/medium_foliage_01/medium_foliage_01_mesh.tres" id="16_fern_medium"]
 [ext_resource type="ArrayMesh" path="res://assets/models/foliage/ground_leaves_01/ground_leaves_01_mesh.tres" id="18_leaves"]
+[ext_resource type="Script" path="res://scripts/environment/shed_ground_dressing.gd" id="19_dressing"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_shed_steps"]
 size = Vector3(15.4, 6, 11)
@@ -25,7 +26,7 @@ size = Vector3(4.6, 6, 44)
 ; The waiting shed: Sophia's investigation on the bench (see WaitingShedSequence). Positions are in the space of this scene's root;
 ; in the dream the root is at world (65, -12.452, -16). The bench holds, seen from its open front (+Z): at its left (west) end the notebook, in the middle the main clipping lying OVER the
 ; videotape, at its right end the supposed sister's note; Sophia's backpack stands on the ground beside the bench. The hinged box is gone: the token is no longer in it (it comes with the final letter).
-[node name="WaitingShed" type="Node3D" node_paths=PackedStringArray("vhs", "ficha", "vhs_set_down", "effects_root", "archive_dressing", "archive_foreground", "footage", "camcorder", "shot_copy", "shot_recording", "shot_photo", "clipping", "clipping_aside", "letter", "leaf_cover", "investigation_root", "camcorder_cover", "rear_annex", "platform", "track", "marker_group")]
+[node name="WaitingShed" type="Node3D" node_paths=PackedStringArray("vhs", "ficha", "vhs_set_down", "effects_root", "archive_dressing", "archive_foreground", "footage", "camcorder", "shot_copy", "shot_recording", "shot_photo", "clipping", "clipping_aside", "letter", "leaf_cover", "investigation_root", "ground_dressing", "camcorder_cover", "rear_annex", "platform", "track", "marker_group")]
 script = ExtResource("1_sequence")
 vhs = NodePath("Platform/PersonalEffects/VhsTape")
 ficha = NodePath("Platform/RearAnnex/SophiaFicha")
@@ -44,6 +45,7 @@ letter = NodePath("Platform/Investigation/FamilyReplyLetter")
 leaf_cover = NodePath("Platform/Investigation/LeafCover")
 investigation_root = NodePath("Platform/Investigation")
 camcorder_cover = NodePath("CamcorderCover")
+ground_dressing = NodePath("GroundDressing")
 rear_annex = NodePath("Platform/RearAnnex")
 platform = NodePath("Platform")
 track = NodePath("Track")
@@ -159,25 +161,6 @@ rotation_degrees = Vector3(-90, 80, 0)
 
 [node name="LeafCover" type="Node3D" parent="Platform/Investigation"]
 
-[node name="Leaves0" type="MeshInstance3D" parent="Platform/Investigation/LeafCover"]
-transform = Transform3D(0.1692, 0, 0.0616, 0, 0.18, 0, -0.0616, 0, 0.1692, -5.3, 0.058, -3.66)
-mesh = ExtResource("18_leaves")
-
-[node name="Leaves1" type="MeshInstance3D" parent="Platform/Investigation/LeafCover"]
-transform = Transform3D(-0.0964, 0, 0.1149, 0, 0.15, 0, -0.1149, 0, -0.0964, -5.4, 0.072, -3.74)
-mesh = ExtResource("18_leaves")
-
-[node name="Leaves2" type="MeshInstance3D" parent="Platform/Investigation/LeafCover"]
-transform = Transform3D(-0.0445, 0, -0.1221, 0, 0.13, 0, 0.1221, 0, -0.0445, -5.22, 0.085, -3.58)
-mesh = ExtResource("18_leaves")
-
-[node name="FernEast" type="MeshInstance3D" parent="Platform/Investigation/LeafCover"]
-transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, -4.85, 0.0, -3.5)
-mesh = ExtResource("16_fern_medium")
-
-[node name="FernWestFoot" type="MeshInstance3D" parent="Platform/Investigation/LeafCover"]
-transform = Transform3D(0.36, 0, 0.09, 0, 0.38, 0, -0.09, 0, 0.36, -6.2, 0.0, -3.55)
-mesh = ExtResource("16_fern_medium")
 
 [node name="FamilyReplyLetter" parent="Platform/Investigation" instance=ExtResource("17_letter")]
 position = Vector3(-5.3, 0.0525, -3.66)
@@ -398,3 +381,9 @@ position = Vector3(-5.4, 0.55, -9.05)
 script = ExtResource("14_shot")
 fov = 45.0
 target = NodePath("../RearTarget")
+
+; The ground of the clearing and the thicket round the camcorder, made in code (ShedGroundDressing): patches of moss, humus and pine needles, leaf drifts, rocks, low plants; a dense ring of plants round
+; the camcorder with a narrow trodden path from the slab's corner to the cameraman's place behind the eyepiece. The thicket goes under CamcorderCover.
+[node name="GroundDressing" type="Node3D" parent="." node_paths=PackedStringArray("cover")]
+script = ExtResource("19_dressing")
+cover = NodePath("../CamcorderCover")

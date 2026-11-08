@@ -1,8 +1,9 @@
 extends Node3D
 class_name ShelterFootage
 
-## The waiting shed's archival recording: the EXCERPT, about 62 seconds, silent, in four shots joined by three hard cuts, preceded on the full TAPE by a short REAR segment (see `rear_prefix_seconds`: the excerpt's
-## clock is 0 to `length_seconds`; the rear segment lives at excerpt times from `-rear_prefix_seconds` to 0, so the TAPE's own time is the excerpt's plus the prefix). Everything is a pure function of one clock, `seek(t)` (the cast) and
+## The waiting shed's archival recording: the EXCERPT, about 62 seconds, silent, in four shots joined by three hard cuts, followed on the full TAPE by a short REAR segment (see `rear_seconds`: the excerpt's
+## clock is 0 to `length_seconds`; the rear segment lives at times from `length_seconds` to `length_seconds + rear_seconds`, so the tape's own time IS the excerpt's clock and the rear segment is the last thing on it: the
+## player has to wind the tape to its end to find it). Everything is a pure function of one clock, `seek(t)` (the cast) and
 ## `camera_at(t)` (the picture's camera): a pause, a replay from any time, a seek backwards or a cancel gives the same picture. Nothing here is a timer, a tween, a callback or a random number.
 ##
 ##   A (0 to `cut_walk_seconds`, 20 s): a hidden, locked camera outside the shelter, behind a few ferns, watches Emily sit on the bench. She waits (`turn_start_seconds`, 10 s of it), turns her head and
@@ -112,13 +113,13 @@ class_name ShelterFootage
 ## How much darker the stains are drawn than the capture tool's dressing (a multiplier on their colour), so that they read through the tape look.
 @export var stain_darkening: float = 0.3
 
-@export_category("The rear segment (earlier on the tape, voluntary review only)")
-## How long the rear segment is (seconds). The excerpt starts this long after the start of the tape. It is never part of the directed first viewing.
-@export var rear_prefix_seconds: float = 8.0
+@export_category("The rear segment (the end of the tape, voluntary review only)")
+## How long the rear segment is (seconds). It starts where the excerpt ends. It is never part of the directed first viewing.
+@export var rear_seconds: float = 8.0
 ## The low camera behind the shelter (a marker with a target and a lens) and the blood words on the rear face of the low wall (in the space of this node: the middle of the words, their size).
 @export var shot_rear: ShotMarker
-@export var rear_message_at: Vector3 = Vector3(-4.90, 0.40, -7.353)
-@export var rear_message_size: Vector2 = Vector2(0.52, 0.17)
+@export var rear_message_at: Vector3 = Vector3(-4.90, 0.315, -7.353)
+@export var rear_message_size: Vector2 = Vector2(0.52, 0.34)
 ## A very small hand drift of the rear camera (metres), the only movement of the segment.
 @export var rear_drift_metres: float = 0.004
 ## From this time into the rear segment (s) the camera's lamp comes up, narrow, on the token.
@@ -260,7 +261,7 @@ func _clear_blood_view() -> void:
 
 ## "A", "walk", "aftermath" or "walk2": the shot the source is in at `time`.
 func passage_at(time: float) -> StringName:
-	if time < 0.0:
+	if time > length_seconds:
 		return &"rear"
 	if time >= cut_walk2_seconds:
 		return &"walk2"
@@ -282,7 +283,8 @@ func seek(time: float) -> void:
 	marina.visible = passage == &"A"
 	if rear_message != null:
 		rear_message.visible = passage == &"rear"
-	aftermath.visible = passage == &"aftermath"
+	# The bloodstained shelter is the same one in the aftermath's shot and in the rear segment (the end of the tape).
+	aftermath.visible = passage == &"aftermath" or passage == &"rear"
 	if litter != null:
 		litter.visible = passage == &"walk"
 	if litter2 != null:
@@ -302,7 +304,7 @@ func camera_at(time: float) -> Dictionary:
 		&"walk2":
 			return _walk_camera(time - cut_walk2_seconds, length_seconds - cut_walk2_seconds, walk2_start, walk2_end, _walk2_ground, true)
 		&"rear":
-			return _rear_camera(time + rear_prefix_seconds)
+			return _rear_camera(time - length_seconds)
 		&"aftermath":
 			return _aftermath_camera(time - cut_aftermath_seconds)
 	return {"transform": shot_a.aimed_transform() if shot_a != null else Transform3D.IDENTITY, "fov": shot_a.fov if shot_a != null else 26.0}
@@ -470,25 +472,25 @@ func _keyed_vector(times: PackedFloat32Array, values: PackedVector3Array, count:
 	return values[i] * (2.0 * u3 - 3.0 * u2 + 1.0) + m0 * span * (u3 - 2.0 * u2 + u) + values[i + 1] * (-2.0 * u3 + 3.0 * u2) + m1 * span * (u3 - u2)
 
 
-## The whole tape's length in seconds: the rear segment and the excerpt.
+## The whole tape's length in seconds: the excerpt and the rear segment after it.
 func tape_length() -> float:
-	return rear_prefix_seconds + length_seconds
+	return length_seconds + rear_seconds
 
 
-## The tape's own time (0 is the start of the tape) of an excerpt time, and the other way round. The directed first viewing and the replay of her greeting run on the excerpt's clock; the review's counter runs on the tape's.
+## The tape's own time (0 is the start of the tape) of an excerpt time, and the other way round: the same clock (the rear segment comes after the excerpt, so nothing is shifted).
 func tape_time_of(excerpt_time: float) -> float:
-	return excerpt_time + rear_prefix_seconds
+	return excerpt_time
 
 
 func excerpt_time_of(tape_time: float) -> float:
-	return tape_time - rear_prefix_seconds
+	return tape_time
 
 
 ## The words in blood on the rear wall, as a quad on the wall's outside face (facing -Z), in the language of the text: `RECORDING_BLOOD_WORDS` ("ME LIGA" / "CALL ME"). Rebuilt when the language changes.
 func _build_rear_message() -> void:
 	if rear_message != null and is_instance_valid(rear_message):
 		rear_message.queue_free()
-	rear_message = ShelterAftermathDressing.build_words(self, "RearMessage", tr("RECORDING_BLOOD_WORDS").to_upper(), rear_message_at, rear_message_size, 180.0)
+	rear_message = ShelterAftermathDressing.build_words(self, "RearMessage", tr("RECORDING_BLOOD_WORDS").to_upper(), rear_message_at, rear_message_size, 180.0, 1.0)
 	rear_message.visible = false
 	var copy: StandardMaterial3D = (rear_message.material_override as StandardMaterial3D).duplicate() as StandardMaterial3D
 	copy.albedo_color = Color(minf(stain_darkening * 1.5, 1.0), minf(stain_darkening * 1.5, 1.0), minf(stain_darkening * 1.5, 1.0), 1.0)

@@ -14,6 +14,11 @@ class_name SeatedFigure
 
 const MODEL: String = "res://assets/models/characters/basic_model/basic_model_rigged.tscn"
 const PREFIX: String = "mixamorig_"
+## The sitting animation (Mixamo, no skin) the body is posed from, and the moment of it used: see `MixamoPose`. The arms are not the clip's: the sequence puts the hands where it wants them (`_reach`).
+const SITTING: String = "res://assets/animations/mixamo/sitting.fbx"
+const SITTING_TIME: float = 2.0
+## How far (degrees) each bone of the trunk is turned forward on top of the clip's sitting pose, to lean to the table.
+const SIT_LEAN: Array = [["Spine", 8.0], ["Spine1", 10.0], ["Spine2", 8.0], ["Neck", 6.0], ["Head", 6.0]]
 
 ## (Vertex colours of the old, plain look: dark clothes, a dim skin, black hair. The figure is a shadow now, see `GHOST_SHADER`; they remain in the mesh.)
 const CLOTH: Color = Color(0.07, 0.08, 0.11)
@@ -61,6 +66,10 @@ void fragment() {
 
 ## How far the head has been lowered from its resting pose (degrees), see `lower_head`.
 var head_bow_degrees: float = 0.0
+## How far over the ground the soles are: negative when they are in the ground (the body sits on the bench, its feet go where the animation puts them); set by `build`.
+var feet_clearance: float = 0.0
+## The rotations the sitting animation gave the bones (empty when the body was posed by hand).
+var _sit_base: Dictionary = {}
 
 var _scale: float = 1.0
 var _ghost: ShaderMaterial = null
@@ -91,13 +100,32 @@ func build(seat_height: float, figure_scale: float, reach: Dictionary) -> void:
 	_colour_the_body()
 	_sort_vertices()
 
-	_solve_legs(seat_height / figure_scale)
-	_pose_trunk()
+	var sitting: MixamoPose = MixamoPose.load_clip(SITTING, skeleton, _bones)
+	if sitting != null:
+		# Posed from the animation (legs, trunk, head): the arms are put at the table below.
+		_rotations.clear()
+		skeleton.reset_bone_poses()
+		var locals: Array[Quaternion] = sitting.sample(skeleton, SITTING_TIME)
+		for bone: int in skeleton.get_bone_count():
+			_set_rotation(bone, locals[bone])
+		# Leaning to the table, shoulders rounded, the head lowered a little (on top of what the clip has).
+		for lean: Array in SIT_LEAN:
+			var index: int = int(_bones[String(lean[0])])
+			_set_rotation(index, (_rotations[index] as Quaternion) * Quaternion(Vector3.RIGHT, deg_to_rad(float(lean[1]))))
+		_sit_base = _rotations.duplicate()
+	else:
+		_solve_legs(seat_height / figure_scale)
+		_pose_trunk()
 
 	var extent: Dictionary = _extent()
 	var feet_low: float = float(extent["feet"])
 	var hips_z: float = _global_pose(int(_bones["Hips"])).origin.z
-	model.position.y = -feet_low * figure_scale
+	if sitting != null:
+		# The lowest point of the pelvis is on the bench, exactly: neither floating over it nor sunk into it.
+		model.position.y = seat_height - float(extent["pelvis"]) * figure_scale
+	else:
+		model.position.y = -feet_low * figure_scale
+	feet_clearance = feet_low * figure_scale + model.position.y
 	# The seat is on the bench's centre line: the pelvis (the hips bone) is over the origin.
 	model.position.z = -hips_z * figure_scale
 
@@ -106,16 +134,16 @@ func build(seat_height: float, figure_scale: float, reach: Dictionary) -> void:
 	var hold: Vector3 = reach.get("hold", Vector3(0.2, 0.85, 0.6)) as Vector3
 	var rest: Vector3 = reach.get("rest", Vector3(-0.2, seat_height + 0.12, 0.25)) as Vector3
 	var outward: float = 1.0 if holding == "Left" else -1.0
-	hold_error = _reach(holding, _to_model(hold, feet_low, hips_z), Vector3(outward * 0.5, -1.0, -0.2))
-	_reach(resting, _to_model(rest, feet_low, hips_z), Vector3(-outward * 0.5, -1.0, -0.2))
+	hold_error = _reach(holding, _to_model(hold, model.position.y, hips_z), Vector3(outward * 0.5, -1.0, -0.2))
+	_reach(resting, _to_model(rest, model.position.y, hips_z), Vector3(-outward * 0.5, -1.0, -0.2))
 	hold_point = hold
 	var head: Vector3 = _global_pose(int(_bones["Head"])).origin
-	head_point = Vector3(head.x * figure_scale, (head.y - feet_low) * figure_scale + 0.1, (head.z - hips_z) * figure_scale)
+	head_point = Vector3(head.x * figure_scale, head.y * figure_scale + model.position.y + 0.1, (head.z - hips_z) * figure_scale)
 
 
 ## A point of the figure's own frame in the model's units.
-func _to_model(point: Vector3, feet_low: float, hips_z: float) -> Vector3:
-	return Vector3(point.x / _scale, point.y / _scale + feet_low, point.z / _scale + hips_z)
+func _to_model(point: Vector3, offset_y: float, hips_z: float) -> Vector3:
+	return Vector3(point.x / _scale, (point.y - offset_y) / _scale, point.z / _scale + hips_z)
 
 
 ## The lowest point of the pelvis and of the feet (in the model's own units), skinned by hand.
@@ -295,6 +323,10 @@ func lower_head(degrees: float, seconds: float) -> void:
 
 func _set_head_bow(degrees: float) -> void:
 	head_bow_degrees = degrees
+	if not _sit_base.is_empty():
+		_set_rotation(int(_bones["Neck"]), (_sit_base[int(_bones["Neck"])] as Quaternion) * Quaternion(Vector3.RIGHT, deg_to_rad(degrees * 0.35)))
+		_set_rotation(int(_bones["Head"]), (_sit_base[int(_bones["Head"])] as Quaternion) * Quaternion(Vector3.RIGHT, deg_to_rad(degrees * 0.65)))
+		return
 	_rotate("Neck", [[Vector3.RIGHT, 8.0 + degrees * 0.35]])
 	_rotate("Head", [[Vector3.BACK, -3.0], [Vector3.RIGHT, 10.0 + degrees * 0.65]])
 

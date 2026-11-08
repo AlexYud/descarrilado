@@ -1249,6 +1249,9 @@ msgstr ""
 msgid "CAPTION_SHED_TALK_14"
 msgstr ""
 
+msgid "CAPTION_SHED_TALK_FORGIVEN"
+msgstr ""
+
 msgid "CAPTION_SHED_TALK_15"
 msgstr ""
 

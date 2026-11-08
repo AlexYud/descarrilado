@@ -11,7 +11,7 @@ uniform float roughness : hint_range(0.0, 1.0) = 0.5;
 uniform float alpha_scissor : hint_range(0.0, 1.0) = 0.5;
 
 void vertex() {
-	VERTEX += wind_local_offset(VERTEX, MODEL_MATRIX, CAMERA_POSITION_WORLD, TIME);
+	VERTEX += wind_local_offset(VERTEX, MODEL_MATRIX, CAMERA_POSITION_WORLD, TIME) + actor_local_offset(VERTEX, MODEL_MATRIX, TIME);
 	VERTEX = clearing_apply(VERTEX, MODEL_MATRIX);
 }
 

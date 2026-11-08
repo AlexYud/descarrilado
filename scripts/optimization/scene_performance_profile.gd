@@ -173,6 +173,10 @@ func _apply_to_node(node: Node) -> void:
 
 
 func _configure_camera(camera: Camera3D) -> void:
+	# A camera that keeps its own render distance (the waiting shed's tape) is left as it is.
+	if camera.has_meta(&"keep_far"):
+		return
+
 	camera.far = maxf(
 		camera_far_distance,
 		camera.near + 1.0

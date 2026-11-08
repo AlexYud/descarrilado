@@ -24,7 +24,7 @@ const EVIDENCE: Dictionary = {
 	"READABLE_HELENA_NOTICE": ["[b]SEARCH FOR HELENA CLARKE CONTINUES[/b]\n\nHelena Clarke, who was born and raised in the Fenda, has been missing since last week. According to information received by the search team, she was last seen near the railway line.\n\nHer family asks that any information about her whereabouts be reported to the local station.", "[b]CONTINUAM AS BUSCAS POR HELENA CLARKE[/b]\n\nHelena Clarke, nascida e criada na Fenda, continua desaparecida desde a semana passada. Segundo as informações recebidas pela equipe de busca, ela foi vista pela última vez nas proximidades da linha férrea.\n\nA família pede que qualquer informação sobre seu paradeiro seja comunicada ao posto local."],
 	"ITEM_FAMILY_LETTER_NAME": ["Reply from Emily's Family", "Resposta da família de Emily"],
 	"ITEM_FAMILY_LETTER_DESCRIPTION": ["A short reply to Sophia's questions. The edges of the paper are damp.", "Uma resposta curta às perguntas de Sophia. O papel está úmido nas bordas."],
-	"READABLE_FAMILY_LETTER": ["Sophia,\n\nI don't know who you spoke to. Emily doesn't have a sister.", "Sophia,\n\nNão sei com quem você falou. A Emily não tem irmã."],
+	"READABLE_FAMILY_LETTER": ["Sophia,\n\nEmily doesn't have a sister. I don't know who gave you that tape, but if I were you I wouldn't watch it again, especially the ending. She said it was meant for you.", "Sophia,\n\nA Emily não tem irmã, não sei quem te deu essa fita, mas se eu fosse você não assistiria ela de novo, especialmente o final. Ela disse que era pra você."],
 	"ITEM_SOPHIA_FICHA_NAME": ["Sophia's Telephone Token", "Ficha de Sophia"],
 	"ITEM_SOPHIA_FICHA_DESCRIPTION": ["A brass telephone token found in a recess behind the shelter.", "Uma ficha de telefone de latão, encontrada numa reentrância atrás do abrigo."],
 }
@@ -53,7 +53,8 @@ const CAPTIONS: Dictionary = {
 	"CAPTION_SHED_TALK_11": ["No.", "Não.", "JULIANA"],
 	"CAPTION_SHED_TALK_12": ["I have to work tomorrow.", "Eu tenho que trabalhar amanhã.", "JULIANA"],
 	"CAPTION_SHED_TALK_13": ["I don't want to leave the house thinking about this.", "Não quero sair de casa pensando nisso.", "JULIANA"],
-	"CAPTION_SHED_TALK_14": ["I'm sorry.", "Desculpa.", "SOPHIA"],
+	"CAPTION_SHED_TALK_14": ["You're right, I'm sorry.", "Você tem razão, desculpa.", "SOPHIA"],
+	"CAPTION_SHED_TALK_FORGIVEN": ["It's okay.", "Tudo bem.", "JULIANA"],
 	"CAPTION_SHED_TALK_15": ["Want to watch Dead Poets Society?", "Quer ver Sociedade dos Poetas Mortos?", "JULIANA"],
 	"CAPTION_SHED_TALK_16": ["Sure. Only if we make brigadeiro first?", "Claro. Só se fizermos um brigadeiro antes?", "SOPHIA"],
 }

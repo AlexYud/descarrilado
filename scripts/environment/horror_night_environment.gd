@@ -886,6 +886,9 @@ func _update_dream_camera_distance_for_altitude(
 
 	if active_camera == null:
 		return
+	# A camera that keeps its own render distance (the waiting shed's tape) is left as it is.
+	if active_camera.has_meta(&"keep_far"):
+		return
 
 	var blend: float = _get_dream_visibility_blend(altitude)
 	var target_far_distance: float = lerpf(
@@ -924,6 +927,9 @@ func _apply_forest_camera_distance() -> void:
 
 	if active_camera == null:
 		return
+	# A camera that keeps its own render distance (the waiting shed's tape) is left as it is.
+	if active_camera.has_meta(&"keep_far"):
+		return
 
 	active_camera.far = maxf(
 		active_camera.near + 1.0,
@@ -935,6 +941,9 @@ func _restore_dream_camera_distance() -> void:
 	var active_camera: Camera3D = get_viewport().get_camera_3d()
 
 	if active_camera == null:
+		return
+	# A camera that keeps its own render distance (the waiting shed's tape) is left as it is.
+	if active_camera.has_meta(&"keep_far"):
 		return
 
 	active_camera.far = maxf(

@@ -56,9 +56,9 @@ func _run() -> void:
 			only = argument.get_slice("=", 1)
 	var checks: Array[Array] = [
 		["strings", _check_strings_and_assets], ["viewfinder", _check_viewfinder_before_the_cinematic], ["input", _check_viewfinder_input_rules],
-		["after", _check_viewfinder_after_the_cinematic], ["slide", _check_leaving_during_the_slide], ["hidden", _check_hidden_means_hidden],
+		["after", _check_viewfinder_after_the_cinematic], ["creature", _check_leaving_during_the_creature], ["hidden", _check_hidden_means_hidden], ["dressing", _check_ground_dressing],
 		["letter", _check_letter_starts_nothing], ["token", _check_token_in_the_recess], ["review", _check_review], ["reviewkey", _check_review_by_key], ["clipping", _check_clipping_reveal], ["rear", _check_rear_handheld], ["seek", _check_seeking],
-		["cue", _check_camcorder_cue], ["cancel", _check_cancel_from_every_phase], ["loads", _check_loads_at_every_stage], ["pause", _check_pause_in_the_viewfinder],
+		["cue", _check_camcorder_cue], ["cancel", _check_cancel_from_every_phase], ["loads", _check_loads_at_every_stage], ["pause", _check_pause_in_the_viewfinder], ["skip", _check_skip_recording],
 	]
 	for entry: Array in checks:
 		if only.is_empty() or only.split(",").has(entry[0]):
@@ -126,7 +126,7 @@ func _check_strings_and_assets() -> void:
 	var expected: Dictionary = {
 		"ITEM_FAMILY_LETTER_NAME": ["Reply from Emily's Family", "Resposta da família de Emily"],
 		"ITEM_FAMILY_LETTER_DESCRIPTION": ["A short reply to Sophia's questions. The edges of the paper are damp.", "Uma resposta curta às perguntas de Sophia. O papel está úmido nas bordas."],
-		"READABLE_FAMILY_LETTER": ["Sophia,\n\nI don't know who you spoke to. Emily doesn't have a sister.", "Sophia,\n\nNão sei com quem você falou. A Emily não tem irmã."],
+		"READABLE_FAMILY_LETTER": ["Sophia,\n\nEmily doesn't have a sister. I don't know who gave you that tape, but if I were you I wouldn't watch it again, especially the ending. She said it was meant for you.", "Sophia,\n\nA Emily não tem irmã, não sei quem te deu essa fita, mas se eu fosse você não assistiria ela de novo, especialmente o final. Ela disse que era pra você."],
 		"ITEM_SOPHIA_FICHA_DESCRIPTION": ["A brass telephone token found in a recess behind the shelter.", "Uma ficha de telefone de latão, encontrada numa reentrância atrás do abrigo."],
 		"PROMPT_VIEWFINDER_EXIT": ["Step back", "Afastar-se"],
 		"PROMPT_REVIEW_TAPE": ["Review tape", "Revisar fita"],
@@ -149,7 +149,7 @@ func _check_strings_and_assets() -> void:
 	_expect(not shed.letter.visible and not shed.letter.can_interact(player), "and it is not in the world at the start")
 	_expect(shed.camcorder_cue_delay_seconds >= 1.2 and shed.camcorder_cue_delay_seconds <= 1.8, "the camcorder's own sound comes 1.2 to 1.8 s after the control (%.2f s)" % shed.camcorder_cue_delay_seconds)
 	_expect(shed.viewfinder_enter_seconds >= 1.2 and shed.viewfinder_enter_seconds <= 1.8 and shed.viewfinder_exit_seconds >= 0.4 and shed.viewfinder_exit_seconds <= 0.7, "the lean lasts 1.2 to 1.8 s and the withdrawal 0.4 to 0.7 s")
-	_expect(shed.footage.rear_prefix_seconds == 8.0 and absf(shed.footage.tape_length() - 70.0) < 0.001 and shed.footage.tape_time_of(0.0) == 8.0 and shed.footage.excerpt_time_of(8.0) == 0.0, "the tape is 70 s: the rear segment is its first 8 s and the excerpt starts at 8 s")
+	_expect(shed.footage.rear_seconds == 8.0 and absf(shed.footage.tape_length() - 70.0) < 0.001 and shed.footage.tape_time_of(0.0) == 0.0 and shed.footage.excerpt_time_of(8.0) == 8.0, "the tape is 70 s: the excerpt is its first 62 s and the rear segment (CALL ME) its last 8 s")
 	await _free_level()
 
 
@@ -167,7 +167,10 @@ func _check_viewfinder_before_the_cinematic() -> void:
 	_expect(bool(run["settled"]), "the viewfinder is reached")
 	_expect(bool(run["held"]) and bool(run["never_walked_on_input"]), "using the camcorder holds the player the whole time")
 	_expect(float(run["lean"]) >= 1.2 and float(run["lean"]) <= 1.85, "the eye leans to the eyecup for 1.2 to 1.8 s (%.2f s)" % float(run["lean"]))
-	_expect(float(run["occlusion_at_cut"]) >= 0.99 and bool(run["cut_hidden"]), "the cut from her eye to the lens happens under full black (alpha %.2f)" % float(run["occlusion_at_cut"]))
+	_expect(int(run["circle_on_her_view"]) == 0, "her own view is never circled: nothing but black ever covers it before the cut (%d frames with a circle on it)" % int(run["circle_on_her_view"]))
+	_expect(float(run["black_before_cut"]) > 0.99 and float(run["black_at_cut"]) > 0.99, "the cut from her eye to the lens happens in full black (%.2f at the cut)" % float(run["black_at_cut"]))
+	_expect(int(run["wrong_world_frames"]) == 0, "and from the first frame the picture is seen it is the right one: no frame of the ordinary shelter that then turns into the bloodstained one (%d wrong frames)" % int(run["wrong_world_frames"]))
+	_expect(float(run["peer"]) >= shed.viewfinder_peer_seconds * 0.7 and float(run["wander"]) > 0.005, "the lens's picture is peered through in the small round window before it opens (%.2f s, the window moved by %.3f)" % [float(run["peer"]), float(run["wander"])])
 	_expect(float(run["max_step"]) < 0.4, "nothing teleports: the largest step between frames is %.2f m" % float(run["max_step"]))
 	_expect(float(run["eye_error"]) < 0.02, "her eye ends on the eyecup's marker (%.3f m)" % float(run["eye_error"]))
 	var cinema: Camera3D = shed.get_node_or_null("CinemaCamera") as Camera3D
@@ -182,9 +185,9 @@ func _check_viewfinder_before_the_cinematic() -> void:
 	_expect(not shed.archive_foreground.visible and not shed.archive_dressing.visible and shed.replaced_plank.visible, "no actor, no ferns, the present's plank")
 	var fill: Node = device.find_child("FillLight", true, false)
 	_expect(fill == null, "the camcorder has no fill light of its own (it is hidden by planting, not by a beacon)")
-	var prompt: Label = shed.get_node("ViewfinderPrompt/Exit") as Label
-	_expect(prompt != null and shed.get_node("ViewfinderPrompt").visible and prompt.text == "[W/A/S/D] Step back", "the exit hint names the movement keys really bound (%s)" % prompt.text)
-	_expect(get_viewport().get_visible_rect().size.x > 0 and prompt.get_global_rect().end.y <= get_viewport().get_visible_rect().size.y, "and sits inside the window")
+	var prompt: KeyHint = shed.get_node("ViewfinderPrompt/Root/Exit") as KeyHint
+	_expect(prompt != null and shed.get_node("ViewfinderPrompt").visible and str(prompt.get("_key_label").text) == "WASD" and str(prompt.get("_text_label").text) == "Step away", "the exit hint is the payphone's: a cap with the four movement keys and the words 'Step away' (%s, %s)" % [str(prompt.get("_key_label").text), str(prompt.get("_text_label").text)])
+	_expect(prompt.global_position.x > get_viewport().get_visible_rect().size.x * 0.5 and prompt.global_position.y > get_viewport().get_visible_rect().size.y * 0.85, "at the bottom right, where the payphone has it")
 	_expect(not shed.get_node("VhsReviewUi" if shed.has_node("VhsReviewUi") else "ViewfinderPrompt") is VhsReviewUi, "the tape's transport row is not part of the viewfinder")
 	await _wait(4.0)
 	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)) and not shed.letter.visible, "looking for long enough shows nothing and unlocks nothing before the first cinematic")
@@ -193,14 +196,16 @@ func _check_viewfinder_before_the_cinematic() -> void:
 	var leave: Dictionary = await _leave_measured(&"down")
 	_expect(bool(leave["done"]), "a fresh movement key steps back")
 	_expect(float(leave["lean"]) >= 0.4 and float(leave["lean"]) <= 0.72, "the eye comes back from the eyecup in 0.4 to 0.7 s (%.2f s)" % float(leave["lean"]))
-	_expect(bool(leave["black_before_world"]), "the black is full before the ordinary world is shown again")
+	_expect(bool(leave["black_before_world"]), "the picture has closed to the small round hole before the ordinary world is shown again")
 	_expect(int(shed.get("_aux_mode")) == AUX_NONE and not player.view_locked and not player.manual_save_blocked, "the control is back")
 	_expect(get_viewport().get_camera_3d() == player.movement_controller.camera and (shed.get_node_or_null("CinemaCamera") == null or shed.get_node("CinemaCamera").is_queued_for_deletion()), "the player's own camera is current again")
 	_expect(overlay == null or not is_instance_valid(overlay) or not overlay.visible, "the picture is gone")
 	_expect(shed.camcorder.visible and shed.effects_root.visible and shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT, "the ordinary world is whole")
 	_expect(Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length() < 0.8 and player.scripted_flashlight == scripted_before and is_zero_approx(player.movement_controller.scripted_fov), "the flashlight scripting and the lens are as they were")
 	_expect(player.movement_controller.gesture_offset.length() < 0.001, "her head is back where it was (no leftover lean)")
-	_expect(absf(wrapf(player.movement_controller.look_yaw - float(run["yaw_before"]), -180.0, 180.0)) < 0.5 and absf(player.movement_controller.look_pitch - float(run["pitch_before"])) < 0.5, "and her gaze is the one she had (%.1f, %.1f)" % [player.movement_controller.look_yaw, player.movement_controller.look_pitch])
+	var forward: Vector3 = -player.movement_controller.camera.global_basis.z
+	var lens_axis: Vector3 = shed.global_transform.basis * (shed.get_camcorder_view()["axis"] as Vector3)
+	_expect(Vector2(forward.x, forward.z).normalized().dot(Vector2(lens_axis.x, lens_axis.z).normalized()) > 0.97, "she keeps looking the way the lens looked: no turning about to face where she stood before (%.1f degrees off the lens axis)" % rad_to_deg(Vector2(forward.x, forward.z).angle_to(Vector2(lens_axis.x, lens_axis.z))))
 	_expect(device.viewfinder_enabled and not shed.get_node("ViewfinderPrompt").visible, "it can be used again, and the exit hint is gone")
 	_expect(Vector2(start_position.x - stand.x, start_position.z - stand.z).length() < 0.01, "(she began behind the eyepiece)")
 
@@ -213,6 +218,8 @@ func _check_viewfinder_before_the_cinematic() -> void:
 	_expect(bool(round_trip["settled"]) and float(round_trip["max_step"]) < 0.4, "from the lens side she walks round to the back (largest step %.2f m)" % float(round_trip["max_step"]))
 	_expect(float(round_trip["closest_to_body"]) > 0.25, "and does not walk through the device (closest %.2f m)" % float(round_trip["closest_to_body"]))
 	await _leave_measured(&"up")
+	var forward_2: Vector3 = -player.movement_controller.camera.global_basis.z
+	_expect(Vector2(forward_2.x, forward_2.z).normalized().dot(Vector2(lens_axis.x, lens_axis.z).normalized()) > 0.97, "having come from the lens side too she leaves looking the way the lens looked, not back toward where she came from (%.1f degrees)" % rad_to_deg(Vector2(forward_2.x, forward_2.z).angle_to(Vector2(lens_axis.x, lens_axis.z))))
 	await _free_level()
 
 
@@ -264,8 +271,8 @@ func _check_viewfinder_input_rules() -> void:
 	InputBindings.call("_apply_action", &"up")
 	device.interact(player)
 	await _wait_for_mode(AUX_VIEWFINDER, 8.0)
-	var prompt: Label = shed.get_node("ViewfinderPrompt/Exit") as Label
-	_expect(prompt.text.begins_with("[T/") and prompt.text.ends_with("Step back"), "rebinding the movement keys changes the hint (%s)" % prompt.text)
+	var prompt: KeyHint = shed.get_node("ViewfinderPrompt/Root/Exit") as KeyHint
+	_expect(str(prompt.get("_key_label").text).begins_with("T"), "rebinding the movement keys changes the hint (%s)" % str(prompt.get("_key_label").text))
 	await _wait_real(shed.viewfinder_input_guard_seconds + 0.25)
 	await _key(&"up", true)
 	await _key(&"up", false)
@@ -277,16 +284,14 @@ func _check_viewfinder_input_rules() -> void:
 	await _free_level()
 
 
-## After the first cinematic: the empty bloodstained shelter, the broken plank, no actor, the drag trail; a static dressing; the leaves slide after a short hold, the reply under them.
+## After the first cinematic: the empty bloodstained shelter, the broken plank, no actor, the drag trail, no leaves and no letter; a static dressing; three seconds in, the shadow crawls into the picture along the
+## trail to the pillar, dies and lies there; it is not seen again (a second look through the lens shows the bloodstained shelter alone), and the reply lies in the real world where it died.
 func _check_viewfinder_after_the_cinematic() -> void:
 	await _new_game([&"shelter_clipping_read", &"shelter_recording_done"])
 	await _near_camcorder()
 	var device: ShedCamcorder = shed.camcorder
-	var home_transforms: Array[Transform3D] = []
-	for sheet: Node in shed.leaf_cover.get_children():
-		if String(sheet.name).begins_with("Leaves"):
-			home_transforms.append((sheet as Node3D).transform)
-	_expect(home_transforms.size() == 3, "three leaf sheets lie over the end of the trail")
+	_expect(shed.leaf_cover == null or shed.leaf_cover.find_children("Leaves*", "MeshInstance3D", true, false).is_empty(), "there are no leaves over anything: the three leaf sheets are gone")
+	_expect(shed.leaf_cover == null or shed.leaf_cover.find_children("*", "MeshInstance3D", true, false).is_empty(), "and no ferns either: nothing grows on the slab by the pillar and the reply")
 	var clock_before: float = shed.footage.current_time
 	var run: Dictionary = await _enter_measured(device)
 	_expect(bool(run["settled"]), "the viewfinder is reached after the first cinematic too")
@@ -309,97 +314,293 @@ func _check_viewfinder_after_the_cinematic() -> void:
 	var intact: Node3D = shed.archive_dressing.get_node("Intact") as Node3D
 	_expect(shed.archive_dressing.visible and damaged.visible and not intact.visible, "and the bench's plank is the broken one")
 	_expect(shed.footage.current_time == clock_before and not bool(shed.get("_footage_playing")), "there is no clock: the source is not playing, the footage's time did not move")
-	_expect(shed.leaf_cover.visible and shed.leaf_cover.get_child(0).visible, "the leaves are in the picture (they are the destination)")
-	for i: int in 3:
-		_expect((shed.leaf_cover.get_node("Leaves%d" % i) as Node3D).transform.is_equal_approx(home_transforms[i]), "leaf sheet %d is still over the trail's end" % i)
-	_expect(not shed.letter.visible, "nothing of the letter is in view")
+	_expect(not shed.letter.visible and not shed.letter.can_interact(player), "no letter is in the picture, and none is in the world yet")
 	_expect(shed.rear_annex.visible, "the rear annex (with the token) is part of the shelter in the viewfinder too, but out of the lens's cone")
-	await _wait(1.0)
-	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "for a moment nothing happens: the picture is held to be read (%.1f s)" % shed.viewfinder_read_seconds)
-	await _wait(shed.viewfinder_read_seconds)
-	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)) and bool(shed.get("_leaf_busy")), "then the leaves start to slide (saved when it starts)")
-	_expect(shed.letter.visible and not shed.letter.can_interact(player), "the letter shows under them but cannot be used yet")
-	await _wait(shed.leaf_slide_seconds + 0.6)
-	var moved: bool = true
-	for i: int in 3:
-		moved = moved and (shed.leaf_cover.get_node("Leaves%d" % i) as Node3D).transform.is_equal_approx(shed.call("_leaf_displaced", i))
-	_expect(moved and not bool(shed.get("_leaf_busy")), "and are aside when the slide is over")
-	_expect(shed.letter.can_interact(player) and shed.letter.interaction_enabled, "the letter offers its reading now")
-	_expect(shed.leaf_cover.get_node("FernEast") != null, "(the ferns stay)")
-
+	var creature: ShadowCrawler = shed.get("_creature") as ShadowCrawler
+	_expect(creature == null or not creature.visible, "nothing is in the picture at first")
+	# Three seconds of the empty picture, then it crawls in.
+	var waited: float = 0.0
+	while (shed.get("_creature") == null or not (shed.get("_creature") as ShadowCrawler).visible) and waited < 6.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+	creature = shed.get("_creature") as ShadowCrawler
+	_expect(creature != null and creature.visible and waited >= shed.viewfinder_read_seconds - 0.45 and waited <= shed.viewfinder_read_seconds + 0.9, "three seconds into the picture the creature comes (%.2f s)" % waited)
+	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)) and not shed.letter.visible, "merely coming into the picture does not count as having been seen, and there is no letter in the picture")
+	# Its crawl: it is there from the first frame, beside the pillar where the reply lies, and crawls at the pace of the animation toward the right of the picture and a little toward the lens; in the middle of it the camera fails and
+	# the shadow strobes like a ghost; and under a burst of static it is gone, with nothing left behind.
+	var end_point: Vector3 = shed.to_global(shed.creature_path[shed.creature_path.size() - 1])
+	var start_point: Vector3 = shed.to_global(shed.creature_path[0])
+	var start_head: Vector3 = creature.head_world()
+	_expect(creature.global_position.distance_to(start_point) < 0.5, "it starts at the beginning of the path (%.2f m from it)" % creature.global_position.distance_to(start_point))
+	_expect(_in_picture(cinema, start_head) and start_head.distance_to(shed.letter.global_position) < 1.0, "it shows beside the pillar where the reply lies (%.2f m from it)" % start_head.distance_to(shed.letter.global_position))
+	var way: Vector3 = (end_point - start_point)
+	way.y = 0.0
+	way = way.normalized()
+	var cam_right: Vector3 = cinema.global_basis.x
+	var cam_toward: Vector3 = cinema.global_basis.z
+	cam_right.y = 0.0
+	cam_toward.y = 0.0
+	_expect(way.dot(cam_right.normalized()) > 0.8 and way.dot(cam_toward.normalized()) > 0.1 and way.dot(cam_toward.normalized()) < 0.6, "it crawls toward the right of the picture and a little toward the camera, not along the shed (%.2f to the right, %.2f toward the lens)" % [way.dot(cam_right.normalized()), way.dot(cam_toward.normalized())])
+	var overlay: ArchiveVideoOverlay = shed.get("_overlay") as ArchiveVideoOverlay
+	var material: ShaderMaterial = overlay.get("_material") as ShaderMaterial
+	var frames: int = 0
+	var spent: float = 0.0
+	var worst_glitch: float = 0.0
+	var worst_static: float = 0.0
+	var seen_solid: int = 0
+	var seen_gone: int = 0
+	var seen_faded: int = 0
+	var glitch_before: float = 0.0
+	var darkest: float = 0.0
+	var travelled: float = 0.0
+	var last_position: Vector3 = creature.global_position
+	while creature.playing and spent < 25.0:
+		await get_tree().process_frame
+		spent += get_process_delta_time()
+		frames += 1
+		travelled += creature.global_position.distance_to(last_position)
+		last_position = creature.global_position
+		worst_glitch = maxf(worst_glitch, _number(material, &"glitch"))
+		worst_static = maxf(worst_static, _number(material, &"burst"))
+		var alpha: float = creature.ghost_alpha_at(creature.elapsed)
+		if creature.elapsed < creature.lead_seconds - 0.35:
+			glitch_before = maxf(glitch_before, _number(material, &"glitch"))
+		darkest = maxf(darkest, _number(material, &"dim"))
+		if alpha > 0.9:
+			seen_solid += 1
+		elif alpha > 0.1:
+			seen_faded += 1
+		else:
+			seen_gone += 1
+	_expect(glitch_before > 0.1, "the picture goes wrong before the shadow shows (%.2f of failing with nothing in it)" % glitch_before)
+	_expect(darkest > 0.9, "and the light fails altogether in the scene (%.2f dark at the worst)" % darkest)
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "watched through, it counts as seen (written down)")
+	_expect(spent > shed.creature_crawl_seconds - 1.0 and spent < shed.creature_crawl_seconds + 1.0, "the whole of it takes about %.1f s (%.1f s)" % [shed.creature_crawl_seconds, spent])
+	_expect(worst_glitch > 0.3 and worst_static >= 0.99, "in the middle of the crawl the camera fails (tearing %.2f at worst, static %.2f at its worst)" % [worst_glitch, worst_static])
+	_expect(seen_solid > 15 and seen_faded >= 1 and seen_gone > 2, "the shadow is whole and readable for most of its crawl and only stutters in the spikes: whole %d frames, faded %d, not yet or no longer there %d" % [seen_solid, seen_faded, seen_gone])
+	_expect(travelled > 0.5 and travelled < 1.1, "it crawled about as far as the animation takes it, and stops short (%.2f m)" % travelled)
+	_expect(not creature.visible and not creature.playing and not creature.is_dead, "and it is gone: nothing lies there, nothing is left of it")
+	await _wait(0.6)
+	_expect(_number(material, &"glitch") == 0.0 and _number(material, &"burst") == 0.0 and _number(material, &"dim") == 0.0, "the picture is clean and the light normal again, with nothing in it")
+	_expect(shed.get_node_or_null("GlitchNoise") == null and shed.get_node_or_null("GlitchDrone") == null, "and nothing is added to the sound: the camera's failing is silent")
+	_expect(creature.global_position.distance_to(end_point) < 0.35, "(it had crawled to the end of its path: %.2f m from it)" % creature.global_position.distance_to(end_point))
+	# A look away and back: the creature is not replayed.
 	var leave: Dictionary = await _leave_measured(&"up")
-	_expect(bool(leave["done"]) and int(shed.get("_aux_mode")) == AUX_NONE and not player.view_locked, "the control comes back")
-	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT and shed.effects_root.visible and shed.camcorder.visible and shed.replaced_plank.visible and not shed.archive_dressing.visible, "the ordinary shelter is whole again (the present's plank, the belongings, the camcorder)")
+	_expect(bool(leave["done"]) and creature != null and not creature.visible, "stepping back takes it out of the world at once")
+	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT and shed.effects_root.visible and shed.camcorder.visible and shed.replaced_plank.visible and not shed.archive_dressing.visible, "the ordinary shelter is whole again: no creature in the real world")
 	_expect(not shed.footage.visible and not shed.footage.is_blood_view() and not shed.footage.aftermath.is_visible_in_tree() and not shed.footage.trail.is_visible_in_tree(), "no blood and no trail in the ordinary view")
 	for stain: Node in shed.footage.aftermath.get_children():
 		_expect((stain as Node3D).visible, "(the recording's own stain %s is back as the recording has it)" % stain.name)
 	_expect(shed.clipping.global_transform.is_equal_approx(shed.clipping_aside.global_transform) and shed.vhs.global_transform.is_equal_approx(shed.vhs_set_down.global_transform), "the props are where the new layout has them, not at an old default")
-	_expect(shed.letter.visible and shed.letter.can_interact(player), "the leaves stay aside and the letter stays exposed")
-	# A second visit does not replay the reveal.
+	_expect(shed.letter.visible and shed.letter.can_interact(player) and shed.letter.global_position.distance_to(start_head) < 1.0, "the reply lies in the real world where the shadow began, by the pillar (%.2f m from it)" % shed.letter.global_position.distance_to(start_head))
+	_expect(shed.letter.mark_notice_distance >= 10.0, "its mark is seen from far: %.0f m" % shed.letter.mark_notice_distance)
+	# From where the camcorder stands, ten metres away, the player sees its mark.
+	var view: Dictionary = shed.get_camcorder_view()
+	var at: Vector3 = (view["eye"] as Vector3) - (view["axis"] as Vector3) * 0.6
+	var seen_from_far: Array = []
+	player.global_position = shed.to_global(Vector3(at.x, 1.1, at.z))
+	player.velocity = Vector3.ZERO
+	await _settle_player()
+	var camera: Camera3D = player.get_node("Head/Camera3D")
+	var to_letter: Vector3 = shed.letter.global_position - camera.global_position
+	player.movement_controller.look_yaw = -rad_to_deg(atan2(-to_letter.x, -to_letter.z))
+	player.movement_controller.look_pitch = -rad_to_deg(atan2(to_letter.y, Vector2(to_letter.x, to_letter.z).length()))
+	for i: int in 6:
+		await get_tree().physics_frame
+	seen_from_far = player.interaction_controller.reticle.call("_scan", false)
+	_expect(seen_from_far.has(shed.letter), "from the camcorder's stand, %.1f m away, the reply's interaction mark shows" % camera.global_position.distance_to(shed.letter.global_position))
+	# A second look through the lens: the bloodstained shelter alone.
 	device.interact(player)
 	await _wait_for_mode(AUX_VIEWFINDER, 8.0)
-	await _wait(shed.viewfinder_read_seconds + 1.0)
-	_expect(not bool(shed.get("_leaf_busy")) and shed.footage.is_blood_view(), "(a second visit still shows the blood)")
-	var still_moved: bool = true
-	for i: int in 3:
-		still_moved = still_moved and (shed.leaf_cover.get_node("Leaves%d" % i) as Node3D).transform.is_equal_approx(shed.call("_leaf_displaced", i))
-	_expect(still_moved, "and the cover is not put back or moved again")
+	await _wait(shed.viewfinder_read_seconds + 2.0)
+	_expect(not creature.visible and not creature.playing, "looking through the lens again shows no creature (it is not replayed)")
+	_expect(shed.footage.is_blood_view() and shed.get_world_state() == WaitingShedSequence.WorldState.VIEWFINDER and not shed.letter.visible, "only the bloodstained shelter, and no letter in the picture")
 	await _leave_measured(&"down")
 	_expect(int(shed.get("_aux_mode")) == AUX_NONE, "(and it is left again)")
 	await _free_level()
 
 
-## Leaving the viewfinder while the leaves are sliding: it finishes by itself in the ordinary view.
-func _check_leaving_during_the_slide() -> void:
+## Leaving the lens before the creature has been watched: it is gone at once, it does not count as seen, the reply is not in the world, and the next look shows it again; watched long enough, leaving then puts the reply in the world.
+func _check_leaving_during_the_creature() -> void:
 	await _new_game([&"shelter_clipping_read", &"shelter_recording_done"])
 	await _near_camcorder()
 	shed.camcorder.interact(player)
 	await _wait_for_mode(AUX_VIEWFINDER, 8.0)
 	var guard: float = 0.0
-	while not bool(shed.get("_leaf_busy")) and guard < shed.viewfinder_read_seconds + 3.0:
+	while (shed.get("_creature") == null or not (shed.get("_creature") as ShadowCrawler).playing) and guard < shed.viewfinder_read_seconds + 3.0:
 		await get_tree().process_frame
 		guard += get_process_delta_time()
-	_expect(bool(shed.get("_leaf_busy")) and bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "the leaves are sliding")
-	await _leave_measured(&"up")
+	var creature: ShadowCrawler = shed.get("_creature") as ShadowCrawler
+	await _wait(1.5)
+	_expect(creature != null and creature.playing and not creature.is_dead, "the creature is crawling")
+	shed.call("_exit_viewfinder")
+	await _wait(2.0)
+	_expect(not creature.visible and not creature.playing, "stepping back takes it out of the picture and the world at once")
 	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT and not shed.footage.visible, "the ordinary view is back, with no blood")
-	await _wait(shed.leaf_slide_seconds + 0.8)
-	var moved: bool = true
-	for i: int in 3:
-		moved = moved and (shed.leaf_cover.get_node("Leaves%d" % i) as Node3D).transform.is_equal_approx(shed.call("_leaf_displaced", i))
-	_expect(moved and not bool(shed.get("_leaf_busy")), "and the slide is completed in the ordinary view (the leaves stay aside)")
-	_expect(shed.letter.visible and shed.letter.can_interact(player), "the paper is exposed and can be examined")
+	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)) and not shed.letter.visible and not shed.letter.can_interact(player), "it was not watched through, so it does not count as seen and the reply is not in the world")
+	_expect(not player.view_locked and int(shed.get("_aux_mode")) == AUX_NONE, "and nobody is held")
+	# The next look shows it again, from the beginning.
+	shed.camcorder.interact(player)
+	await _wait_for_mode(AUX_VIEWFINDER, 8.0)
+	guard = 0.0
+	while not creature.playing and guard < shed.viewfinder_read_seconds + 3.0:
+		await get_tree().process_frame
+		guard += get_process_delta_time()
+	_expect(creature.playing and creature.elapsed < 1.0, "the next look shows it again from the beginning (%.2f s in)" % creature.elapsed)
+	await _wait(shed.creature_seen_after_seconds + 1.0)
+	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "watched for %.0f s it counts as seen" % shed.creature_seen_after_seconds)
+	shed.call("_exit_viewfinder")
+	await _wait(2.0)
+	_expect(not creature.visible and shed.letter.visible and shed.letter.can_interact(player), "and then the reply is in the world")
+	# Leaving before it has come: nothing was seen, nothing is in the world.
+	await _free_level()
+	await _new_game([&"shelter_clipping_read", &"shelter_recording_done"])
+	await _near_camcorder()
+	shed.camcorder.interact(player)
+	await _wait_for_mode(AUX_VIEWFINDER, 8.0)
+	await _wait(0.8)
+	shed.call("_exit_viewfinder")
+	await _wait(2.0)
+	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)) and not shed.letter.visible, "stepping back before it comes leaves the reply out of the world: it was not seen")
 	await _free_level()
 
 
-## Until the leaves have moved, nothing of the letter can be found: no prompt, no ray target, nothing in sight. (The token is not behind the leaves any more: it is a real object behind the shelter.)
+## Until the creature has been seen, nothing of the reply can be found: no prompt, no ray target, no mark, nothing in sight.
 func _check_hidden_means_hidden() -> void:
 	await _new_game([&"shelter_clipping_read", &"shelter_recording_done"])
-	_expect(not shed.letter.visible and not shed.letter.can_interact(player) and not shed.letter.interaction_enabled, "the covered letter is not drawn and offers nothing")
+	_expect(not shed.letter.visible and not shed.letter.can_interact(player) and not shed.letter.interaction_enabled, "the reply is not in the world and offers nothing")
 	var letter_shape: CollisionShape3D = shed.letter.get_node("InteractArea/CollisionShape3D") as CollisionShape3D
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_expect(letter_shape.disabled, "and its interaction shape is off")
-	var covered_x0: float = 1.0e9
-	var covered_x1: float = -1.0e9
-	var covered_z0: float = 1.0e9
-	var covered_z1: float = -1.0e9
-	for sheet: Node in shed.leaf_cover.get_children():
-		if String(sheet.name).begins_with("Leaves"):
-			var box: AABB = _mesh_bounds_world(sheet)
-			covered_x0 = minf(covered_x0, box.position.x)
-			covered_x1 = maxf(covered_x1, box.end.x)
-			covered_z0 = minf(covered_z0, box.position.z)
-			covered_z1 = maxf(covered_z1, box.end.z)
-	var letter_box: AABB = shed.letter.get_node("Visual").global_transform * AABB(Vector3(-0.0525, -0.0725, -0.002), Vector3(0.105, 0.145, 0.004))
-	_expect(letter_box.position.x > covered_x0 + 0.05 and letter_box.end.x < covered_x1 - 0.05 and letter_box.position.z > covered_z0 + 0.05 and letter_box.end.z < covered_z1 - 0.05, "the leaves reach well past the letter's footprint on every side")
 	var found_early: bool = false
 	for spot: Vector3 in [Vector3(-5.0, 0.0, -2.45), Vector3(-4.2, 0.0, -2.6), Vector3(-6.5, 0.0, -3.0), Vector3(-5.3, 0.0, -4.9)]:
 		for aim: Vector3 in [shed.letter.global_position, shed.letter.global_position + Vector3(0.0, 0.1, 0.0)]:
 			if await _ray_target(shed.to_global(spot), aim) == shed.letter:
 				found_early = true
-	_expect(not found_early, "no ray from the places around the pillar's foot finds the letter")
+	_expect(not found_early, "no ray from the places around the pillar's foot finds it")
 	var marks: Array = player.interaction_controller.reticle.call("_scan", false)
-	_expect(not marks.has(shed.letter), "and no interaction mark shows it, close to the leaves")
+	_expect(not marks.has(shed.letter), "and no interaction mark shows it, close to the pillar")
+	await _free_level()
+
+
+## The ground and the plants of the clearing, and the thicket round the camcorder with its path.
+func _check_ground_dressing() -> void:
+	await _new_game([&"shelter_clipping_read", &"shelter_recording_done"])
+	await _wait(1.5)
+	var dressing: ShedGroundDressing = shed.ground_dressing as ShedGroundDressing
+	_expect(dressing != null and dressing.visible, "the clearing has its dressing in the present")
+	var total: int = 0
+	for kind: String in dressing.plants_placed:
+		total += int(dressing.plants_placed[kind])
+	_expect(total >= 380 and dressing.plants_placed.size() >= 8, "plants of %d kinds, %d of them" % [dressing.plants_placed.size(), total])
+	_expect(dressing.thicket_count >= 120, "%d of them in the thicket round the camcorder" % dressing.thicket_count)
+	_expect(dressing.patches_made >= 25 and dressing.rocks_made >= 5, "%d patches of ground (moss, humus, pine needles, the path's earth) and %d rocks" % [dressing.patches_made, dressing.rocks_made])
+	# The patches of ground follow the terrain (it rises half a metre toward the west and north edges of the clearing: a flat plane there is cut by it and shows as a straight line), and are drawn in a fixed order
+	# (patches that overlap are never re-sorted by the camera's distance, which made them change as the player moved).
+	var priorities: Dictionary = {}
+	var patch_count: int = 0
+	var buried: int = 0
+	var floating: int = 0
+	var vertex_count: int = 0
+	for child: Node in dressing.get_children():
+		var patch: MeshInstance3D = child as MeshInstance3D
+		if patch == null or not (patch.mesh is ArrayMesh):
+			continue
+		patch_count += 1
+		var patch_material: Material = patch.material_override
+		priorities[patch_material.render_priority] = int(priorities.get(patch_material.render_priority, 0)) + 1
+		var vertices: PackedVector3Array = (patch.mesh as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_VERTEX] as PackedVector3Array
+		for vertex: Vector3 in vertices:
+			vertex_count += 1
+			var ground: float = dressing._ground_y(Vector2(vertex.x, vertex.z))
+			if vertex.y < ground + 0.005:
+				buried += 1
+			if vertex.y > ground + 0.2:
+				floating += 1
+	_expect(patch_count >= 25 and priorities.size() == patch_count, "every patch has its own place in the drawing order (%d patches, %d orders)" % [patch_count, priorities.size()])
+	_expect(buried == 0 and floating == 0 and vertex_count > 1000, "every point of every patch lies just over the ground under it (%d points, %d under it, %d floating)" % [vertex_count, buried, floating])
+	if scene_path == DREAM_SCENE_PATH:
+		_expect(dressing._terrain_data != null, "(the real terrain is what they follow)")
+		var rise: float = dressing._ground_y(Vector2(-11.0, -11.0)) - dressing._ground_y(Vector2(-4.0, -3.0))
+		_expect(rise > 0.15, "where the clearing's ground rises (%.2f m at the north-west corner) the patches rise with it" % rise)
+		# The plants of the clearing sway with the wind as the forest's do (the terrain's own wind meshes and materials), and the terrain's low plants under the slab are hidden.
+		_expect(dressing._wind != null, "(the level's wind is there)")
+		var unmoved: Array[String] = []
+		var wind_checked: int = 0
+		for holder: Node in dressing.find_children("Plants_*", "MultiMeshInstance3D", true, false):
+			var plants: MultiMeshInstance3D = holder as MultiMeshInstance3D
+			if String(plants.name) == "Plants_leaves":
+				continue
+			wind_checked += 1
+			var blowing: bool = plants.material_override is ShaderMaterial
+			if not blowing and plants.multimesh != null and plants.multimesh.mesh != null:
+				for surface: int in plants.multimesh.mesh.get_surface_count():
+					blowing = blowing or plants.multimesh.mesh.surface_get_material(surface) is ShaderMaterial
+			if not blowing:
+				unmoved.append(String(plants.name))
+		_expect(wind_checked >= 6 and unmoved.is_empty(), "every kind of plant of the clearing is drawn with a wind material (%d kinds; still: %s)" % [wind_checked, str(unmoved)])
+		_expect(dressing.slab_rect.has_area() and dressing.slab_rect.size.x > 7.0 and dressing.slab_rect.size.y > 5.0, "the ground under the slab is hidden from the terrain's plants (%s)" % str(dressing.slab_rect))
+		var hide: Variant = dressing._wind.materials[0].get_shader_parameter("hide_rect") if not dressing._wind.materials.is_empty() else null
+		_expect(hide is Vector4 and (hide as Vector4).z > (hide as Vector4).x, "and the wind's shader has that rectangle")
+	# What is where: nothing stands on the slab, the track, the recess, the stand or the path (from the dressing's own records: a headless run discards a MultiMesh's data).
+	var offenders: Array[String] = []
+	var thicket_plants: Array[Dictionary] = []
+	for record: Dictionary in dressing.plant_records:
+		var origin: Vector3 = (record["t"] as Transform3D).origin
+		var p: Vector2 = Vector2(origin.x, origin.z)
+		if bool(record["thicket"]):
+			thicket_plants.append({"t": record["t"], "h": float(record["height"])})
+		if String(record["kind"]) == "leaves":
+			continue
+		if dressing._path_distance(p) < dressing.path_half_width + 0.1 or p.distance_to(dressing.stand_position) < 0.7 or (p.x > -7.4 and p.x < -1.9 and p.y > -8.8 and p.y < -1.5) or p.x > 3.0 or (p.x > -6.6 and p.x < -4.2 and p.y > -10.4 and p.y < -7.0):
+			offenders.append("%s %s" % [record["kind"], str(p)])
+	_expect(offenders.is_empty(), "nothing grows on the slab, the track, the token's recess, the cameraman's place or the path (%s)" % str(offenders.slice(0, 3)))
+	# Nothing of the dressing stands on the shelter's own floor slab, which is wider than the box the old checks used (it reaches 0.3 m east of the shed's origin).
+	var on_slab: int = 0
+	for record: Dictionary in dressing.plant_records:
+		var at: Vector3 = (record["t"] as Transform3D).origin
+		if dressing.slab_local.has_point(Vector2(at.x, at.z)):
+			on_slab += 1
+	_expect(dressing.slab_local.has_area() and dressing.slab_local.size.x > 6.0 and dressing.slab_local.size.y > 4.0 and on_slab == 0, "no plant of the clearing stands on the shelter's floor slab (%s; %d on it)" % [str(dressing.slab_local), on_slab])
+	_expect(shed.get_node_or_null("%Shelter/Weed0") == null, "and no weeds grow through the slab")
+	_expect(thicket_plants.size() >= 120, "(%d plants counted in the thicket)" % thicket_plants.size())
+	# The path: from the slab's corner to the stand, a continuous strip free of plants.
+	var points: PackedVector2Array = dressing.path_points
+	_expect(points.size() >= 5 and points[0].distance_to(Vector2(-2.2, -1.5)) < 1.0 and points[points.size() - 1].distance_to(dressing.stand_position) < 0.1, "a path leads from the slab's corner to the cameraman's place behind the eyepiece")
+	var worst_gap: float = 0.0
+	for i: int in points.size() - 1:
+		worst_gap = maxf(worst_gap, points[i].distance_to(points[i + 1]))
+	_expect(worst_gap < 1.6, "with no gap in it (longest piece %.1f m)" % worst_gap)
+	# The camcorder is not seen from the shelter: a plant of the thicket stands in the way from most of the places it could be seen from.
+	var head: Vector3 = shed.camcorder.get_head().global_position
+	var covered: int = 0
+	var viewpoints: Array[Vector3] = [Vector3(-5.0, 1.55, -2.45), Vector3(-4.0, 1.55, -4.8), Vector3(-2.2, 1.55, -2.0), Vector3(0.5, 1.55, -1.0), Vector3(-6.5, 1.55, -1.5)]
+	for spot: Vector3 in viewpoints:
+		var eye: Vector3 = shed.to_global(spot)
+		var blocked: bool = false
+		for entry: Dictionary in thicket_plants:
+			var t: Transform3D = entry["t"] as Transform3D
+			var base: Vector3 = shed.to_global(t.origin)
+			var top: float = base.y + float(entry["h"])
+			# The plant as an upright cylinder 0.35 m wide, as high as it is: does the sight line cross it?
+			var flat: Vector2 = Vector2(eye.x, eye.z)
+			var target_flat: Vector2 = Vector2(head.x, head.z)
+			var along: float = clampf((Vector2(base.x, base.z) - flat).dot(target_flat - flat) / maxf((target_flat - flat).length_squared(), 0.0001), 0.0, 1.0)
+			var closest: Vector2 = flat.lerp(target_flat, along)
+			var height_there: float = lerpf(eye.y, head.y, along)
+			if closest.distance_to(Vector2(base.x, base.z)) < 0.3 and height_there < top and height_there > base.y and along > 0.05 and along < 0.97:
+				blocked = true
+				break
+		if blocked:
+			covered += 1
+	_expect(covered >= 1, "the camcorder is hidden from %d of the 5 places it could be seen from (the ones off the lens axis; the lens looks out through a gap)" % covered)
+	var tall_in_cone: Array[String] = []
+	for record: Dictionary in dressing.plant_records:
+		var origin2: Vector3 = (record["t"] as Transform3D).origin
+		if String(record["kind"]) != "leaves" and float(record["height"]) > ShedGroundDressing.LOW_PLANT + 0.05 and dressing._in_lens_cone(Vector2(origin2.x, origin2.z), 27.0):
+			tall_in_cone.append("%s %.2f at %s" % [record["kind"], float(record["height"]), str(Vector2(origin2.x, origin2.z))])
+	_expect(tall_in_cone.is_empty(), "nothing taller than %.1f m stands in the way of the lens (the cone is open, like a gap between the plants) (%s)" % [ShedGroundDressing.LOW_PLANT, str(tall_in_cone.slice(0, 3))])
 	await _free_level()
 
 
@@ -424,6 +625,7 @@ func _check_letter_starts_nothing() -> void:
 		held = held or player.view_locked or int(shed.get("_aux_mode")) != AUX_NONE or get_viewport().get_camera_3d() != player.movement_controller.camera
 	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_letter_read", false)), "closing the letter remembers that it was read")
 	_expect(not held, "and starts nothing: nobody is held, the camera is the player's, for the following 3 s")
+	_expect(shed.letter.mark_notice_distance == 0.0, "and once read its mark behaves like every other: the reticle's ordinary distance, not 14 m (%.1f)" % shed.letter.mark_notice_distance)
 	_expect(shed.ficha.global_transform.is_equal_approx(token_before) and shed.ficha.visible == token_visible_before and shed.ficha.pickup_enabled == token_pickup_before, "the token is exactly as it was: not moved, not shown, not released")
 	_expect(shed.find_children("*", "Collectible", true, false).filter(func(n: Node) -> bool: return str(n.get("item_id")) == "sophia_ficha").size() == token_count_before, "and not duplicated")
 	_expect(player.global_position.distance_to(start_position) < 0.05 and not player.manual_save_blocked, "the player did not move, saving is not blocked")
@@ -522,7 +724,7 @@ func _check_review() -> void:
 	var ui: VhsReviewUi = shed.get("_review_ui") as VhsReviewUi
 	var overlay: ArchiveVideoOverlay = shed.get("_overlay") as ArchiveVideoOverlay
 	_expect(ui != null and ui.visible and overlay != null and overlay.visible, "the transport row and the picture are shown")
-	_expect(is_zero_approx(float(shed.get("_review_time"))) and shed.review_counter_text(0.0) == "00:08 / 01:10", "the first visit is cued at the first frame of the excerpt: tape 00:08 of 01:10")
+	_expect(is_zero_approx(float(shed.get("_review_time"))) and shed.review_counter_text(0.0) == "00:00 / 01:10", "the first visit starts at the start of the tape: 00:00 of 01:10")
 	_expect(shed.footage.passage_at(float(shed.get("_review_time"))) == &"A" and shed.footage.marina.visible, "(on Emily's excerpt)")
 	_expect(str(shed.get("_review_state")) == "pause" and overlay.get_label_text() == "PAUSE", "paused on it, with the word PAUSE")
 	for kind: StringName in [&"rewind", &"play", &"pause", &"stop", &"forward", &"close"]:
@@ -544,41 +746,51 @@ func _check_review() -> void:
 	await _wait(0.5)
 	_expect(is_equal_approx(float(shed.get("_review_time")), paused_at), "and holds")
 
-	# Held Right fast-forwards at about 4x; releasing holds a frame.
+	# Held Right fast-forwards at about 10x; releasing holds a frame.
 	await _key(&"right", true)
 	_expect(str(shed.get("_review_state")) == "ff" and overlay.get_label_text() == "FF", "holding Right fast-forwards")
 	t0 = float(shed.get("_review_time"))
 	spent = await _spend(1.0)
 	var ff: float = float(shed.get("_review_time")) - t0
-	_expect(absf(ff - spent * shed.review_search_speed) < 0.6 and shed.review_search_speed >= 3.5 and shed.review_search_speed <= 4.5, "at about 4 times the speed (%.2f s of tape in %.2f s)" % [ff, spent])
+	_expect(absf(ff - spent * shed.review_search_speed) < 1.5 and shed.review_search_speed >= 8.0 and shed.review_search_speed <= 14.0, "at about 10 times the speed (%.2f s of tape in %.2f s)" % [ff, spent])
 	await _key(&"right", false)
 	_expect(str(shed.get("_review_state")) == "pause", "releasing it pauses")
-	# Held Left rewinds across the excerpt's first frame into the rear segment, which is the first 8 s of the tape.
+	# Held Right winds the tape on across the excerpt's end into the rear segment, which is the last 8 s of the tape (jumped to near the end first: the wind itself is measured above).
 	var seen_rear: bool = false
-	await _key(&"left", true)
-	_expect(str(shed.get("_review_state")) == "rew" and overlay.get_label_text() == "REW", "holding Left rewinds")
+	shed.set("_review_time", shed.footage.length_seconds - 3.0)
+	await _key(&"right", true)
+	_expect(str(shed.get("_review_state")) == "ff" and overlay.get_label_text() == "FF", "holding Right winds the tape on")
 	var guard: float = 0.0
-	while float(shed.get("_review_time")) > -2.0 and guard < 12.0:
+	while float(shed.get("_review_time")) < shed.footage.length_seconds + 2.0 and guard < 12.0:
 		await get_tree().process_frame
 		guard += get_process_delta_time()
-	seen_rear = float(shed.get("_review_time")) < 0.0
-	await _key(&"left", false)
+	seen_rear = float(shed.get("_review_time")) > shed.footage.length_seconds
+	await _key(&"right", false)
 	var rear_time: float = float(shed.get("_review_time"))
-	_expect(seen_rear and shed.footage.passage_at(rear_time) == &"rear", "rewinding past the excerpt's first frame reaches the rear segment (%.2f)" % rear_time)
+	_expect(seen_rear and shed.footage.passage_at(rear_time) == &"rear", "winding past the excerpt's end reaches the rear segment (%.2f)" % rear_time)
 	_expect(shed.footage.rear_message != null and shed.footage.rear_message.visible and not shed.footage.marina.visible, "the rear wall with its words is in the picture, and nobody")
 	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.RECORDING and shed.rear_annex.visible and shed.rear_annex.get_node("Structure").visible, "with the repaired wall and the recess in the rear annex")
 	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_rear_seen", false)), "seeing the rear segment is remembered")
 	var cinema: Camera3D = shed.get_node("CinemaCamera") as Camera3D
 	var rear_shot: Transform3D = shed.footage.camera_at(rear_time)["transform"] as Transform3D
-	_expect(cinema.global_position.distance_to(rear_shot.origin) < 0.06 and shed.review_counter_text(rear_time).begins_with("00:0"), "from the rear camera, a handheld walk behind the wall; the counter reads tape time (%s, %.3f m from where it should be)" % [shed.review_counter_text(rear_time), cinema.global_position.distance_to(rear_shot.origin)])
+	_expect(cinema.global_position.distance_to(rear_shot.origin) < 0.06 and shed.review_counter_text(rear_time).begins_with("01:0"), "from the rear camera, a handheld walk behind the wall; the counter reads tape time (%s, %.3f m from where it should be)" % [shed.review_counter_text(rear_time), cinema.global_position.distance_to(rear_shot.origin)])
+	# Winding stops at the tape's end.
+	await _key(&"right", true)
+	guard = 0.0
+	while float(shed.get("_review_time")) < shed.footage.tape_length() - 0.001 and guard < 12.0:
+		await get_tree().process_frame
+		guard += get_process_delta_time()
+	await _key(&"right", false)
+	_expect(is_equal_approx(float(shed.get("_review_time")), shed.footage.tape_length()) and shed.review_counter_text(shed.footage.tape_length()) == "01:10 / 01:10" and str(shed.get("_review_state")) == "pause", "it stops at the end of the tape (01:10)")
 	# Rewinding stops at the tape's start.
+	shed.set("_review_time", 3.0)
 	await _key(&"left", true)
 	guard = 0.0
-	while float(shed.get("_review_time")) > -shed.footage.rear_prefix_seconds + 0.001 and guard < 12.0:
+	while float(shed.get("_review_time")) > 0.001 and guard < 12.0:
 		await get_tree().process_frame
 		guard += get_process_delta_time()
 	await _key(&"left", false)
-	_expect(is_equal_approx(float(shed.get("_review_time")), -shed.footage.rear_prefix_seconds) and shed.review_counter_text(-8.0) == "00:00 / 01:10" and str(shed.get("_review_state")) == "pause", "it stops at the start of the tape (00:00)")
+	_expect(is_equal_approx(float(shed.get("_review_time")), 0.0) and shed.review_counter_text(0.0) == "00:00 / 01:10" and str(shed.get("_review_state")) == "pause", "and at the start of the tape (00:00)")
 
 	# Stop keeps the playhead and shows no picture; Space plays on from there.
 	await _key_space()
@@ -664,6 +876,7 @@ func _check_clipping_reveal() -> void:
 	_expect(int(shed.get("_aux_mode")) == AUX_TRANSITION and player.view_locked, "closing the clipping takes the player in that very call")
 	_expect(not bool(SaveManager.get_state_value(&"puzzles", &"shelter_clipping_read", false)), "nothing is written yet")
 	var seen_cinema: bool = false
+	var own_eyes: bool = true
 	var moved: bool = false
 	var lifted: float = 0.0
 	var tape_early: bool = false
@@ -673,11 +886,14 @@ func _check_clipping_reveal() -> void:
 	while int(shed.get("_aux_mode")) != AUX_NONE and elapsed < 20.0:
 		await get_tree().process_frame
 		elapsed += get_process_delta_time()
-		var cinema: Camera3D = shed.get_node_or_null("CinemaCamera") as Camera3D
-		if cinema != null and cinema.is_current():
+		# The whole scene is from her own eyes: no other camera is ever current, and the paper and the tape are in front of her.
+		var eyes: Camera3D = player.movement_controller.camera
+		if _cinema_is_current() or get_viewport().get_camera_3d() != eyes:
+			own_eyes = false
+		if slide_done_at < 0.0 and moved:
 			seen_cinema = true
-			var to_tape: Vector3 = shed.vhs.global_position - cinema.global_position
-			camera_look = minf(camera_look, rad_to_deg((-cinema.global_basis.z).angle_to(to_tape)))
+			var to_tape: Vector3 = shed.vhs.global_position - eyes.global_position
+			camera_look = minf(camera_look, rad_to_deg((-eyes.global_basis.z).angle_to(to_tape)))
 		tape_early = tape_early or (shed.vhs.can_interact(player) and not moved)
 		if shed.clipping.global_position.distance_to(home.origin) > 0.02:
 			moved = true
@@ -685,7 +901,8 @@ func _check_clipping_reveal() -> void:
 		if slide_done_at < 0.0 and shed.clipping.global_transform.is_equal_approx(shed.clipping_aside.global_transform):
 			slide_done_at = elapsed
 	var held_after_slide: float = elapsed - slide_done_at if slide_done_at >= 0.0 else 0.0
-	_expect(seen_cinema and camera_look < 30.0, "a still camera shows the bench, the tape in its view (%.1f degrees off its axis at best)" % camera_look)
+	_expect(own_eyes, "the scene is seen from the player's own eyes: no other camera takes the view")
+	_expect(seen_cinema and camera_look < 30.0, "and the tape is in front of her as the paper slides (%.1f degrees off her line of sight at best)" % camera_look)
 	_expect(not tape_early, "the tape was not offered before the paper was moved")
 	_expect(moved and lifted > 0.005 and lifted < 0.06, "the paper was lifted a little (%.3f m) and slid" % lifted)
 	_expect(held_after_slide >= shed.clipping_hold_seconds * 0.7, "and the tape is held in view for a moment after (%.1f s)" % held_after_slide)
@@ -695,12 +912,13 @@ func _check_clipping_reveal() -> void:
 	# Cut short in the middle of the slide: the paper is aside, the stage saved, nobody held.
 	await _new_game([])
 	await _near_bench()
+	var home_cut: Vector3 = shed.clipping.global_position
 	await _read_and_close_without_waiting(shed.clipping)
 	var waited: float = 0.0
-	while not _cinema_is_current() and waited < 8.0:
+	while shed.clipping.global_position.distance_to(home_cut) < 0.02 and waited < 8.0:
 		await get_tree().process_frame
 		waited += get_process_delta_time()
-	await _wait(1.4)
+	await _wait(0.5)
 	shed.call("_abort_aux")
 	await get_tree().process_frame
 	_expect(_given_back("cut short in the scene") and shed.clipping.global_transform.is_equal_approx(shed.clipping_aside.global_transform) and bool(SaveManager.get_state_value(&"puzzles", &"shelter_clipping_read", false)), "cancelled midway: the paper is aside, the stage is saved, the player is free")
@@ -750,15 +968,15 @@ func _check_rear_handheld() -> void:
 	var previous: Vector3 = Vector3.INF
 	var max_step: float = 0.0
 	var step: float = 1.0 / 12.0
-	var t: float = -footage.rear_prefix_seconds
-	while t <= 0.0:
+	var t: float = footage.length_seconds + 0.1
+	while t <= footage.tape_length():
 		shed.call("_apply_footage", t)
 		if cinema.is_position_in_frustum(words) and _sight_clear(cinema.global_position, words + Vector3(0.0, 0.0, -0.02)):
 			words_in_view += step
 		if cinema.is_position_in_frustum(token) and _sight_clear(cinema.global_position, token + Vector3(0.0, 0.03, 0.0)):
 			token_in_view += step
 			if token_seen_from < 0.0:
-				token_seen_from = t + footage.rear_prefix_seconds
+				token_seen_from = t - footage.length_seconds
 		if previous != Vector3.INF:
 			max_step = maxf(max_step, previous.distance_to(cinema.global_position))
 		previous = cinema.global_position
@@ -766,14 +984,26 @@ func _check_rear_handheld() -> void:
 	_expect(words_in_view >= 3.0, "the words in blood are in view and unobstructed for %.1f s of the 8" % words_in_view)
 	_expect(token_in_view >= 1.0 and token_seen_from >= 4.0, "the token is in view over the lip for %.1f s, from %.1f s into the segment" % [token_in_view, token_seen_from])
 	_expect(max_step < 0.12, "the camera moves like a hand, never jumps (largest step between frames %.3f m)" % max_step)
-	shed.call("_apply_footage", -footage.rear_prefix_seconds)
+	shed.call("_apply_footage", footage.length_seconds + 0.1)
 	var start_at: Vector3 = cinema.global_position
-	shed.call("_apply_footage", -0.05)
+	shed.call("_apply_footage", footage.tape_length() - 0.05)
 	_expect(start_at.distance_to(cinema.global_position) > 2.0 and cinema.global_position.y < start_at.y, "it walks in from the dark behind the shelter and goes down toward the recess (%.1f m)" % start_at.distance_to(cinema.global_position))
 	var lamp: SpotLight3D = shed.get("_shot_light") as SpotLight3D
 	_expect(lamp != null and lamp.light_energy > 1.0 and lamp.spot_angle < 30.0, "at the end the camera's lamp is a narrow beam on the token")
-	shed.call("_apply_footage", -6.0)
+	shed.call("_apply_footage", footage.length_seconds + 2.0)
 	_expect(lamp.light_energy < 0.05, "and not a wide lamp on the wall earlier (no white hotspot)")
+	# The tape's look is the recording's own: on whatever the player's filter option says; and the picture reaches far, fading into the dark, so that nothing pops in out of black.
+	var overlay: ArchiveVideoOverlay = shed.get("_overlay") as ArchiveVideoOverlay
+	_expect(overlay != null and overlay.force_full_look and is_equal_approx(float((overlay.get("_material") as ShaderMaterial).get_shader_parameter(&"degrade")), 0.85) and float((overlay.get("_material") as ShaderMaterial).get_shader_parameter(&"grain")) > 0.05, "the worn tape look (grain, tracking, bleeding) is on: it does not depend on the player's video filter option (%s)" % str(GameSettings.get_vhs_filter_enabled()))
+	_expect(cinema.far >= 100.0, "the tape's camera sees %.0f m (the player's own is 15 and a black cut-off)" % cinema.far)
+	var environment: Environment = cinema.environment
+	_expect(environment != null and environment.fog_enabled and environment.fog_depth_begin >= 25.0 and environment.fog_depth_end <= cinema.far, "and the distance fades into the dark from %.0f m, ending inside the view (%.0f m)" % [environment.fog_depth_begin if environment != null else 0.0, environment.fog_depth_end if environment != null else 0.0])
+	var wind0: Node = shed.call("_wind_node") as Node
+	if wind0 != null:
+		var material0: ShaderMaterial = (wind0.get("materials") as Array)[0] as ShaderMaterial
+		var clearing: Vector4 = material0.get_shader_parameter("clearing_a") as Vector4
+		var clearing_end: Vector3 = material0.get_shader_parameter("clearing_b") as Vector3
+		_expect(clearing.w > 0.5 and Vector3(clearing.x, clearing.y, clearing.z).distance_to(shed.to_global(footage.rear_key_positions[0])) < 0.05 and clearing_end.distance_to(shed.to_global(footage.rear_key_positions[footage.rear_key_positions.size() - 1])) < 0.05, "the plants within %.1f m of the whole walk are gone from the shot, set once (no plant shrinks as the camera passes)" % clearing.w)
 	if wind != null:
 		await _key_space()
 		await _key_space()
@@ -787,13 +1017,11 @@ func _check_rear_handheld() -> void:
 		await _wait(0.8)
 		_expect(float(wind.get("strength")) < 0.01, "and stands still when it is stopped")
 		var material: ShaderMaterial = (wind.get("materials") as Array)[0] as ShaderMaterial
-		var clearing: Vector4 = material.get_shader_parameter("camera_clearing") as Vector4
-		_expect(clearing.w > 0.5 and Vector3(clearing.x, clearing.y, clearing.z).distance_to(cinema.global_position) < 0.5, "the plants within %.1f m of the lens shrink away" % clearing.w)
 		await _wait_real(shed.viewfinder_input_guard_seconds + 0.25)
 		await _key(&"interact", true)
 		await _key(&"interact", false)
 		await _wait(0.6)
-		_expect(is_equal_approx(float(wind.get("strength")), strength_before) and (material.get_shader_parameter("camera_clearing") as Vector4).w <= 0.0, "leaving the review gives the wind and the plants back")
+		_expect(is_equal_approx(float(wind.get("strength")), strength_before) and (material.get_shader_parameter("clearing_a") as Vector4).w <= 0.0, "leaving the review gives the wind and the plants back")
 	await _free_level()
 
 
@@ -803,7 +1031,7 @@ func _check_seeking() -> void:
 	shed.vhs.interact(player)
 	await get_tree().process_frame
 	var cinema: Camera3D = shed.get_node("CinemaCamera") as Camera3D
-	var times: Array[float] = [-8.0, -4.0, -0.04, 0.0, 5.0, 12.5, 19.96, 20.0, 31.96, 32.0, 45.96, 46.0, 61.9, 62.0]
+	var times: Array[float] = [0.0, 5.0, 12.5, 19.96, 20.0, 31.96, 32.0, 45.96, 46.0, 61.9, 62.0, 62.1, 66.0, 70.0]
 	var first_pass: Dictionary = {}
 	for t: float in times:
 		shed.call("_apply_footage", t)
@@ -816,23 +1044,23 @@ func _check_seeking() -> void:
 		if not _same_picture(first_pass[t], _picture()):
 			identical = false
 			print("  differs at ", t)
-	_expect(identical, "going back over every time gives the same picture as going forward (14 times, across the prefix boundary and all three cuts)")
-	var shuffled: Array[float] = [31.96, -8.0, 20.0, 62.0, -0.04, 12.5, 46.0, 0.0, 19.96, 61.9, 5.0, 45.96, 32.0, -4.0]
+	_expect(identical, "going back over every time gives the same picture as going forward (14 times, across the end of the excerpt and all three cuts)")
+	var shuffled: Array[float] = [31.96, 70.0, 20.0, 62.0, 62.1, 12.5, 46.0, 0.0, 19.96, 61.9, 5.0, 45.96, 32.0, 66.0]
 	identical = true
 	for t: float in shuffled:
 		shed.call("_apply_footage", t)
 		if not _same_picture(first_pass[t], _picture()):
 			identical = false
 	_expect(identical, "and so does jumping about")
-	shed.call("_apply_footage", -0.04)
-	_expect(shed.footage.passage_at(-0.04) == &"rear" and shed.footage.rear_message.visible and not shed.footage.marina.visible, "the frame before the excerpt is the rear segment")
-	shed.call("_apply_footage", 0.0)
-	_expect(shed.footage.passage_at(0.0) == &"A" and shed.footage.marina.visible and not shed.footage.rear_message.visible and not shed.rear_annex.visible, "and the excerpt's first frame is Emily's, with the rear annex gone")
+	shed.call("_apply_footage", 62.1)
+	_expect(shed.footage.passage_at(62.1) == &"rear" and shed.footage.rear_message.visible and not shed.footage.marina.visible, "the frame after the excerpt is the rear segment")
+	shed.call("_apply_footage", 62.0)
+	_expect(shed.footage.passage_at(62.0) == &"walk2" and not shed.footage.rear_message.visible and not shed.rear_annex.visible, "and the excerpt's last frame is still the dragging walk, with the rear annex gone")
 	var last_state: Dictionary = {}
 	for t: float in [19.96, 20.0, 31.96, 32.0, 45.96, 46.0]:
 		last_state[t] = shed.footage.passage_at(t)
 	_expect(last_state[19.96] == &"A" and last_state[20.0] == &"walk" and last_state[31.96] == &"walk" and last_state[32.0] == &"aftermath" and last_state[45.96] == &"aftermath" and last_state[46.0] == &"walk2", "the cuts are where the tape has them (excerpt 20, 32 and 46 s = tape 28, 40 and 54 s)")
-	_expect(shed.footage.tape_time_of(20.0) == 28.0 and shed.footage.tape_time_of(32.0) == 40.0 and shed.footage.tape_time_of(46.0) == 54.0, "(the same on the tape's clock)")
+	_expect(shed.footage.tape_time_of(20.0) == 20.0 and shed.footage.tape_time_of(32.0) == 32.0 and shed.footage.tape_time_of(46.0) == 46.0, "(the same on the tape's clock)")
 	await _free_level()
 
 
@@ -905,21 +1133,20 @@ func _check_cancel_from_every_phase() -> void:
 	shed.call("_abort_aux")
 	await get_tree().process_frame
 	_expect(_given_back("during the withdrawal") and player.movement_controller.gesture_offset.length() < 0.001, "cancelled during the withdrawal")
-	# Phase 5: the leaf slide, with the viewfinder left through the tree.
+	# Phase 5: the creature crawling, with the viewfinder left through the tree.
 	await _free_level()
 	await _new_game([&"shelter_clipping_read", &"shelter_recording_done"])
 	await _near_camcorder()
 	shed.camcorder.interact(player)
 	await _wait_for_mode(AUX_VIEWFINDER, 8.0)
 	guard = 0.0
-	while not bool(shed.get("_leaf_busy")) and guard < shed.viewfinder_read_seconds + 3.0:
+	while (shed.get("_creature") == null or not (shed.get("_creature") as ShadowCrawler).playing) and guard < shed.viewfinder_read_seconds + 3.0:
 		await get_tree().process_frame
 		guard += get_process_delta_time()
 	shed.call("_abort_aux")
 	await get_tree().process_frame
-	_expect(_given_back("during the leaf slide") and bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "cancelled during the leaf slide (the stage is already saved)")
-	await _wait(shed.leaf_slide_seconds + 0.8)
-	_expect(shed.letter.can_interact(player) and not bool(shed.get("_leaf_busy")), "and the slide finishes by itself")
+	_expect(_given_back("during the creature") and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)) and not (shed.get("_creature") as ShadowCrawler).visible, "cancelled while the creature crawls (it was not watched to the end: it is not counted as seen, and it is gone)")
+	_expect(not shed.letter.visible and not shed.letter.can_interact(player), "and the reply is not in the world yet")
 	# Phase 6: the review.
 	shed.vhs.interact(player)
 	await get_tree().process_frame
@@ -941,12 +1168,9 @@ func _check_cancel_from_every_phase() -> void:
 
 ## Every stage, saved and loaded; and the older saves.
 func _check_loads_at_every_stage() -> void:
-	# Leaves revealed, letter not read: the cover is aside, the letter exposed and not read.
+	# The creature seen, the reply not read: the reply lies in the world.
 	await _new_game([&"shelter_clipping_read", &"shelter_recording_done", &"shelter_leaf_revealed"])
-	var moved: bool = true
-	for i: int in 3:
-		moved = moved and (shed.leaf_cover.get_node("Leaves%d" % i) as Node3D).transform.is_equal_approx(shed.call("_leaf_displaced", i))
-	_expect(moved and shed.letter.visible and shed.letter.can_interact(player) and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_letter_read", false)), "after the leaf reveal: the cover is aside and the letter is exposed, not read")
+	_expect(shed.letter.visible and shed.letter.can_interact(player) and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_letter_read", false)), "after the creature: the reply lies in the world, not read")
 	_expect(shed.ficha.visible and shed.ficha.pickup_enabled, "and the token lies where it always did")
 	_expect(shed.clipping.global_transform.is_equal_approx(shed.clipping_aside.global_transform) and shed.vhs.review_mode, "the clipping lies aside and the tape is for review")
 	await _free_level()
@@ -998,10 +1222,10 @@ func _check_pause_in_the_viewfinder() -> void:
 	_expect(cinema.global_transform.is_equal_approx(before) and int(shed.get("_aux_mode")) == AUX_VIEWFINDER and not bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "paused: the view stands still and the hold does not run out")
 	get_tree().paused = false
 	await _wait(shed.viewfinder_read_seconds)
-	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_leaf_revealed", false)), "resumed: the hold goes on and the cover slides")
-	await _leave_measured(&"up")
-	await _wait(shed.leaf_slide_seconds + 0.6)
-	_expect(int(shed.get("_aux_mode")) == AUX_NONE and shed.letter.can_interact(player) and not player.view_locked, "left, with the letter exposed")
+	_expect(shed.get("_creature") != null and (shed.get("_creature") as ShadowCrawler).visible, "resumed: the hold goes on and the creature comes")
+	shed.call("_exit_viewfinder")
+	await _wait(0.9)
+	_expect(int(shed.get("_aux_mode")) == AUX_NONE and not player.view_locked and not shed.letter.visible, "left before the creature was watched through: nobody is held, and the reply is not in the world yet")
 	await _free_level()
 
 
@@ -1129,15 +1353,18 @@ func _press_button(button: Control, pressed: bool) -> void:
 ## Uses the camcorder and watches every frame of the way in (game time): the largest step the body takes, how long the eye leans, the black at the cut, the closest she comes to the device.
 func _enter_measured(device: ShedCamcorder) -> Dictionary:
 	var movement: PlayerMovementController = player.movement_controller
-	var result: Dictionary = {"settled": false, "held": true, "never_walked_on_input": true, "lean": 0.0, "occlusion_at_cut": 0.0, "cut_hidden": true, "max_step": 0.0, "eye_error": 1.0, "closest_to_body": 99.0, "yaw_before": movement.look_yaw, "pitch_before": movement.look_pitch}
+	var result: Dictionary = {"settled": false, "held": true, "never_walked_on_input": true, "lean": 0.0, "black_at_cut": 0.0, "circle_on_her_view": 0, "peer": 0.0, "wrong_world_frames": 0, "black_before_cut": 0.0, "wander": 0.0, "max_step": 0.0, "eye_error": 1.0, "closest_to_body": 99.0, "yaw_before": movement.look_yaw, "pitch_before": movement.look_pitch}
 	var previous: Vector3 = player.global_position
 	var lean_started: float = -1.0
 	var elapsed: float = 0.0
 	var seen_cut: bool = false
+	var expected_world: int = WaitingShedSequence.WorldState.VIEWFINDER if bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)) else WaitingShedSequence.WorldState.PRESENT
+	var last_black: float = 0.0
 	device.interact(player)
 	while elapsed < 14.0:
 		await get_tree().process_frame
-		elapsed += get_process_delta_time()
+		var step_time: float = get_process_delta_time()
+		elapsed += step_time
 		result["held"] = bool(result["held"]) and (player.view_locked or movement.is_guided_walking())
 		result["max_step"] = maxf(float(result["max_step"]), previous.distance_to(player.global_position))
 		previous = player.global_position
@@ -1147,12 +1374,25 @@ func _enter_measured(device: ShedCamcorder) -> Dictionary:
 		if lean_started < 0.0 and movement.gesture_direct:
 			lean_started = elapsed
 		var cinema: Camera3D = shed.get_node_or_null("CinemaCamera") as Camera3D
-		var rect: ColorRect = shed.get("_occlusion_rect") as ColorRect
-		var alpha: float = rect.color.a if rect != null and is_instance_valid(rect) and rect.get_parent().visible else 0.0
+		var black: float = float(shed.get("_iris_black_alpha"))
+		var radius: float = float(shed.get("_iris_radius"))
+		if not seen_cut:
+			# Her own view is never circled: only black may cover it, and it covers it before the cut.
+			if radius < 1.5 and black < 0.99:
+				result["circle_on_her_view"] = int(result["circle_on_her_view"]) + 1
+			result["black_before_cut"] = maxf(float(result["black_before_cut"]), black)
+			last_black = black
 		if not seen_cut and cinema != null and cinema.is_current():
 			seen_cut = true
-			result["occlusion_at_cut"] = alpha
+			result["black_at_cut"] = black
 			result["lean"] = elapsed - lean_started if lean_started >= 0.0 else 0.0
+		if seen_cut:
+			# After the cut: the picture is what it should be from the first frame it is seen, and the small round window is peered through.
+			if black < 0.95 and shed.get_world_state() != expected_world:
+				result["wrong_world_frames"] = int(result["wrong_world_frames"]) + 1
+			if black < 0.05 and radius < 0.4:
+				result["peer"] = float(result["peer"]) + step_time
+				result["wander"] = maxf(float(result["wander"]), ((shed.get("_iris_center") as Vector2) - Vector2(0.5, 0.5)).length())
 		if int(shed.get("_aux_mode")) == AUX_VIEWFINDER:
 			result["settled"] = true
 			break
@@ -1177,11 +1417,9 @@ func _leave_measured(action: StringName) -> Dictionary:
 	while elapsed < 6.0:
 		await get_tree().process_frame
 		elapsed += get_process_delta_time()
-		var rect: ColorRect = shed.get("_occlusion_rect") as ColorRect
-		var alpha: float = rect.color.a if rect != null and is_instance_valid(rect) and rect.get_parent().visible else 0.0
 		if lean_from < 0.0 and get_viewport().get_camera_3d() == movement.camera:
 			lean_from = elapsed
-			result["black_before_world"] = alpha >= 0.99
+			result["black_before_world"] = float(shed.get("_iris_radius")) <= 0.35
 		if int(shed.get("_aux_mode")) == AUX_NONE:
 			result["done"] = true
 			result["lean"] = elapsed - lean_from if lean_from >= 0.0 else 0.0
@@ -1422,3 +1660,60 @@ func _standing_ground(space: PhysicsDirectSpaceState3D, around: Vector3) -> floa
 	query.exclude = [player.get_rid()]
 	query.collide_with_areas = false
 	return INF if not space.intersect_shape(query, 1).is_empty() else ground_y
+
+
+## True where a world point is inside the 4:3 picture the tape's overlay leaves visible (the camera renders wider, the black bars cover the rest), in front of the camera.
+func _in_picture(camera: Camera3D, point: Vector3) -> bool:
+	if camera.is_position_behind(point):
+		return false
+
+	var size: Vector2 = get_viewport().get_visible_rect().size
+	var picture_w: float = size.y * 4.0 / 3.0
+	var left: float = (size.x - picture_w) * 0.5
+	var at: Vector2 = camera.unproject_position(point)
+	return at.x >= left and at.x <= left + picture_w and at.y >= 0.0 and at.y <= size.y
+
+
+## Holding Space ("Hold [Space] to Skip", the project's own prompt) skips the recording's cutscene: it is cut to its end at once, the view and the control are the player's own, the stage is saved, and the camcorder
+## behind her makes its sound as ever. A tap does nothing.
+func _check_skip_recording() -> void:
+	await _new_game([&"shelter_clipping_read"])
+	await _near_bench()
+	shed.call("_begin_recording")
+	await _wait(2.0)
+	var skip: HoldToSkip = shed.get("_skip_ui") as HoldToSkip
+	_expect(shed.is_recording_running() and skip != null and skip.is_armed(), "the recording has the skip prompt armed")
+	# A tap does nothing.
+	Input.action_press(&"skip_cinematic")
+	await _wait(0.3)
+	Input.action_release(&"skip_cinematic")
+	await _wait(0.4)
+	_expect(shed.is_recording_running(), "a tap of Space does not skip it")
+	# Held, it does.
+	Input.action_press(&"skip_cinematic")
+	var held: float = 0.0
+	while shed.is_recording_running() and held < 4.0:
+		await get_tree().process_frame
+		held += get_process_delta_time()
+	Input.action_release(&"skip_cinematic")
+	_expect(not shed.is_recording_running() and held >= skip.hold_seconds - 0.2 and held < skip.hold_seconds + 1.0, "held, Space skips it (%.2f s of the %.2f s hold)" % [held, skip.hold_seconds])
+	await get_tree().process_frame
+	_expect(shed.is_recording_done() and not player.view_locked and get_viewport().get_camera_3d() == player.movement_controller.camera and shed.get_node_or_null("CinemaCamera") == null, "the stage is saved and the view and the control are the player's")
+	_expect(shed.get_world_state() == WaitingShedSequence.WorldState.PRESENT and shed.effects_root.visible and not shed.footage.visible, "the shelter is the present, whole")
+	_expect(not skip.is_armed() and not skip.panel.visible, "the prompt is gone")
+	var waited: float = 0.0
+	var cue: AudioStreamPlayer3D = null
+	while cue == null and waited < 4.0:
+		await get_tree().process_frame
+		waited += get_process_delta_time()
+		cue = shed.camcorder.get_head().get_node_or_null("CueSound") as AudioStreamPlayer3D
+	_expect(cue != null and cue.playing, "and the camcorder makes its sound")
+	var led: StandardMaterial3D = (shed.camcorder.find_child("Led", true, false) as MeshInstance3D).material_override as StandardMaterial3D
+	_expect(led.emission_energy_multiplier > 1.0, "with its red light on")
+	await _free_level()
+
+
+## A shader parameter as a number (0 when it has never been set).
+func _number(material: ShaderMaterial, name: StringName) -> float:
+	var value: Variant = material.get_shader_parameter(name)
+	return float(value) if value != null else 0.0

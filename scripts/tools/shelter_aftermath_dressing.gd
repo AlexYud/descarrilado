@@ -96,13 +96,13 @@ static func _smear(seed_value: int, along_trail: float) -> ImageTexture:
 
 ## Handwritten words in blood on a wall (the waiting shed's rear message), as a textured quad facing `facing_yaw` (degrees, 0 faces +Z, 180 faces -Z): uneven strokes made of a few letters' skeletons (a small
 ## stroke alphabet: C A L M E I G), wobbling, thicker where the finger pressed, with a few runs under the heaviest strokes. Dark red-brown, never a clean decal. `text` is upper case.
-static func build_words(parent: Node3D, node_name: String, text: String, at: Vector3, size: Vector2, facing_yaw: float) -> MeshInstance3D:
+static func build_words(parent: Node3D, node_name: String, text: String, at: Vector3, size: Vector2, facing_yaw: float, drip: float = 0.0) -> MeshInstance3D:
 	var quad: QuadMesh = QuadMesh.new()
 	quad.size = size
 	var instance: MeshInstance3D = MeshInstance3D.new()
 	instance.name = node_name
 	instance.mesh = quad
-	instance.material_override = _material(words_texture(text, size.x / size.y))
+	instance.material_override = _material(words_texture(text, size.x / size.y, drip))
 	instance.position = at
 	instance.rotation_degrees = Vector3(0.0, facing_yaw, 0.0)
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -122,8 +122,10 @@ const GLYPHS: Dictionary = {
 
 
 ## The words' alpha mask and colour: strokes brushed along the glyphs with a wobbling width, a few runs below the heavy ones.
-static func words_texture(text: String, aspect: float) -> ImageTexture:
-	var height: int = 128
+static func words_texture(text: String, aspect: float, drip: float = 0.0) -> ImageTexture:
+	# `drip` is the extra height of the picture, as a share of the lettering's own (0 for none): the room under the words for the blood that runs down from them.
+	var text_height: float = 128.0
+	var height: int = int(round(text_height * (1.0 + drip)))
 	var width: int = int(round(float(height) * aspect))
 	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(WET.r, WET.g, WET.b, 0.0))
@@ -136,9 +138,9 @@ static func words_texture(text: String, aspect: float) -> ImageTexture:
 		letters.append(text.substr(i, 1))
 	var advance: float = float(width) * 0.94 / float(maxi(letters.size(), 1))
 	var glyph_w: float = advance * 0.66
-	var glyph_h: float = float(height) * 0.6
+	var glyph_h: float = text_height * 0.6
 	var left: float = float(width) * 0.03
-	var top: float = float(height) * 0.1
+	var top: float = text_height * 0.1
 	var heavy: Array[Vector2] = []
 	for i: int in letters.size():
 		var strokes: Array = GLYPHS.get(letters[i], [])
@@ -156,14 +158,19 @@ static func words_texture(text: String, aspect: float) -> ImageTexture:
 					var py: float = oy + p.y * glyph_h + wobble.get_noise_2d(p.y * 40.0, p.x * 40.0 + float(i) * 7.0) * 4.0
 					var radius: float = 4.2 + 2.0 * weight.get_noise_2d(px, py) + 0.8 * sin(float(s) * 0.7)
 					_dab(image, px, py, radius)
-					if radius > 5.4 and rng.randf() < 0.12:
+					if (rng.randf() < 0.07) if drip > 0.0 else (radius > 5.4 and rng.randf() < 0.12):
 						heavy.append(Vector2(px, py))
 	for spot: Vector2 in heavy:
-		var run_length: float = rng.randf_range(6.0, 22.0)
+		# With room under the words (`drip`) the blood runs a long way down the wall, thinning as it goes and gathering in a bead at the end; otherwise only a short run.
+		var run_length: float = rng.randf_range(6.0, 22.0) if drip <= 0.0 else rng.randf_range(26.0, 40.0 + 110.0 * drip * rng.randf())
+		var run_width: float = 1.7 if drip <= 0.0 else rng.randf_range(2.6, 4.2)
 		var y: float = spot.y
-		while y < spot.y + run_length and y < float(height) - 2.0:
-			_dab(image, spot.x + wobble.get_noise_2d(spot.x, y) * 1.2, y, 1.7 - 0.6 * (y - spot.y) / run_length)
+		while y < spot.y + run_length and y < float(height) - 4.0:
+			var share: float = (y - spot.y) / run_length
+			_dab(image, spot.x + wobble.get_noise_2d(spot.x, y) * 1.2, y, run_width * (1.0 - 0.35 * share))
 			y += 1.0
+		if drip > 0.0 and y < float(height) - 3.0:
+			_dab(image, spot.x + wobble.get_noise_2d(spot.x, y) * 1.2, y + 1.0, run_width * 1.6)
 	return ImageTexture.create_from_image(image)
 
 

@@ -75,7 +75,7 @@ func _build() -> void:
 	_add("house_unstick", "house_unstick", "If the unfinished house is stuck: ends the bedroom scene at once (the cameras and the player are given back, the capsule key lies on the nightstand) and unlocks the pantry and the bedroom.", _house_unstick)
 	_add("house_postcard", "house_postcard", "Plays the bedroom's postcard scene again from where the player stands (best beside the nightstand). Nothing else is reset.", _house_postcard)
 	_add("shed_replay", "shed_replay", "Puts the waiting shed back as before its recording scene (the tape exposed, the viewfinder showing the ordinary shelter, the leaves over the letter); examining the tape plays it again. Only while the token is not taken.", _shed_replay)
-	_add("shed_preview", "shed_preview <seconds|tape <seconds>|off>", "Shows the waiting shed's silent recording at one moment of the footage (EXCERPT seconds, 0 to 62 s, the rear segment at -8 to 0; or `tape <seconds>` on the whole tape's clock, 0 to 70 s: the hidden camera to 20 s, the carried camera to 32 s, the aftermath seen from outside to 46 s, the carried camera dragging something after; no sound, no captions), through its own camera and picture, without taking the player or touching any save; 'off' puts the view back. Works on a finished save too.", _shed_preview)
+	_add("shed_preview", "shed_preview <seconds|tape <seconds>|off>", "Shows the waiting shed's silent recording at one moment of the footage (tape seconds, 0 to 70 s: the hidden camera to 20 s, the carried camera to 32 s, the aftermath seen from outside to 46 s, the carried camera dragging something to 62 s, and the rear segment (CALL ME) to the end; no sound, no captions), through its own camera and picture, without taking the player or touching any save; 'off' puts the view back. Works on a finished save too.", _shed_preview)
 	_add("shed_skip", "shed_skip", "Resolves every stage of the waiting shed's investigation at once (the cinematic is over, the leaves are aside, the letter is read). The token is not touched: it lies in its recess behind the shelter, to be found.", _shed_skip)
 	_add("shed_unstick", "shed_unstick", "Ends the waiting shed's recording scene at once (the player is given back and the camcorder's viewfinder shows the blood trail; the tape becomes reviewable). The rest of the investigation is NOT done by it: see shed_skip.", _shed_unstick)
 	_add("scene", "scene <res://path.tscn>", "Changes to a scene.", _scene)
@@ -346,17 +346,16 @@ func _shed_preview(args: PackedStringArray) -> String:
 			return "[color=%s]The recording is playing, or something else holds the view.[/color]" % _bad_colour()
 		return "The view is back."
 
-	# `<seconds>` is the EXCERPT's clock (0 is the first frame of the Emily excerpt; the rear segment is at -8 to 0); `tape <seconds>` is the whole tape's (0 is the start of the tape, the excerpt starts at 8).
+	# `<seconds>` is the tape's clock (0 is the first frame of the Emily excerpt; the rear segment, "CALL ME", is the last 8 s: 62 to 70); `tape <seconds>` is the same.
 	var as_tape: bool = args[0].to_lower() == "tape"
 	if as_tape and args.size() < 2:
 		return "Usage: shed_preview tape <seconds>"
 	var given: float = args[1].to_float() if as_tape else args[0].to_float()
-	var prefix: float = shed.footage.rear_prefix_seconds if shed.footage != null else 8.0
-	var seconds: float = clampf(given - prefix if as_tape else given, -prefix, 1000.0)
+	var seconds: float = clampf(given, 0.0, 1000.0)
 	if not shed.preview_footage(seconds):
 		return "[color=%s]The recording is playing, something else holds the view, or its cast could not be built.[/color]" % _bad_colour()
 
-	return "The recording at excerpt %.1f s = tape %.1f s (close the console to look; shed_preview off puts the view back)." % [seconds, seconds + prefix]
+	return "The recording at excerpt %.1f s = tape %.1f s (close the console to look; shed_preview off puts the view back)." % [seconds, seconds]
 
 
 func _shed_unstick(_args: PackedStringArray) -> String:

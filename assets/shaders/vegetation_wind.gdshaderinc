@@ -80,16 +80,78 @@ vec3 wind_local_offset(vec3 vertex, mat4 model, vec3 camera, float time) {
 	return (transpose(basis) * world_push) / scale_squared;
 }
 
-// A clearing round a camera that is not the player's (the recorded tape's, which walks through the forest at head height): a plant whose root is nearer the camera than the inner
-// radius is shrunk to nothing, and one between the inner and the outer radius is shrunk part of the way, so that no leaf ever passes through the lens and nothing pops. xyz is the camera, w the inner
-// radius (0 is off). Only the ground plane counts. Not saved; the scene's own plants are untouched.
-uniform vec4 camera_clearing = vec4(0.0);
-uniform float camera_clearing_outer : hint_range(0.1, 10.0) = 2.0;
+// A clearing along the walk of a camera that is not the player's (the recorded tape's, which goes through the forest at head height): a plant whose root is nearer the segment `clearing_a`..`clearing_b`
+// than the radius is shrunk to nothing, one within the band beyond it part of the way. It is set once for a whole shot (the hard cut hides the change) so that no plant is ever seen to shrink, and no
+// leaf passes through the lens. xyz of `clearing_a` is the start, its w the radius (0 is off); only the ground plane counts. Not saved; the scene's own plants are untouched.
+uniform vec4 clearing_a = vec4(0.0);
+uniform vec3 clearing_b = vec3(0.0);
+uniform float clearing_band : hint_range(0.05, 3.0) = 0.4;
+
+// A body going through the plants (the player): the plants near it are pushed away from it, bending from the root (the push is weighted by the vertex's height over its base, so the root stays planted), the more the
+// closer they are and the faster it goes; the ones it touches shiver. This is what most games do (a position, or a few, given to the shader and no state): `actor` is where its feet are (xyz, world metres) and its
+// speed in w (m/s), `actor_radius` how far it reaches (0 is off). Only plants as high as the body are moved (none above its head).
+uniform vec4 actor = vec4(0.0, -10000.0, 0.0, 0.0);
+uniform float actor_radius : hint_range(0.0, 3.0) = 0.0;
+
+vec3 actor_local_offset(vec3 vertex, mat4 model, float time) {
+	if (actor_radius <= 0.0) {
+		return vec3(0.0);
+	}
+
+	float height_ratio = clamp(vertex.y / max(bend_height, 0.05), 0.0, 1.5);
+	float weight = height_ratio * height_ratio;
+	if (weight <= 0.0) {
+		return vec3(0.0);
+	}
+
+	mat3 basis = mat3(model);
+	float scale_squared = dot(basis[1], basis[1]);
+	float scale = sqrt(scale_squared);
+	vec3 root = model[3].xyz;
+	vec3 world = root + basis * vertex;
+	vec2 away = world.xz - actor.xz;
+	float dist = length(away);
+	float influence = 1.0 - smoothstep(actor_radius * 0.2, actor_radius, dist);
+	float above = world.y - actor.y;
+	influence *= 1.0 - smoothstep(1.3, 2.1, above);
+	influence *= smoothstep(-0.6, -0.1, above);
+	if (influence <= 0.0) {
+		return vec3(0.0);
+	}
+
+	// Away from the body (a plant right under the feet is thrown the way its own position leans).
+	vec2 dir = dist > 0.04 ? away / dist : normalize(vec2(sin(root.x * 12.9), cos(root.z * 7.3)) + vec2(0.001));
+	float speed = clamp(actor.w / 3.0, 0.0, 1.0);
+	// How far the tip goes: up to about half the plant's height at a standstill beside it, more when it is going by quickly.
+	float reach = max(bend_height, 0.25) * scale * (0.45 + 0.25 * speed);
+	vec3 push = vec3(dir.x, 0.0, dir.y) * reach * influence * weight;
+	// A bent stem is shorter.
+	push.y -= reach * influence * weight * 0.35;
+	// The shiver of what has just been brushed.
+	float shiver = sin(time * 17.0 + dot(root.xz, vec2(5.3, 8.1))) * 0.06 * reach * influence * weight * (0.3 + speed);
+	push += vec3(shiver, 0.0, -shiver * 0.7);
+	return (transpose(basis) * push) / scale_squared;
+}
+
+// A rectangle of ground (x min, z min, x max, z max, in world metres) under which no plant shows: the plants whose root lies in it, lower than `hide_below` (a height in world metres), are shrunk to nothing. Used for the ground under
+// the waiting shed's slab, where the terrain's low plants would show through the concrete. Zero is off. Not saved: the terrain's own data is untouched.
+uniform vec4 hide_rect = vec4(0.0);
+uniform float hide_below = 1000.0;
 
 vec3 clearing_apply(vec3 vertex, mat4 model) {
-	if (camera_clearing.w <= 0.0) {
+	if (hide_rect.z > hide_rect.x) {
+		vec3 root = model[3].xyz;
+		if (root.x > hide_rect.x && root.x < hide_rect.z && root.z > hide_rect.y && root.z < hide_rect.w && root.y < hide_below) {
+			return vec3(0.0);
+		}
+	}
+	if (clearing_a.w <= 0.0) {
 		return vertex;
 	}
-	float d = distance(model[3].xz, camera_clearing.xz);
-	return vertex * smoothstep(camera_clearing.w, max(camera_clearing_outer, camera_clearing.w + 0.01), d);
+	vec2 p = model[3].xz;
+	vec2 a = clearing_a.xz;
+	vec2 ab = clearing_b.xz - a;
+	float h = clamp(dot(p - a, ab) / max(dot(ab, ab), 0.0001), 0.0, 1.0);
+	float d = distance(p, a + ab * h);
+	return vertex * smoothstep(clearing_a.w, clearing_a.w + clearing_band, d);
 }

@@ -84,9 +84,19 @@ func _run(level: Node) -> void:
 		reached = reached and is_equal_approx(float(material.get_shader_parameter("wind_speed")), 2.0)
 		reached = reached and (material.get_shader_parameter("wind_direction") as Vector2).is_equal_approx(Vector2(0.0, 1.0))
 	_expect(reached, "strength, direction and speed reach every material")
+	# A body going through the plants reaches every material too (the plants bend away from it: see `actor_local_offset`).
+	wind.follow_player = false
+	wind.set_actor(Vector3(1.0, 2.0, 3.0), 2.0)
+	var actor_reached: bool = true
+	for material: ShaderMaterial in wind.materials:
+		actor_reached = actor_reached and (material.get_shader_parameter("actor") as Vector4).is_equal_approx(Vector4(1.0, 2.0, 3.0, 2.0))
+		actor_reached = actor_reached and is_equal_approx(float(material.get_shader_parameter("actor_radius")), wind.push_radius)
+	_expect(actor_reached and wind.push_radius >= 0.8, "the body that plants make way for reaches every material (reach %.1f m)" % wind.push_radius)
 	var sways: Array[float] = []
 	for material: ShaderMaterial in wind.materials:
-		sways.append(float(material.get_shader_parameter("sway_amount")))
+		# (The leaf litter is in the wind's materials only for the shader's hidden ground: it does not sway.)
+		if float(material.get_shader_parameter("sway_amount")) > 0.0:
+			sways.append(float(material.get_shader_parameter("sway_amount")))
 	_expect(sways.min() > 0.01 and sways.max() < 0.8, "no plant sways less than a centimetre or more than 80 cm (%.2f to %.2f m)" % [sways.min(), sways.max()])
 	wind.strength = 0.0
 	_expect(is_zero_approx(float(wind.materials[0].get_shader_parameter("wind_strength"))), "and with strength 0 the air is still")

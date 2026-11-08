@@ -1342,7 +1342,7 @@ msgid "ITEM_FAMILY_LETTER_DESCRIPTION"
 msgstr "Uma resposta curta às perguntas de Sophia. O papel está úmido nas bordas."
 
 msgid "READABLE_FAMILY_LETTER"
-msgstr "Sophia,\n\nNão sei com quem você falou. A Emily não tem irmã."
+msgstr "Sophia,\n\nA Emily não tem irmã, não sei quem te deu essa fita, mas se eu fosse você não assistiria ela de novo, especialmente o final. Ela disse que era pra você."
 
 msgid "CAPTION_SHED_REPLAY_07"
 msgstr "Ela parece conhecer quem chegou."
@@ -1438,7 +1438,10 @@ msgid "CAPTION_SHED_TALK_13"
 msgstr "Não quero sair de casa pensando nisso."
 
 msgid "CAPTION_SHED_TALK_14"
-msgstr "Desculpa."
+msgstr "Você tem razão, desculpa."
+
+msgid "CAPTION_SHED_TALK_FORGIVEN"
+msgstr "Tudo bem."
 
 msgid "CAPTION_SHED_TALK_15"
 msgstr "Quer ver Sociedade dos Poetas Mortos?"

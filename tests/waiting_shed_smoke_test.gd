@@ -117,7 +117,7 @@ func _check_layout() -> void:
 		shed.get_node("%Shelter").find_children("Pillar?", "MeshInstance3D", false, false).size() == 4,
 		"the shelter stands on four pillars"
 	)
-	_expect(shed.get_node("%Shelter/PillarCrack0") != null and shed.get_node("%Shelter/PillarPatch") != null, "one pillar has its crack and its mend")
+	_expect(shed.get_node_or_null("%Shelter/PillarCrack0") == null and shed.get_node_or_null("%Shelter/PillarPatch") == null and shed.get_node_or_null("%Shelter/ExposedBar0") == null and shed.get_node_or_null("%Shelter/Spall") == null, "no thin black crack lines and no exposed iron on the pillars")
 	_expect(shed.get_node("%Track").get_child_count() == 4, "the track is the ready-made track model: three pieces and a bank (no lantern)")
 	_expect(shed.get_node("%Track/TrackBank/Bank") != null, "the track has a low bank to walk over")
 	_expect(shed.get_node_or_null("%MileMarker") != null, "the KM 214 marker stays")
@@ -259,13 +259,14 @@ func _check_text() -> void:
 			_expect(_translated(key, "en").length() < 66 and _translated(key, "pt_BR").length() < 66, "%s is one short line (a longer sentence is split into contiguous groups)" % key)
 			for banned: String in ["help", "ajud", "lip", "lábio", "watch it again", "ver de novo", "bag", "bolsa", "turn it off", "desliga", "marina", "head", "cabeça", "replay", "employee", "funcionário", "ground", "bench", "banco", "sitting", "sentada"]:
 				_expect(not _translated(key, "en").to_lower().contains(banned) and not _translated(key, "pt_BR").to_lower().contains(banned), "%s has nothing of the old scene (%s)" % [key, banned])
-	_expect(cue_count == ShedExpectedTexts.CAPTIONS.size() and cue_count == 25, "three lines of introduction and twenty-two of conversation, and no other (%d)" % cue_count)
+	_expect(cue_count == ShedExpectedTexts.CAPTIONS.size() and cue_count == 26, "three lines of introduction and twenty-three of conversation, and no other (%d)" % cue_count)
 	_expect(_translated("CAPTION_SPEAKER_SOPHIA", "en") == "Sophia" and _translated("CAPTION_SPEAKER_JULIANA", "en") == "Juliana", "the speakers are labelled with their names")
 	var intro: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_COPY)
 	var talk: float = CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK)
 	_expect(intro >= 7.0 and intro <= 10.0, "the introduction is about 8 to 9 s (%.1f)" % intro)
-	_expect(talk >= 74.0 and talk <= 82.0, "the conversation, the second viewing included, is about 78 s (%.1f)" % talk)
+	_expect(talk >= 86.0 and talk <= 94.0, "the conversation, the second viewing included, is about 90 s (%.1f)" % talk)
 	var talk_cues: Array = CaptionTracks.get_cues(CaptionTracks.SHED_REMEMBERED_TALK)
+	_expect(float(_talk_cue("CAPTION_SHED_REPLAY_08")["start"]) >= 4.7, "the tape runs about four seconds in silence before Juliana's first 'Não.' (%.1f s)" % float(_talk_cue("CAPTION_SHED_REPLAY_08")["start"]))
 	# Every group is on screen long enough to read (never under a second, at most about 20 characters a second); a split line's groups meet exactly.
 	for i: int in talk_cues.size() - 1:
 		var cue: Dictionary = talk_cues[i]
@@ -278,14 +279,16 @@ func _check_text() -> void:
 		_expect(float(second_cue["start"]) == float(first_cue["end"]) and first_cue["speaker"] == second_cue["speaker"], "the groups %d and %d of a split line meet exactly" % [pair[0], pair[1]])
 	# The director's pauses, between the end of one line and the start of the next.
 	var gaps: Array = [
-		["CAPTION_SHED_REPLAY_08", "CAPTION_SHED_REPLAY_09", 0.4, 1.0, "hesitation after the first 'Não.' before 'Pode parar, por favor?'"],
-		["CAPTION_SHED_REPLAY_09", "CAPTION_SHED_TALK_01", 0.8, 2.0, "silence before the warning"],
+		["CAPTION_SHED_REPLAY_08", "CAPTION_SHED_REPLAY_09", 0.4, 1.5, "hesitation after the first 'Não.' before 'Pode parar, por favor?'"],
+		["CAPTION_SHED_REPLAY_09", "CAPTION_SHED_REPLAY_07", 2.0, 3.5, "the picture is held and a silence follows before Sophia speaks over it"],
+		["CAPTION_SHED_REPLAY_07", "CAPTION_SHED_TALK_01", 1.0, 2.0, "a pause before the warning"],
 		["CAPTION_SHED_TALK_01", "CAPTION_SHED_REPLAY_10", 1.0, 2.5, "the photograph holds before Sophia goes on"],
 		["CAPTION_SHED_REPLAY_12", "CAPTION_SHED_TALK_02", 1.5, 3.0, "a silence after 'Nunca encontraram.'"],
 		["CAPTION_SHED_TALK_08", "CAPTION_SHED_TALK_09", 1.5, 3.0, "a pause before 'Aqui não é seguro.'"],
 		["CAPTION_SHED_TALK_10", "CAPTION_SHED_TALK_11", 0.0, 0.3, "Juliana's 'Não.' cuts in on the unfinished thought"],
 		["CAPTION_SHED_TALK_11", "CAPTION_SHED_TALK_12", 1.0, 2.5, "a silence after it"],
-		["CAPTION_SHED_TALK_14", "CAPTION_SHED_TALK_15", 2.0, 4.0, "a long silence after 'Desculpa.'"],
+		["CAPTION_SHED_TALK_14", "CAPTION_SHED_TALK_FORGIVEN", 0.8, 2.0, "Juliana forgives her after a breath"],
+		["CAPTION_SHED_TALK_FORGIVEN", "CAPTION_SHED_TALK_15", 4.0, 7.0, "a long silence, over which the view goes back to the bench and starts drifting to her eyes"],
 	]
 	for gap: Array in gaps:
 		var between: float = float(_talk_cue(gap[1])["start"]) - float(_talk_cue(gap[0])["end"])
@@ -309,13 +312,16 @@ func _check_second_viewing_text(talk_cues: Array) -> void:
 	var order: Array[String] = []
 	for cue: Dictionary in talk_cues:
 		order.append(str(cue["key"]))
-	_expect(order.find("CAPTION_SHED_REPLAY_08") < order.find("CAPTION_SHED_REPLAY_09") and order.find("CAPTION_SHED_REPLAY_09") < order.find("CAPTION_SHED_TALK_01") and order.find("CAPTION_SHED_TALK_01") < order.find("CAPTION_SHED_REPLAY_10") and order.find("CAPTION_SHED_REPLAY_10") < order.find("CAPTION_SHED_TALK_02"), "Juliana's first 'Não.' and her request to stop come first, then the warning, then Sophia goes on, and only then the rest of the conversation")
-	var first_no: float = float(_talk_cue("CAPTION_SHED_REPLAY_08")["start"])
+	_expect(order.find("CAPTION_SHED_REPLAY_08") < order.find("CAPTION_SHED_REPLAY_09") and order.find("CAPTION_SHED_REPLAY_09") < order.find("CAPTION_SHED_REPLAY_07") and order.find("CAPTION_SHED_REPLAY_07") < order.find("CAPTION_SHED_TALK_01") and order.find("CAPTION_SHED_TALK_01") < order.find("CAPTION_SHED_REPLAY_10") and order.find("CAPTION_SHED_REPLAY_10") < order.find("CAPTION_SHED_TALK_02"), "Juliana's first 'Não.' and her request to stop come first, then (the tape paused) Sophia's remark, then the warning, then Sophia goes on, and only then the rest of the conversation")
 	var stop_at: float = shed.replay_stop_seconds()
 	var photo_at: float = shed.photo_cut_seconds()
-	_expect(is_equal_approx(stop_at, first_no + shed.replay_stop_after_start_seconds) and absf(shed.replay_stop_after_start_seconds - 0.25) < 0.0001, "the picture is held 0.25 s after Juliana's first 'Não.' begins (%.2f s into the viewing)" % stop_at)
+	_expect(is_equal_approx(stop_at, float(_talk_cue("CAPTION_SHED_REPLAY_09")["end"]) + shed.replay_stop_after_request_seconds) and absf(shed.replay_stop_after_request_seconds - 0.9) < 0.0001, "the picture is held 0.9 s after Juliana's request to stop ends (%.2f s into the viewing)" % stop_at)
 	_expect(is_equal_approx(photo_at, float(_talk_cue("CAPTION_SHED_TALK_01")["end"]) + shed.photo_after_replay_seconds) and absf(shed.photo_after_replay_seconds - 1.0) < 0.0001, "and the photograph cuts in 1.0 s after 'Você não devia ficar vendo esse tipo de coisa.' ends (%.2f s)" % photo_at)
-	_expect(stop_at < float(_talk_cue("CAPTION_SHED_REPLAY_09")["start"]) and photo_at < float(_talk_cue("CAPTION_SHED_REPLAY_10")["start"]), "(both marks fall before the next line)")
+	_expect(stop_at < float(_talk_cue("CAPTION_SHED_REPLAY_07")["start"]) and photo_at < float(_talk_cue("CAPTION_SHED_REPLAY_10")["start"]), "(both marks fall before the next line)")
+	# The notice about Helena Clarke covers her name (Sophia's TALK_06 to TALK_08) and the photograph returns before Juliana speaks again; the view goes back to the bench after "Tudo bem.", arrives with Sophia's last line, and she has it a second after.
+	_expect(shed.notice_cut_in_seconds() <= float(_talk_cue("CAPTION_SHED_TALK_06")["start"]) and shed.notice_cut_in_seconds() >= float(_talk_cue("CAPTION_SHED_TALK_05")["end"]) - 0.0001 and shed.notice_cut_out_seconds() > float(_talk_cue("CAPTION_SHED_TALK_08")["end"]) and shed.notice_cut_out_seconds() < float(_talk_cue("CAPTION_SHED_TALK_09")["start"]), "the notice about Helena Clarke is on screen while her name is spoken (%.1f to %.1f s)" % [shed.notice_cut_in_seconds(), shed.notice_cut_out_seconds()])
+	_expect(shed.return_cut_seconds() > float(_talk_cue("CAPTION_SHED_TALK_FORGIVEN")["end"]) and shed.return_cut_seconds() < float(_talk_cue("CAPTION_SHED_TALK_15")["start"]) and is_equal_approx(shed.return_cut_seconds() + shed.return_move_seconds(), float(_talk_cue("CAPTION_SHED_TALK_16")["end"])), "the view goes back to the bench during the silence and arrives exactly as Sophia's last line ends (%.1f to %.1f s)" % [shed.return_cut_seconds(), shed.return_cut_seconds() + shed.return_move_seconds()])
+	_expect(absf(CaptionTracks.get_length(CaptionTracks.SHED_REMEMBERED_TALK) - float(_talk_cue("CAPTION_SHED_TALK_16")["end"]) - shed.return_hold_seconds) < 0.0001 and absf(shed.return_hold_seconds - 1.0) < 0.0001, "and the control is hers a second after it")
 	var footage: ShelterFootage = shed.footage
 	var held_at: float = shed.replay_from() + stop_at
 	_expect(footage.passage_at(shed.replay_from()) == &"A" and footage.passage_at(held_at) == &"A" and held_at > footage.hand_up_start_seconds and held_at < footage.hand_down_end_seconds, "the viewing replays from %.1f s and is held at %.1f s of the excerpt: on her raised hand, inside the first shot" % [shed.replay_from(), held_at])
@@ -551,6 +557,8 @@ func _check_scene_plays_once() -> void:
 	_expect(str(_seen.get("order_ok", "")) == "yes", "the subtitles came in order and none was left behind across a cut (%s)" % str(_seen.get("order_ok", "")))
 	var led: MeshInstance3D = shed.camcorder.find_child("Led", true, false)
 	_expect((led.material_override as StandardMaterial3D).emission_energy_multiplier == 0.0 and shed.camcorder.visible, "its light is out and it is still there")
+	_expect(_seen.has("fov_start") and float(_seen["fov_end"]) < float(_seen["fov_start"]) - 8.0 and (_seen["origin_end"] as Vector3).distance_to(_seen["origin_start"] as Vector3) > 0.15, "the first shot, the tape on the bench, zooms in instead of standing still (lens %.0f to %.0f degrees, the camera %.2f m closer)" % [float(_seen.get("fov_start", 0.0)), float(_seen.get("fov_end", 0.0)), (_seen.get("origin_end", Vector3.ZERO) as Vector3).distance_to(_seen.get("origin_start", Vector3.ZERO) as Vector3)])
+	_expect(float(_seen.get("last_cinema_gap", 9.0)) < 0.05 and float(_seen.get("last_cinema_turn", 90.0)) < 0.5 and float(_seen.get("last_cinema_fov", 90.0)) < 0.5, "the last frame of the scene's camera is the player's own view (%.3f m, %.2f degrees, %.2f of lens apart): the view drifts back to her eyes and is handed over without a jump" % [float(_seen.get("last_cinema_gap", -1.0)), float(_seen.get("last_cinema_turn", -1.0)), float(_seen.get("last_cinema_fov", -1.0))])
 	_expect(bool(SaveManager.get_state_value(&"puzzles", &"shelter_recording_done", false)), "completion is saved")
 	_expect(not bool(SaveManager.get_state_value(&"collectibles", &"sophia_ficha", false)), "the token is not collected by the scene")
 	_expect(not player.has_inventory_item("sophia_ficha"), "and not in the inventory")
@@ -579,6 +587,8 @@ func _check_after_scene() -> void:
 	var cue: AudioStreamPlayer3D = shed.camcorder.get_head().get_node_or_null("CueSound") as AudioStreamPlayer3D
 	_expect(heard_at >= 1.2 and heard_at <= 1.9, "the camcorder's own sound begins 1.2 to 1.8 s after the control (%.2f s)" % heard_at)
 	_expect(cue != null and shed.camcorder.get_head().is_ancestor_of(cue) and cue.stream != null, "from the device itself, a 3D source (not a UI sound)")
+	var led_after: MeshInstance3D = shed.camcorder.find_child("Led", true, false)
+	_expect((led_after.material_override as StandardMaterial3D).emission_energy_multiplier > 1.0, "and with it the camcorder's red light comes on, to say it is on")
 	_expect(not player.view_locked and get_viewport().get_camera_3d() == camera and absf(player.movement_controller.look_yaw - yaw_after) < 0.05, "and it forces no look: the player is free and their view has not moved")
 	await _wait(1.8)
 	_expect(cue != null and not cue.playing, "and it stops by itself, once")
@@ -1439,6 +1449,22 @@ func _watch() -> void:
 		if in_cinema and not _seen.has("cinema_first"):
 			_seen["cinema_first"] = shed.vhs.get_parent() == shed.effects_root and shed.vhs.is_inside_tree()
 		last_cinema_origin = current.global_position if in_cinema else Vector3.ZERO
+		if in_cinema and not _seen.has("shot1_done"):
+			# The first shot (the tape on the bench) is a slow zoom in, not a still.
+			var overlay_node: Node = shed.get("_overlay") as Node
+			if overlay_node != null and is_instance_valid(overlay_node) and bool(overlay_node.get("visible")):
+				_seen["shot1_done"] = true
+			else:
+				if not _seen.has("fov_start"):
+					_seen["fov_start"] = current.fov
+					_seen["origin_start"] = current.global_position
+				_seen["fov_end"] = current.fov
+				_seen["origin_end"] = current.global_position
+		if in_cinema:
+			# The last frame of the scene's camera against the player's own (the camera drifts back to her eyes: nothing may jump when the view is handed over).
+			_seen["last_cinema_gap"] = current.global_position.distance_to(camera.global_position)
+			_seen["last_cinema_turn"] = rad_to_deg(current.global_basis.get_rotation_quaternion().angle_to(camera.global_basis.get_rotation_quaternion()))
+			_seen["last_cinema_fov"] = absf(current.fov - camera.fov)
 		var changed_world: bool = not shed.effects_root.visible or shed.archive_dressing.visible or not shed.replaced_plank.visible or not shed.camcorder.visible
 		if changed_world and not in_cinema:
 			_seen["hidden_in_player_view"] = int(_seen.get("hidden_in_player_view", 0)) + 1
@@ -1791,7 +1817,7 @@ func _check_pinned_texts() -> void:
 	_expect(_translated("READABLE_HELENA_NOTICE", "en").contains("born and raised in the Fenda") and _translated("READABLE_HELENA_NOTICE", "pt_BR").contains("nascida e criada na Fenda"), "Helena was born and raised in the Fenda")
 	_expect(not _translated("READABLE_MARINA_SISTER_NOTE", "en").to_lower().contains("sister") and not _translated("ITEM_MARINA_SISTER_NOTE_NAME", "en").to_lower().contains("sister"), "the note that came with the tape does not call its writer a sister (the family's reply says Emily has none)")
 	_expect(_translated("READABLE_CLIPPING", "en").contains("remains missing") and _translated("READABLE_CLIPPING", "pt_BR").contains("não foi localizada"), "the clipping says Emily is missing")
-	_expect(_translated("READABLE_FAMILY_LETTER", "en").ends_with("Emily doesn't have a sister.") and _translated("READABLE_FAMILY_LETTER", "pt_BR").ends_with("A Emily não tem irmã."), "the family's reply says she has no sister")
+	_expect(_translated("READABLE_FAMILY_LETTER", "en").contains("Emily doesn't have a sister") and _translated("READABLE_FAMILY_LETTER", "pt_BR").contains("A Emily não tem irmã") and _translated("READABLE_FAMILY_LETTER", "en").contains("especially the ending"), "the family's reply says she has no sister")
 
 
 ## From the moment the first cinematic ends (the control is back), counts game time until the physical camcorder's own sound begins.

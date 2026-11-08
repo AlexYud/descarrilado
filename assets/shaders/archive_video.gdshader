@@ -24,6 +24,10 @@ uniform float fps : hint_range(4.0, 30.0) = 12.0;
 uniform vec2 tape_size = vec2(340.0, 255.0);
 // The end of the tape: 1 is nothing but static.
 uniform float burst : hint_range(0.0, 1.0) = 0.0;
+// The camera failing (the shadow's scene): 0 is nothing, 1 is the worst: whole bands of rows thrown sideways, the picture rolling and jumping, the colours torn apart, snow.
+uniform float glitch : hint_range(0.0, 1.0) = 0.0;
+// How dark the whole picture is (the light flickering and failing): 0 is as it is, 1 is black.
+uniform float dim : hint_range(0.0, 1.0) = 0.0;
 
 // A hash with no sine in it (a sine's pattern shows as diagonal stripes once the numbers are large).
 float hash(vec2 p) {
@@ -47,7 +51,15 @@ void fragment() {
 	float slip = (hash(vec2(row, frame)) - 0.5) * 0.0035;
 	float foot = smoothstep(0.93, 1.0, uv.y);
 	slip += (hash(vec2(row, frame + 5.0)) - 0.5) * 0.05 * foot;
+	// Failing (the shadow's scene): whole bands of rows are thrown across the picture, the rows wobble, the picture jumps, loses its vertical hold and rolls, and pulses in size.
+	float band = floor(uv.y * 16.0 + hash(vec2(frame, 1.7)) * 16.0);
+	slip += (hash(vec2(band, frame + 11.0)) - 0.5) * 0.8 * glitch * step(0.4, hash(vec2(band, frame + 2.0)));
+	slip += sin(uv.y * 38.0 + frame * 1.7) * 0.016 * glitch * step(0.5, hash(vec2(frame, 40.0)));
+	float jump = (hash(vec2(frame, 6.0)) - 0.5) * 0.6 * glitch * step(0.6, hash(vec2(frame, 5.0)));
+	float hold = glitch * step(0.72, hash(vec2(frame, 14.0))) * fract(TIME * 1.7);
 	vec2 at = uv + vec2(slip, (hash(vec2(frame, 9.0)) - 0.5) * 0.0025) * degrade;
+	at = (at - 0.5) * (1.0 - 0.12 * glitch * hash(vec2(frame, 50.0))) + 0.5;
+	at.y = fract(at.y + jump + hold);
 
 	vec3 clean = tap(uv, UV, SCREEN_UV, SCREEN_PIXEL_SIZE);
 
@@ -58,8 +70,13 @@ void fragment() {
 	vec3 b = tap(coarse + vec2(step_x * 1.5, 0.0), UV, SCREEN_UV, SCREEN_PIXEL_SIZE);
 	vec3 c0 = tap(coarse - vec2(step_x * 1.5, 0.0), UV, SCREEN_UV, SCREEN_PIXEL_SIZE);
 	float luma = dot(a, vec3(0.299, 0.587, 0.114)) * 0.4 + dot(b, vec3(0.299, 0.587, 0.114)) * 0.3 + dot(c0, vec3(0.299, 0.587, 0.114)) * 0.3;
-	vec3 bleed = vec3(tap(coarse + vec2(step_x * 3.0, 0.0), UV, SCREEN_UV, SCREEN_PIXEL_SIZE).r, a.g, tap(coarse - vec2(step_x * 3.0, 0.0), UV, SCREEN_UV, SCREEN_PIXEL_SIZE).b);
+	// The colours are torn apart sideways as the camera fails.
+	float split = step_x * (3.0 + 16.0 * glitch);
+	vec3 bleed = vec3(tap(coarse + vec2(split, 0.0), UV, SCREEN_UV, SCREEN_PIXEL_SIZE).r, a.g, tap(coarse - vec2(split, 0.0), UV, SCREEN_UV, SCREEN_PIXEL_SIZE).b);
 	vec3 worn = vec3(luma) + (bleed - vec3(dot(bleed, vec3(0.299, 0.587, 0.114)))) * 1.2;
+	// A second, ghostly image of the picture lags beside it as the camera fails.
+	vec3 ghost_image = tap(coarse - vec2(0.05 * glitch, 0.0), UV, SCREEN_UV, SCREEN_PIXEL_SIZE);
+	worn = mix(worn, vec3(dot(ghost_image, vec3(0.299, 0.587, 0.114))) + (bleed - vec3(dot(bleed, vec3(0.299, 0.587, 0.114)))) * 0.6, 0.4 * glitch);
 
 	vec3 c = mix(clean, worn, degrade);
 	float l = dot(c, vec3(0.299, 0.587, 0.114));
@@ -89,6 +106,17 @@ void fragment() {
 	c -= scanlines * (0.5 + 0.5 * sin(FRAGCOORD.y * 3.14159)) * mix(1.0, 0.0, 1.0 - degrade);
 	vec2 d = UV - 0.5;
 	c *= 1.0 - vignette * dot(d, d) * 2.0 * (0.4 + 0.6 * degrade);
+
+	// Failing: whole frames of the picture turned to its negative, frames dropped to black, a red wash, and (below) streaks of snow.
+	c = mix(c, vec3(1.0) - c, 0.5 * glitch * step(0.95, hash(vec2(frame, 33.0))));
+	c *= 1.0 - 0.75 * glitch * step(0.92, hash(vec2(frame, 44.0)));
+	c += vec3(0.3, 0.0, 0.02) * glitch * step(0.9, hash(vec2(frame, 60.0)));
+	// Failing: streaks of snow on some rows, and a flash now and then.
+	float snow_rows = glitch * 0.5 * step(0.74, hash(vec2(row, frame + 19.0)));
+	c = mix(c, vec3(hash(floor(FRAGCOORD.xy * 0.5) + frame * 13.0) * 0.8), snow_rows);
+	c += glitch * 0.25 * step(0.9, hash(vec2(frame, 21.0)));
+
+	c *= 1.0 - dim;
 
 	// The end of the tape.
 	c = mix(c, vec3(hash(floor(FRAGCOORD.xy * 0.5) + frame * 31.0) * 0.85), burst);

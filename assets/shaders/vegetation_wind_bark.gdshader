@@ -14,7 +14,7 @@ uniform float roughness : hint_range(0.0, 1.0) = 1.0;
 uniform float normal_scale : hint_range(-16.0, 16.0) = 1.0;
 
 void vertex() {
-	VERTEX += wind_local_offset(VERTEX, MODEL_MATRIX, CAMERA_POSITION_WORLD, TIME);
+	VERTEX += wind_local_offset(VERTEX, MODEL_MATRIX, CAMERA_POSITION_WORLD, TIME) + actor_local_offset(VERTEX, MODEL_MATRIX, TIME);
 	VERTEX = clearing_apply(VERTEX, MODEL_MATRIX);
 }
 

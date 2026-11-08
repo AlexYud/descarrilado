@@ -103,6 +103,8 @@ func show_picture() -> void:
 func hide_overlay() -> void:
 	visible = false
 	set_burst(0.0)
+	set_glitch(0.0)
+	set_dim(0.0)
 	set_paused(false)
 	set_counter_text("")
 	if _black != null:
@@ -115,6 +117,18 @@ func set_burst(amount: float) -> void:
 		_material.set_shader_parameter(&"burst", clampf(amount, 0.0, 1.0))
 	if _play_label != null:
 		_play_label.visible = amount < 0.5
+
+
+## The camera failing (the shadow's scene): 0 is a clean picture, 1 the worst: rows thrown sideways, the picture jumping, the colours torn apart, snow.
+func set_glitch(amount: float) -> void:
+	if _material != null:
+		_material.set_shader_parameter(&"glitch", clampf(amount, 0.0, 1.0))
+
+
+## How dark the picture is (the light flickering and failing in the shadow's scene): 0 as it is, 1 black.
+func set_dim(amount: float) -> void:
+	if _material != null:
+		_material.set_shader_parameter(&"dim", clampf(amount, 0.0, 1.0))
 
 
 ## The machine's word in the corner: PLAY while the tape runs, PAUSE once it is stopped (the picture is held by the sequence).

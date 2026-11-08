@@ -29,6 +29,8 @@ const PROFILES: Dictionary = {
 	"small_foliage_02": {"sway": 0.2, "flutter": 0.012},
 	"white_flower_01": {"sway": 0.26, "flutter": 0.012},
 	"white_flower_02": {"sway": 0.26, "flutter": 0.012},
+	# Leaf litter does not sway; it is listed so that it gets the wind's shader (and with it the hidden ground under the shelter's slab).
+	"ground_leaves_01": {"sway": 0.0, "flutter": 0.0},
 }
 
 const LEAVES_SHADER: Shader = preload("res://assets/shaders/vegetation_wind_leaves.gdshader")
@@ -48,6 +50,13 @@ const BARK_SHADER: Shader = preload("res://assets/shaders/vegetation_wind_bark.g
 	set(value):
 		speed = value
 		_push_parameters()
+## How far a body going through the plants reaches (metres; 0 is off): the plants near the player bend away from them (see `actor_local_offset` in the shader), and shiver if they brush them.
+@export_range(0.0, 3.0, 0.05) var push_radius: float = 1.1:
+	set(value):
+		push_radius = value
+		_push_parameters()
+## False leaves the body to `set_actor` (the tests).
+@export var follow_player: bool = true
 
 ## The wind materials made, by the asset's name (the tests look at them).
 var materials: Array[ShaderMaterial] = []
@@ -57,6 +66,8 @@ var assets_changed: Array[String] = []
 ## instances get it directly, because setting the asset's override at run time makes the terrain redraw the editor's
 ## thumbnails, which only works in the editor.
 var _override_materials: Dictionary = {}
+var _hidden_rect: Rect2 = Rect2()
+var _hidden_below: float = 1000.0
 
 
 func _ready() -> void:
@@ -159,14 +170,87 @@ func _wind_instance(instance: MultiMeshInstance3D) -> void:
 func _push_parameters() -> void:
 	var direction: Vector2 = Vector2.from_angle(deg_to_rad(direction_degrees))
 	for material: ShaderMaterial in materials:
+		material.set_shader_parameter("actor_radius", push_radius)
 		material.set_shader_parameter("wind_strength", strength)
 		material.set_shader_parameter("wind_direction", direction)
 		material.set_shader_parameter("wind_speed", speed)
 
 
-## A clearing of the plants round a camera that walks through the forest (the waiting shed's tape): roots nearer than `inner` metres (on the ground plane) shrink to nothing, roots up to `outer` shrink part of the way.
-## `inner` 0 puts everything back. Only in the running game; nothing of the terrain is touched.
-func set_camera_clearing(position: Vector3, inner: float, outer: float = 2.0) -> void:
+## A clearing of the plants along the walk of a camera that goes through the forest (the waiting shed's tape): roots nearer than `radius` metres (on the ground plane) to the segment `from`..`to` shrink to nothing,
+## roots up to `band` metres further part of the way. `radius` 0 puts everything back. Meant to be set once for a whole shot, under a cut. Only in the running game; nothing of the terrain is touched.
+func set_clearing_segment(from: Vector3, to: Vector3, radius: float, band: float = 0.4) -> void:
 	for material: ShaderMaterial in materials:
-		material.set_shader_parameter("camera_clearing", Vector4(position.x, position.y, position.z, inner))
-		material.set_shader_parameter("camera_clearing_outer", outer)
+		material.set_shader_parameter("clearing_a", Vector4(from.x, from.y, from.z, radius))
+		material.set_shader_parameter("clearing_b", to)
+		material.set_shader_parameter("clearing_band", band)
+
+
+## No plant shows in a rectangle of ground (`rect`: x and z in world metres) whose root is lower than `below` (world height): the ground under a slab. An empty rect puts everything back. Only in the running game;
+## nothing of the terrain is touched.
+func set_hidden_ground(rect: Rect2, below: float = 1000.0) -> void:
+	_hidden_rect = rect
+	_hidden_below = below
+	for material: ShaderMaterial in materials:
+		material.set_shader_parameter("hide_rect", Vector4(rect.position.x, rect.position.y, rect.end.x, rect.end.y) if rect.has_area() else Vector4(0.0, 0.0, 0.0, 0.0))
+		material.set_shader_parameter("hide_below", below)
+
+
+## The mesh the terrain draws an asset with (its wind materials on it), by the asset's name (the folder name of its model: `small_foliage_01`); null if there is none. Plants of the clearing's dressing use it so that they sway as the forest does.
+func asset_mesh(asset_name: String) -> Mesh:
+	if terrain == null or terrain.assets == null:
+		return null
+
+	for index: int in terrain.assets.get_mesh_count():
+		var asset: Terrain3DMeshAsset = terrain.assets.get_mesh_asset(index)
+		if asset != null and asset.name == asset_name and PROFILES.has(asset_name):
+			return asset.get_mesh(0)
+	return null
+
+
+## The material the terrain gives every instance of an asset whose tint is a material override (the grass tufts), or null.
+func asset_override_material(asset_name: String) -> Material:
+	if terrain == null or terrain.assets == null:
+		return null
+
+	for index: int in terrain.assets.get_mesh_count():
+		var asset: Terrain3DMeshAsset = terrain.assets.get_mesh_asset(index)
+		if asset != null and asset.name == asset_name and _override_materials.has(asset.id):
+			return _override_materials[asset.id] as Material
+	return null
+
+
+# ============================================================
+# THE PLAYER GOING THROUGH THE PLANTS
+# ============================================================
+
+var _actor_previous: Vector3 = Vector3.INF
+var _actor_speed: float = 0.0
+
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint() or not enabled or materials.is_empty() or not follow_player or push_radius <= 0.0:
+		return
+
+	var player: Node3D = get_tree().get_first_node_in_group(&"player") as Node3D
+	if player == null:
+		return
+
+	# Where the feet are: the player's eyes are about 1.54 m over the ground.
+	var camera: Node3D = player.get_node_or_null(^"Head/Camera3D") as Node3D
+	var feet: Vector3 = player.global_position
+	if camera != null:
+		feet = Vector3(camera.global_position.x, camera.global_position.y - 1.54, camera.global_position.z)
+	var speed: float = 0.0
+	if _actor_previous != Vector3.INF and delta > 0.0:
+		speed = Vector2(feet.x - _actor_previous.x, feet.z - _actor_previous.z).length() / delta
+	_actor_previous = feet
+	# (Smoothed: a frame's step is a poor measure of a walking speed.)
+	_actor_speed = lerpf(_actor_speed, minf(speed, 8.0), clampf(delta * 8.0, 0.0, 1.0))
+	set_actor(feet, _actor_speed)
+
+
+## Puts the body that the plants make way for at `feet` (world), going `speed` metres a second.
+func set_actor(feet: Vector3, speed: float) -> void:
+	var value: Vector4 = Vector4(feet.x, feet.y, feet.z, speed)
+	for material: ShaderMaterial in materials:
+		material.set_shader_parameter("actor", value)
