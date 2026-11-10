@@ -202,15 +202,19 @@ const TAPE_SOUND_PATH: String = "res://assets/audios/placeholder_video_tape.mp3"
 @export var creature_seen_after_seconds: float = 2.0
 ## Putting the eye to the eyecup: the walk (when she is not already at the rear of the device) is the project's guided walk; then the lean takes this long (seconds), and a short black occlusion (the eyecup)
 ## hides the cut to the lens. Stepping back takes `viewfinder_exit_seconds`. A fresh movement input is accepted this long (seconds) after the view has settled.
-@export var viewfinder_enter_seconds: float = 1.75
+@export var viewfinder_enter_seconds: float = 1.65
 @export var viewfinder_exit_seconds: float = 0.55
 @export var viewfinder_input_guard_seconds: float = 0.35
-@export var viewfinder_iris_open_seconds: float = 0.6
+@export var viewfinder_iris_open_seconds: float = 0.45
 ## Her own view is never circled: as the eye meets the eyecup it goes to black over the last `viewfinder_black_in_seconds` of the lean, the cut to the lens happens in that black (the lens's picture is built and settled under it),
 ## the black then lifts over `viewfinder_black_out_seconds` leaving only the small round window of the eyepiece with the lens's picture in it, which is peered through for `viewfinder_peer_seconds` before it opens (`viewfinder_iris_open_seconds`).
-@export var viewfinder_black_in_seconds: float = 0.3
-@export var viewfinder_black_out_seconds: float = 0.3
-@export var viewfinder_peer_seconds: float = 0.35
+@export var viewfinder_black_in_seconds: float = 0.5
+@export var viewfinder_black_out_seconds: float = 0.22
+@export var viewfinder_peer_seconds: float = 0.55
+## Under the black, after the cut, the picture settles at least this long (and at least 4 frames) before the black lifts; the frame time is clamped, so a long frame is not counted.
+@export var viewfinder_settle_min_seconds: float = 0.15
+## The iris's visible opening ends this far past the screen's corner (screen heights); it is then snapped to `IRIS_OPEN`, off screen.
+@export var viewfinder_iris_overshoot: float = 0.08
 @export var viewfinder_iris_close_seconds: float = 0.2
 ## How far the body stops behind the eyecup (metres): the eye goes the rest of the way.
 @export var viewfinder_stand_back_metres: float = 0.55
@@ -1784,8 +1788,12 @@ func _enter_viewfinder(run: int) -> void:
 		_abort_aux()
 		return
 
-	# She stands at the eyepiece: from here the view is held. The lean: the eye goes to the eyecup and the gaze onto the lens's axis, smoothly (no tremor). The world narrows to a round hole (the eyecup) that
-	# wanders about the screen for a moment, as a hand finds an eyepiece, and settles in the middle; under that circle the view is cut to the lens, and the circle then opens onto the picture.
+	# Everything expensive that changes nothing on screen is done now, in the light (the scene's camera and its light, the footage, the overlay), so that
+	# nothing has to be made under the black.
+	_prewarm_viewfinder()
+
+	# THE LEAN, a plunge and not a stop: the gaze settles on the lens's axis by 80 % of the lean, while the eye's travel (soft at the start, 2w^2 - w^3) keeps its speed
+	# to the eyecup; her own view goes to black over the last `viewfinder_black_in_seconds`, full exactly as the eye arrives, so the motion is never seen to end.
 	_lock_player()
 	movement.gesture_direct = true
 	var local_axis: Vector3 = _held.global_transform.basis.inverse() * axis
@@ -1795,6 +1803,7 @@ func _enter_viewfinder(run: int) -> void:
 	var pitch_to: float = clampf(-rad_to_deg(asin(clampf(local_axis.y, -1.0, 1.0))), -35.0, 75.0)
 	var head_node: Node3D = movement.get("head") as Node3D
 	var duration: float = maxf(viewfinder_enter_seconds, 0.3)
+	var black_in: float = minf(maxf(viewfinder_black_in_seconds, 0.05), duration)
 	var elapsed: float = 0.0
 	while elapsed < duration:
 		await get_tree().process_frame
@@ -1804,49 +1813,67 @@ func _enter_viewfinder(run: int) -> void:
 			continue
 		elapsed += get_process_delta_time()
 		var w: float = clampf(elapsed / duration, 0.0, 1.0)
-		var u: float = smoothstep(0.0, 1.0, w)
-		movement.look_yaw = -rad_to_deg(lerp_angle(yaw_from, yaw_to, u))
-		movement.look_pitch = lerpf(pitch_from, pitch_to, u)
+		var u_look: float = smoothstep(0.0, 1.0, clampf(w / 0.8, 0.0, 1.0))
+		var u_eye: float = w * w * (2.0 - w)
+		movement.look_yaw = -rad_to_deg(lerp_angle(yaw_from, yaw_to, u_look))
+		movement.look_pitch = lerpf(pitch_from, pitch_to, u_look)
 		_vf_full_offset = head_node.to_local(eye_world) - movement.original_camera_position
-		movement.gesture_offset = _vf_full_offset * u
-		# The eye meets the eyecup: her own view goes to black over the last moments of the lean (a plain black, no circle on what she sees).
-		_set_eye_black(smoothstep(duration - viewfinder_black_in_seconds, duration, elapsed))
+		movement.gesture_offset = _vf_full_offset * u_eye
+		_set_eye_black(smoothstep(duration - black_in, duration, elapsed))
 
-	# In the black: the cut to the lens. Its picture (the bloodstained shelter, the tape's look) is built and given a few frames to settle under the black, so that nothing of it is ever seen being put together.
+	# THE CUT, under a black that has really been on screen: two frames of full black before anything is swapped.
 	_set_eye_black(1.0)
 	_set_iris(IRIS_EYE, Vector2(0.5, 0.5))
-	_set_eye_black(1.0)
-	_show_viewfinder_picture()
-	_show_viewfinder_prompt(true)
-	for settle: int in 4:
+	for black_frame: int in 2:
 		await get_tree().process_frame
 		if not _aux_alive(run):
 			return
-	# The black lifts and there is only the small round window of the eyepiece, the lens's picture in it (glimpsed as through an eyepiece), which wanders a little and settles.
-	var lifting: float = 0.0
+	_show_viewfinder_picture()
+	_show_viewfinder_prompt(true)
+
+	# Settling under the black: at least 4 frames AND `viewfinder_settle_min_seconds`, counted with a clamped frame time (a long frame is not time that has passed).
+	var settled: float = 0.0
+	var frames: int = 0
+	while frames < 4 or settled < viewfinder_settle_min_seconds:
+		await get_tree().process_frame
+		if not _aux_alive(run):
+			return
+		frames += 1
+		settled += _frame_dt()
+
+	# THE PEER: the black lifts quickly onto the small round window, which breathes (a lens focusing) and wanders a little, then settles.
 	var peering: float = 0.0
-	var peer_total: float = viewfinder_black_out_seconds + viewfinder_peer_seconds
+	var lift: float = maxf(viewfinder_black_out_seconds, 0.05)
+	var peer_total: float = lift + viewfinder_peer_seconds
 	while peering < peer_total:
 		await get_tree().process_frame
 		if not _aux_alive(run):
 			return
 		if get_tree().paused:
 			continue
-		peering += get_process_delta_time()
-		lifting = clampf(peering / maxf(viewfinder_black_out_seconds, 0.05), 0.0, 1.0)
-		_set_eye_black(1.0 - smoothstep(0.0, 1.0, lifting))
-		_set_iris(IRIS_EYE, Vector2(0.5, 0.5) + _iris_wander(peering, 0.4 * (1.0 - smoothstep(0.0, 1.0, peering / peer_total))))
+		peering += _frame_dt()
+		var settle_t: float = smoothstep(0.0, 1.0, clampf(peering / peer_total, 0.0, 1.0))
+		_set_eye_black(1.0 - smoothstep(0.0, 1.0, clampf(peering / lift, 0.0, 1.0)))
+		var breathe: float = lerpf(IRIS_EYE * 0.92, IRIS_EYE, settle_t)
+		_set_iris(breathe, Vector2(0.5, 0.5) + _iris_wander(peering, 0.4 * (1.0 - settle_t)))
 	_set_eye_black(0.0)
 	_set_iris(IRIS_EYE, Vector2(0.5, 0.5))
+
+	# THE OPENING: an ease-out to just past the screen's corner (all that is ever seen of it), then snapped to "no hole", off screen.
+	var screen: Vector2 = get_viewport().get_visible_rect().size
+	var corner: float = 0.5 * sqrt(pow(screen.x / maxf(screen.y, 1.0), 2.0) + 1.0)
+	var visible_end: float = corner + viewfinder_iris_overshoot
 	var opening: float = 0.0
-	while opening < viewfinder_iris_open_seconds:
+	var open_total: float = maxf(viewfinder_iris_open_seconds, 0.1)
+	while opening < open_total:
 		await get_tree().process_frame
 		if not _aux_alive(run):
 			return
 		if get_tree().paused:
 			continue
-		opening += get_process_delta_time()
-		_set_iris(lerpf(IRIS_EYE, IRIS_OPEN, smoothstep(0.0, 1.0, opening / viewfinder_iris_open_seconds)), Vector2(0.5, 0.5))
+		opening += _frame_dt()
+		var t: float = clampf(opening / open_total, 0.0, 1.0)
+		_set_iris(lerpf(IRIS_EYE, visible_end, 1.0 - pow(1.0 - t, 3.0)), Vector2(0.5, 0.5))
 	_set_iris(IRIS_OPEN, Vector2(0.5, 0.5))
 	_aux_mode = AuxMode.VIEWFINDER
 	_vf_phase = &"settled"
@@ -1856,6 +1883,24 @@ func _enter_viewfinder(run: int) -> void:
 		await _wait(viewfinder_read_seconds)
 		if _aux_alive(run) and _aux_mode == AuxMode.VIEWFINDER and not _flag(KEY_LEAF_REVEALED):
 			_begin_creature_scene(run)
+
+
+## A frame's time, never more than 0.1 s: a long hitch (something being built under the black) must not eat the reveal, while a slow machine still plays in real time.
+func _frame_dt() -> float:
+	return minf(get_process_delta_time(), 0.1)
+
+
+## What the cut needs that can be made before it, while she is still in the light: the scene's camera and its light (made, not current), the footage, the
+## overlay (built, hidden) and the iris layer. Nothing here changes what is on screen.
+func _prewarm_viewfinder() -> void:
+	_cinema_camera()
+	if footage != null:
+		footage.prepare()
+	if _overlay == null or not is_instance_valid(_overlay):
+		_overlay = ArchiveVideoOverlay.new()
+		_overlay.force_full_look = true
+		add_child(_overlay)
+	_ensure_iris_layer()
 
 
 ## The lens's own picture: the scene's camera at shot A with the 4:3 overlay; the ordinary shelter before the first cinematic, the bloodstained one after.
