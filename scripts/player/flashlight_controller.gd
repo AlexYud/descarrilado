@@ -33,6 +33,16 @@ signal toggled_by_player(is_on: bool)
 @export var probe_distance: float = 8.0
 @export var probe_origin_offset: float = 0.05
 
+## Where the hand holds the flashlight, in the view's frame (x right, y up, -z ahead): at chest height below the eyes, to the right, a little ahead, as
+## a real one is held; its light comes from below the eyes, so the shadows it throws fall up and away (never from above the head).
+@export var hand_offset: Vector3 = Vector3(0.17, -0.3, -0.05)
+## Close to a surface a real torch's hotspot is not a white blot: the light is dimmed (by its colour's brightness, the strength the scenes set left
+## alone) to `near_dim_fraction` when what it points at is `near_dim_from` metres away or nearer, back to full from `near_dim_to`.
+@export_range(0.1, 1.0, 0.05) var near_dim_fraction: float = 0.45
+@export var near_dim_from: float = 0.3
+@export var near_dim_to: float = 1.6
+@export var near_dim_speed: float = 6.0
+
 @export var center_forward_offset: float = 0.08
 @export var center_right_offset: float = 0.05
 @export var center_down_offset: float = -0.04
@@ -86,6 +96,11 @@ var ray_exclude_rids: Array[RID] = []
 
 var probed_target_point: Vector3 = Vector3.ZERO
 var probed_distance: float = 0.0
+## How much of its light the flashlight gives now (`_dim_near_surfaces`: less close to a surface), and its own colours.
+var near_dim: float = 1.0
+var _base_color: Color = Color.WHITE
+var _fill_base_color: Color = Color.WHITE
+var _has_base_color: bool = false
 
 ## A script has taken over the light (see `begin_scripted_light`).
 var _scripted: bool = false
@@ -113,7 +128,7 @@ func _process(delta: float) -> void:
 		_refresh_references()
 
 	if camera != null and not has_camera_local_position:
-		original_camera_local_position = camera.to_local(global_position)
+		original_camera_local_position = hand_offset
 		has_camera_local_position = true
 
 	if _can_toggle_flashlight() and not _scripted and not toggle_locked and Input.is_action_just_pressed("flashlight"):
@@ -247,7 +262,8 @@ func _refresh_references() -> void:
 		_refresh_ray_excludes()
 
 		if camera != null and not has_camera_local_position:
-			original_camera_local_position = camera.to_local(global_position)
+			# (The hand, not where the node happens to stand at the start: the camera begins in the head-raise pose.)
+			original_camera_local_position = hand_offset
 			has_camera_local_position = true
 	else:
 		camera = null
@@ -311,11 +327,9 @@ func _update_dynamic_flashlight(delta: float) -> void:
 	var pos_weight: float = clamp(delta * follow_speed, 0.0, 1.0)
 	global_position = global_position.lerp(desired_pos, pos_weight)
 
-	# Far away: aim more like a normal hand flashlight, roughly parallel to view
-	# Close up / corrected: aim more at the exact camera probe hit point
-	var far_aim_target: Vector3 = global_position + (camera_forward * max(probed_distance, 0.25))
-	var near_aim_target: Vector3 = probed_target_point
-	var desired_aim_target: Vector3 = far_aim_target.lerp(near_aim_target, current_shift_t)
+	# The hand points the light at what the eyes look at (the camera probe's hit, or the point `probe_distance` ahead when nothing is hit): the
+	# hotspot is in the middle of the view at every distance, though the light comes from the hand below and to the right.
+	var desired_aim_target: Vector3 = probed_target_point
 	if scripted_aim_on:
 		desired_aim_target = global_position + scripted_aim_direction.normalized() * 6.0
 
@@ -328,6 +342,24 @@ func _update_dynamic_flashlight(delta: float) -> void:
 
 	if global_position.distance_squared_to(smoothed_aim_target) > 0.0001:
 		look_at(smoothed_aim_target, Vector3.UP)
+
+	_dim_near_surfaces(delta)
+
+
+## Dims the light (its colour, the strength left to the scenes) as what it points at comes near: a readable hotspot, not a white blot.
+func _dim_near_surfaces(delta: float) -> void:
+	if not _has_base_color:
+		_base_color = light_color
+		var fill: SpotLight3D = get_node_or_null("FlashlightFill") as SpotLight3D
+		_fill_base_color = fill.light_color if fill != null else Color.WHITE
+		_has_base_color = true
+
+	var wanted: float = lerpf(near_dim_fraction, 1.0, smoothstep(near_dim_from, near_dim_to, probed_distance))
+	near_dim = move_toward(near_dim, wanted, delta * near_dim_speed)
+	light_color = Color(_base_color.r * near_dim, _base_color.g * near_dim, _base_color.b * near_dim, _base_color.a)
+	var fill_light: SpotLight3D = get_node_or_null("FlashlightFill") as SpotLight3D
+	if fill_light != null:
+		fill_light.light_color = Color(_fill_base_color.r * near_dim, _fill_base_color.g * near_dim, _fill_base_color.b * near_dim, _fill_base_color.a)
 
 
 func _find_required_shift_for_clear_path(

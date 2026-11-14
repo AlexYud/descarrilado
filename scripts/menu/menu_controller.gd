@@ -96,6 +96,7 @@ const CINEMATIC_LOADING_LABEL_PATH := NodePath(
 
 const PERSISTENT_AUDIO_NAME := "PersistentAudio"
 const HORROR_FILTER_SCENE := "res://scenes/ui/filters/horror_filter.tscn"
+const DREAM_FILTER_SCENE := "res://scenes/ui/filters/dream_filter.tscn"
 
 
 # ============================================================
@@ -1535,9 +1536,10 @@ func _make_cinematic_host() -> void:
 	viewport.use_debanding = window.use_debanding
 	viewport.scaling_3d_mode = window.scaling_3d_mode
 	viewport.scaling_3d_scale = window.scaling_3d_scale
-	# The horror filter (grain, glare, lens) is a layer-0 overlay of the main window: it never sees what is drawn in another viewport, so the 3D scene gets one of its own (without
+	# The screen filters (the dream look, and the VHS look a scene may show) are layer-0 overlays of the main window: they never see what is drawn in another viewport, so the 3D scene gets its own (without
 	# it the menu's night loses its haze and colour).
 	viewport.add_child((load(HORROR_FILTER_SCENE) as PackedScene).instantiate())
+	viewport.add_child((load(DREAM_FILTER_SCENE) as PackedScene).instantiate())
 	container.add_child(viewport)
 	window.add_child(_cinematic_host)
 

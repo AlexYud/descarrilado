@@ -468,6 +468,15 @@ msgstr "Não lembro de ter tirado esta foto. O carimbo diz 1988, mas eu nunca fi
 msgid "PHOTO_NOTE_WORKSHOP"
 msgstr "Lucas no turno da noite. Ele sempre achou que força bruta consertava as máquinas desta cidade."
 
+msgid "ITEM_SOPHIA_WAGON_LETTER_NAME"
+msgstr "Carta da Sophia"
+
+msgid "ITEM_SOPHIA_WAGON_LETTER_DESCRIPTION"
+msgstr "Uma carta com a letra da Sophia, dobrada uma vez e deixada no banco do outro lado do corredor."
+
+msgid "READABLE_SOPHIA_WAGON_LETTER"
+msgstr "Juli,\n\nEu sei que é um pouco tarde para te dizer isso, mas eu quero que você volte pra mim, Juli.\n\nAssim que chegar, me liga do mirante.\n\n— Sophia"
+
 msgid "ITEM_TRAIN_TICKET_NAME"
 msgstr "Bilhete de Trem"
 
@@ -970,8 +979,8 @@ msgstr "Profundidade de campo"
 msgid "OPTIONS_MOTION_BLUR"
 msgstr "Desfoque de movimento"
 
-msgid "OPTIONS_VHS_FILTER"
-msgstr "Filtro VHS"
+msgid "OPTIONS_DREAM_FILTER"
+msgstr "Filtro onírico"
 
 # The overlook payphone
 msgid "FICHA_NUMBER_1"

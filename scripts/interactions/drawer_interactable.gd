@@ -67,6 +67,21 @@ func interact(_player: Node) -> void:
 	_remember_persistent_state()
 
 
+## For a scene: the drawer slides open or shut (as the player's hand would), remembered in the save unless `remember` is false (a memory that
+## closes it while the real one stays open).
+func set_open(open: bool, remember: bool = true) -> void:
+	is_open = open
+	if remember:
+		_remember_persistent_state()
+
+
+## The same, there at once (no slide): for a change made while nobody can see the drawer.
+func set_open_now(open: bool, remember: bool = true) -> void:
+	set_open(open, remember)
+	if drawer_root != null:
+		drawer_root.position = open_local_position if open else closed_local_position
+
+
 func _restore_persistent_state() -> void:
 	if persistent_id.is_empty():
 		return

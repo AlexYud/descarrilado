@@ -189,6 +189,7 @@ static func add_text(
 	var label: Label3D = Label3D.new()
 	label.name = node_name
 	label.text = key
+	MeshText.fix(label)
 	label.font_size = font_size
 	label.pixel_size = pixel_size
 	label.modulate = color

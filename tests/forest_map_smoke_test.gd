@@ -190,7 +190,7 @@ func _check_the_words() -> void:
 	for landmark: Dictionary in ForestMapProps.LANDMARKS:
 		keys.append(str(landmark["label"]))
 		var label: Label3D = visual.find_child("Label_%s" % landmark["id"], true, false) as Label3D
-		_expect(label != null and label.text == str(landmark["label"]), "%s has its name written on the map" % landmark["id"])
+		_expect(label != null and label.text == MeshText.written(str(landmark["label"])) and label.auto_translate_mode == Node.AUTO_TRANSLATE_MODE_DISABLED, "%s has its name written on the map, in Portuguese whatever the language (it is ink on the paper)" % landmark["id"])
 		if label == null:
 			continue
 

@@ -994,7 +994,7 @@ func _check_rear_handheld() -> void:
 	_expect(lamp.light_energy < 0.05, "and not a wide lamp on the wall earlier (no white hotspot)")
 	# The tape's look is the recording's own: on whatever the player's filter option says; and the picture reaches far, fading into the dark, so that nothing pops in out of black.
 	var overlay: ArchiveVideoOverlay = shed.get("_overlay") as ArchiveVideoOverlay
-	_expect(overlay != null and overlay.force_full_look and is_equal_approx(float((overlay.get("_material") as ShaderMaterial).get_shader_parameter(&"degrade")), 0.85) and float((overlay.get("_material") as ShaderMaterial).get_shader_parameter(&"grain")) > 0.05, "the worn tape look (grain, tracking, bleeding) is on: it does not depend on the player's video filter option (%s)" % str(GameSettings.get_vhs_filter_enabled()))
+	_expect(overlay != null and overlay.force_full_look and is_equal_approx(float((overlay.get("_material") as ShaderMaterial).get_shader_parameter(&"degrade")), 0.85) and float((overlay.get("_material") as ShaderMaterial).get_shader_parameter(&"grain")) > 0.05, "the worn tape look (grain, tracking, bleeding) is on: a tape always looks like a tape (the player's dream filter is %s)" % str(GameSettings.get_dream_filter_enabled()))
 	_expect(cinema.far >= 100.0, "the tape's camera sees %.0f m (the player's own is 15 and a black cut-off)" % cinema.far)
 	var environment: Environment = cinema.environment
 	_expect(environment != null and environment.fog_enabled and environment.fog_depth_begin >= 25.0 and environment.fog_depth_end <= cinema.far, "and the distance fades into the dark from %.0f m, ending inside the view (%.0f m)" % [environment.fog_depth_begin if environment != null else 0.0, environment.fog_depth_end if environment != null else 0.0])

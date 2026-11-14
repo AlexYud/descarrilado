@@ -235,12 +235,9 @@ func _inspecting() -> bool:
 	return inspect != null and bool(inspect.call("is_open"))
 
 
-## Where the horror filter's lens shows what the camera drew at `point`.
+## Where the picture filter's lens shows what the camera drew at `point` (`ScreenLens`).
 func _lens(point: Vector2, screen: Vector2) -> Vector2:
-	var filter: Node = get_node_or_null("/root/HorrorFilter")
-	if filter != null and filter.has_method("lens_position"):
-		return filter.call("lens_position", point, screen)
-	return point
+	return ScreenLens.position(self, point, screen)
 
 
 # ---- The marks ---------------------------------------------------------------------------------------------------

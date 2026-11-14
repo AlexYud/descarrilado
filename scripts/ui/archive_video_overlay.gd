@@ -4,8 +4,7 @@ class_name ArchiveVideoOverlay
 ## The presentation of the recording in the waiting shed: a 4:3 picture with black bars around it, and the picture itself made into a worn, copied
 ## home-video tape (assets/shaders/archive_video.gdshader): a coarse low-resolution picture with the colour bleeding, tracking lines, dropouts and
 ## grain, updating at a low frame rate, with the playing machine's own "PLAY" on it. It sits above the game's own filters and below
-## the subtitles, and is only built, shown and freed by the shed's sequence. It does not touch the player's settings: with
-## the player's video filter off, only the colour is drained and the bars stay (nothing worn, moving or grained).
+## the subtitles, and is only built, shown and freed by the shed's sequence. It does not touch the player's settings.
 
 const ASPECT: float = 4.0 / 3.0
 const SHADER: Shader = preload("res://assets/shaders/archive_video.gdshader")
@@ -35,7 +34,8 @@ func _init() -> void:
 func _ready() -> void:
 	_material = ShaderMaterial.new()
 	_material.shader = SHADER
-	_full_look = force_full_look or GameSettings.get_vhs_filter_enabled()
+	# (The tape always looks like a tape: the game's video look is no longer a player setting.)
+	_full_look = true
 	_material.set_shader_parameter(&"degrade", 0.85 if _full_look else 0.0)
 	_material.set_shader_parameter(&"fps", TAPE_FPS)
 	_material.set_shader_parameter(&"grain", 0.11 if _full_look else 0.0)

@@ -306,7 +306,10 @@ func _check_the_broken_flashlight() -> void:
 	SaveManager.set_state_value(&"collectibles", &"lucas_ficha", true)
 	await _until(func() -> bool: return not bool(light.get("failed")), "taking Lucas's token mends the flashlight", 3.0)
 	await _wait(1.4)
-	_expect(bool(light.call("_can_toggle_flashlight")) and (light as Node3D).visible, "and it lights again, as before")
+	_expect(bool(light.call("_can_toggle_flashlight")) and not (light as Node3D).visible and not bool(light.get("flashlight_on")), "and it can be switched on again, but stays dark until the player does it")
+	light.call("player_toggle")
+	await _wait(1.4)
+	_expect((light as Node3D).visible, "the key lights it, as before")
 	SaveManager.set_state_value(&"collectibles", &"lucas_ficha", false)
 
 

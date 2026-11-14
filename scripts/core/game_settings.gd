@@ -19,7 +19,7 @@ signal tutorial_hints_changed(enabled: bool)
 signal head_bob_changed(enabled: bool)
 signal depth_of_field_changed(enabled: bool)
 signal motion_blur_changed(enabled: bool)
-signal vhs_filter_changed(enabled: bool)
+signal dream_filter_changed(enabled: bool)
 
 enum GraphicsQuality {
 	LOW,
@@ -49,7 +49,7 @@ const BRIGHTNESS_KEY: String = "brightness_percent"
 const UI_SIZE_KEY: String = "ui_size_index"
 const DEPTH_OF_FIELD_KEY: String = "depth_of_field"
 const MOTION_BLUR_KEY: String = "motion_blur"
-const VHS_FILTER_KEY: String = "vhs_filter"
+const DREAM_FILTER_KEY: String = "dream_filter"
 const HINTS_SECTION: String = "hints"
 const INTERACTION_PROMPT_SEEN_KEY: String = "interaction_prompt_seen"
 
@@ -102,7 +102,7 @@ const DEFAULT_BRIGHTNESS_PERCENT: float = 100.0
 ## The soft focus behind what the player looks at, and the blur of a fast turn.
 const DEFAULT_DEPTH_OF_FIELD: bool = true
 const DEFAULT_MOTION_BLUR: bool = true
-const DEFAULT_VHS_FILTER: bool = true
+const DEFAULT_DREAM_FILTER: bool = true
 
 const MIN_BRIGHTNESS_PERCENT: float = 70.0
 const MAX_BRIGHTNESS_PERCENT: float = 130.0
@@ -154,8 +154,9 @@ var motion_blur_enabled: bool = DEFAULT_MOTION_BLUR
 ## The player has used something once, so the key legend over usable things is no longer shown. Kept with the settings, not with a
 ## save, so that loading an older save cannot bring it back; not reset by "restore defaults".
 var interaction_prompt_seen: bool = false
-## The camcorder / VHS look over the picture (the horror filter); the player can take it off.
-var vhs_filter_enabled: bool = DEFAULT_VHS_FILTER
+## The dream look over the picture (`DreamFilter`: a soft diffusion glow, halation, lifted blacks); the player can take it off. (The camcorder / VHS look,
+## `HorrorFilter`, is no longer a setting: only a scene turns it on, for itself.)
+var dream_filter_enabled: bool = DEFAULT_DREAM_FILTER
 
 var text_locale: String = DEFAULT_TEXT_LOCALE
 var voice_locale: String = DEFAULT_VOICE_LOCALE
@@ -276,8 +277,8 @@ func save_settings() -> void:
 	)
 	config.set_value(
 		GRAPHICS_SECTION,
-		VHS_FILTER_KEY,
-		vhs_filter_enabled
+		DREAM_FILTER_KEY,
+		dream_filter_enabled
 	)
 	config.set_value(
 		HINTS_SECTION,
@@ -505,22 +506,22 @@ func get_motion_blur_enabled() -> bool:
 	return motion_blur_enabled
 
 
-func set_vhs_filter_enabled(
+func set_dream_filter_enabled(
 	value: bool,
 	save_after_change: bool = true
 ) -> void:
-	if vhs_filter_enabled == value:
+	if dream_filter_enabled == value:
 		return
 
-	vhs_filter_enabled = value
-	vhs_filter_changed.emit(value)
+	dream_filter_enabled = value
+	dream_filter_changed.emit(value)
 
 	if save_after_change:
 		save_settings()
 
 
-func get_vhs_filter_enabled() -> bool:
-	return vhs_filter_enabled
+func get_dream_filter_enabled() -> bool:
+	return dream_filter_enabled
 
 
 func set_interaction_prompt_seen(value: bool = true) -> void:
@@ -823,7 +824,7 @@ func reset_graphics_to_default() -> void:
 	brightness_percent = DEFAULT_BRIGHTNESS_PERCENT
 	depth_of_field_enabled = DEFAULT_DEPTH_OF_FIELD
 	motion_blur_enabled = DEFAULT_MOTION_BLUR
-	vhs_filter_enabled = DEFAULT_VHS_FILTER
+	dream_filter_enabled = DEFAULT_DREAM_FILTER
 
 	_apply_quality_preset()
 	_apply_display_mode()
@@ -833,7 +834,7 @@ func reset_graphics_to_default() -> void:
 
 	depth_of_field_changed.emit(depth_of_field_enabled)
 	motion_blur_changed.emit(motion_blur_enabled)
-	vhs_filter_changed.emit(vhs_filter_enabled)
+	dream_filter_changed.emit(dream_filter_enabled)
 	quality_preset_changed.emit(quality_preset)
 	display_mode_changed.emit(display_mode)
 	window_resolution_changed.emit(window_resolution)
@@ -876,7 +877,7 @@ func _set_default_values() -> void:
 	brightness_percent = DEFAULT_BRIGHTNESS_PERCENT
 	depth_of_field_enabled = DEFAULT_DEPTH_OF_FIELD
 	motion_blur_enabled = DEFAULT_MOTION_BLUR
-	vhs_filter_enabled = DEFAULT_VHS_FILTER
+	dream_filter_enabled = DEFAULT_DREAM_FILTER
 	text_locale = DEFAULT_TEXT_LOCALE
 	voice_locale = DEFAULT_VOICE_LOCALE
 	captions_enabled = DEFAULT_CAPTIONS_ENABLED
@@ -969,11 +970,11 @@ func _load_values_from_config(config: ConfigFile) -> void:
 			DEFAULT_MOTION_BLUR
 		)
 	)
-	vhs_filter_enabled = bool(
+	dream_filter_enabled = bool(
 		config.get_value(
 			GRAPHICS_SECTION,
-			VHS_FILTER_KEY,
-			DEFAULT_VHS_FILTER
+			DREAM_FILTER_KEY,
+			DEFAULT_DREAM_FILTER
 		)
 	)
 	interaction_prompt_seen = bool(

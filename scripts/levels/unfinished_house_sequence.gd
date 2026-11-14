@@ -14,16 +14,18 @@ class_name UnfinishedHouseSequence
 ##     From the moment the note is read, muffled arguing comes from the hallway whenever the player is in the pantry
 ##     with its door shut; opening the door cuts it at once, shutting it again brings it back. The bulb stays on and the
 ##     flashlight is never touched.
-##  3. Bedroom: the key opens the door. Lucas's notebook lies on the bed and the nightstand drawer is empty (both
-##     optional: nothing happens). Reading Lucas's unsent postcard on the nightstand plays one continuous directed scene, once,
+##  3. Bedroom: the key opens the door. Lucas's notebook lies on the bed (optional: nothing happens). Lucas's unsent postcard is in the nightstand's
+##     drawer (`Postcard.drawer`): the player opens the drawer, and reading the postcard plays one continuous directed scene, once,
 ##     with the controls taken away from beginning to end, almost still (no shaking anywhere):
-##       - she is walked to the nightstand; through her eyes the postcard is taken up in one movement (she bows to it, the hand
+##       - she is walked to the nightstand; through her eyes the postcard is taken up from the drawer in one movement (she bows to it, the hand
 ##         lifts it, the head rises) and comes close until the paper is all there is to see, with no stop to read;
-##       - under the paper the time changes (`_dissolve` of the paper alone): the scene's camera sees the postcard on the
-##         nightstand exactly as she held it (`_fill_camera`), and draws slowly back into the warm room, to one held shot of the
-##         postcard, the lamp and a little of the bed; Lucas and Sophia talk, unseen (subtitles, `HOUSE_BEDROOM_MEMORY`);
-##       - after the last line the camera pushes back into the paper; under it, her eyes again, in the cold room; she lowers
-##         the postcard back onto the nightstand; a while on the dark room;
+##       - under the paper the time changes (`_dissolve`): the scene's camera sees the postcard in the open drawer exactly as she held it
+##         (`_fill_camera`, from above), and draws slowly back from it, and goes on drawing back, slower, all through the memory: the open drawer from
+##         above, the card sharp and everything else soft (a lens's depth of field), seen as an old tape (`HorrorFilter`, for this shot only);
+##         Lucas and Sophia talk, unseen (subtitles, `HOUSE_BEDROOM_MEMORY`);
+##       - after Lucas's "Leave it where it was" and a second of silence the memory's drawer slides shut; held a moment, then under a dissolve her eyes
+##         again, in the cold room, the card close in her hands and the real drawer open; she lowers the postcard back into the drawer and pushes it
+##         shut; a while on the dark room;
 ##       - a hard cut, with the first footstep, to a camera far back, on the door's middle line and square on to the shut bedroom door, which
 ##         starts a slow, straight approach that goes on to the shush (the whole door always in the picture); slow, heavy steps come along the hallway
 ##         and stop outside; her flashlight, which points back at the nightstand where she stands, comes slowly round to the door; the handle goes down and
@@ -31,8 +33,9 @@ class_name UnfinishedHouseSequence
 ##         then the voice on the other side (`HOUSE_DOOR_THREAT`: Juliana asks who is there, and a voice with Sophia's, light at first and then afraid,
 ##         sharper, impatient, asks her to open it; nobody answers). Meanwhile, out of this camera's sight, the wall between the kitchen and the bedroom
 ##         becomes a doorway (`UnfinishedHouseBuilder.set_escape_doorway`), with a door (`EscapeDoor`, shut);
-##       - the shush (`HOUSE_DOOR_SHUSH`) at her right ear and a HARD CUT to her own eyes at the bedside (her normal lens, looking at the original door,
-##         her flashlight following her view); she turns to the right over about 0.85 s: the new door is opening, the kitchen's warm light in it; one look
+##       - the shush (`HOUSE_DOOR_SHUSH`) at her right ear, over the door shot close on the door; then a HARD CUT to her own eyes at the bedside (her
+##         normal lens, looking at the original door, her flashlight following her view and swaying a little in her hand); at once she turns to the right
+##         over about 0.85 s: the new door is opening, the kitchen's warm light in it; one look
 ##         back at the original door (the next plea, `HOUSE_DOOR_COLD`), and she walks, her own body, through the doorway (`HOUSE_DOOR_HELP`); only when all
 ##         of her is in the kitchen the door slams and locks behind her, the pleas stop, the two outside exits are shut and locked, the living room's light
 ##         comes up; a moment in the kitchen looking down the way, and the controls are hers (the capsule is unlocked then, as before);
@@ -130,22 +133,31 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 @export var shut_tolerance_degrees: float = 2.0
 
 @export_category("Bedroom: the postcard scene")
-## Lucas's unsent postcard on the nightstand: reading it plays the scene (once; afterwards it is read like any note).
+## Lucas's unsent postcard, in the nightstand's drawer (`Postcard.drawer`): reading it plays the scene (once; afterwards it is read like any note).
 @export var postcard: Postcard
 ## The warm room: the dressing (bedding, chair, cups, lamp) and its light, shown only during the memory, and only ever changed
 ## while the paper fills the picture. The light casts shadows (the walls keep it in the bedroom).
 @export var memory_root: Node3D
 @export var memory_light: OmniLight3D
 @export var memory_light_energy: float = 1.6
-## The memory's one held shot: where the camera stands and what it looks at (close to the postcard, low and looking up a little, with the lamp
-## and a part of the bed soft behind it), with `memory_fov`.
+## The memory's shot: the open drawer from above, the postcard in it at the middle of the picture (the eye over the drawer, tipped a little toward
+## the nightstand, looking at the card), with `memory_fov`. Mostly the drawer and the card; nothing of the room but the floor, out of focus.
 @export var memory_eye: Marker3D
 @export var memory_aim: Marker3D
-@export var memory_fov: float = 38.0
-## The flashback's depth of field (`FocusBlur`): how soft the lamp and the bed are, how far behind the card the sharp part ends and how fast it softens.
-@export var memory_blur_amount: float = 1.0
-@export var memory_blur_depth: float = 0.02
-@export var memory_blur_falloff: float = 0.5
+@export var memory_fov: float = 48.0
+## The flashback's depth of field, a lens's (the engine's own, near and far): a thin sharp zone at the card (`memory_focus_depth` either side of it),
+## going soft over `memory_blur_near_falloff` toward the lens and `memory_blur_far_falloff` beyond (the floor under the drawer is well out of focus),
+## at `memory_blur_amount`.
+@export var memory_blur_amount: float = 0.09
+@export var memory_focus_depth: float = 0.025
+@export var memory_blur_near_falloff: float = 0.12
+@export var memory_blur_far_falloff: float = 0.3
+## Once the camera has drawn back from the paper it keeps drawing back, slowly, over the whole conversation: this much farther from the card, over this long.
+@export var memory_drift_distance: float = 0.14
+@export var memory_drift_seconds: float = 46.0
+## After Lucas's last line ("Leave it where it was") and a second's silence (the track's last, empty cue), the memory's drawer slides shut; the shut
+## drawer is held `memory_closed_hold_seconds` before the change back to the night.
+@export var memory_closed_hold_seconds: float = 1.8
 ## Before it is picked up she is walked (slowly, looking at the postcard) to where she stands over the nightstand, as the doors
 ## walk her to their handle: this marker, the walk's speed, and how long it may take.
 @export var postcard_stand: Marker3D
@@ -225,10 +237,8 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 @export var conversation_after_seconds: float = 4.0
 
 @export_group("Back to the night")
-## After the last line (and its hold, which is in the track): the slow push back into the paper, still, the change back under it,
-## a moment, the postcard lowered back onto the nightstand, and her own eyes on the dark room before the first step.
-@export var push_seconds: float = 4.0
-@export var push_hold_seconds: float = 0.3
+## After the memory's drawer is shut: the change back under a dissolve (her eyes, the postcard close in her hands, the real drawer open), a moment,
+## the postcard lowered back into the drawer, the drawer pushed shut, and her own eyes on the dark room before the first step.
 @export var return_hold_seconds: float = 0.4
 @export var lower_seconds: float = 3.0
 ## The postcard touches the nightstand and she hears the steps: a beat of stillness (`scare_hesitation_seconds`), a wind-up the other way
@@ -255,7 +265,7 @@ const WATCHER_AREA: AABB = AABB(Vector3(1.6, -1.0, 6.3), Vector3(7.7, 4.0, 2.2))
 ## to `step_interval_end_seconds` at the door), `step_stride` metres apart, louder as they come. The first is heard with the cut.
 ## The sound is the player's own indoor step (`walk.wav`), lower and heavier. They are heard from the door camera
 ## (`step_unit_size`: louder further off; `step_max_distance`).
-@export var footstep_path: Array[Vector3] = [Vector3(1.4, 0.08, 8.0), Vector3(2.6, 0.08, 7.35), Vector3(6.0, 0.08, 7.3), Vector3(7.45, 0.08, 6.9)]
+@export var footstep_path: Array[Vector3] = [Vector3(1.4, 0.08, 8.0), Vector3(2.6, 0.08, 7.35), Vector3(6.0, 0.08, 7.3), Vector3(6.97, 0.08, 6.9)]
 @export var step_stride: float = 0.8
 ## The run begins this long before the cut to the door, while the postcard is being put away (heard far off, from her eyes).
 @export var steps_lead_seconds: float = 5.0
@@ -325,8 +335,13 @@ const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3
 @export var unanswered_beat_seconds: float = 1.2
 
 @export_subgroup("Her own view: the shush, the doorway, one look back")
-## She stands this long looking at the original door after the cut to her own eyes; then the turn to the right (`turn_right_seconds`, decisive and braking).
-@export var pov_beat_seconds: float = 0.2
+## The shush is heard over the door shot (close on the door), and the picture cuts to her eyes this long after it begins (the whiff of it said).
+@export var shush_hold_seconds: float = 1.4
+## After the cut to her own eyes, only this long on the original door; then the turn to the right (`turn_right_seconds`, decisive and braking).
+@export var pov_beat_seconds: float = 0.05
+## From the cut her flashlight is in her hand, not fixed to her view: it sways round where she looks by about this much (degrees), slowly, never the
+## same twice (a few slow waves and a faint tremble).
+@export var pov_beam_sway_degrees: float = 1.6
 @export var turn_right_seconds: float = 0.85
 ## The look to the doorway is not direct: her light goes over the opening and on past it by `pass_overshoot_degrees`, drifting on for `pass_drift_seconds`, and only
 ## then, with a start, does the mind catch up and the view come back to it (`realize_seconds`, a half second at most).
@@ -382,8 +397,10 @@ const TENSION_PATH: String = "res://assets/audios/placeholder_string_tension.mp3
 @export var watcher_arm_delay_seconds: float = 0.8
 @export var watcher_look_degrees: float = 30.0
 @export var watcher_range: float = 11.0
-## When the light finds it, the head goes back into the room, and the pantry's bulb goes out with it, over this long.
+## When the light finds it, the head goes back into the room over this long; `watcher_lamp_off_after_seconds` into that, while it is still slipping away, the
+## pantry's bulb goes out, at once, like a switch (no fade).
 @export var watcher_retreat_seconds: float = 1.0
+@export var watcher_lamp_off_after_seconds: float = 0.18
 
 ## Set when the player is not the node found by group "player".
 @export var player: Node3D
@@ -408,6 +425,10 @@ var _tweens: Array[Tween] = []
 var _held: Node = null
 var _held_view_locked: bool = false
 var _held_scripted_flashlight: bool = false
+## The memory shut the drawer (only in the memory): it is opened again, at once, when the night comes back.
+var _memory_shut_drawer: bool = false
+## The camera is on its way back into the paper (the push-in of the conversation must not start after that).
+var _returning: bool = false
 var _held_save_block: bool = false
 var _held_motion_still: bool = false
 ## What the scene did, in order (for tests): {"beat": StringName, "time": seconds since it began}.
@@ -554,7 +575,7 @@ func _restore() -> void:
 			escape_door.ajar_degrees = 0.0
 			escape_door.close_instantly()
 			escape_door.lock()
-		_set_kitchen_light(kitchen_light_energy * kitchen_light_after, 0.0)
+		_set_kitchen_light(0.0 if _capsule_open() else kitchen_light_energy * kitchen_light_after, 0.0)
 		if _token_owned():
 			if _exits_locked:
 				_release_exits()
@@ -675,8 +696,11 @@ func _sync_flashlight_failure(delta: float, force: bool = false) -> void:
 	if light == null or not light.has_method("set_failed"):
 		return
 
-	var dead: bool = _escape_done and not _token_owned()
+	var dead: bool = _escape_done and not _token_owned() and not _capsule_open()
 	if bool(light.get("failed")) != dead:
+		if not dead and light.has_method("turn_off"):
+			# Working again, it does not light by itself: the player finds the switch (the key) in the dark.
+			light.call("turn_off")
 		light.call("set_failed", dead)
 		_log(&"flashlight_broken" if dead else &"flashlight_repaired")
 
@@ -922,6 +946,9 @@ func _play_memory() -> void:
 	_skip_open = false
 	_skip_requested = false
 	_skipped = false
+	# The postcard is in the drawer: the player opened it to read it (a replay from the console may start with it shut: it slides open).
+	if _drawer() != null and not _drawer().is_open:
+		_drawer().set_open(true)
 	# Walked to the nightstand first, as the doors walk her to the handle (before she is held: a held view does not walk).
 	if not await _walk_to_nightstand(run, target, movement):
 		return
@@ -1024,6 +1051,8 @@ func _shot_read(run: int) -> bool:
 	_fill_fov_used = _get_camera().fov
 	_dissolve(paper_dissolve_seconds)
 	_set_room(true)
+	# The remembered part, the card in its drawer, is seen as an old tape would show it (the camcorder look, for this shot only).
+	_show_tape_look(true)
 	held_card.visible = false
 	postcard.visible = true
 	_show_camera(_fill_at, _fill_fov_used)
@@ -1070,6 +1099,28 @@ func _fill_lens() -> float:
 func _memory_shot() -> Transform3D:
 	var eye: Vector3 = memory_eye.global_position
 	return Transform3D(Basis.looking_at(memory_aim.global_position - eye, Vector3.UP), eye)
+
+
+## The memory shot, `memory_drift_distance` farther from the card along its line of sight (where the slow drawing back ends).
+func _memory_drift_shot() -> Transform3D:
+	var shot: Transform3D = _memory_shot()
+	var card: Vector3 = memory_aim.global_position
+	var away: Vector3 = (shot.origin - card).normalized()
+	return Transform3D(shot.basis, shot.origin + away * memory_drift_distance)
+
+
+## The drawer the postcard lies in (none for a postcard left out of one).
+func _drawer() -> DrawerInteractable:
+	return postcard.drawer if postcard != null else null
+
+
+## The camcorder / VHS look (`HorrorFilter`) over the picture, for the remembered shot only (the player's own look, `DreamFilter`, steps aside meanwhile).
+func _show_tape_look(on: bool) -> void:
+	if not is_inside_tree():
+		return
+	var filter: Node = get_node_or_null(^"/root/HorrorFilter")
+	if filter != null and filter.has_method(&"hold_scene_look"):
+		filter.call(&"hold_scene_look", &"house_memory", on)
 
 
 ## A copy of the postcard's model, where the postcard lies, in place of it.
@@ -1171,6 +1222,12 @@ func _shot_conversation(run: int) -> bool:
 		return _still(run)
 
 	_log(&"conversation")
+	# The draw back goes on, slower, once the first one has come to rest (never a second movement on top of the first): the drawer gets smaller in the picture.
+	var drift_wait: float = maxf(pullback_seconds - conversation_after_seconds, 0.0) + 0.05
+	get_tree().create_timer(drift_wait).timeout.connect(func() -> void:
+		if _still(run) and in_memory and not _skipped and not _returning:
+			_move_camera(_memory_drift_shot(), memory_drift_seconds)
+	)
 	if memory_voice != null and memory_voice_player != null:
 		memory_voice_player.stream = memory_voice
 		memory_voice_player.play()
@@ -1190,16 +1247,22 @@ func _shot_conversation(run: int) -> bool:
 
 # ---- Back to the night --------------------------------------------------------------------------------------------
 
-## The camera pushes slowly back into the paper; under it the time changes back (her eyes, the postcard in her hands, close, in
-## the cold room); she lowers it back onto the nightstand; her eyes rest on the dark room a while.
+## "Leave it where it was": the memory's drawer slides shut under the camera (the card goes into the dark under the nightstand's top), and is held
+## shut a moment; under a dissolve the time changes back (her eyes, the postcard in her hands, close, in the cold room, the real drawer open); she lowers
+## it back into the drawer and pushes the drawer shut; her eyes rest on the dark room a while.
 func _shot_return(run: int) -> bool:
 	if not _skipped:
 		_log(&"return")
+		_returning = true
 		if memory_voice_player != null:
 			memory_voice_player.stop()
-		_move_camera(_fill_at, push_seconds)
-		_change_lens(_fill_fov_used, push_seconds)
-		if not await _flash_wait(run, push_seconds + push_hold_seconds):
+		var drawer: DrawerInteractable = _drawer()
+		if drawer != null:
+			# Only in the memory (not saved): the real drawer is open again when the time changes back (`_reopen_drawer`).
+			drawer.set_open(false, false)
+			_memory_shut_drawer = true
+		_log(&"memory_drawer_shut")
+		if not await _flash_wait(run, memory_closed_hold_seconds):
 			return false
 
 	if not _skipped:
@@ -1227,6 +1290,9 @@ func _shot_return(run: int) -> bool:
 	if not _still(run):
 		return false
 	_drop_held_card()
+	# Laid back where it was, and the drawer pushed shut (it slides in while she hears the steps).
+	if _drawer() != null:
+		_drawer().set_open(false)
 	_read_level = 0.0
 	if _read_light != null:
 		_read_light.visible = false
@@ -1238,9 +1304,17 @@ func _shot_return(run: int) -> bool:
 	return _still(run)
 
 
-## The time changes back to the night under the paper: the cold room, the postcard in her hands close, her own eyes. (Also where a skip lands.)
+## The drawer the memory shut is open again, at once (it was never shut in the night).
+func _reopen_drawer() -> void:
+	if _memory_shut_drawer and _drawer() != null:
+		_drawer().set_open_now(true, false)
+	_memory_shut_drawer = false
+
+
+## The time changes back to the night under a dissolve: the cold room, the postcard in her hands close, her own eyes. (Also where a skip lands.)
 func _back_to_the_night() -> void:
 	_set_room(false)
+	_reopen_drawer()
 	_read_level = 1.0
 	postcard.visible = false
 	_held_weight = 1.0
@@ -1725,14 +1799,26 @@ func _door_middle() -> Vector3:
 
 # ---- Back to her eyes ---------------------------------------------------------------------------------------------
 
-## The shush at her right ear, and the hard cut to her own eyes at the bedside (her normal lens, looking at the original door, her flashlight and her view
-## together); the turn to the right, to the doorway that was a wall, whose new door is already opening; one look back at the original door (the pleas
-## go on); the walk, in her own body, through the doorway into the kitchen; the slam behind her, the lock; a moment in the kitchen, looking down the way to
-## the lit rooms. The view is hers again only after all of it (`_play_memory` hands it back).
+## The shush at her right ear while the picture is still the door shot, close on the door at the end of its approach; then the hard cut to her own eyes
+## at the bedside (her normal lens, looking at the original door, her flashlight and her view together) and at once the turn to the right, to the doorway
+## that was a wall, whose new door is already opening; one look back at the original door (the pleas go on); the walk, in her own body, through the
+## doorway into the kitchen; the slam behind her, the lock; a moment in the kitchen, looking down the way to the lit rooms. The view is hers again only
+## after all of it (`_play_memory` hands it back). From the cut her flashlight sways a little in her hand (`pov_beam_sway_degrees`).
 func _shot_escape(run: int) -> bool:
 	var movement: PlayerMovementController = _get_movement()
 	var camera: Camera3D = _get_camera()
 	if movement == null or camera == null:
+		return false
+
+	# The shush, at her right ear, over the door shot: the string tension comes in with it, and the new door begins to open, out of this camera's sight.
+	CaptionManager.clear()
+	_log(&"shush")
+	_start_tension()
+	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_SHUSH, 13)
+	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_SHUSH)
+	_open_escape_door()
+	await _wait(shush_hold_seconds)
+	if not _still(run):
 		return false
 
 	# Off camera (the picture is still the door camera's): the exits are shut, her view is turned to the original door as the cut will show it.
@@ -1752,22 +1838,18 @@ func _shot_escape(run: int) -> bool:
 	_pov_follow = true
 	_follow_view_with_the_beam()
 	_show_eyes()
+	# Her own body again: from the cut the view breathes and sways with her, and walking out it bobs with her steps (the footsteps keep time with it).
+	movement.view_motion_still = false
 	_log(&"cut_to_eyes")
 	if door_lighting != null:
 		door_lighting.fade_to(0.0, 0.4)
-	CaptionManager.clear()
+	_set_kitchen_light(kitchen_light_energy, kitchen_light_fade_in_seconds)
 	await _wait(pov_beat_seconds)
 	if not _still(run):
 		return false
 
-	# Then the shush, at her right ear; she turns to the right, to the new door, which is opening (it began out of her sight): her light goes over the
-	# opening and on past it, drifting; and only then, with a start, does she see it and come back to it.
-	_log(&"shush")
-	_start_tension()
-	_schedule_cue_voices(CaptionTracks.HOUSE_DOOR_SHUSH, 13)
-	CaptionManager.play_scripted(CaptionTracks.HOUSE_DOOR_SHUSH)
-	_set_kitchen_light(kitchen_light_energy, kitchen_light_fade_in_seconds)
-	_open_escape_door()
+	# At once she turns to the right, to the new door, which is opening: her light goes over the opening and on past it, drifting; and only then, with
+	# a start, does she see it and come back to it.
 	_log(&"turn_right")
 	var doorway: Vector2 = _look_angles(_doorway_view_point())
 	var side: float = signf(wrapf(doorway.x - _get_movement().look_yaw, -180.0, 180.0))
@@ -2057,13 +2139,18 @@ func _set_kitchen_light(energy: float, seconds: float) -> void:
 
 	if _kitchen_fade != null and _kitchen_fade.is_valid():
 		_kitchen_fade.kill()
-	kitchen_light.visible = energy > 0.0
 	if seconds <= 0.0:
+		kitchen_light.visible = energy > 0.0
 		kitchen_light.light_energy = energy
 		return
 
+	# Fading out, it stays on until it is dark (with the living room's, when the capsule is opened); fading in, it is on at once.
+	if energy > 0.0:
+		kitchen_light.visible = true
 	_kitchen_fade = _track(create_tween())
 	_kitchen_fade.tween_property(kitchen_light, "light_energy", energy, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if energy <= 0.0:
+		_kitchen_fade.tween_callback(func() -> void: kitchen_light.visible = false)
 
 
 # ---- The exits, the escape's outcome, the watcher --------------------------------------------------------------------
@@ -2184,30 +2271,24 @@ func _update_watcher(delta: float) -> void:
 	_consume_watcher()
 
 
-## Found by the light: the head goes back into the room and the pantry's lamp goes out with it, together, over `watcher_retreat_seconds`; it will not look again (saved).
+## Found by the light: the head goes back into the room over `watcher_retreat_seconds`, and while it is still going the pantry's lamp is switched off, at once
+## (`watcher_lamp_off_after_seconds`); it will not look again (saved).
 func _consume_watcher() -> void:
 	_watcher_done = true
 	_set_flag(KEY_WATCHER_DONE, true)
 	_log(&"watcher_noticed")
-	var seconds: float = watcher.retreat(watcher_retreat_seconds)
-	_fade_pantry_lamp_out(maxf(seconds, 0.2))
-
-
-func _fade_pantry_lamp_out(seconds: float) -> void:
-	var glass: StandardMaterial3D = _bulb_material()
-	var fade: Tween = _track(create_tween())
-	fade.set_parallel(true)
-	if pantry_light != null:
-		fade.tween_property(pantry_light, "light_energy", 0.0, seconds)
-	if glass != null:
-		fade.tween_property(glass, "emission_energy_multiplier", 0.0, seconds)
-	fade.chain().tween_callback(func() -> void: _set_pantry_lamp(false, false))
+	watcher.retreat(watcher_retreat_seconds)
+	var off: Tween = _track(create_tween())
+	off.tween_interval(maxf(watcher_lamp_off_after_seconds, 0.0))
+	off.tween_callback(func() -> void:
+		_set_pantry_lamp(false, false)
+		_log(&"watcher_lamp_off"))
 
 
 ## Whether the pantry's bulb is on in a game as the story left it: lit from the recipe on; after the old scene it was out; after the new one it stays on until the
 ## watcher has been noticed.
 func _pantry_lamp_wanted() -> bool:
-	if not _recipe_done:
+	if not _recipe_done or _capsule_open():
 		return false
 	if _escape_done:
 		return not _watcher_done
@@ -2237,15 +2318,23 @@ func _hold_the_walker() -> void:
 		map.call("close")
 
 
-## Her flashlight points where her view does, every frame (and follows it fast), so that the beam is on whatever she turns to.
+## Her flashlight points where her view does, every frame (and follows it fast), so that the beam is on whatever she turns to; held in a hand, it sways
+## a little round that (`pov_beam_sway_degrees`): slow waves of different lengths, and a faint tremble on top.
 func _follow_view_with_the_beam() -> void:
 	var camera: Camera3D = _get_camera()
 	if camera == null or _flashlight == null or not is_instance_valid(_flashlight) or not _flashlight_scripted:
 		return
 
+	var t: float = scene_clock
+	var sway: Vector2 = Vector2(
+		sin(t * 0.83) * 0.55 + sin(t * 1.91 + 1.3) * 0.3 + sin(t * 6.7 + 0.4) * 0.06,
+		sin(t * 1.07 + 2.1) * 0.5 + sin(t * 2.37 + 0.6) * 0.28 + sin(t * 7.9 + 1.5) * 0.06
+	) * deg_to_rad(pov_beam_sway_degrees)
+	var view: Basis = camera.global_basis.orthonormalized()
+	var direction: Vector3 = (-view.z).rotated(view.y, sway.x).rotated(view.x, sway.y)
 	_flashlight.set("scripted_aim_on", true)
 	_flashlight.set("scripted_aim_speed", 14.0)
-	_flashlight.set("scripted_aim_direction", -camera.global_basis.z)
+	_flashlight.set("scripted_aim_direction", direction.normalized())
 
 
 ## The door put back shut when none of it can be seen from her eyes (`now`: at once, whatever is seen).
@@ -2369,6 +2458,7 @@ func _cancel_memory() -> void:
 	if door_lighting != null:
 		door_lighting.fade_to(0.0, 0.0)
 	_set_room(false)
+	_reopen_drawer()
 	_door_reset_pending = false
 	if bedroom_door != null:
 		bedroom_door.ajar_degrees = 0.0
@@ -2387,11 +2477,15 @@ func _still(run: int) -> bool:
 ## flashlight back). Changed all at once: only ever while a dissolve covers it, or with the room out of the shot.
 func _set_room(memory: bool) -> void:
 	in_memory = memory
+	if memory:
+		_returning = false
 	# The memory is not the night: the wind and the night chorus are gone while it lasts (they come back with the cold room).
 	if is_inside_tree():
 		get_tree().call_group(OutdoorAmbience.GROUP, "set_silenced", &"house_memory", memory)
 	if memory_root != null:
 		memory_root.visible = memory
+	if not memory:
+		_show_tape_look(false)
 	if memory_light != null:
 		memory_light.light_energy = memory_light_energy if memory else 0.0
 	for node: Node3D in night_only:
@@ -2482,8 +2576,13 @@ func _apply_living_light(energy: float) -> void:
 		glass.emission_energy_multiplier = living_lamp_glow * energy / maxf(living_light_energy, 0.001)
 
 
+## Opening the capsule puts every light of the house out together (the living room, the kitchen, the pantry's bulb), and from then the player's own
+## flashlight works again: they switch it on (the light key) to find their way out, the token taken or not.
 func _on_capsule_opened() -> void:
 	_set_living_light(false, living_light_fade_seconds)
+	_set_kitchen_light(0.0, living_light_fade_seconds)
+	_set_pantry_lamp(false, true)
+	_sync_flashlight_failure(0.0, true)
 
 
 ## Once the bedroom scene is done the capsule opens to the player, with no key.
@@ -2701,21 +2800,34 @@ func _drive_camera(delta: float) -> void:
 	_focus_on_the_card()
 
 
-## In the flashback (and only there: the door shots of the night have none) the scene's camera is focused on the postcard on the nightstand, close to the lens: the card
-## is sharp and the lamp behind it and the bed are soft.
+## In the flashback (and only there: the door shots of the night have none) the scene's camera is a lens focused on the postcard in the drawer, close to it:
+## a thin sharp zone at the card's distance, the drawer's near edge a little soft, the floor beyond the drawer well out of focus (the engine's own near and
+## far depth of field). It follows the player's depth of field setting.
 func _focus_on_the_card() -> void:
+	var lens: CameraAttributesPractical = _cam.attributes as CameraAttributesPractical
+	if lens == null:
+		lens = CameraAttributesPractical.new()
+		_cam.attributes = lens
 	var card: Node3D = null
-	if in_memory:
+	if in_memory and GameSettings.get_depth_of_field_enabled():
 		if held_card != null and is_instance_valid(held_card) and held_card.visible:
 			card = held_card
 		elif postcard != null and is_instance_valid(postcard) and postcard.visible:
 			card = postcard
+	lens.dof_blur_far_enabled = card != null
+	lens.dof_blur_near_enabled = card != null
 	if card == null:
-		FocusBlur.clear(_cam)
 		return
 
-	var distance: float = _cam.global_position.distance_to(card.global_position)
-	FocusBlur.focus_on(_cam, distance, 1.0, memory_blur_amount, memory_blur_depth, memory_blur_falloff)
+	# The clean quality (no dark ghosts round the bright card), as `FocusBlur` uses.
+	FocusBlur.use_clean_quality()
+	# The distance along the lens's axis (what the engine's depth of field measures).
+	var distance: float = maxf((card.global_position - _cam.global_position).dot(-_cam.global_basis.z), 0.05)
+	lens.dof_blur_far_distance = distance + memory_focus_depth
+	lens.dof_blur_far_transition = memory_blur_far_falloff
+	lens.dof_blur_near_distance = maxf(distance - memory_focus_depth - memory_blur_near_falloff, 0.01)
+	lens.dof_blur_near_transition = memory_blur_near_falloff
+	lens.dof_blur_amount = memory_blur_amount
 
 
 func _ease(t: float) -> float:

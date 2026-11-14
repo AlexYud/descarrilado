@@ -339,6 +339,15 @@ msgstr ""
 msgid "PHOTO_FRONT_RECENT"
 msgstr ""
 
+msgid "ITEM_SOPHIA_WAGON_LETTER_NAME"
+msgstr ""
+
+msgid "ITEM_SOPHIA_WAGON_LETTER_DESCRIPTION"
+msgstr ""
+
+msgid "READABLE_SOPHIA_WAGON_LETTER"
+msgstr ""
+
 msgid "ITEM_TRAIN_TICKET_NAME"
 msgstr ""
 
@@ -835,7 +844,7 @@ msgstr ""
 msgid "OPTIONS_MOTION_BLUR"
 msgstr ""
 
-msgid "OPTIONS_VHS_FILTER"
+msgid "OPTIONS_DREAM_FILTER"
 msgstr ""
 
 # The overlook payphone

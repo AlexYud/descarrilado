@@ -51,15 +51,36 @@ var _escape_solid: Array[Node] = []
 var _escape_open: Array[Node] = []
 var escape_doorway_open: bool = false
 
+## The shell as a model (`UnfinishedHouseShell`): its floor, outer walls and roof are shown instead of the boxes of the same parts, which stay (hidden) for the
+## collision. With it, the outer walls follow the model: they are solid where the boxes had windows (the model's windows are elsewhere and are `HouseWindow`s,
+## which have their own collision) and their two doorways are the model's. The model's two partitions (see `MODEL_PARTITIONS`) replace the boxes of the same walls and
+## collide where they are drawn. The flat ceiling, the escape wall and the pantry's wall (the model has none of these) stay boxes, dressed in the model's plaster
+## and wood. Shown in the editor too. Off, the house is the boxes alone.
+@export var use_model_shell: bool = true
+## The outer walls of `_walls()` (by index): their pictures are the model's.
+const EXTERIOR_WALLS: Array[int] = [0, 1, 2, 4, 5]
+## The partitions of `_walls()` (by index) that the model has itself: the kitchen and bedroom against the hallway (6), the hallway against the living room (8).
+## They are not built with the model: its walls, arches and door frames are drawn and collide instead. The model has no wall between the kitchen and the
+## bedroom (7, the escape wall) nor round the pantry (3): those stay boxes.
+const MODEL_PARTITIONS: Array[int] = [6, 8]
+## How often the model's plaster and wood repeat on the boxes dressed in them (per metre).
+const PLASTER_UV_SCALE: float = 0.4
+const WOOD_UV_SCALE: float = 1.5
+var model_shell: UnfinishedHouseShell = null
+
 
 func _ready() -> void:
 	if get_child_count() > 0:
 		return
 
 	_make_materials()
+	if use_model_shell:
+		_prepare_model_shell()
 	_build_floor_and_ceiling()
 	_build_walls()
 	_build_roof()
+	if model_shell != null:
+		_dress_with_model()
 
 
 # ============================================================
@@ -173,7 +194,11 @@ func _build_walls() -> void:
 	for wall: Dictionary in _walls():
 		var meshes_before: int = get_child_count()
 		var shapes_before: int = _wall_body.get_child_count()
-		_build_wall(index, wall)
+		# The model's own partitions stand where these were (with the model's collision, see `UnfinishedHouseShell.build_collision`).
+		if model_shell != null and index in MODEL_PARTITIONS:
+			index += 1
+			continue
+		_build_wall(index, _fitted_to_model(index, wall))
 		if index == ESCAPE_WALL_INDEX:
 			_escape_solid = _new_pieces(meshes_before, shapes_before)
 		index += 1
@@ -348,6 +373,110 @@ func _add_window_parts(
 		Vector3(0.0, sill + height * 0.5, 0.0), _frame_material
 	)
 
+
+
+## Makes the model's shell, fitted to the inside faces of the outer walls (before the walls are built: they follow its doors).
+func _prepare_model_shell() -> void:
+	var far: Vector2 = Vector2.ZERO
+	for block: Rect2 in BLOCKS:
+		var scaled: Rect2 = _scaled(block)
+		far = Vector2(maxf(far.x, scaled.end.x), maxf(far.y, scaled.end.y))
+	var half: float = WALL_THICKNESS * 0.5
+
+	model_shell = UnfinishedHouseShell.new()
+	model_shell.name = "ModelShell"
+	add_child(model_shell)
+	model_shell.setup(Vector2(half, half), far - Vector2(half, half))
+	if model_shell.mesh_instance == null:
+		model_shell.queue_free()
+		model_shell = null
+
+
+## An outer wall as the model has it: no window openings (the boxes' windows are not where the model's are, and nothing must walk through a window), and
+## its doorway, if it has one, exactly where the model's is and as wide and tall. Any other wall is returned as it is.
+func _fitted_to_model(index: int, wall: Dictionary) -> Dictionary:
+	if model_shell == null or index not in EXTERIOR_WALLS:
+		return wall
+
+	var from: Vector2 = (wall["from"] as Vector2) * PLAN_SCALE
+	var to: Vector2 = (wall["to"] as Vector2) * PLAN_SCALE
+	var along_x: bool = is_equal_approx(from.y, to.y)
+	var start: float = minf(from.x, to.x) if along_x else minf(from.y, to.y)
+	var finish: float = maxf(from.x, to.x) if along_x else maxf(from.y, to.y)
+	var openings: Array = []
+	for source: Dictionary in wall["openings"] as Array:
+		if float(source["sill"]) > 0.0:
+			continue
+
+		var opening: Dictionary = source.duplicate()
+		for door: Dictionary in model_shell.door_openings():
+			var at: Vector3 = door["center"] as Vector3
+			var across: float = at.z - from.y if along_x else at.x - from.x
+			var along: float = at.x if along_x else at.z
+			if absf(across) < 0.5 and along > start and along < finish:
+				opening["center"] = (along - start) / PLAN_SCALE
+				opening["width"] = float(door["width"])
+				opening["height"] = float(door["height"])
+		openings.append(opening)
+
+	# The model's windows go through the hidden wall too (without a casing: the model has its own): a box wall there would make an open window a
+	# wall to everything that is not the player (the night's sound measures the way out by rays). Each `HouseWindow` keeps the player out itself.
+	for window: Dictionary in model_shell.window_openings():
+		var middle: Vector3 = window["center"] as Vector3
+		var across_window: float = middle.z - from.y if along_x else middle.x - from.x
+		var along_window: float = middle.x if along_x else middle.z
+		if absf(across_window) < 0.5 and along_window > start and along_window < finish:
+			openings.append({
+				"center": (along_window - start) / PLAN_SCALE,
+				"width": float(window["width"]),
+				"height": float(window["height"]),
+				"sill": middle.y - float(window["height"]) * 0.5,
+				"frame": false,
+			})
+
+	var fitted: Dictionary = wall.duplicate()
+	fitted["openings"] = openings
+	return fitted
+
+
+## Shows the model's floor, outer walls and roof in place of the boxes of those parts (kept, hidden, for their collision), gives the model's windows their
+## shutters, and dresses what stays a box (the ceiling, the partitions and their casings) in the model's plaster and wood.
+func _dress_with_model() -> void:
+	model_shell.build_collision()
+	if not Engine.is_editor_hint():
+		# The windows of the model, each with its pair of shutters the player can open and close (and its own collision).
+		var window_index: int = 0
+		for opening: Dictionary in model_shell.window_openings():
+			var window: HouseWindow = HouseWindow.new()
+			window.name = "Window%d" % window_index
+			window.persistent_id = StringName("house_window_%d" % window_index)
+			window.opening_width = float(opening["width"])
+			window.opening_height = float(opening["height"])
+			add_child(window)
+			window.position = opening["center"] as Vector3
+			# Its +Z faces the outside: the north wall's outside is the house's -Z.
+			window.rotation_degrees = Vector3(0.0, 180.0 if bool(opening["north"]) else 0.0, 0.0)
+			window_index += 1
+
+	var plaster: StandardMaterial3D = model_shell.world_material(UnfinishedHouseShell.SURFACE_PLASTER, PLASTER_UV_SCALE)
+	var wood: StandardMaterial3D = model_shell.world_material(UnfinishedHouseShell.SURFACE_WOOD, WOOD_UV_SCALE)
+	for child: Node in get_children():
+		if not (child is Node3D) or child == model_shell or child is HouseWindow:
+			continue
+
+		var child_name: String = String(child.name)
+		var hidden: bool = child_name.begins_with("Floor") or child_name.begins_with("Roof")
+		for wall: int in EXTERIOR_WALLS:
+			if child_name.begins_with("Wall%d_" % wall) or child_name.begins_with("Frame%d_" % wall):
+				hidden = true
+		if hidden:
+			(child as Node3D).visible = false
+		elif child is MeshInstance3D and (child_name.begins_with("Ceiling") or child_name.begins_with("Wall")) and plaster != null:
+			(child as MeshInstance3D).material_override = plaster
+		elif child_name.begins_with("Frame") and wood != null:
+			for piece: Node in child.get_children():
+				if piece is MeshInstance3D:
+					(piece as MeshInstance3D).material_override = wood
 
 
 func _build_roof() -> void:

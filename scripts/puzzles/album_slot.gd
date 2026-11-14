@@ -25,6 +25,7 @@ class_name AlbumSlot
 
 func _ready() -> void:
 	caption_label.text = caption_key
+	MeshText.fix(caption_label)
 
 
 ## Shows `photo_visual` (the Visual of a photograph scene) lying flat in the

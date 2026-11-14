@@ -40,6 +40,8 @@ func _ready() -> void:
 	SaveManager.create_new_game(
 		1, TEST_SCENE_PATH, "house_test_start", "SAVE_LOCATION_DREAM_INTRO"
 	)
+	# (The walk out of the bedroom is checked for its head bob: the player's own setting is pinned on, unsaved.)
+	GameSettings.set_head_bob_enabled(true, false)
 	GameSettings.set_captions_enabled(true, false)
 
 	var level: Node = (load(TEST_SCENE_PATH) as PackedScene).instantiate()
@@ -117,19 +119,19 @@ func _check_layout() -> void:
 	capsule.interact(player)
 	_expect(not capsule.is_open and not capsule._opening, "and trying it opens nothing")
 
-	# The drawer is empty, and no notebook lies on the bed.
-	_expect(drawer.get_node("DrawerRoot/ItemAnchor").get_child_count() == 0, "the nightstand drawer is empty")
-	_expect(drawer.find_children("*", "Interactable", true, false).is_empty(), "nothing to read or take in it")
+	# The drawer holds only the postcard, and no notebook lies on the bed.
+	_expect(drawer.get_node("DrawerRoot/ItemAnchor").get_child_count() == 0 and drawer.find_children("*", "Interactable", true, false).is_empty(), "nothing else is in the nightstand drawer")
+	_expect(card.drawer == drawer, "the postcard is kept in it")
 	_expect(not house.get_node("Memory/Bed").is_visible_in_tree() and house.get_node("Memory").find_children("*", "CollisionShape3D", true, false).all(func(c: Node) -> bool: return (c as CollisionShape3D).disabled), "the bed is only in the memory (not shown, not solid, in the night)")
 	_expect(not house.living_light.visible, "the living room light is off before the scene")
 	_expect(house.get_node_or_null("Furniture/LucasDiary") == null and house.get_node_or_null("Furniture/CapsuleKey") == null, "the notebook is gone from the bed, and there is no key in the scene")
 
-	# Lucas's postcard on the nightstand: an ordinary readable world prop (not an item), its writing up; no clock.
+	# Lucas's postcard in the nightstand's drawer: an ordinary readable world prop (not an item), its writing up; no clock.
 	var nightstand: Node3D = house.get_node("Furniture/Nightstand")
 	_expect(not _is_collectable(card) and card is Inspectable, "the postcard is read in place, not taken")
 	_expect(card.get_prompt_text() == "PROMPT_INSPECT" and card.inspect_name == "ITEM_POSTCARD_NAME" and card.get_visual_node().get_meta("readable_text", "") == "READABLE_POSTCARD", "it offers \"Inspect\" under its own name, and its writing can be read")
 	_expect(tr("ITEM_POSTCARD_NAME") == "Postcard" and tr("ITEM_POSTCARD_DESCRIPTION") == "A postcard of the town, written by Lucas. No address or stamp.", "its name and description")
-	_expect(absf(card.global_position.y - 0.576) < 0.01 and Vector2(card.global_position.x - nightstand.global_position.x, card.global_position.z - nightstand.global_position.z).length() < 0.2, "it lies on the nightstand")
+	_expect(absf(card.global_position.y - 0.3825) < 0.01 and Vector2(card.global_position.x - nightstand.global_position.x, card.global_position.z - nightstand.global_position.z).length() < 0.1, "it lies on the floor of the shut drawer, inside the nightstand")
 	_expect(card.get_visual_node().global_basis.z.y > 0.99, "written side up")
 	_expect(card.plays_scene, "and its reading is the scene's")
 	_expect(house.get_node_or_null("Furniture/AlarmClock") == null and house.find_children("*", "AlarmClock", true, false).is_empty(), "the clock is gone from the nightstand")
@@ -216,6 +218,10 @@ func _check_kitchen() -> void:
 func _check_pantry() -> void:
 	var flashlight_was_on: bool = bool(flashlight.get("flashlight_on"))
 	_expect(not house.is_argument_playing(), "no arguing before the pantry")
+
+	# The latch gave a moment ago and the door is still swinging open on its own (slowly): it is let finish, so that what follows does not depend on how
+	# long the steps before took (the gentle close below is measured from where the door stands).
+	await _until(func() -> bool: return _pantry_angle() > house.pantry_ajar_degrees - 3.0, "the pantry door finishing its swing open", 10.0)
 
 	# Just inside, still in the door's swing: it does not move.
 	player.global_position = Vector3(9.75, 1.05, 7.7)
@@ -311,17 +317,17 @@ func _check_bedroom_and_notebook() -> void:
 	await _until(func() -> bool: return bedroom_door._choreo == &"", "the key and the opening playing out", 15.0)
 
 
-	# Walking up to the bed and opening the empty drawer: nothing either.
+	# Walking up to the bed and opening the drawer the postcard is in: nothing either (the postcard is what plays the scene). Left open.
 	player.global_position = Vector3(7.58, 1.05, 1.45)
 	player.velocity = Vector3.ZERO
 	await _wait(1.0)
 	_expect(not house.memory_running, "being in the room starts nothing")
+	_expect(not drawer.is_open and not card.can_interact(player), "the drawer is shut, and the postcard in it cannot be used")
 	drawer.interact(player)
 	await _wait(1.5)
 	_expect(drawer.is_open and not house.memory_running and not house.in_memory, "opening the drawer starts nothing (no memory, no door scene)")
 	_expect(not CaptionManager.panel.visible and not bool(player.get("view_locked")), "no line, and the player keeps the controls")
-	drawer.interact(player)
-	await _wait(0.6)
+	_expect(card.can_interact(player) and card.global_position.z > drawer.global_position.z + 0.2, "the postcard came out with the drawer and can be read")
 
 
 func _check_memory_scene() -> void:
@@ -330,7 +336,11 @@ func _check_memory_scene() -> void:
 	var spot: SpotLight3D = flashlight as SpotLight3D
 	player.global_position = Vector3(7.58, 1.05, 1.45)
 	player.velocity = Vector3.ZERO
-	await _ray_finds(card, Vector3(7.58, 1.05, 1.45), card.global_position, "the postcard from beside the bed")
+	await _ray_finds(card, Vector3(7.45, 1.05, 1.2), card.global_position, "the postcard in the open drawer from beside the bed")
+	# Back by the bed, a couple of steps from the drawer: she is walked up to it.
+	player.global_position = Vector3(7.75, 1.05, 1.7)
+	player.velocity = Vector3.ZERO
+	await _aim_player_at(card.global_position)
 	await _wait(0.8)
 	var stand: Vector3 = player.global_position
 	var eye_height: float = camera.global_position.y
@@ -390,13 +400,20 @@ func _check_memory_scene() -> void:
 	var written_side_to_her: bool = false
 	var held_pixels: Array = []
 	var registration_in: float = -1.0
-	var registration_out: float = -1.0
+	var memory_drawer_closed_seen: bool = false
+	var walk_bob_low: float = INF
+	var walk_bob_high: float = -INF
+	var night_drawer_open: bool = false
+	var tape_look_in_memory: bool = false
+	var tape_look_only_there: bool = true
+	var dof_in_memory: bool = false
+	var covered_out_checked: bool = false
 	var covered_in: bool = false
 	var covered_out: bool = false
-	var cinema_pixels: Array = []
 	var memory_motion: float = 0.0
 	var memory_settled: Transform3D = Transform3D.IDENTITY
 	var memory_settled_seen: bool = false
+	var memory_creep: float = 0.0
 	var swap_times: Array[float] = []
 	var memory_was: bool = house.memory_root.visible
 	var unlocked_during: bool = false
@@ -465,7 +482,12 @@ func _check_memory_scene() -> void:
 				var other: AudioStreamPlayer3D = sound as AudioStreamPlayer3D
 				if other.playing and other.stream != house._step_sound and not other.has_meta(&"footfall") and not bedroom_door.is_ancestor_of(other) and other != house.argument_voices:
 					other_sounds += 1
-		max_roll = maxf(max_roll, absf(rad_to_deg(asin(clampf(view.global_basis.x.y, -1.0, 1.0)))))
+		# (The directed shots never roll; from the cut to her eyes it is her own head, which sways a hair as she walks.)
+		if not _logged(&"cut_to_eyes"):
+			max_roll = maxf(max_roll, absf(rad_to_deg(asin(clampf(view.global_basis.x.y, -1.0, 1.0)))))
+		if _logged(&"go") and not _logged(&"arrived") and view == camera:
+			walk_bob_low = minf(walk_bob_low, camera.position.y)
+			walk_bob_high = maxf(walk_bob_high, camera.position.y)
 		last_forward = -camera.global_basis.z
 		var held: Node3D = house.held_card if house.held_card != null and is_instance_valid(house.held_card) else null
 
@@ -484,25 +506,37 @@ func _check_memory_scene() -> void:
 				duplicate_seen = true
 			if not _logged(&"dissolve_in"):
 				held_pixels = _card_on_screen(view, held.global_transform)
-		if _logged(&"return") and not _logged(&"dissolve_out") and view != camera:
-			cinema_pixels = _card_on_screen(view, card.get_visual_node().global_transform)
-
-		# The paper seams: the same writing on the same pixels, and the paper over the whole picture.
+		# The paper seam going in: the same writing on the same pixels, and the paper over the whole picture; coming back, the paper close in her hands.
 		if _logged(&"dissolve_in") and registration_in < 0.0:
 			var now_pixels: Array = _card_on_screen(view, card.get_visual_node().global_transform)
 			registration_in = _worst_pixel(held_pixels, now_pixels)
 			covered_in = _covers_screen(now_pixels)
-		if _logged(&"dissolve_out") and registration_out < 0.0 and held != null:
-			var back_pixels: Array = _card_on_screen(view, held.global_transform)
-			registration_out = _worst_pixel(cinema_pixels, back_pixels)
-			covered_out = _covers_screen(back_pixels)
+		if _logged(&"dissolve_out") and not covered_out_checked and held != null:
+			covered_out_checked = true
+			covered_out = _covers_screen(_card_on_screen(view, held.global_transform))
 
-		# The memory's one shot: still once it is composed.
+		# The memory's one shot, once it is composed: it never turns, and only creeps (`memory_push_distance` at most) straight towards the card.
 		if _logged(&"conversation") and now > _logged_time(&"pullback") + house.pullback_seconds + 0.1 and not _logged(&"return") and view != camera:
 			if not memory_settled_seen:
 				memory_settled_seen = true
 				memory_settled = view.global_transform
-			memory_motion = maxf(memory_motion, view.global_position.distance_to(memory_settled.origin) * 1000.0 + rad_to_deg(forward.angle_to(-memory_settled.basis.z)))
+			var crept: Vector3 = view.global_position - memory_settled.origin
+			memory_motion = maxf(memory_motion, rad_to_deg(forward.angle_to(-memory_settled.basis.z)) * 10.0 + maxf(crept.length() - house.memory_drift_distance - 0.005, 0.0) * 1000.0)
+			memory_creep = maxf(memory_creep, crept.length())
+		# The drawer: shut in the memory after the last line, open again in the night; the tape look and the lens on the remembered shot only.
+		if _logged(&"memory_drawer_shut") and not _logged(&"dissolve_out") and drawer.drawer_root.position.distance_to(drawer.closed_local_position) < 0.002:
+			memory_drawer_closed_seen = true
+		if _logged(&"night") and not _logged(&"settled") and _logged_time(&"night") < now:
+			night_drawer_open = night_drawer_open or drawer.drawer_root.position.is_equal_approx(drawer.open_local_position)
+		var tape_on: bool = (get_node(^"/root/HorrorFilter") as CanvasLayer).visible
+		if house.in_memory and _logged(&"pullback"):
+			tape_look_in_memory = tape_look_in_memory or tape_on
+			var lens: CameraAttributesPractical = view.attributes as CameraAttributesPractical
+			if lens != null and lens.dof_blur_far_enabled and lens.dof_blur_near_enabled and view != camera:
+				var to_card: float = (card.global_position - view.global_position).dot(-view.global_basis.z)
+				dof_in_memory = dof_in_memory or (lens.dof_blur_near_distance < to_card and lens.dof_blur_far_distance > to_card and lens.dof_blur_far_distance - to_card < 0.05)
+		elif not house.in_memory and tape_on:
+			tape_look_only_there = false
 		if house.memory_root.visible != memory_was:
 			memory_was = house.memory_root.visible
 			swap_times.append(now)
@@ -549,7 +583,7 @@ func _check_memory_scene() -> void:
 			if since > 8.0:
 				beam_near = minf(beam_near, off)
 			# The door camera is centred on the door the whole way, and the picture's middle is the door's.
-			door_x_error = maxf(door_x_error, absf(view.global_position.x - bedroom_door.global_position.x - 0.45))
+			door_x_error = maxf(door_x_error, absf(view.global_position.x - bedroom_door.global_position.x - bedroom_door.leaf_width * 0.5))
 			if _logged(&"voice"):
 				var door_centre: Vector2 = view.unproject_position(bedroom_door.to_global(Vector3(0.45, 1.0, 0.0)))
 				screen_centre_error = minf(screen_centre_error, (door_centre - get_viewport().get_visible_rect().size * 0.5).length() / get_viewport().get_visible_rect().size.y)
@@ -643,7 +677,7 @@ func _check_memory_scene() -> void:
 	var beats: Array[StringName] = []
 	for entry: Dictionary in house.memory_log:
 		beats.append(entry["beat"] as StringName)
-	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"door", &"handle", &"resist", &"release", &"voice", &"handle", &"resist", &"release", &"cut_to_eyes", &"shush", &"turn_right", &"passed", &"realized", &"noticed", &"look_back", &"go", &"slam", &"arrived", &"glance_end", &"released"]
+	var wanted: Array[StringName] = [&"approach", &"start", &"lift", &"dissolve_in", &"door_closed", &"pullback", &"conversation", &"return", &"memory_drawer_shut", &"dissolve_out", &"night", &"lower", &"steps", &"settled", &"door", &"handle", &"resist", &"release", &"voice", &"handle", &"resist", &"release", &"shush", &"cut_to_eyes", &"turn_right", &"passed", &"realized", &"noticed", &"look_back", &"go", &"slam", &"arrived", &"glance_end", &"released"]
 	var main_beats: Array[StringName] = beats.filter(func(b: StringName) -> bool: return wanted.has(b))
 	_expect(main_beats == wanted, "the beats run in order: %s" % ", ".join(PackedStringArray(beats.map(func(b: StringName) -> String: return String(b)))))
 	_expect(beats.has(&"doorway_prepared") and not beats.has(&"doorway_in_view"), "the doorway is made while the camera is on the original door and cannot see it")
@@ -660,17 +694,24 @@ func _check_memory_scene() -> void:
 	_expect(absf(lower_seconds_log - 3.0 * house.lower_land_share) < 0.2, "putting it down takes until the card touches the nightstand (%.1f s)" % lower_seconds_log)
 	var smooth_start: bool = bow_samples_lift.size() > 8 and bow_samples_lift.max() > 8.5
 	_expect(smooth_start, "the head goes down and comes back up (not one constant movement)")
-	var push_seconds_log: float = _logged_time(&"dissolve_out") - _logged_time(&"return")
-	_expect(push_seconds_log > 4.2 and push_seconds_log < 4.6, "the camera takes four seconds to frame the paper again (%.1f s with a moment still)" % push_seconds_log)
+	var shut_hold_log: float = _logged_time(&"dissolve_out") - _logged_time(&"memory_drawer_shut")
+	_expect(absf(shut_hold_log - house.memory_closed_hold_seconds) < 0.15, "the memory's drawer is shut after the last line, and held shut a moment before the night comes back (%.1f s)" % shut_hold_log)
+	_expect(memory_drawer_closed_seen, "it slides all the way in, the card with it, while the memory is on screen")
+	_expect(night_drawer_open, "and in the night the drawer is open again, the card close in her hands, as she left it")
+	_expect(not drawer.is_open and drawer.drawer_root.position.is_equal_approx(drawer.closed_local_position), "laid back in it, the drawer is pushed shut")
+	_expect(tape_look_in_memory and tape_look_only_there, "the old tape look is on the remembered shot, and only there")
+	_expect(dof_in_memory, "the remembered shot has a lens's depth of field focused on the card (near and far)")
 	_expect(other_sounds == 0, "no sound but the footsteps plays in the scene (%d other)" % other_sounds)
-	_expect(not duplicate_seen, "never two postcards at once (the one on the nightstand is hidden while one is held)")
+	_expect(not duplicate_seen, "never two postcards at once (the one in the drawer is hidden while one is held)")
 	_expect(covered_in and covered_out, "the paper is most of the picture, centred, with the room at its edges, at both changes of time")
-	_expect(registration_in >= 0.0 and registration_in < 0.5 and registration_out >= 0.0 and registration_out < 0.5, "the writing stays on the same pixels through both (%.2f and %.2f px)" % [registration_in, registration_out])
-	_expect(swap_times.size() == 2 and swap_times[0] - _logged_time(&"dissolve_in") < 0.12 and swap_times[0] >= _logged_time(&"dissolve_in") and swap_times[1] - _logged_time(&"dissolve_out") < 0.12 and swap_times[1] >= _logged_time(&"dissolve_out"), "the room changes only under the paper")
-	_expect(memory_settled_seen and memory_motion < 0.01, "the memory holds one still shot (%.4f)" % memory_motion)
-	_expect(max_roll < 0.05, "no shot ever rolls (%.3f degrees)" % max_roll)
-	_expect(card.visible and (house.held_card == null or not is_instance_valid(house.held_card)), "the postcard is back on the nightstand, and nothing is left in her hands")
-	_expect(card.global_transform.is_equal_approx(card_home), "exactly where it was")
+	_expect(registration_in >= 0.0 and registration_in < 0.5, "the writing stays on the same pixels going into the memory (%.2f px)" % registration_in)
+	_expect(swap_times.size() == 2 and swap_times[0] - _logged_time(&"dissolve_in") < 0.12 and swap_times[0] >= _logged_time(&"dissolve_in") and swap_times[1] - _logged_time(&"dissolve_out") < 0.12 and swap_times[1] >= _logged_time(&"dissolve_out"), "the room changes only under a dissolve")
+	_expect(memory_settled_seen and memory_motion < 1.0, "the memory holds one shot that never turns and only draws slowly back from the card (%.3f)" % memory_motion)
+	_expect(memory_creep > 0.01, "and it does draw back, slowly, over the conversation (%.3f m)" % memory_creep)
+	_expect(max_roll < 0.05, "no directed shot ever rolls (%.3f degrees)" % max_roll)
+	_expect(walk_bob_high - walk_bob_low > 0.004, "walking out, her view bobs with her steps (%.1f mm)" % ((walk_bob_high - walk_bob_low) * 1000.0))
+	_expect(card.visible and (house.held_card == null or not is_instance_valid(house.held_card)), "the postcard is back in the drawer, and nothing is left in her hands")
+	_expect(card.global_transform.is_equal_approx(card_home), "exactly where it was, the drawer shut")
 
 	# The subtitles: the seventeen lines in order, with the right speakers (no voice playing, and no "Shh.").
 	var speakers: String = "SLSLSLSLSLSLSLSSLJSSSSSSSSSSSSSSSS"
@@ -695,11 +736,11 @@ func _check_memory_scene() -> void:
 	_expect(pauses.all(func(p: float) -> bool: return p >= 1.0 and p <= 2.0) and float(silence["CAPTION_HOUSE_BED_01"]) < 1.0, "short pauses after cues 04, 08 and 15 (%s), not between every line" % str(pauses))
 	_expect(float(silence["CAPTION_HOUSE_BED_11"]) > pauses.max() and float(silence["CAPTION_HOUSE_BED_11"]) <= 2.5, "a slightly longer silence after \"All right.\" (%.1f s)" % float(silence["CAPTION_HOUSE_BED_11"]))
 
-	# From the last line to the first step: the hold, the push into the paper, the paper lowered, three seconds of the room.
+	# From the last line to the first step: a second of silence, the drawer shut and held, the night again, the paper lowered, the room.
 	var last_line_end: float = _logged_time(&"conversation") + 49.8
 	var to_steps: float = _logged_time(&"door") - last_line_end
-	_expect(to_steps > 10.0 and to_steps < 14.5, "the first footstep comes %.1f s after the last line ends" % to_steps)
-	_expect(absf((_logged_time(&"return") - last_line_end) - 2.0) < 0.3, "the shot is held two seconds after the last line")
+	_expect(to_steps > 5.5 and to_steps < 10.5, "the first footstep comes %.1f s after the last line ends" % to_steps)
+	_expect(absf((_logged_time(&"return") - last_line_end) - 1.0) < 0.3, "the drawer is shut a second after \"Leave it where it was\" (%.1f s)" % (_logged_time(&"return") - last_line_end))
 	_expect(absf((_logged_time(&"door") - _logged_time(&"settled")) - (house._scare_seconds() + house.night_seconds)) < 0.3, "and her eyes rest on the dark room for %.0f s before it" % house.night_seconds)
 	_expect(_logged_time(&"steps") >= _logged_time(&"lower") and _logged_time(&"steps") < _logged_time(&"settled") and _logged_time(&"door") - _logged_time(&"steps") > 2.0, "the running begins while the postcard is being put away, heard before the cut (%.1f s before it)" % (_logged_time(&"door") - _logged_time(&"steps")))
 
@@ -710,7 +751,7 @@ func _check_memory_scene() -> void:
 		var first_step: Array = step_list[0]
 		var last_step: Array = step_list[step_list.size() - 1]
 		var last_at: Vector3 = last_step[0]
-		_expect(last_at.z > 6.2 and last_at.z < 8.525 and absf(last_at.x - 7.43) < 0.5, "they stop just outside the bedroom door")
+		_expect(last_at.z > 6.2 and last_at.z < 8.92 and absf(last_at.x - (bedroom_door.global_position.x + bedroom_door.leaf_width * 0.5)) < 0.5, "they stop just outside the bedroom door")
 		_expect(float(first_step[1]) >= -16.0 and float(last_step[1]) >= -4.0, "clearly heard, from %.0f dB to %.0f dB" % [float(first_step[1]), float(last_step[1])])
 		var cadence: float = (float(last_step[2]) - float(first_step[2])) / float(step_list.size() - 1)
 		_expect(cadence > 0.3 and cadence < 0.85, "walking, hurried to arrive in time: a step every %.2f s" % cadence)
@@ -744,8 +785,10 @@ func _check_memory_scene() -> void:
 	_expect(_logged_time(&"shush") - _logged_time(&"voice") > 32.5 and _logged_time(&"shush") - _logged_time(&"voice") < 37.0, "the twelve lines at the door take their time (%.1f s)" % (_logged_time(&"shush") - _logged_time(&"voice")))
 
 	# The shush: a hard cut to her own eyes, looking at the original door, then the turn to the right, to the new doorway, which is opening.
-	_expect(escape_views > 60, "from the shush the view is her own camera, to the end")
-	_expect(_logged_time(&"shush") - _logged_time(&"cut_to_eyes") > 0.1 and _logged_time(&"shush") - _logged_time(&"cut_to_eyes") < 0.5, "the view is hers for 0.2 s before the shush (%.2f s)" % (_logged_time(&"shush") - _logged_time(&"cut_to_eyes")))
+	_expect(escape_views > 60, "from the cut after the shush the view is her own camera, to the end")
+	var shush_to_cut: float = _logged_time(&"cut_to_eyes") - _logged_time(&"shush")
+	_expect(shush_to_cut > house.shush_hold_seconds - 0.05 and shush_to_cut < house.shush_hold_seconds + 0.2, "the shush is heard over the door shot, close on the door, and the picture cuts to her eyes as it ends (%.2f s)" % shush_to_cut)
+	_expect(_logged_time(&"turn_right") - _logged_time(&"cut_to_eyes") < 0.15, "and she starts to look round at once (%.2f s after the cut)" % (_logged_time(&"turn_right") - _logged_time(&"cut_to_eyes")))
 	_expect(door_angle_at_cut < 3.0, "the cut shows the original bedroom door (%.1f degrees off its middle), not the old postcard view" % door_angle_at_cut)
 	_expect(beam_following and beam_lag < 32.0 and beam_lag_sum / maxf(float(escape_views), 1.0) < 3.0, "her flashlight points where her view does (%.1f degrees on average, %.1f at most, during %s, which is the fastest turn, a frame or two behind)" % [beam_lag_sum / maxf(float(escape_views), 1.0), beam_lag, beam_lag_at])
 	_expect(pass_angle > 20.0 and _logged_time(&"realized") - _logged_time(&"passed") > 0.2 and _logged_time(&"realized") - _logged_time(&"passed") < 0.6, "her light goes over the doorway and on past it (%.0f degrees past) for a first instinct, and she notices it quickly (%.1f s)" % [pass_angle, _logged_time(&"realized") - _logged_time(&"passed")])
@@ -886,16 +929,18 @@ func _worst_pixel(a: Array, b: Array) -> float:
 
 ## After the scene the postcard is a postcard: reading it opens the ordinary inspect view, and plays nothing.
 func _check_postcard_again() -> void:
+	# The drawer, which she shut, opens as before and starts nothing; the postcard in it is read like any note.
+	_expect(not drawer.is_open, "(the drawer is shut, as she left it)")
+	drawer.interact(player)
+	await _wait(0.8)
+	_expect(drawer.is_open and not house.memory_running, "opening the drawer again plays nothing")
 	card.interact(player)
 	await _wait(0.6)
 	_expect(player.inspect_controller.is_open() and not house.memory_running, "reading the postcard again opens the inspect view and plays nothing")
 	_close_view()
 	await _wait(0.5)
 	drawer.interact(player)
-	await _wait(0.6)
-	_expect(drawer.is_open and not house.memory_running, "nor does the drawer")
-	drawer.interact(player)
-	await _wait(0.6)
+	await _wait(1.0)
 
 
 func _check_capsule_and_ficha() -> void:
@@ -911,6 +956,12 @@ func _check_capsule_and_ficha() -> void:
 	_expect(capsule.get_node("Model/LidPivot").rotation_degrees.x < -90.0, "the lid stands open")
 	_expect(capsule.get_node_or_null("Contents") != null, "the contents are within reach")
 	_expect(not capsule.can_interact(player), "the open capsule offers nothing more")
+	# Opening it puts every light of the house out, the kitchen's and the pantry's too, and her own flashlight works again (the light key), the token taken or not.
+	await _until(func() -> bool: return (house.kitchen_light == null or not house.kitchen_light.visible) and not house.living_light.visible, "the lights going out", 5.0)
+	_expect(not house.living_light.visible or house.living_light.light_energy < 0.05, "the living room's light is out")
+	_expect(house.kitchen_light == null or not house.kitchen_light.visible or house.kitchen_light.light_energy < 0.05, "the kitchen's light is out too")
+	_expect(not house.is_pantry_lamp_on(), "and the pantry's bulb")
+	_expect(not bool(flashlight.get("failed")) and not bool(flashlight.get("flashlight_on")) and not (flashlight as Node3D).visible, "her flashlight works again before the Ficha is taken, but it stays off: the player switches it on in the dark")
 	_expect(completed_count == 0, "the scene is not over yet")
 
 	var ad: Inspectable = capsule.get_node("Contents/HouseAdvertisement")
@@ -1004,7 +1055,8 @@ func _check_memory_cancelled() -> void:
 	_expect(not house.memory_running and not bool(player.get("view_locked")) and not player.manual_save_blocked, "the developer console's way out lets the player go at once")
 	_expect(get_viewport().get_camera_3d() == camera and (house._cinema == null or not is_instance_valid(house._cinema)), "her own camera is the view again")
 	_expect(not house.memory_root.visible and not house.in_memory and not CaptionManager.panel.visible, "the room is the night again and the subtitles are gone")
-	_expect(card.visible and card.global_transform.is_equal_approx(card_home) and (house.held_card == null or not is_instance_valid(house.held_card)), "the postcard lies where it was on the nightstand, and nothing is left in her hands")
+	var in_open_drawer: Transform3D = Transform3D(card_home.basis, card_home.origin + drawer.global_basis * drawer.open_offset)
+	_expect(card.visible and card.global_transform.origin.distance_to(in_open_drawer.origin) < 0.002 and (house.held_card == null or not is_instance_valid(house.held_card)), "the postcard lies where it was in the open drawer, and nothing is left in her hands")
 	var movement: PlayerMovementController = player.movement_controller
 	_expect(not movement.view_motion_still and movement.scripted_fov == 0.0, "the player's camera motion and lens are their own")
 	_expect(not bedroom_door.is_open and _bedroom_angle() < 0.5 and _lever_turn() < 0.05, "the door is shut, its handle up")
@@ -1080,7 +1132,7 @@ func _check_flashback_skip() -> void:
 	_expect(not prompt.is_armed() and not prompt.panel.visible, "the prompt is gone")
 	await _until(func() -> bool: return not house.memory_running, "the scene plays on to the end after the skip", 200.0)
 	_expect(_logged(&"released") and _logged(&"door") and _logged(&"voice") and _logged(&"slam"), "the horror plays as ever (the steps, the door, the voice, the escape)")
-	_expect(card.visible and card.global_transform.is_equal_approx(card_home), "and the postcard lies back on the nightstand")
+	_expect(card.visible and card.global_transform.is_equal_approx(card_home), "and the postcard lies back in the shut drawer")
 	_expect(house.escape_door.is_locked and not house.escape_door.is_open, "the new door is shut and locked behind her, as after a full run")
 
 
@@ -1088,7 +1140,7 @@ func _check_flashback_skip() -> void:
 func _check_reload() -> void:
 	var copy: UnfinishedHouseSequence = await _spawn_house()
 	_expect((copy.get_node("Doors/PantryDoor") as DoorController).is_locked == false, "after a reload the pantry is open to the player")
-	_expect(copy.is_pantry_lamp_on() and not (copy.get_node("Doors/PantryDoor") as DoorController).is_locked, "its bulb is on and its door open, as the escape left them (the head has not been seen)")
+	_expect(not copy.is_pantry_lamp_on() and not (copy.get_node("Doors/PantryDoor") as DoorController).is_locked, "its door open as the escape left it, and its bulb out: the capsule was opened, which put every light of the house out")
 	_expect(copy.shell.escape_doorway_open and copy.escape_door.is_locked and copy.escape_door.position.y > -1.0, "the new doorway is there after a reload, its door shut and locked")
 	_expect(not copy.back_door.is_locked and not copy.front_door.is_locked, "the exits stay free once the token has been taken")
 	_expect(copy.watcher.is_peeking, "and the head still waits in the pantry")

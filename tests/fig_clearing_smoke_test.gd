@@ -1199,10 +1199,9 @@ func _open_the_lockbox(lockbox: JSLockbox, eye: Vector3) -> void:
 		arrows_there = arrows_there and view._up[i].visible and view._down[i].visible and view._up[i].position.y < view._down[i].position.y
 	_expect(arrows_there, "an arrow sits above and below each wheel, on the box")
 	# They sit over the wheels as the picture filter's lens shows them (it bends the picture under them a little toward its corners).
-	var filter: Node = get_node_or_null("/root/HorrorFilter")
-	var worst_miss: float = 0.0 if filter != null else INF
+	var worst_miss: float = 0.0
 	for i: int in 4:
-		var shown: Vector2 = filter.call("lens_position", view_camera.unproject_position(lockbox.get_wheel_position(i)), get_viewport().get_visible_rect().size)
+		var shown: Vector2 = ScreenLens.position(self, view_camera.unproject_position(lockbox.get_wheel_position(i)), get_viewport().get_visible_rect().size)
 		worst_miss = maxf(worst_miss, maxf(absf(view._up[i].position.x + view._up[i].size.x * 0.5 - shown.x), absf(view._down[i].position.x + view._down[i].size.x * 0.5 - shown.x)))
 	_expect(worst_miss < 1.0, "each pair is centred on its wheel as the filter's lens shows it (off by at most %.1f px)" % worst_miss)
 

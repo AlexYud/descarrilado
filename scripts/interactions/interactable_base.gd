@@ -29,3 +29,10 @@ func get_prompt_text() -> String:
 
 func interact(_player: Node) -> void:
 	pass
+
+
+## Whatever is written on the thing is in Portuguese for good (see `MeshText`); only the overlay follows the player's language. Made here, once the thing and
+## its parts are ready, so that every usable thing, of every kind, is covered.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_READY:
+		MeshText.fix_all(self)

@@ -72,7 +72,7 @@
 [ext_resource type="Texture2D" uid="uid://bajkl0lt1p6q7" path="res://assets/textures/moss_ground/moss_ground_NormalGL.jpg" id="gt_moss_ground_n"]
 [ext_resource type="Texture2D" uid="uid://hi36hnyybhlc" path="res://assets/textures/pine_needle_mulch/pine_needle_mulch_Color.jpg" id="gt_pine_needle_mulch_c"]
 [ext_resource type="Texture2D" uid="uid://bxod1j03kwo7b" path="res://assets/textures/pine_needle_mulch/pine_needle_mulch_NormalGL.jpg" id="gt_pine_needle_mulch_n"]
-[ext_resource type="PackedScene" path="res://scenes/objects/train_ticket.tscn" id="tt_ticket"]
+[ext_resource type="PackedScene" path="res://scenes/objects/sophia_wagon_letter.tscn" id="tt_ticket"]
 [ext_resource type="Script" path="res://scripts/interactions/tutorial_trigger.gd" id="60_trigger"]
 [ext_resource type="PackedScene" path="res://scenes/objects/forest_map.tscn" id="forest_map_scene"]
 [ext_resource type="Script" path="res://scripts/environment/trailhead_props.gd" id="trailhead_script"]
@@ -635,7 +635,7 @@ use_collision = true
 size = Vector3(0.36246827, 0.2848541, 0.6270832)
 material = SubResource("StandardMaterial3D_yilg7")
 
-[node name="TrainTicket" parent="Train/Wagons/TrainWagon" unique_id=863240159 instance=ExtResource("tt_ticket")]
+[node name="SophiaLetter" parent="Train/Wagons/TrainWagon" unique_id=863240159 instance=ExtResource("tt_ticket")]
 transform = Transform3D(0.9800666, -0.19866933, -8.684112e-09, 0, -4.371139e-08, 1, -0.19866933, -0.9800666, -4.284007e-08, -0.956, 0.472, 3.223)
 
 [node name="TrainWagon2" parent="Train/Wagons" unique_id=392497124 instance=ExtResource("2_5acte")]

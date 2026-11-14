@@ -50,21 +50,27 @@ script = ExtResource("2_builder")
 [node name="Doors" type="Node3D" parent="." unique_id=2047209378]
 
 [node name="BackDoor" parent="Doors" unique_id=1712536259 instance=ExtResource("5_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.865, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.855, 0, 0)
+leaf_width = 0.935
+leaf_height = 2.1
 swing_sign = -1
 persistent_id = &"house_back_door"
 
 [node name="FrontDoor" parent="Doors" unique_id=731664303 instance=ExtResource("5_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.19, 0, 15.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.124, 0, 15.5)
+leaf_width = 0.934
+leaf_height = 2.098
 persistent_id = &"house_front_door"
 
 [node name="PantryDoor" parent="Doors" unique_id=981741055 instance=ExtResource("5_door")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 9.3, 0, 6.9025)
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 9.3, 0, 6.8925)
 starts_locked = true
 persistent_id = &"house_pantry_door"
 
 [node name="BedroomDoor" parent="Doors" unique_id=9984893 instance=ExtResource("5_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.98, 0, 6.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.491, 0, 6.2)
+leaf_width = 0.938
+leaf_height = 2.103
 starts_locked = true
 required_key_id = "master_key"
 persistent_id = &"house_bedroom_door"
@@ -132,7 +138,7 @@ kind = &"tin_can"
 transform = Transform3D(-4.371139e-08, -1, -4.371139e-08, 0, -4.371139e-08, 1, -1, 4.371139e-08, 1.9106855e-15, 11.375, 1.0165, 7.9)
 
 [node name="Sack" type="Node3D" parent="Furniture" unique_id=64400243]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.85, 0, 8.92)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.85, 0, 8.62)
 script = ExtResource("3_prop")
 kind = &"sack"
 
@@ -158,8 +164,9 @@ kind = &"nightstand"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2675, 0.43, 0.30789375)
 persistent_id = &"house_nightstand_drawer"
 
-[node name="Postcard" parent="Furniture" instance=ExtResource("16_postcard")]
-transform = Transform3D(0.9848078, -0.17364818, 0, 0, 0, 1, -0.17364818, -0.9848078, 0, 7.33, 0.5758, 0.29)
+[node name="Postcard" parent="Furniture" node_paths=PackedStringArray("drawer") instance=ExtResource("16_postcard")]
+transform = Transform3D(0.9848078, -0.17364818, 0, 0, 0, 1, -0.17364818, -0.9848078, 0, 7.2875, 0.3825, 0.32989)
+drawer = NodePath("../NightstandDrawer")
 
 [node name="Memory" type="Node3D" parent="."]
 visible = false
@@ -216,23 +223,25 @@ omni_range = 9.5
 
 [node name="DoorLighting" type="Node3D" parent="."]
 script = ExtResource("17_door_lighting")
+door_position = Vector3(6.965, 2.4, 1.2)
+door_target = Vector3(6.965, 0.9, 6.2)
 
 [node name="Markers" type="Node3D" parent="."]
 
 [node name="PostcardStand" type="Marker3D" parent="Markers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.43, 0.0, 0.95)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.35, 0.0, 1.08)
 
 [node name="PostcardMemoryEye" type="Marker3D" parent="Markers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.66, 0.63, 0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2875, 0.798, 0.711)
 
 [node name="PostcardMemoryAim" type="Marker3D" parent="Markers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.3, 0.68, 0.29)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2875, 0.3825, 0.6)
 
 [node name="DoorFrontWide" type="Marker3D" parent="Markers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.43, 1.05, 1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.965, 1.05, 1.3)
 
 [node name="DoorFrontTight" type="Marker3D" parent="Markers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.43, 1.05, 2.85)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.965, 1.05, 2.85)
 
 [node name="Sounds" type="Node3D" parent="." unique_id=1510714190]
 
@@ -271,6 +280,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.42, 0.95, 7.9)
 script = ExtResource("18_watcher")
 
 [node name="DoorVoice" type="AudioStreamPlayer3D" parent="Sounds"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.44, 1.5, 6.75)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.975, 1.5, 6.75)
 unit_size = 4.0
 max_distance = 18.0

@@ -114,8 +114,8 @@ const TRACKS: Dictionary = {
 		# A short pause.
 		{"start": 45.1, "end": 46.9, "key": "CAPTION_HOUSE_BED_16", "speaker": SPEAKER_SOPHIA},
 		{"start": 47.4, "end": 49.8, "key": "CAPTION_HOUSE_BED_17", "speaker": SPEAKER_LUCAS},
-		# The same shot held, in silence, before the camera goes back into the paper.
-		{"start": 49.8, "end": 51.8, "key": ""},
+		# A second of silence after "Leave it where it was"; then the drawer is shut (`UnfinishedHouseSequence._shot_return`).
+		{"start": 49.8, "end": 50.8, "key": ""},
 	],
 	# The voice at the bedroom door (cues 01 to 12), from Juliana's question on, at the pace of someone listening between the lines: Juliana asks, and nobody answers
 	# for a long moment; then a voice with Sophia's, in short pieces with silences between them: warm and unsure (02 to 04), asking (05 and 06, as the handle is

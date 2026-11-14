@@ -133,9 +133,9 @@ func _check_the_name_cannot_be_read() -> void:
 	var welcome: Label3D = sign_board.get_node_or_null("Welcome") as Label3D
 	var old_name: Label3D = trail.old_name_label
 	var new_name: Label3D = trail.new_name_label
-	_expect(welcome != null and welcome.text == "SIGN_TRAILHEAD_WELCOME", "it says Bem-vindo à")
-	_expect(old_name != null and old_name.text == "SIGN_TRAILHEAD_OLD_NAME", "it has the old name of the place")
-	_expect(new_name != null and new_name.text == "SIGN_TRAILHEAD_NEW_NAME", "and the new one")
+	_expect(welcome != null and welcome.text == "Bem-vindo à" and welcome.auto_translate_mode == Node.AUTO_TRANSLATE_MODE_DISABLED, "it says Bem-vindo à, in every language (it is painted on the sign)")
+	_expect(old_name != null and old_name.text == "TRILHA DA SERRA", "it has the old name of the place")
+	_expect(new_name != null and new_name.text == "Fenda", "and the new one")
 	if welcome == null or old_name == null or new_name == null or trail.defacement == null:
 		return
 
@@ -230,13 +230,13 @@ func _check_the_board(door: Node3D) -> void:
 	_expect(TrailheadProps.BOARD_TOP_Y < 2.3, "and it is %.2f m tall" % (TrailheadProps.BOARD_TOP_Y + 0.07))
 	_expect(ForestMapProps.paper_size().x <= 0.5, "the map on it is %.2f m wide" % ForestMapProps.paper_size().x)
 
-	# Two solid posts, a cap, a frame, a face, and nothing written on it: no name (the names are in the picture's emblems only).
+	# Two solid posts and a solid panel, a cap, a frame, a face, and nothing written on it: no name (the names are in the picture's emblems only).
 	var posts: int = 0
 	for node: Node in board.get_children():
-		if node is StaticBody3D:
+		if node is StaticBody3D and node.name != &"PanelSolid":
 			posts += 1
 
-	_expect(posts == 2, "it stands on two solid posts (%d)" % posts)
+	_expect(posts == 2 and board.get_node_or_null("PanelSolid") is StaticBody3D, "it stands on two solid posts (%d), and its panel is solid (a flashlight finds it)" % posts)
 	_expect(board.get_node_or_null("Cap") != null and board.get_node_or_null("FrameTop") != null and board.get_node_or_null("Face") != null, "it has its cap, its frame and its painted face")
 	_expect(board.find_children("*", "Label3D", true, false).is_empty(), "no name is written on it")
 	_expect(trail.pins.size() == 4, "four pins hold the map")

@@ -189,15 +189,15 @@ text = "OPTIONS_MOTION_BLUR"
 [node name="MotionBlurCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/MotionBlurRow"]
 layout_mode = 2
 
-[node name="VhsFilterRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox"]
+[node name="DreamFilterRow" type="HBoxContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox"]
 layout_mode = 2
 
-[node name="VhsFilterLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/VhsFilterRow"]
+[node name="DreamFilterLabel" type="Label" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/DreamFilterRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "OPTIONS_VHS_FILTER"
+text = "OPTIONS_DREAM_FILTER"
 
-[node name="VhsFilterCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/VhsFilterRow"]
+[node name="DreamFilterCheckButton" type="CheckButton" parent="OptionsMargin/OptionsVBox/OptionsTabs/Graphics/GraphicsVBox/DreamFilterRow"]
 layout_mode = 2
 
 [node name="Controls" type="MarginContainer" parent="OptionsMargin/OptionsVBox/OptionsTabs" unique_id=155467256]

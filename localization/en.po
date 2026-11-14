@@ -324,7 +324,7 @@ msgid "OPTIONS_CAPTION_PREVIEW"
 msgstr "This is how captions will look."
 
 msgid "CAPTION_INTRO_01"
-msgstr "The Fenda is the exact size of what is missing."
+msgstr "The Rift is the exact size of what is missing."
 
 msgid "CAPTION_INTRO_02"
 msgstr "When I first arrived, still a little girl,"
@@ -467,6 +467,15 @@ msgstr "I don't remember taking this. The date stamp says 1988, but I was never 
 
 msgid "PHOTO_NOTE_WORKSHOP"
 msgstr "Lucas working the late shift. He always thought brute force could fix the machinery in this town."
+
+msgid "ITEM_SOPHIA_WAGON_LETTER_NAME"
+msgstr "Sophia's Letter"
+
+msgid "ITEM_SOPHIA_WAGON_LETTER_DESCRIPTION"
+msgstr "A letter in Sophia's handwriting, folded once and left on the seat across the aisle."
+
+msgid "READABLE_SOPHIA_WAGON_LETTER"
+msgstr "Juli,\n\nI know it's a little late to tell you that, but I want you to come back to me, Juli.\n\nAs soon as you arrive, call me at the overlook.\n\n— Sophia"
 
 msgid "ITEM_TRAIN_TICKET_NAME"
 msgstr "Train Ticket"
@@ -970,8 +979,8 @@ msgstr "Depth of field"
 msgid "OPTIONS_MOTION_BLUR"
 msgstr "Motion blur"
 
-msgid "OPTIONS_VHS_FILTER"
-msgstr "VHS filter"
+msgid "OPTIONS_DREAM_FILTER"
+msgstr "Dream filter"
 
 # The overlook payphone
 msgid "FICHA_NUMBER_1"
@@ -1324,10 +1333,10 @@ msgid "ITEM_HELENA_NOTICE_NAME"
 msgstr "Recent News — Helena Clarke"
 
 msgid "ITEM_HELENA_NOTICE_DESCRIPTION"
-msgstr "A recent clipping about the disappearance of Helena Clarke, who was born and raised in the Fenda."
+msgstr "A recent clipping about the disappearance of Helena Clarke, who was born and raised in the Rift."
 
 msgid "READABLE_HELENA_NOTICE"
-msgstr "[b]SEARCH FOR HELENA CLARKE CONTINUES[/b]\n\nHelena Clarke, who was born and raised in the Fenda, has been missing since last week. According to information received by the search team, she was last seen near the railway line.\n\nHer family asks that any information about her whereabouts be reported to the local station."
+msgstr "[b]SEARCH FOR HELENA CLARKE CONTINUES[/b]\n\nHelena Clarke, who was born and raised in the Rift, has been missing since last week. According to information received by the search team, she was last seen near the railway line.\n\nHer family asks that any information about her whereabouts be reported to the local station."
 
 msgid "PROMPT_VIEWFINDER"
 msgstr "Look through viewfinder"

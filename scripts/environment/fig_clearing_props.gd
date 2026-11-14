@@ -27,6 +27,11 @@ class_name FigClearingProps
 ## The ready-made models the camp's wood is made of, and each one's box in its own file frame (position, size; metres), which `_place_model` fits to the
 ## size a prop has here.
 const TABLE_SCENE: PackedScene = preload("res://assets/models/wooden_structures/wood_table/wood_table.glb")
+## The memory table (`Scenery/CampTable` in the scene, a box top on four box legs) is shown as this dark table instead; the boxes stay (hidden), and so does its collision, which is
+## fitted to the new top. The top is at the height the boxes' was (what lies on it stays on it).
+const MEMORY_TABLE_SCENE: PackedScene = preload("res://assets/models/wooden_structures/wood_table_dark/wood_table_dark.glb")
+const MEMORY_TABLE_BOX: AABB = AABB(Vector3(-0.673, -0.002, -1.399), Vector3(1.345, 0.914, 2.791))
+const MEMORY_TABLE_SIZE: Vector3 = Vector3(1.95, 0.78, 1.0)
 const BENCH_SCENE: PackedScene = preload("res://assets/models/wooden_structures/wood_bench/wood_bench.glb")
 const LOG_SCENE: PackedScene = preload("res://assets/models/wooden_structures/log/log.glb")
 const STUMP_SCENE: PackedScene = preload("res://assets/models/wooden_structures/log_small/log_small.glb")
@@ -147,6 +152,7 @@ func _ready() -> void:
 
 	_make_materials()
 	_build_clothesline()
+	_swap_memory_table()
 	_build_log_table()
 	_build_bench()
 	_build_fire_ring()
@@ -913,3 +919,28 @@ static func _add_beam(parent: Node3D, node_name: String, from_point: Vector3, to
 	var beam: MeshInstance3D = HouseProps.add_cylinder(parent, node_name, radius, from_point.distance_to(to_point), (from_point + to_point) * 0.5, mat)
 	beam.basis = Basis(Quaternion(Vector3.UP, (to_point - from_point).normalized()))
 	return beam
+
+
+# ============================================================
+# THE MEMORY TABLE
+# ============================================================
+
+## Shows `MEMORY_TABLE_SCENE` on the scene's memory table in place of its box top and legs (kept, hidden). The nodes and the table's place are untouched.
+func _swap_memory_table() -> void:
+	var parent: Node = get_parent()
+	var table: Node3D = parent.get_node_or_null("Scenery/CampTable") as Node3D if parent != null else null
+	if table == null or table.get_node_or_null("DarkTable") != null:
+		return
+
+	for part: String in ["TableTop", "LegA", "LegB", "LegC", "LegD"]:
+		var node: Node3D = table.get_node_or_null(part) as Node3D
+		if node != null:
+			node.visible = false
+
+	var model: Node3D = _place_model(table, MEMORY_TABLE_SCENE, "DarkTable", MEMORY_TABLE_BOX, MEMORY_TABLE_SIZE, Vector3.ZERO, 90.0)
+	model.set_meta(&"memory_table_model", true)
+	var shape_node: CollisionShape3D = table.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if shape_node != null and shape_node.shape is BoxShape3D:
+		var box: BoxShape3D = (shape_node.shape as BoxShape3D).duplicate() as BoxShape3D
+		box.size = MEMORY_TABLE_SIZE
+		shape_node.shape = box

@@ -1814,7 +1814,7 @@ func _check_pinned_texts() -> void:
 	_expect(journal_en.contains("smell of iron and soaked wood") and journal_pt.contains("cheiro de ferro e madeira encharcada"), "the smell is a witness's, in the maintenance record's margin note")
 	_expect(journal_en.contains("founded by the English") and journal_pt.contains("fundada por ingleses"), "the leaflet gives the village an English founding")
 	_expect(journal_en.contains("Daniel Nogueira") and journal_pt.contains("Daniel Nogueira"), "Daniel Nogueira is named")
-	_expect(_translated("READABLE_HELENA_NOTICE", "en").contains("born and raised in the Fenda") and _translated("READABLE_HELENA_NOTICE", "pt_BR").contains("nascida e criada na Fenda"), "Helena was born and raised in the Fenda")
+	_expect(_translated("READABLE_HELENA_NOTICE", "en").contains("born and raised in the Rift") and _translated("READABLE_HELENA_NOTICE", "pt_BR").contains("nascida e criada na Fenda"), "Helena was born and raised in the Fenda")
 	_expect(not _translated("READABLE_MARINA_SISTER_NOTE", "en").to_lower().contains("sister") and not _translated("ITEM_MARINA_SISTER_NOTE_NAME", "en").to_lower().contains("sister"), "the note that came with the tape does not call its writer a sister (the family's reply says Emily has none)")
 	_expect(_translated("READABLE_CLIPPING", "en").contains("remains missing") and _translated("READABLE_CLIPPING", "pt_BR").contains("não foi localizada"), "the clipping says Emily is missing")
 	_expect(_translated("READABLE_FAMILY_LETTER", "en").contains("Emily doesn't have a sister") and _translated("READABLE_FAMILY_LETTER", "pt_BR").contains("A Emily não tem irmã") and _translated("READABLE_FAMILY_LETTER", "en").contains("especially the ending"), "the family's reply says she has no sister")

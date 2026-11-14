@@ -27,6 +27,8 @@ var inspect_amount: float = 0.0
 var _glare_base: Dictionary = {}
 var _player: Node = null
 var _applied_amount: float = -1.0
+## Who is showing the look now (`hold_scene_look`).
+var _scene_holders: Dictionary = {}
 
 
 func _ready() -> void:
@@ -37,10 +39,9 @@ func _ready() -> void:
 			_on_quality_preset_changed
 		)
 
-	if not GameSettings.vhs_filter_changed.is_connected(_on_vhs_filter_changed):
-		GameSettings.vhs_filter_changed.connect(_on_vhs_filter_changed)
-	# The player can take the whole look off (the options): the layer is hidden, and the picture is the game's own.
-	visible = GameSettings.get_vhs_filter_enabled()
+	# The camcorder / VHS look is no longer the game's picture (that is the player's `DreamFilter`): it is hidden, and only a scene that wants it for
+	# itself shows it (`hold_scene_look`), for as long as it holds it.
+	_refresh_visible()
 
 	_apply_quality_preset(GameSettings.get_quality_preset())
 
@@ -86,8 +87,22 @@ func _exit_tree() -> void:
 		)
 
 
-func _on_vhs_filter_changed(enabled: bool) -> void:
-	visible = enabled
+## A scene shows the look for itself (`on`), or lets it go; `holder` names who asks (the look stays while anyone holds it). Hidden, the filter's other
+## calls (`pulse_unease`, `set_darkness`, `lens_position`) change nothing that is seen.
+func hold_scene_look(holder: StringName, on: bool) -> void:
+	if on:
+		_scene_holders[holder] = true
+	else:
+		_scene_holders.erase(holder)
+	_refresh_visible()
+
+
+func is_scene_look_held() -> bool:
+	return not _scene_holders.is_empty()
+
+
+func _refresh_visible() -> void:
+	visible = not _scene_holders.is_empty()
 
 
 func _on_quality_preset_changed(preset: int) -> void:

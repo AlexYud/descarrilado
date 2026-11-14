@@ -154,14 +154,14 @@ const COMMON_WINDOW_RESOLUTIONS: Array[Vector2i] = [
 	/MotionBlurCheckButton
 )
 
-@onready var vhs_filter_check_button: CheckButton = (
+@onready var dream_filter_check_button: CheckButton = (
 	$OptionsMargin
 	/OptionsVBox
 	/OptionsTabs
 	/Graphics
 	/GraphicsVBox
-	/VhsFilterRow
-	/VhsFilterCheckButton
+	/DreamFilterRow
+	/DreamFilterCheckButton
 )
 
 @onready var back_button: Button = (
@@ -487,11 +487,11 @@ func _connect_control_signals() -> void:
 			_on_motion_blur_toggled
 		)
 
-	if not vhs_filter_check_button.toggled.is_connected(
-		_on_vhs_filter_toggled
+	if not dream_filter_check_button.toggled.is_connected(
+		_on_dream_filter_toggled
 	):
-		vhs_filter_check_button.toggled.connect(
-			_on_vhs_filter_toggled
+		dream_filter_check_button.toggled.connect(
+			_on_dream_filter_toggled
 		)
 
 	if not ui_scale_option.item_selected.is_connected(_on_ui_scale_option_selected):
@@ -620,8 +620,8 @@ func _sync_controls_from_settings() -> void:
 	motion_blur_check_button.set_pressed_no_signal(
 		GameSettings.get_motion_blur_enabled()
 	)
-	vhs_filter_check_button.set_pressed_no_signal(
-		GameSettings.get_vhs_filter_enabled()
+	dream_filter_check_button.set_pressed_no_signal(
+		GameSettings.get_dream_filter_enabled()
 	)
 
 	brightness_slider.value = (
@@ -787,11 +787,11 @@ func _on_motion_blur_toggled(enabled: bool) -> void:
 	GameSettings.set_motion_blur_enabled(enabled)
 
 
-func _on_vhs_filter_toggled(enabled: bool) -> void:
+func _on_dream_filter_toggled(enabled: bool) -> void:
 	if syncing_controls:
 		return
 
-	GameSettings.set_vhs_filter_enabled(enabled)
+	GameSettings.set_dream_filter_enabled(enabled)
 
 
 func _on_ui_scale_option_selected(index: int) -> void:

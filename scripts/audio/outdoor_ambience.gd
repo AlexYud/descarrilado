@@ -33,6 +33,8 @@ class_name OutdoorAmbience
 ## so the wind does not "arrive" from outside after the cut. The whole fades in at the start of the scene.
 
 const GROUP: StringName = &"outdoor_ambience"
+## Bodies that stop the player but not the air (an open window's invisible bar): the openness rays go through them.
+const SOUND_TRANSPARENT_GROUP: StringName = &"sound_transparent"
 const BUS_NAME: StringName = &"OutdoorAmbience"
 const BED_BUS_NAME: StringName = &"OutdoorAmbienceBed"
 const DETAIL_BUS_NAME: StringName = &"OutdoorAmbienceDetail"
@@ -403,6 +405,10 @@ func _measure_openness(at: Vector3, all_now: bool) -> void:
 	var body: CollisionObject3D = get_tree().get_first_node_in_group(&"player") as CollisionObject3D
 	if body != null:
 		exclude.append(body.get_rid())
+	# What stops a body and not a sound (an open window's invisible bar: the air goes through it).
+	for open_air: Node in get_tree().get_nodes_in_group(SOUND_TRANSPARENT_GROUP):
+		if open_air is CollisionObject3D:
+			exclude.append((open_air as CollisionObject3D).get_rid())
 
 	var count: int = _directions.size() if all_now else mini(rays_per_frame, _directions.size())
 	for i: int in count:

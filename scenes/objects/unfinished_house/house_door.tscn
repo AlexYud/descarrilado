@@ -5,3 +5,5 @@
 [node name="HouseDoor" instance=ExtResource("1_door")]
 leaf_width = 0.94
 leaf_height = 2.05
+leaf_clearance = 0.004
+pivot_on_face = true

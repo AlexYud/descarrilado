@@ -554,13 +554,15 @@ func _apply_look(delta: float) -> void:
 	camera.rotation.y = _view_yaw
 
 	if flashlight != null:
-		flashlight.rotation.x = lerpf(
+		# Angles, not numbers: facing about 180 degrees the beam's yaw and the head's sit on either side of the wrap (+pi and -pi), and
+		# a plain lerp between them swung the beam far to one side (it went off to the top left when looking at the house's south windows).
+		flashlight.rotation.x = lerp_angle(
 			flashlight.rotation.x,
 			aim_pitch,
 			delta * flashlight_lerp_speed
 		)
 
-		flashlight.rotation.y = lerpf(
+		flashlight.rotation.y = lerp_angle(
 			flashlight.rotation.y,
 			head.rotation.y,
 			delta * flashlight_lerp_speed

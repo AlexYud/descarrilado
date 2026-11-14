@@ -65,6 +65,14 @@ const KEY_TURN_DEGREES: float = 90.0
 @export var leaf_height: float = 2.0
 ## Half the thickness of the door, where the handle and the keyhole sit (set from the model when the leaf is dressed).
 @export var door_half_thickness: float = 0.04
+## A real leaf never fills its opening: it hangs with a gap all round so it can swing past the jambs. With `leaf_width` and `leaf_height` the size of the
+## OPENING (from the hinge-side jamb, at this node's origin, to the latch-side jamb, and from the floor to the head), the dressed leaf is this much smaller
+## at each side and at the head, and twice this off the floor. 0 is a leaf the size of its opening.
+@export var leaf_clearance: float = 0.0
+## A real door turns on hinges on the face of the leaf on the side it swings towards, not on a line through the middle of its thickness (that swings the
+## leaf's other corner into the jamb, half a door thick). On: the leaf turns on its face on the side it is swinging to (either side: the pivot only
+## changes sides as the door passes shut, where both pivots put the leaf in the same place).
+@export var pivot_on_face: bool = false
 ## How far from the door the player stands to push it, and how far away a player
 ## can be and still be walked up to it (farther than that, a script or a test is
 ## calling, so nobody is walked anywhere).
@@ -145,6 +153,10 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 ## The player walks up to a door before pushing it. Tests that time the door's
 ## own movements switch this off.
 static var approach_enabled: bool = true
+## The hinge and the leaf's middle where the door was built (`pivot_on_face` moves them across the door by `_pivot_z`).
+var _hinge_rest: Vector3 = Vector3.ZERO
+var _root_rest: Vector3 = Vector3.ZERO
+var _pivot_z: float = 0.0
 static var _sound_cache: Dictionary = {}
 ## The variant seen last for each kind of interaction, shared by every door.
 static var _last_variant: Dictionary = {}
@@ -181,19 +193,54 @@ func _ready() -> void:
 		_dress_leaf()
 		_build_hardware()
 
+	_hinge_rest = hinge.position
+	_root_rest = door_root.position
+	if pivot_on_face and not RenderingServer.frame_pre_draw.is_connected(_update_pivot):
+		RenderingServer.frame_pre_draw.connect(_update_pivot)
+
 	_restore_persistent_state()
 	_show_resting_key()
+	_update_pivot()
 
 
 func _exit_tree() -> void:
 	_set_collision_suspended(false)
 	_cancel_choreo(true)
+	if RenderingServer.frame_pre_draw.is_connected(_update_pivot):
+		RenderingServer.frame_pre_draw.disconnect(_update_pivot)
 
 
 func _process(delta: float) -> void:
 	if hinge == null:
 		return
 
+	_swing(delta)
+	_update_pivot()
+
+
+## Where the leaf turns (`pivot_on_face`): on its face on the side its angle from shut is on. The pivot is a function of that angle's sign, and the two
+## pivots agree at an angle of 0, so the leaf never jumps. Run after every frame's swing and before every frame is drawn (scenes turn doors too).
+func _update_pivot() -> void:
+	if not pivot_on_face or hinge == null or door_root == null:
+		return
+
+	var angle: float = hinge.rotation_degrees.y - closed_rotation_degrees.y
+	if absf(angle) < 0.001:
+		return
+
+	# A positive angle swings the free end towards -Z: the leaf turns on its -Z face.
+	var pivot: float = -door_half_thickness if angle > 0.0 else door_half_thickness
+	if is_equal_approx(pivot, _pivot_z):
+		return
+
+	_pivot_z = pivot
+	# The hinge onto that face and the leaf back by as much, both in the shut door's frame.
+	var shut: Basis = Basis.from_euler(closed_rotation_degrees * (PI / 180.0))
+	hinge.position = _hinge_rest + shut * Vector3(0.0, 0.0, pivot)
+	door_root.position = _root_rest - Vector3(0.0, 0.0, pivot)
+
+
+func _swing(delta: float) -> void:
 	if _choreo != &"":
 		# The door is solid while the player walks up to it and while it is tried,
 		# and lets them through while it swings.
@@ -508,7 +555,10 @@ func _dress_leaf() -> void:
 	if leaf == null or not leaf.mesh is BoxMesh:
 		return
 
-	var hub: Vector2 = DoorModel.dress_leaf(door_root, leaf, leaf_width, leaf_height)
+	var gap: float = maxf(leaf_clearance, 0.0)
+	var hub: Vector2 = DoorModel.dress_leaf(door_root, leaf, leaf_width - gap * 2.0, leaf_height - gap * 3.0)
+	# Off the hinge-side jamb by the gap, and off the floor by twice it.
+	door_root.position += Vector3(gap, gap * 2.0, 0.0)
 	door_half_thickness = DoorModel.HALF_THICKNESS
 	var knobs: Array[DoorKnobInteractable] = []
 	_collect_knobs(door_root, knobs)
@@ -1325,12 +1375,14 @@ const CLEARANCE: float = 0.2
 
 func _frame() -> Dictionary:
 	var closed_yaw: Basis = Basis(Vector3.UP, deg_to_rad(closed_rotation_degrees.y))
-	var leaf: Vector3 = closed_yaw * door_root.position
+	# (Where the door rests: the pivot's move onto a face, a few centimetres across the door, is not the door's frame. The opening is the leaf and its gaps.)
+	var rest: Vector3 = Vector3(_root_rest.x, 0.0, 0.0) if pivot_on_face else door_root.position
+	var leaf: Vector3 = closed_yaw * rest
 	leaf.y = 0.0
 	var half: float = leaf.length()
 	var direction: Vector3 = leaf.normalized() if half > 0.01 else Vector3.RIGHT
 	return {
-		"origin": hinge.position,
+		"origin": _hinge_rest if pivot_on_face else hinge.position,
 		"dir": direction,
 		"normal": direction.rotated(Vector3.UP, -PI * 0.5),
 		"width": half * 2.0,

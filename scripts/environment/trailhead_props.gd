@@ -257,6 +257,7 @@ func _words(parent: Node, part_name: String, key: String, at: Vector3, em: float
 	var label: Label3D = Label3D.new()
 	label.name = part_name
 	label.text = key
+	MeshText.fix(label)
 	label.font_size = LABEL_FONT_SIZE
 	label.pixel_size = em / float(LABEL_FONT_SIZE)
 	label.modulate = color
@@ -366,6 +367,8 @@ func _build_board() -> void:
 	_box(board, "Cap", Vector3(post_x * 2.0 + BOARD_POST, 0.07, BOARD_POST), Vector3(0.0, BOARD_TOP_Y + 0.035, 0.0), _post_wood)
 	var panel_center_y: float = BOARD_PANEL_BOTTOM + BOARD_PANEL.y * 0.5
 	_panelled(board, BOARD_PANEL, panel_center_y, BOARD_FACE_Z - PANEL_DEPTH, BOARD_FRAME, BOARD_FACE_PATH, PANEL_COLOR)
+	# The panel is solid too (nobody walks through a sign, and a flashlight pointed at it finds it: its beam meets the board where she looks).
+	HouseProps.add_solid(board, "PanelSolid", Vector3(BOARD_PANEL.x + BOARD_FRAME * 2.0, BOARD_PANEL.y + BOARD_FRAME * 2.0, PANEL_DEPTH), Vector3(0.0, panel_center_y, BOARD_FACE_Z - PANEL_DEPTH * 0.5))
 
 	# Four pins through the map's corners. They are pulled out when the map is taken.
 	for offset: Vector2 in pin_offsets(ForestMapProps.paper_size()):

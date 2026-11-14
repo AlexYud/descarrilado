@@ -133,6 +133,7 @@ static func _label(label_name: String, key: String, font_size: int, color: Color
 	var label: Label3D = Label3D.new()
 	label.name = label_name
 	label.text = key
+	MeshText.fix(label)
 	label.font_size = font_size
 	label.pixel_size = LABEL_PIXEL_SIZE * PAPER_WIDTH / REFERENCE_PAPER_WIDTH
 	label.modulate = color

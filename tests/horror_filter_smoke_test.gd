@@ -31,6 +31,18 @@ func _ready() -> void:
 
 func _run(player: CharacterBody3D) -> void:
 	var filter: Node = get_node("/root/HorrorFilter")
+	var dream: CanvasLayer = get_node("/root/DreamFilter")
+	# The tape look is a scene's, not the game's: hidden until a scene holds it, and the player's dream look steps aside meanwhile.
+	GameSettings.set_dream_filter_enabled(true, false)
+	await get_tree().process_frame
+	_expect(not (filter as CanvasLayer).visible and dream.visible, "the game's picture is the dream look; the tape look is hidden")
+	filter.call("hold_scene_look", &"test", true)
+	await get_tree().process_frame
+	_expect((filter as CanvasLayer).visible and not dream.visible, "a scene holding the tape look shows it, and the dream look steps aside")
+	GameSettings.set_dream_filter_enabled(false, false)
+	await get_tree().process_frame
+	_expect(not dream.visible, "(the dream look is off when the player turns it off)")
+	GameSettings.set_dream_filter_enabled(true, false)
 	var material: ShaderMaterial = (filter.get("horror_rect") as ColorRect).material as ShaderMaterial
 	var bloom: float = float(material.get_shader_parameter("bloom_strength"))
 	var gain: float = float(material.get_shader_parameter("highlight_gain"))
@@ -40,6 +52,23 @@ func _run(player: CharacterBody3D) -> void:
 	var fisheye: float = float(material.get_shader_parameter("fisheye_strength"))
 	_expect(material.shader.code.contains("fisheye_strength") and fisheye > 0.03 and fisheye < 0.1, "the picture has a little fisheye, not a lot (%.2f)" % fisheye)
 	_check_the_lens(filter, material, fisheye)
+	filter.call("hold_scene_look", &"test", false)
+	await get_tree().process_frame
+	_expect(not (filter as CanvasLayer).visible and dream.visible, "let go, the tape look is hidden again and the dream look is back")
+	var hidden_point: Vector2 = filter.call("lens_position", Vector2(900.0, 100.0), Vector2(1000.0, 600.0))
+	_expect(hidden_point.is_equal_approx(Vector2(900.0, 100.0)), "hidden, its lens moves nothing")
+	# The dream look's own lens (a gentle fisheye): the middle stays, and its inverse puts a point back where the shader reads it.
+	var dream_material: ShaderMaterial = (dream.get("dream_rect") as ColorRect).material as ShaderMaterial
+	# (Its default, as the shader file has it: a headless run has no compiled shader to ask.)
+	var bulge: float = float(dream_material.shader.code.get_slice("uniform float fisheye_strength", 1).get_slice("=", 1).get_slice(";", 0).strip_edges())
+	dream_material.set_shader_parameter(&"fisheye_strength", bulge)
+	var screen: Vector2 = Vector2(1000.0, 600.0)
+	var dream_ok: bool = bulge > 0.0 and (dream.call("lens_position", screen * 0.5, screen) as Vector2).distance_to(screen * 0.5) < 0.01
+	for point: Vector2 in [Vector2(700.0, 300.0), Vector2(250.0, 450.0), Vector2(900.0, 100.0)]:
+		var p: Vector2 = (dream.call("lens_position", point, screen) as Vector2) / screen * 2.0 - Vector2.ONE
+		var read_at: Vector2 = p * (1.0 + bulge * p.length_squared()) / (1.0 + 2.0 * bulge)
+		dream_ok = dream_ok and read_at.distance_to(point / screen * 2.0 - Vector2.ONE) < 0.0005
+	_expect(dream_ok, "the dream look has a gentle fisheye (%.2f), and what is laid over the picture follows it" % bulge)
 
 	var whistle: Inspectable = (load("res://scenes/objects/waiting_shed/carved_whistle.tscn") as PackedScene).instantiate()
 	add_child(whistle)

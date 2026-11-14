@@ -37,6 +37,7 @@ func add_item(
 	inspect_visual_template: Node3D = null,
 	item_scene_path: String = ""
 ) -> bool:
+	MeshText.fix_all(inspect_visual_template)
 	inventory_slots.append({
 		"id": item_id,
 		"name": item_name,

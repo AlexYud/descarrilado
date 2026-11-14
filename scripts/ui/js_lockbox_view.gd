@@ -303,11 +303,7 @@ func _layout_arrows() -> void:
 
 ## Where the picture filter's lens shows what the camera drew at a screen point (the point itself when there is no filter).
 func _through_the_lens(point: Vector2) -> Vector2:
-	var filter: Node = get_node_or_null("/root/HorrorFilter")
-	if filter == null or not filter.has_method("lens_position"):
-		return point
-
-	return filter.call("lens_position", point, get_viewport().get_visible_rect().size)
+	return ScreenLens.position(self, point, get_viewport().get_visible_rect().size)
 
 
 func _fade_overlay(show_it: bool) -> void:
